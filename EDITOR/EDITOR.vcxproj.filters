@@ -22,4 +22,9 @@
   <ItemGroup>
     <None Include="SDL2.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="assests\textures\mafuyu.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
