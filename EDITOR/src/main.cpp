@@ -4,6 +4,48 @@
 #include<glad/glad.h>
 #include<iostream>
 #include<SOIL/SOIL.h>
+#include<glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+class Camera2D
+{
+private:
+	int m_Width, m_Height;
+	float m_Scale;
+	glm::vec2 m_Positon;
+	glm::mat4 m_CameraMatrix, m_OrthoProjection;
+	bool m_bNeedsUpdate;
+public:
+	Camera2D():Camera2D(640,480){}
+	Camera2D(int width, int height) :m_Width{ width }, m_Height{ height },
+		m_Scale(1.f), m_Positon{ glm::vec2{0} },
+		m_CameraMatrix{1.f},m_OrthoProjection{1.f},m_bNeedsUpdate{true}
+	{
+		// Init ortho projection
+		m_OrthoProjection = glm::ortho(0.f, static_cast<float>(m_Width), 0.f, static_cast<float>(m_Height), -1.f, 1.f);
+		//m_OrthoProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+	}
+
+	inline glm::mat4 GetCameraMatrix() { return m_CameraMatrix; }
+	inline void SetScale(float scale) { m_Scale = scale; m_bNeedsUpdate = true; }
+
+	void Update()
+	{
+		if (!m_bNeedsUpdate)
+			return;
+
+		// Translate
+		glm::vec3 translate{ 0.f, 0.f, 0.f };
+		m_CameraMatrix = glm::translate(m_OrthoProjection, translate);
+
+		// Scale
+		glm::vec3 scale{ m_Scale, m_Scale, 0.f };
+		m_CameraMatrix *= glm::scale(glm::mat4(1.f), scale);
+
+		m_bNeedsUpdate = false;
+	}
+
+};
 
 bool LoadTexture(const std::string& filePath, int& width, int& height, bool blended)
 {
@@ -118,9 +160,12 @@ int main()
 		return -1;
 	}
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	SDL_Event event{};
 
-	// texture
+	// texture data
 	GLuint tex0;
 	glGenTextures(1, &tex0);
 	glBindTexture(GL_TEXTURE_2D, tex0);
@@ -132,16 +177,44 @@ int main()
 	}
 
 	// vertex data 
+	//float vertices[] = {
+	//	-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,		// top left 
+	//	 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,		// top right
+	//	 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,		// bottom right
+	//	-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,		// bottom left
+	//};
 	float vertices[] = {
-		-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,		// top left 
-		 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,		// top right
-		 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,		// bottom right
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,		// bottom left
+		160.f,	360.0f,	0.0f, 0.0f, 1.0f,		// top left 
+		480.f,  360.0f,	0.0f, 1.0f, 1.0f,		// top right
+		480.0f, 120.0f,	0.0f, 1.0f, 0.0f,		// bottom right
+		160.0f, 120.0f,	0.0f, 0.0f, 0.0f,		// bottom left
 	};
 	unsigned int indices[] = {  // note that we start from 0!
 		0, 1, 2,  // first Triangle
 		2, 3, 0   // second Triangle
 	};
+
+	// VAO VBO EBO
+	GLuint VAO, VBO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+	glBindVertexArray(0);	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+
+
+	// Create camera
+	Camera2D camera{};
 
 	// vertex source
 	const char* vertexSource =
@@ -149,9 +222,10 @@ int main()
 		"layout (location = 0) in vec3 aPosition;\n"
 		"layout (location = 1) in vec2 aTexCoord;"
 		"out vec2 TexCoord;"
+		"uniform mat4 Projection;"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = vec4(aPosition, 1.0);\n"
+		"	gl_Position = Projection * vec4(aPosition, 1.0);\n"
 		"	TexCoord = aTexCoord;\n"
 		"}\0";
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);		// shader
@@ -210,36 +284,6 @@ int main()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	// VAO VBO
-	GLuint VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-	
-	glBindVertexArray(VAO);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-	glBindVertexArray(0);
-
 	// Window loop
 	while (running)
 	{
@@ -259,17 +303,24 @@ int main()
 				break;
 			}
 		}
+		
 		glViewport(0, 0, window.GetWidth(), window.GetHeight());
+
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		// Active shader
 		glUseProgram(shaderProgram);
-		glUniform1i(glGetUniformLocation(shaderProgram, "texture0"), 0);
-		glBindVertexArray(VAO);
 
-		glActiveTexture(GL_TEXTURE0);		// texture0 is actived defaultly
+		glActiveTexture(GL_TEXTURE0);		// Bind texture, texture0 is actived defaultly
 		glBindTexture(GL_TEXTURE_2D, tex0);
+		glUniform1i(glGetUniformLocation(shaderProgram, "texture0"), 0);
+		
+		camera.Update();
+		auto projection = camera.GetCameraMatrix();
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "Projection"), 1, GL_FALSE, &projection[0][0]);
 
+		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		
