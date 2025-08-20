@@ -15,18 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
+    <ClInclude Include="Rendering\Essentials\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Essentials\ShaderLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Rendering\Essentials\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="SDL2.dll" />
-    <None Include="assests\shaders\basicShader.vert" />
-    <None Include="assests\shaders\basicShader.frag" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="assests\textures\mafuyu.png">
-      <Filter>Resource Files</Filter>
-    </Image>
+    <ClCompile Include="Rendering\Essentials\ShaderLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
