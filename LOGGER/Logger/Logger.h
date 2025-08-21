@@ -33,7 +33,7 @@ namespace LOGGER {
 	public:
 		static Logger& GetInstance();
 		~Logger() = default;
-		Logger(const Logger&) = default;
+		Logger(const Logger&) = delete;
 		Logger& operator = (const Logger&) = delete;
 
 		void Init(bool consoleLog = true, bool retainLogs = true);

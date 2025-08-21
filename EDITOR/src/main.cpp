@@ -174,12 +174,12 @@ int main()
 	glGenTextures(1, &tex0);
 	glBindTexture(GL_TEXTURE_2D, tex0);
 	int width{ 0 }, height{ 0 };
-	if (!LoadTexture("assests/textures/mafuyu.png", width, height, false))
+	if (!LoadTexture("assests/textures/mafuyu.pngs", width, height, false))
 	{
 		ENGINE_ERROR("Failed to load the texture!");
 		return -1;
 	}
-	//ENGINE_LOG("window siez with_{},height{}!", width, height);
+	ENGINE_LOG("window siez with_{},height{}!", width, height);
 	//ENGINE_WARN("window siez with_{},height{}!", width, height);
 
 	// vertex data 
