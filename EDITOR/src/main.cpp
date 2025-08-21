@@ -7,6 +7,7 @@
 #include<glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include<Rendering/Essentials/ShaderLoader.h>
+#include<Logger/Logger.h>
 
 class Camera2D
 {
@@ -55,7 +56,7 @@ bool LoadTexture(const std::string& filePath, int& width, int& height, bool blen
 	// check
 	if(!image)
 	{
-		std::cout << "SOIL failed to load image [" << filePath << "] -- " << SOIL_last_result();
+		std::cout << "SOIL failed to load image [" << filePath << "] -- " << SOIL_last_result() << std::endl;
 		return false;
 	}
 	
@@ -97,6 +98,8 @@ bool LoadTexture(const std::string& filePath, int& width, int& height, bool blen
 
 int main()
 {
+	ENGINE_INIT_LOGS(true, true);
+
 	bool running{ true };
 
 	// Init SDL
@@ -173,9 +176,11 @@ int main()
 	int width{ 0 }, height{ 0 };
 	if (!LoadTexture("assests/textures/mafuyu.png", width, height, false))
 	{
-		std::cout << "Failed to load the texture\n";
+		ENGINE_ERROR("Failed to load the texture!");
 		return -1;
 	}
+	//ENGINE_LOG("window siez with_{},height{}!", width, height);
+	//ENGINE_WARN("window siez with_{},height{}!", width, height);
 
 	// vertex data 
 	//float vertices[] = {
