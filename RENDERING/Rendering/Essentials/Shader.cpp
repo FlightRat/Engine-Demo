@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include<iostream>
+#include<Logger/Logger.h>
 
 namespace RENDERING {
 	Shader::Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath):
@@ -22,7 +23,7 @@ namespace RENDERING {
 		GLuint location = glGetUniformLocation(m_ShaderProgramID, uniformName.c_str());
 		if (location == GL_INVALID_INDEX)
 		{
-			std::cout << "Uniform[" << uniformName << "] not found in the shader!" << std::endl;
+			ENGINE_ERROR("Uniform[{0}] not found in the shader!", uniformName);
 			return -1; // not in the shader
 		}
 

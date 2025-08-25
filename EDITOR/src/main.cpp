@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
+#include<Rendering/Essentials/TextureLoader.h>
 
 class Camera2D
 {
@@ -48,53 +49,6 @@ public:
 	}
 
 };
-
-bool LoadTexture(const std::string& filePath, int& width, int& height, bool blended)
-{
-	int channels = 0;
-	unsigned char* image = SOIL_load_image(filePath.c_str(), &width, &height, &channels, SOIL_LOAD_AUTO);
-	// check
-	if(!image)
-	{
-		std::cout << "SOIL failed to load image [" << filePath << "] -- " << SOIL_last_result() << std::endl;
-		return false;
-	}
-	
-	GLint format = GL_RGBA;
-	switch (channels)
-	{
-	case 3:format = GL_RGB; break;
-	case 4:format = GL_RGBA; break;
-	}
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	if (!blended)
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	}
-	else
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	}
-	glTexImage2D(
-		GL_TEXTURE_2D,		// target texture
-		0,					// level of mipmp
-		format,				// number of color components
-		width, height,
-		0,					// border
-		format,				// formet of the pixel data
-		GL_UNSIGNED_BYTE,
-		image				// data
-	);
-
-	// delete the image data
-	SOIL_free_image_data(image);
-	
-	return true;
-}
 
 int main()
 {
@@ -159,7 +113,7 @@ int main()
 	//Initialze Glad
 	if (gladLoadGLLoader(SDL_GL_GetProcAddress) == 0)
 	{
-		std::cout << "Failed to loadGL --> GLAD" << std::endl;
+		ENGINE_ERROR("Failed to loadGL --> GLAD");
 		running = false;
 		return -1;
 	}
@@ -170,25 +124,18 @@ int main()
 	SDL_Event event{};
 
 	// texture data
-	GLuint tex0;
-	glGenTextures(1, &tex0);
-	glBindTexture(GL_TEXTURE_2D, tex0);
-	int width{ 0 }, height{ 0 };
-	if (!LoadTexture("assests/textures/mafuyu.png", width, height, false))
+	auto texture = RENDERING::TextureLoader::Create(RENDERING::Texture::TextureType::PIXEL, "./assests/textures/mafuyu.png");
+	if (!texture)
 	{
-		ENGINE_ERROR("Failed to load the texture!");
+		ENGINE_ERROR("Failed to create the texture!");
 		return -1;
 	}
-	//ENGINE_LOG("window siez with_{},height{}!", width, height);
-	//ENGINE_WARN("window siez with_{},height{}!", width, height);
+
+	//ENGINE_LOG("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
+	//ENGINE_WARN("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
+
 
 	// vertex data 
-	//float vertices[] = {
-	//	-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,		// top left 
-	//	 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,		// top right
-	//	 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,		// bottom right
-	//	-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,		// bottom left
-	//};
 	float vertices[] = {
 		160.f,	360.0f,	0.0f, 0.0f, 1.0f,		// top left 
 		480.f,  360.0f,	0.0f, 1.0f, 1.0f,		// top right
@@ -258,7 +205,7 @@ int main()
 		shader->Enable();
 
 		glActiveTexture(GL_TEXTURE0);		// Bind texture, texture0 is actived defaultly
-		glBindTexture(GL_TEXTURE_2D, tex0);
+		glBindTexture(GL_TEXTURE_2D, texture->GetID());
 		shader->SetUniformInt("texture0", 0);
 		
 		camera.Update();

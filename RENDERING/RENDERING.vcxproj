@@ -71,10 +71,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -134,6 +134,9 @@
     <ProjectReference Include="..\GLAD\GLAD.vcxproj">
       <Project>{90fc090c-3046-40d5-ae1e-d04e8aec83cc}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
+      <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\SOIL\SOIL.vcxproj">
       <Project>{51e7f6d2-108b-40d0-be47-8772bad4a838}</Project>
     </ProjectReference>
@@ -141,10 +144,14 @@
   <ItemGroup>
     <ClInclude Include="Rendering\Essentials\Shader.h" />
     <ClInclude Include="Rendering\Essentials\ShaderLoader.h" />
+    <ClInclude Include="Rendering\Essentials\Texture.h" />
+    <ClInclude Include="Rendering\Essentials\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Rendering\Essentials\Shader.cpp" />
     <ClCompile Include="Rendering\Essentials\ShaderLoader.cpp" />
+    <ClCompile Include="Rendering\Essentials\Texture.cpp" />
+    <ClCompile Include="Rendering\Essentials\TextureLoader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
