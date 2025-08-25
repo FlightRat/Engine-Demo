@@ -131,7 +131,7 @@ int main()
 		return -1;
 	}
 
-	//ENGINE_LOG("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
+	ENGINE_LOG("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
 	//ENGINE_WARN("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
 
 
