@@ -21,7 +21,7 @@ namespace LOGGER
 
     Logger& Logger::GetInstance()
     {
-        static Logger instance{};
+        static Logger instance{}; // local static, every time called, get the same instance
         return instance;
     }
 
