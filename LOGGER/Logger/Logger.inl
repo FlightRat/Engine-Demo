@@ -24,7 +24,8 @@ namespace LOGGER {
 		}
 
 		std::stringstream ss;
-		ss << "[INFO]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(std::forward<Args>(args)...)) << "\n";
+		ss << "[INFO]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(args...)) << "\n";
+		//ss << "[INFO]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(std::forward<Args>(args)...)) << "\n";
 		if (m_bConsoleLog)
 		{
 			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -48,7 +49,8 @@ namespace LOGGER {
 		}
 
 		std::stringstream ss;
-		ss << "[WARN]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(std::forward<Args>(args)...)) << "\n";
+		ss << "[WARN]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(args...)) << "\n";
+		//ss << "[WARN]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(std::forward<Args>(args)...)) << "\n";
 
 		if (m_bConsoleLog)
 		{
@@ -73,9 +75,13 @@ namespace LOGGER {
 		}
 
 		std::stringstream ss;
-		ss << "[ERROR]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(std::forward<Args>(args)...)) <<
+
+		ss << "[ERROR]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(args...)) << 
 			"\nFUNC: " << location.function_name() <<
 			"\nLINE: " << location.line() << "\n";
+		//ss << "[ERROR]: " << CurrentDateTime() << "-" << std::vformat(message, std::make_format_args(std::forward<Args>(args)...)) <<
+		//	"\nFUNC: " << location.function_name() <<
+		//	"\nLINE: " << location.line() << "\n";
 
 		if (m_bConsoleLog)
 		{

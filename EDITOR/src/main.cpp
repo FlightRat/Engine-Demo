@@ -130,9 +130,8 @@ int main()
 		ENGINE_ERROR("Failed to create the texture!");
 		return -1;
 	}
-
-	ENGINE_LOG("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
-	//ENGINE_WARN("window siez with_{},height{}!", texture->GetWidth(), texture->GetHeight());
+	//ENGINE_LOG("window siez with_{},height_{}!", texture->GetWidth(), texture->GetHeight());
+	//ENGINE_WARN("window siez with_{},height_{}!", texture->GetWidth(), texture->GetHeight());
 
 
 	// vertex data 

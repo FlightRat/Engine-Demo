@@ -19,8 +19,7 @@ namespace RENDERING{
 		// Check to see if the image is successful
 		if (!image)
 		{
-			std::cout << "SOIL failed to load image [" << filepath << "] -- " << SOIL_last_result() << std::endl;
-			//ENGINE_ERROR("SOIL failed to load image [{0}] -- {1}", filepath, SOIL_last_result());
+			ENGINE_ERROR("SOIL failed to load image [{0}] -- {1}", filepath, SOIL_last_result());
 			return false;
 		}
 
