@@ -9,46 +9,8 @@
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
 #include<Rendering/Essentials/TextureLoader.h>
-
-class Camera2D
-{
-private:
-	int m_Width, m_Height;
-	float m_Scale;
-	glm::vec2 m_Positon;
-	glm::mat4 m_CameraMatrix, m_OrthoProjection;
-	bool m_bNeedsUpdate;
-public:
-	Camera2D():Camera2D(640,480){}
-	Camera2D(int width, int height) :m_Width{ width }, m_Height{ height },
-		m_Scale(1.f), m_Positon{ glm::vec2{0} },
-		m_CameraMatrix{1.f},m_OrthoProjection{1.f},m_bNeedsUpdate{true}
-	{
-		// Init ortho projection
-		m_OrthoProjection = glm::ortho(0.f, static_cast<float>(m_Width), 0.f, static_cast<float>(m_Height), -1.f, 1.f);
-		//m_OrthoProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-	}
-
-	inline glm::mat4 GetCameraMatrix() { return m_CameraMatrix; }
-	inline void SetScale(float scale) { m_Scale = scale; m_bNeedsUpdate = true; }
-
-	void Update()
-	{
-		if (!m_bNeedsUpdate)
-			return;
-
-		// Translate
-		glm::vec3 translate{ 0.f, 0.f, 0.f };
-		m_CameraMatrix = glm::translate(m_OrthoProjection, translate);
-
-		// Scale
-		glm::vec3 scale{ m_Scale, m_Scale, 0.f };
-		m_CameraMatrix *= glm::scale(glm::mat4(1.f), scale);
-
-		m_bNeedsUpdate = false;
-	}
-
-};
+#include<Rendering/Essentials/Vertex.h>
+#include<Rendering/Core/Camera2D.h>
 
 int main()
 {
@@ -135,12 +97,26 @@ int main()
 
 
 	// vertex data 
-	float vertices[] = {
-		160.f,	360.0f,	0.0f, 0.0f, 1.0f,		// top left 
-		480.f,  360.0f,	0.0f, 1.0f, 1.0f,		// top right
-		480.0f, 120.0f,	0.0f, 1.0f, 0.0f,		// bottom right
-		160.0f, 120.0f,	0.0f, 0.0f, 0.0f,		// bottom left
-	};
+	//float vertices[] = {
+	//	160.f,	360.0f,	0.0f, 0.0f, 1.0f,		// top left 
+	//	480.f,  360.0f,	0.0f, 1.0f, 1.0f,		// top right
+	//	480.0f, 120.0f,	0.0f, 1.0f, 0.0f,		// bottom right
+	//	160.0f, 120.0f,	0.0f, 0.0f, 0.0f,		// bottom left
+	//};
+	std::vector<RENDERING::Vertex> vertices{};
+	RENDERING::Vertex vTL, vTR, vBR, vBL;
+	vTL.position = glm::vec2{ 160.0f, 360.0f };
+	vTL.uvs = glm::vec2{ 0.0f, 1.0f };
+	vTR.position = glm::vec2{ 480.0f, 360.0f };
+	vTR.uvs = glm::vec2{ 1.0f, 1.0f };
+	vBR.position = glm::vec2{ 480.0f, 120.0f };
+	vBR.uvs = glm::vec2{ 1.0f, 0.0f };
+	vBL.position = glm::vec2{ 160.0f, 120.0f };
+	vBL.uvs = glm::vec2{ 0.0f, 0.0f };
+	vertices.push_back(vTL);
+	vertices.push_back(vTR);
+	vertices.push_back(vBR);
+	vertices.push_back(vBL);
 	unsigned int indices[] = {  // note that we start from 0!
 		0, 1, 2,  // first Triangle
 		2, 3, 0   // second Triangle
@@ -153,20 +129,22 @@ int main()
 	glGenBuffers(1, &EBO);
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(RENDERING::Vertex), vertices.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(RENDERING::Vertex), (void*)offsetof(RENDERING::Vertex, position));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(RENDERING::Vertex), (void*)offsetof(RENDERING::Vertex, uvs));
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(RENDERING::Vertex), (void*)offsetof(RENDERING::Vertex, color));
+	glEnableVertexAttribArray(2);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
 	glBindVertexArray(0);	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
 
 
 	// Create camera
-	Camera2D camera{};
+	RENDERING::Camera2D camera{};
 
 	auto shader = RENDERING::ShaderLoader::Create("assests/shaders/basicShader.vert", "assests/shaders/basicShader.frag");
 	if (!shader)
