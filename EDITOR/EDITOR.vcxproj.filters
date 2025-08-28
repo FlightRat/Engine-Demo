@@ -21,8 +21,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SDL2.dll" />
-    <None Include="assests\shaders\basicShader.vert" />
-    <None Include="assests\shaders\basicShader.frag" />
+    <None Include="assests\shaders\colorShader.vert" />
+    <None Include="assests\shaders\colorShader.frag" />
+    <None Include="assests\shaders\texShader.vert" />
+    <None Include="assests\shaders\texShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assests\textures\mafuyu.png">

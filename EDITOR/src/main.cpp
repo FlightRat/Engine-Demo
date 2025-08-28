@@ -24,17 +24,11 @@ Uint64 now = SDL_GetPerformanceCounter();
 Uint64 last = 0;
 double deltaTime = 0;
 
-unsigned int cubeVAO = 0;
-unsigned int cubeVBO = 0;
-unsigned int quadVAO = 0;
-unsigned int quadVBO = 0;
-unsigned int planeVBO = 0;
-unsigned int planeVAO = 0;
-
 void mouse_callback(double xposIn, double yposIn);
 void scroll_callback(double xoffset, double yoffset);
 
 void renderCube();
+void renderPlane();
 
 int main()
 {
@@ -119,8 +113,8 @@ int main()
 		return -1;
 	}
 
-	auto cubeShader = RENDERING::ShaderLoader::Create("assests/shaders/basicShader.vert", "assests/shaders/basicShader.frag");
-	if (!cubeShader)
+	auto colorShader = RENDERING::ShaderLoader::Create("assests/shaders/colorShader.vert", "assests/shaders/colorShader.frag");
+	if (!colorShader)
 	{
 		ENGINE_ERROR("Failed to create the shader!");
 		return -1;
@@ -182,22 +176,29 @@ int main()
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// view & projetc matrix
 		glm::mat4 view = camera3D.GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(camera3D.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture->GetID());
 
-		cubeShader->Enable();
+		colorShader->Enable();
+		// cube
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::scale(model, glm::vec3(0.5));
-		// MVP
-		cubeShader->SetUniformMat4("model", model);
-		cubeShader->SetUniformMat4("view", view);
-		cubeShader->SetUniformMat4("projection", projection);
-		// tex
-		// cubeShader->SetUniformInt("texture0", 0);
+		colorShader->SetUniformMat4("model", model);
+		colorShader->SetUniformMat4("view", view);
+		colorShader->SetUniformMat4("projection", projection);
+		colorShader->SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
 		renderCube();
+		// plane
+		model = glm::mat4(1.0f);
+		colorShader->SetUniformMat4("model", model);
+		colorShader->SetUniformMat4("view", view);
+		colorShader->SetUniformMat4("projection", projection);
+		colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 1.0f));
+		renderPlane();
 
 		SDL_GL_SwapWindow(window.GetWindow().get());
 		
@@ -229,6 +230,8 @@ void scroll_callback(double xoffset, double yoffset)
 	camera3D.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
+unsigned int cubeVAO = 0;
+unsigned int cubeVBO = 0;
 void renderCube()
 {
 	if (cubeVAO == 0)
@@ -300,29 +303,36 @@ void renderCube()
 	glBindVertexArray(0);
 }
 
-void renderQuad()
+unsigned int planeVAO = 0;
+unsigned int planeVBO = 0;
+void renderPlane()
 {
-	if (quadVAO == 0)
+	if (planeVAO == 0)
 	{
-		GLfloat quadVertices[] = {
-			// Positions        // Texture Coords
-			-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-			1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-			1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		float planeVertices[] = {
+			// positions            // normals         // texcoords
+			 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+			-10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+			-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+			 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+			-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+			 10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
 		};
-		// Setup plane VAO
-		glGenVertexArrays(1, &quadVAO);
-		glGenBuffers(1, &quadVBO);
-		glBindVertexArray(quadVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		// setup plane VAO
+		glGenVertexArrays(1, &planeVAO);
+		glGenBuffers(1, &planeVBO);
+		glBindVertexArray(planeVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	}
-	glBindVertexArray(quadVAO);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(planeVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
 	glBindVertexArray(0);
 }

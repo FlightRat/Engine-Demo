@@ -159,8 +159,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assests\shaders\basicShader.frag" />
-    <None Include="assests\shaders\basicShader.vert" />
+    <None Include="assests\shaders\colorShader.frag" />
+    <None Include="assests\shaders\colorShader.vert" />
+    <None Include="assests\shaders\texShader.frag" />
+    <None Include="assests\shaders\texShader.vert" />
     <None Include="SDL2.dll" />
   </ItemGroup>
   <ItemGroup>
