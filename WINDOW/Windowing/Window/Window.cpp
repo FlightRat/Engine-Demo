@@ -14,7 +14,7 @@ namespace WINDOWING
 		if (!m_pWindow)
 		{
 			std::string error = SDL_GetError();
-			std::cout << "Failed to create the window:" << error << "\n";
+			ENGINE_ERROR("Failed to create the window:{0}", error);
 		}
 	}
 
@@ -28,9 +28,9 @@ namespace WINDOWING
 		if (v_sync)
 		{
 			if (!SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1"))
-				std::cout << "Failed to enable v-sync!\n";
+				ENGINE_ERROR("Failed to enable v - sync!");
 		}
-		std::cout << "Window Created Successfully!\n";
+		ENGINE_LOG("Window Created Successfully!");
 	}
 
 	Window::~Window()

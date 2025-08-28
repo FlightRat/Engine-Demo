@@ -46,7 +46,7 @@ int main()
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
 		std::string error = SDL_GetError();
-		std::cout << "Failed to initialize SDL:" << error << std::endl;
+		ENGINE_ERROR("Failed to initialize SDL: {0}", error);
 		running = false;
 		return -1;
 	}
@@ -55,7 +55,7 @@ int main()
 	if (SDL_GL_LoadLibrary(NULL) != 0)
 	{
 		std::string error = SDL_GetError();
-		std::cout << "Failed to initialize OpenGL:" << error << std::endl;
+		ENGINE_ERROR("Failed to initialize OpenGL: {0}", error);
 		running = false;
 		return -1;
 	}
@@ -79,7 +79,7 @@ int main()
 
 	if (!window.GetWindow())
 	{
-		std::cout << "Failed to create the window!" << std::endl;
+		ENGINE_ERROR("Failed to create the window!");
 		return -1;
 	}
 
@@ -88,7 +88,7 @@ int main()
 	if (!window.GetGLContext())
 	{
 		std::string error = SDL_GetError();
-		std::cout << "Failed to create OpenGL context:" << error << "\n";
+		ENGINE_ERROR("Failed to create OpenGL context: {0}", error);
 		running = false;
 		return -1;
 	}
@@ -119,7 +119,7 @@ int main()
 		return -1;
 	}
 
-	auto cubeShader = RENDERING::ShaderLoader::Create("assests/shaders/cubeShader.vert", "assests/shaders/cubeShader.frag");
+	auto cubeShader = RENDERING::ShaderLoader::Create("assests/shaders/basicShader.vert", "assests/shaders/basicShader.frag");
 	if (!cubeShader)
 	{
 		ENGINE_ERROR("Failed to create the shader!");
@@ -196,14 +196,14 @@ int main()
 		cubeShader->SetUniformMat4("view", view);
 		cubeShader->SetUniformMat4("projection", projection);
 		// tex
-		cubeShader->SetUniformInt("texture0", 0);
+		// cubeShader->SetUniformInt("texture0", 0);
 		renderCube();
 
 		SDL_GL_SwapWindow(window.GetWindow().get());
 		
 	}
 
-	std::cout << "Closing!" << std::endl;
+	ENGINE_LOG("Closing!");
 	return 0;
 }
 

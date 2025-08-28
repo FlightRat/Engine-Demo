@@ -1,6 +1,7 @@
 #pragma once
 #include<Utilities/SDL_Wrappers.h>
 #include<string>
+#include<Logger/Logger.h>
 
 namespace WINDOWING {
 	class Window

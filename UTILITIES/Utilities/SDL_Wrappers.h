@@ -1,6 +1,8 @@
 #pragma once
 #include<SDL.h>
 #include<memory>
+#include<Logger/Logger.h>
+
 namespace UTIL {
 	//定义一个结构体，重构其函数调用运算符()；这里相当于把一个结构体当作函数，用于销毁
 	struct SDL_Destoryer

@@ -4,7 +4,7 @@
 void UTIL::SDL_Destoryer::operator()(SDL_Window* window) const
 {
     SDL_DestroyWindow(window);
-    std::cout << "SDL Window destoryed\n";
+    ENGINE_LOG("SDL Window destoryed!");
 }
 
 void UTIL::SDL_Destoryer::operator()(SDL_GameController* controller) const

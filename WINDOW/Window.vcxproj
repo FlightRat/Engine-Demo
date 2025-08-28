@@ -72,11 +72,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\Utilities\;$(SolutionDir).\Dependencies\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\Utilities\;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\SDL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir).\Utilities\;$(SolutionDir).\Dependencies\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\Utilities\;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\SDL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -143,6 +143,9 @@
     <ClInclude Include="Windowing\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
+      <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.vcxproj">
       <Project>{57200a04-1262-450c-907e-b274c1889cfb}</Project>
     </ProjectReference>
