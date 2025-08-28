@@ -16,9 +16,22 @@ namespace RENDERING {
 		Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath);
 		~Shader();
 
-		// TODO: more setters
+		// Setters
 		void SetUniformInt(const std::string& name, int value);
+		void SetUniformFloat(const std::string& name, float value);
+		void SetUniformBool(const std::string& name, bool value);
+		// Vec
+		void SetUniformVec2(const std::string& name, const glm::vec2& value);
+		void SetUniformVec2(const std::string& name, float x, float y);
+		void SetUniformVec3(const std::string& name, const glm::vec3& value);
+		void SetUniformVec3(const std::string& name, float x, float y, float z);
+		void SetUniformVec4(const std::string& name, const glm::vec4& value);
+		void SetUniformVec4(const std::string& name, float x, float y, float z, float w);
+		// Mat
+		void SetUniformMat2(const std::string& name, glm::mat2& mat);
+		void SetUniformMat3(const std::string& name, glm::mat3& mat);
 		void SetUniformMat4(const std::string& name, glm::mat4& mat);
+		
 
 		//TODU: getters
 

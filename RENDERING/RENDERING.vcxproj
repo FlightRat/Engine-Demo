@@ -142,12 +142,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Rendering\Core\Camera3D.h" />
     <ClInclude Include="Rendering\Essentials\Shader.h" />
     <ClInclude Include="Rendering\Essentials\ShaderLoader.h" />
     <ClInclude Include="Rendering\Essentials\Texture.h" />
     <ClInclude Include="Rendering\Essentials\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Rendering\Core\Camera3D.cpp" />
     <ClCompile Include="Rendering\Essentials\Shader.cpp" />
     <ClCompile Include="Rendering\Essentials\ShaderLoader.cpp" />
     <ClCompile Include="Rendering\Essentials\Texture.cpp" />

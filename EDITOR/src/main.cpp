@@ -9,46 +9,32 @@
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
 #include<Rendering/Essentials/TextureLoader.h>
+#include<Rendering/Core/Camera3D.h>
 
-class Camera2D
-{
-private:
-	int m_Width, m_Height;
-	float m_Scale;
-	glm::vec2 m_Positon;
-	glm::mat4 m_CameraMatrix, m_OrthoProjection;
-	bool m_bNeedsUpdate;
-public:
-	Camera2D():Camera2D(640,480){}
-	Camera2D(int width, int height) :m_Width{ width }, m_Height{ height },
-		m_Scale(1.f), m_Positon{ glm::vec2{0} },
-		m_CameraMatrix{1.f},m_OrthoProjection{1.f},m_bNeedsUpdate{true}
-	{
-		// Init ortho projection
-		m_OrthoProjection = glm::ortho(0.f, static_cast<float>(m_Width), 0.f, static_cast<float>(m_Height), -1.f, 1.f);
-		//m_OrthoProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-	}
+// Create camera
+RENDERING::Camera3D camera3D(glm::vec3(0.0f, 0.0f, 3.0f));
 
-	inline glm::mat4 GetCameraMatrix() { return m_CameraMatrix; }
-	inline void SetScale(float scale) { m_Scale = scale; m_bNeedsUpdate = true; }
+const unsigned int SCR_WIDTH = 600;
+const unsigned int SCR_HEIGHT = 600;
+float lastX = SCR_WIDTH /2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
 
-	void Update()
-	{
-		if (!m_bNeedsUpdate)
-			return;
+Uint64 now = SDL_GetPerformanceCounter();
+Uint64 last = 0;
+double deltaTime = 0;
 
-		// Translate
-		glm::vec3 translate{ 0.f, 0.f, 0.f };
-		m_CameraMatrix = glm::translate(m_OrthoProjection, translate);
+unsigned int cubeVAO = 0;
+unsigned int cubeVBO = 0;
+unsigned int quadVAO = 0;
+unsigned int quadVBO = 0;
+unsigned int planeVBO = 0;
+unsigned int planeVAO = 0;
 
-		// Scale
-		glm::vec3 scale{ m_Scale, m_Scale, 0.f };
-		m_CameraMatrix *= glm::scale(glm::mat4(1.f), scale);
+void mouse_callback(double xposIn, double yposIn);
+void scroll_callback(double xoffset, double yoffset);
 
-		m_bNeedsUpdate = false;
-	}
-
-};
+void renderCube();
 
 int main()
 {
@@ -89,7 +75,7 @@ int main()
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
 	// Create the window
-	WINDOWING::Window window("Test", 640, 480, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
+	WINDOWING::Window window("Test", SCR_WIDTH, SCR_HEIGHT, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
 
 	if (!window.GetWindow())
 	{
@@ -108,6 +94,7 @@ int main()
 	}
 
 	SDL_GL_MakeCurrent(window.GetWindow().get(), window.GetGLContext());
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_GL_SetSwapInterval(1);
 
 	//Initialze Glad
@@ -118,6 +105,7 @@ int main()
 		return -1;
 	}
 
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -130,66 +118,60 @@ int main()
 		ENGINE_ERROR("Failed to create the texture!");
 		return -1;
 	}
-	//ENGINE_LOG("window siez with_{},height_{}!", texture->GetWidth(), texture->GetHeight());
-	//ENGINE_WARN("window siez with_{},height_{}!", texture->GetWidth(), texture->GetHeight());
 
-
-	// vertex data 
-	float vertices[] = {
-		160.f,	360.0f,	0.0f, 0.0f, 1.0f,		// top left 
-		480.f,  360.0f,	0.0f, 1.0f, 1.0f,		// top right
-		480.0f, 120.0f,	0.0f, 1.0f, 0.0f,		// bottom right
-		160.0f, 120.0f,	0.0f, 0.0f, 0.0f,		// bottom left
-	};
-	unsigned int indices[] = {  // note that we start from 0!
-		0, 1, 2,  // first Triangle
-		2, 3, 0   // second Triangle
-	};
-
-	// VAO VBO EBO
-	GLuint VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
-	glBindVertexArray(0);	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-
-
-	// Create camera
-	Camera2D camera{};
-
-	auto shader = RENDERING::ShaderLoader::Create("assests/shaders/basicShader.vert", "assests/shaders/basicShader.frag");
-	if (!shader)
+	auto cubeShader = RENDERING::ShaderLoader::Create("assests/shaders/cubeShader.vert", "assests/shaders/cubeShader.frag");
+	if (!cubeShader)
 	{
-		std::cout << "Failed to create the shader" << std::endl;
+		ENGINE_ERROR("Failed to create the shader!");
 		return -1;
 	}
 
 	// Window loop
 	while (running)
 	{
+		last = now;
+		now = SDL_GetPerformanceCounter();
+		// Calculate delta time in seconds
+		deltaTime = static_cast<double>(now - last) / SDL_GetPerformanceFrequency();
+
 		//process Events
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
 			{
 			case SDL_QUIT:
+			{
 				running = false;
 				break;
+			}
 			case SDL_KEYDOWN:
+			{
 				if (event.key.keysym.sym == SDLK_ESCAPE)
 					running = false;
+				else if (event.key.keysym.sym == SDLK_w)
+					camera3D.ProcessKeyboard(RENDERING::FORWARD, deltaTime);
+				else if (event.key.keysym.sym == SDLK_a)
+					camera3D.ProcessKeyboard(RENDERING::LEFT, deltaTime);
+				else if (event.key.keysym.sym == SDLK_s)
+					camera3D.ProcessKeyboard(RENDERING::BACKWARD, deltaTime);
+				else if (event.key.keysym.sym == SDLK_d)
+					camera3D.ProcessKeyboard(RENDERING::RIGHT, deltaTime);
 				break;
+			}
+			case SDL_MOUSEMOTION:
+			{
+				int xpos = event.motion.x;
+				int ypos = event.motion.y;
+				mouse_callback(xpos, ypos);
+				break;
+			}
+			case SDL_MOUSEWHEEL:
+			{
+				int xoffset = event.wheel.x;
+				int yoffset = event.wheel.y;
+				scroll_callback(xoffset, yoffset);
+				break;
+			}
 			default:
 				break;
 			}
@@ -198,29 +180,149 @@ int main()
 		glViewport(0, 0, window.GetWidth(), window.GetHeight());
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Active shader
-		shader->Enable();
+		glm::mat4 view = camera3D.GetViewMatrix();
+		glm::mat4 projection = glm::perspective(glm::radians(camera3D.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
-		glActiveTexture(GL_TEXTURE0);		// Bind texture, texture0 is actived defaultly
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture->GetID());
-		shader->SetUniformInt("texture0", 0);
-		
-		camera.Update();
-		auto projection = camera.GetCameraMatrix();
-		shader->SetUniformMat4("Projection", projection);
 
-		glBindVertexArray(VAO);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		
-		// glBindVertexArray(0); // no need to unbind it every time 
+		cubeShader->Enable();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(0.5));
+		// MVP
+		cubeShader->SetUniformMat4("model", model);
+		cubeShader->SetUniformMat4("view", view);
+		cubeShader->SetUniformMat4("projection", projection);
+		// tex
+		cubeShader->SetUniformInt("texture0", 0);
+		renderCube();
 
 		SDL_GL_SwapWindow(window.GetWindow().get());
-		shader->Disable();
+		
 	}
 
 	std::cout << "Closing!" << std::endl;
 	return 0;
+}
+
+void mouse_callback(double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+	camera3D.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(double xoffset, double yoffset)
+{
+	camera3D.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void renderCube()
+{
+	if (cubeVAO == 0)
+	{
+		float vertices[] = {
+			// back face
+			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+			 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+			 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+			 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+			-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+			// front face
+			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+			-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+			// left face
+			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+			-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+			-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+			// right face
+			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+			 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+			 // bottom face
+			 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			  1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+			  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			 -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			 // top face
+			 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+			  1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+			  1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+			  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+			 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+			 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+		};
+
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &cubeVBO);
+		// fill the data
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		// attributes
+		glBindVertexArray(cubeVAO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+	// render
+	glBindVertexArray(cubeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+}
+
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		GLfloat quadVertices[] = {
+			// Positions        // Texture Coords
+			-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+			1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// Setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }

@@ -23,6 +23,8 @@
     <None Include="SDL2.dll" />
     <None Include="assests\shaders\basicShader.vert" />
     <None Include="assests\shaders\basicShader.frag" />
+    <None Include="assests\shaders\cubeShader.vert" />
+    <None Include="assests\shaders\cubeShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assests\textures\mafuyu.png">

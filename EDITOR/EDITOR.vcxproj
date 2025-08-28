@@ -161,6 +161,8 @@
   <ItemGroup>
     <None Include="assests\shaders\basicShader.frag" />
     <None Include="assests\shaders\basicShader.vert" />
+    <None Include="assests\shaders\cubeShader.frag" />
+    <None Include="assests\shaders\cubeShader.vert" />
     <None Include="SDL2.dll" />
   </ItemGroup>
   <ItemGroup>
