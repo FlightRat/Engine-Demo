@@ -19,14 +19,14 @@ private:
 	glm::mat4 m_CameraMatrix, m_OrthoProjection;
 	bool m_bNeedsUpdate;
 public:
-	Camera2D():Camera2D(640,480){}
+	Camera2D():Camera2D(600,600){}
 	Camera2D(int width, int height) :m_Width{ width }, m_Height{ height },
 		m_Scale(1.f), m_Positon{ glm::vec2{0} },
 		m_CameraMatrix{1.f},m_OrthoProjection{1.f},m_bNeedsUpdate{true}
 	{
 		// Init ortho projection
-		m_OrthoProjection = glm::ortho(0.f, static_cast<float>(m_Width), 0.f, static_cast<float>(m_Height), -1.f, 1.f);
-		//m_OrthoProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+		//m_OrthoProjection = glm::ortho(0.f, static_cast<float>(m_Width), 0.f, static_cast<float>(m_Height), -1.f, 1.f);
+		m_OrthoProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 	}
 
 	inline glm::mat4 GetCameraMatrix() { return m_CameraMatrix; }
@@ -89,7 +89,7 @@ int main()
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
 	// Create the window
-	WINDOWING::Window window("Test", 640, 480, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
+	WINDOWING::Window window("Test", 600, 600, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
 
 	if (!window.GetWindow())
 	{
@@ -136,10 +136,10 @@ int main()
 
 	// vertex data 
 	float vertices[] = {
-		160.f,	360.0f,	0.0f, 0.0f, 1.0f,		// top left 
-		480.f,  360.0f,	0.0f, 1.0f, 1.0f,		// top right
-		480.0f, 120.0f,	0.0f, 1.0f, 0.0f,		// bottom right
-		160.0f, 120.0f,	0.0f, 0.0f, 0.0f,		// bottom left
+		-0.5f,	0.5f,	0.0f, 0.0f, 1.0f,		// top left 
+		 0.5f,  0.5f,	0.0f, 1.0f, 1.0f,		// top right
+		 0.5f, -0.5f,	0.0f, 1.0f, 0.0f,		// bottom right
+		-0.5f, -0.5f,	0.0f, 0.0f, 0.0f,		// bottom left
 	};
 	unsigned int indices[] = {  // note that we start from 0!
 		0, 1, 2,  // first Triangle
@@ -209,6 +209,9 @@ int main()
 		
 		camera.Update();
 		auto projection = camera.GetCameraMatrix();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.5f, -0.5f, 0.f));
+		shader->SetUniformMat4("Model", model);
 		shader->SetUniformMat4("Projection", projection);
 
 		glBindVertexArray(VAO);
