@@ -1,4 +1,5 @@
-#define SDL_MAIN_HANDLED 1;
+#define SDL_MAIN_HANDLED 1
+#define NOMINMAX
 #include <Windowing//Window/Window.h>
 #include<SDL.h>
 #include<glad/glad.h>
@@ -10,6 +11,9 @@
 #include<Logger/Logger.h>
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Core/Camera3D.h>
+#include<entt.hpp>
+#include<Core/ECS/Entity.h>
+#include<Core/ECS/Components/TransformComponent.h>
 
 // Create camera
 RENDERING::Camera3D camera3D(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -120,6 +124,13 @@ int main()
 		return -1;
 	}
 
+	auto pRegistry = std::make_unique<CORE::ECS::Registry>(); 
+	CORE::ECS::Entity entity1{ *pRegistry,"Ent1","Test" };
+	auto& transform = entity1.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+		.position = glm::vec3{0.f, 0.f, 0.f},
+		.scale = glm::vec3{1.f},
+		});
+
 	// Window loop
 	while (running)
 	{
@@ -187,6 +198,7 @@ int main()
 		// cube
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::scale(model, glm::vec3(0.5));
+		model = glm::translate(model, transform.position);
 		colorShader->SetUniformMat4("model", model);
 		colorShader->SetUniformMat4("view", view);
 		colorShader->SetUniformMat4("projection", projection);
