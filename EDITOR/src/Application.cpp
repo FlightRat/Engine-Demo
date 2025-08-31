@@ -166,7 +166,7 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
-		auto colorShader = assetManager->GetShader("colorShader");
+		auto& colorShader = assetManager->GetShader("colorShader");
 		
 		// tex shader
 		if (!assetManager->AddShader("texShader", "assests/shaders/texShader.vert", "assests/shaders/texShader.frag"))
@@ -174,7 +174,7 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
-		auto texShader = assetManager->GetShader("texShader");
+		auto& texShader = assetManager->GetShader("texShader");
 
 		return true;
     }
@@ -263,7 +263,6 @@ namespace EDITOR {
 		const auto& texture = assetManager->GetTexture("mafuyu");
 		glBindTexture(GL_TEXTURE_2D, texture.GetID());
 
-		//colorShader.Enable();
 		colorShader.Enable();
 		// cube
 		glm::mat4 model = glm::mat4(1.0f);
