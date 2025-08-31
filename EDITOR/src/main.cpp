@@ -128,7 +128,7 @@ int main()
 	CORE::ECS::Entity entity1{ *pRegistry,"Ent1","Test" };
 	auto& transform = entity1.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
 		.position = glm::vec3{0.f, 0.f, 0.f},
-		.scale = glm::vec3{1.f},
+		.scale = glm::vec3{0.5f},
 		});
 
 	// Window loop
@@ -197,7 +197,7 @@ int main()
 		colorShader->Enable();
 		// cube
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.5));
+		model = glm::scale(model, transform.scale);
 		model = glm::translate(model, transform.position);
 		colorShader->SetUniformMat4("model", model);
 		colorShader->SetUniformMat4("view", view);
