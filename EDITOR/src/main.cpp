@@ -14,6 +14,7 @@
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/Components/TransformComponent.h>
+#include<Core/Resources/AssetManager.h>
 
 // Create camera
 RENDERING::Camera3D camera3D(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -109,20 +110,36 @@ int main()
 
 	SDL_Event event{};
 
-	// texture data
-	auto texture = RENDERING::TextureLoader::Create(RENDERING::Texture::TextureType::PIXEL, "./assests/textures/mafuyu.png");
-	if (!texture)
+	// Asset Manager
+	auto assetManager = std::make_shared<RESOURCES::AssetManager>();
+	if (!assetManager)
 	{
-		ENGINE_ERROR("Failed to create the texture!");
+		ENGINE_ERROR("Failed to create the asset manager!");
 		return -1;
 	}
+	
+	// texture
+	if (!assetManager->AddTexture("mafuyu", "./assests/textures/mafuyu.png", false))
+	{
+		ENGINE_ERROR("Failed to create and add the texture!");
+		return -1;
+	}
+	auto texture = assetManager->GetTexture("mafuyu");
 
-	auto colorShader = RENDERING::ShaderLoader::Create("assests/shaders/colorShader.vert", "assests/shaders/colorShader.frag");
-	if (!colorShader)
+	// color shader
+	if (!assetManager->AddShader("colorShader", "assests/shaders/colorShader.vert", "assests/shaders/colorShader.frag"))
 	{
-		ENGINE_ERROR("Failed to create the shader!");
+		ENGINE_ERROR("Failed to create and add the shader!");
 		return -1;
 	}
+	auto colorShader = assetManager->GetShader("colorShader");
+	// tex shader
+	if (!assetManager->AddShader("texShader", "assests/shaders/texShader.vert", "assests/shaders/texShader.frag"))
+	{
+		ENGINE_ERROR("Failed to create and add the shader!");
+		return -1;
+	}
+	auto texShader = assetManager->GetShader("texShader");
 
 	auto pRegistry = std::make_unique<CORE::ECS::Registry>(); 
 	CORE::ECS::Entity entity1{ *pRegistry,"Ent1","Test" };
@@ -165,9 +182,10 @@ int main()
 			}
 			case SDL_MOUSEMOTION:
 			{
-				int xpos = event.motion.x;
-				int ypos = event.motion.y;
-				mouse_callback(xpos, ypos);
+				float xrel = static_cast<float>(event.motion.xrel);
+				float yrel = static_cast<float>(event.motion.yrel);
+				// 直接将相对偏移量传递给摄像机，不再需要 mouse_callback 函数
+				camera3D.ProcessMouseMovement(xrel, -yrel); // 注意：y轴方向可能需要反转
 				break;
 			}
 			case SDL_MOUSEWHEEL:
@@ -192,24 +210,25 @@ int main()
 		glm::mat4 projection = glm::perspective(glm::radians(camera3D.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture->GetID());
+		glBindTexture(GL_TEXTURE_2D, texture.GetID());
 
-		colorShader->Enable();
+		//colorShader.Enable();
+		colorShader.Enable();
 		// cube
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::scale(model, transform.scale);
 		model = glm::translate(model, transform.position);
-		colorShader->SetUniformMat4("model", model);
-		colorShader->SetUniformMat4("view", view);
-		colorShader->SetUniformMat4("projection", projection);
-		colorShader->SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
+		colorShader.SetUniformMat4("model", model);
+		colorShader.SetUniformMat4("view", view);
+		colorShader.SetUniformMat4("projection", projection);
+		colorShader.SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
 		renderCube();
 		// plane
 		model = glm::mat4(1.0f);
-		colorShader->SetUniformMat4("model", model);
-		colorShader->SetUniformMat4("view", view);
-		colorShader->SetUniformMat4("projection", projection);
-		colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 1.0f));
+		colorShader.SetUniformMat4("model", model);
+		colorShader.SetUniformMat4("view", view);
+		colorShader.SetUniformMat4("projection", projection);
+		colorShader.SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 1.0f));
 		renderPlane();
 
 		SDL_GL_SwapWindow(window.GetWindow().get());

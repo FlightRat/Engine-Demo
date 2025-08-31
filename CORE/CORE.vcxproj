@@ -71,10 +71,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -131,11 +131,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GLAD\GLAD.vcxproj">
+      <Project>{90fc090c-3046-40d5-ae1e-d04e8aec83cc}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
       <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\RENDERING\RENDERING.vcxproj">
       <Project>{51cc6e2b-2094-407b-a2bb-c1c65b712213}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SOIL\SOIL.vcxproj">
+      <Project>{51e7f6d2-108b-40d0-be47-8772bad4a838}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -144,10 +150,12 @@
     <ClInclude Include="Core\ECS\Components\TransformComponent.h" />
     <ClInclude Include="Core\ECS\Entity.h" />
     <ClInclude Include="Core\ECS\Registry.h" />
+    <ClInclude Include="Core\Resources\AssetManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Entity.cpp" />
     <ClCompile Include="Core\ECS\Registry.cpp" />
+    <ClCompile Include="Core\Resources\AssetManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\ECS\Entity.inl" />

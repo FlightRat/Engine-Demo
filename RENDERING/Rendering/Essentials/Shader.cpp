@@ -3,6 +3,8 @@
 #include<Logger/Logger.h>
 
 namespace RENDERING {
+	Shader::Shader():Shader(0, "", ""){ }
+
 	Shader::Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath):
 		m_ShaderProgramID{ program }, m_sVertexPath{vertexPath}, m_sFragmentPath{fragmentPath}
 	{
