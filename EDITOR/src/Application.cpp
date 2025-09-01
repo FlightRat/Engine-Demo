@@ -12,6 +12,7 @@
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/Components/TransformComponent.h>
+#include<Core/ECS/Components/Identification.h>
 #include<Core/Resources/AssetManager.h>
 
 auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -106,7 +107,6 @@ namespace EDITOR {
 
 		// ECS Registry
 		m_pRegistry = std::make_unique<CORE::ECS::Registry>();
-		//auto m_pRegistry = std::make_unique<CORE::ECS::Registry>();
 
 		// Asset Manager
 		auto assetManager = std::make_shared<RESOURCES::AssetManager>();
@@ -137,7 +137,6 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to create and add the texture!");
 			return false;
 		}
-		auto texture = assetManager->GetTexture("mafuyu");
 
 		// shaders
 		if (!LoadShaders())
@@ -152,8 +151,7 @@ namespace EDITOR {
 			.position = glm::vec3{0.f, 0.f, 0.f},
 			.scale = glm::vec3{0.5f},
 			});
-
-
+		auto& id = entity1.GetComponent<CORE::ECS::Identification>();
     }
 
     bool Application::LoadShaders()
@@ -166,15 +164,13 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
-		auto& colorShader = assetManager->GetShader("colorShader");
-		
+
 		// tex shader
 		if (!assetManager->AddShader("texShader", "assests/shaders/texShader.vert", "assests/shaders/texShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
-		auto& texShader = assetManager->GetShader("texShader");
 
 		return true;
     }
@@ -228,7 +224,7 @@ namespace EDITOR {
 
     void Application::Update()
     {
-		// time 17::53
+		// EP.12 time 17::53
     }
 
     void Application::Render()
@@ -237,9 +233,6 @@ namespace EDITOR {
 		auto& camera = m_pRegistry->GetContext<std::shared_ptr<RENDERING::Camera3D>>();
 
 		auto& colorShader = assetManager->GetShader("colorShader");
-		//auto view = camera->GetViewMatrix();
-		//auto projection = 
-
 		if (colorShader.ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader program has not been created correctly!");
