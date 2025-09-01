@@ -147,6 +147,7 @@ namespace EDITOR {
 
 		// ECS Entity & Components
 		CORE::ECS::Entity entity1{ *m_pRegistry,"Ent1","Test" };
+		// to be used
 		auto& transform = entity1.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
 			.position = glm::vec3{0.f, 0.f, 0.f},
 			.scale = glm::vec3{0.5f},
@@ -224,7 +225,7 @@ namespace EDITOR {
 
     void Application::Update()
     {
-		// EP.12 time 17::53
+		// TODO: move the camera update here
     }
 
     void Application::Render()
