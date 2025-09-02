@@ -24,13 +24,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SDL2.dll" />
-    <None Include="assests\shaders\colorShader.vert" />
-    <None Include="assests\shaders\colorShader.frag" />
-    <None Include="assests\shaders\texShader.vert" />
-    <None Include="assests\shaders\texShader.frag" />
+    <None Include="assets\shaders\colorShader.vert" />
+    <None Include="assets\shaders\colorShader.frag" />
+    <None Include="assets\shaders\texShader.vert" />
+    <None Include="assets\shaders\texShader.frag" />
+    <None Include="assets\scripts\main.lua" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assests\textures\mafuyu.png">
+    <Image Include="assets\textures\mafuyu.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

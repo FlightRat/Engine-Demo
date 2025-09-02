@@ -14,6 +14,7 @@
 #include<Core/ECS/Components/TransformComponent.h>
 #include<Core/ECS/Components/Identification.h>
 #include<Core/Resources/AssetManager.h>
+#include<Core/Systems/ScriptingSystem.h>
 
 auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -132,7 +133,7 @@ namespace EDITOR {
 		}
 
 		// textures
-		if (!assetManager->AddTexture("mafuyu", "./assests/textures/mafuyu.png", false))
+		if (!assetManager->AddTexture("mafuyu", "./assets/textures/mafuyu.png", false))
 		{
 			ENGINE_ERROR("Failed to create and add the texture!");
 			return false;
@@ -153,21 +154,53 @@ namespace EDITOR {
 			.scale = glm::vec3{0.5f},
 			});
 		auto& id = entity1.GetComponent<CORE::ECS::Identification>();
-    }
+
+		// Lua script
+		auto lua = std::make_shared<sol::state>();
+		if (!lua)
+		{
+			ENGINE_ERROR("Failed to create the lua state!");
+			return false;
+		}
+		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
+		if(!m_pRegistry->AddToContext<std::shared_ptr<sol::state>>(lua))
+		{
+			ENGINE_ERROR("Failed to add the sol::state to the registry context!");
+			return false;
+		}
+
+		// Script System
+		auto scriptSystem = std::make_shared<CORE::Systems::ScriptingSystem>(*m_pRegistry);
+		if (!scriptSystem)
+		{
+			ENGINE_ERROR("Failed to create the script system!");
+			return false;
+		}
+		if (!scriptSystem->LoadMainScript(*lua))
+		{
+			ENGINE_ERROR("Failed to load the main lua script!");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::ScriptingSystem>>(scriptSystem))
+		{
+			ENGINE_ERROR("Failed to add the script system to the registry context!");
+			return false;
+		}
+	}
 
     bool Application::LoadShaders()
     {
 		auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<RESOURCES::AssetManager>>();
 
 		// color shader
-		if (!assetManager->AddShader("colorShader", "assests/shaders/colorShader.vert", "assests/shaders/colorShader.frag"))
+		if (!assetManager->AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// tex shader
-		if (!assetManager->AddShader("texShader", "assests/shaders/texShader.vert", "assests/shaders/texShader.frag"))
+		if (!assetManager->AddShader("texShader", "assets/shaders/texShader.vert", "assets/shaders/texShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
@@ -226,6 +259,8 @@ namespace EDITOR {
     void Application::Update()
     {
 		// TODO: move the camera update here
+		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::ScriptingSystem>>();
+		scriptSystem->Update();
     }
 
     void Application::Render()
@@ -256,6 +291,9 @@ namespace EDITOR {
 		glActiveTexture(GL_TEXTURE0);
 		const auto& texture = assetManager->GetTexture("mafuyu");
 		glBindTexture(GL_TEXTURE_2D, texture.GetID());
+
+		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::ScriptingSystem>>();
+		scriptSystem->Render();
 
 		colorShader.Enable();
 		// cube

@@ -72,8 +72,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\SDL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\LUA\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(IncludePath)</IncludePath>
@@ -116,7 +116,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;opengl32.lib;lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -163,14 +163,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assests\shaders\colorShader.frag" />
-    <None Include="assests\shaders\colorShader.vert" />
-    <None Include="assests\shaders\texShader.frag" />
-    <None Include="assests\shaders\texShader.vert" />
+    <None Include="assets\scripts\main.lua" />
+    <None Include="assets\shaders\colorShader.frag" />
+    <None Include="assets\shaders\colorShader.vert" />
+    <None Include="assets\shaders\texShader.frag" />
+    <None Include="assets\shaders\texShader.vert" />
     <None Include="SDL2.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assests\textures\mafuyu.png" />
+    <Image Include="assets\textures\mafuyu.png" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />

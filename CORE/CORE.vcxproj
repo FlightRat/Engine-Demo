@@ -71,7 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(IncludePath)</IncludePath>
@@ -114,6 +115,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -147,15 +151,18 @@
   <ItemGroup>
     <ClInclude Include="Core\ECS\Components\CubeComponent.h" />
     <ClInclude Include="Core\ECS\Components\Identification.h" />
+    <ClInclude Include="Core\ECS\Components\ScriptComponent.h" />
     <ClInclude Include="Core\ECS\Components\TransformComponent.h" />
     <ClInclude Include="Core\ECS\Entity.h" />
     <ClInclude Include="Core\ECS\Registry.h" />
     <ClInclude Include="Core\Resources\AssetManager.h" />
+    <ClInclude Include="Core\Systems\ScriptingSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Entity.cpp" />
     <ClCompile Include="Core\ECS\Registry.cpp" />
     <ClCompile Include="Core\Resources\AssetManager.cpp" />
+    <ClCompile Include="Core\Systems\ScriptingSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\ECS\Entity.inl" />
