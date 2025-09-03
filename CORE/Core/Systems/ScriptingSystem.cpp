@@ -21,9 +21,9 @@ namespace CORE::Systems {
 			return false;
 		}
 
-		sol::table main_lua = lua["main"];
+		sol::table main_lua = lua["main"];	// read the "main" into sol::table main_lua
 
-		sol::optional<sol::table> bUpdateExists = main_lua[1];
+		sol::optional<sol::table> bUpdateExists = main_lua[1]; // check if the element 1 is a "sol::table"
 		if (bUpdateExists == sol::nullopt)
 		{
 			ENGINE_ERROR("There is no update function in main.lua!");
@@ -33,7 +33,7 @@ namespace CORE::Systems {
 		sol::function update = update_script["update"];
 
 		sol::optional<sol::table> bRenderExists = main_lua[2];
-		if (bRenderExists = sol::nullopt)
+		if (bRenderExists == sol::nullopt)
 		{
 			ENGINE_ERROR("There is no render function in main.lua!");
 			return false;
