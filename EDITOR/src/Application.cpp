@@ -12,6 +12,7 @@
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/Components/TransformComponent.h>
+#include<Core/ECS/Components/MeshComponent.h>
 #include<Core/ECS/Components/Identification.h>
 #include<Core/Resources/AssetManager.h>
 #include<Core/Systems/ScriptingSystem.h>
@@ -153,6 +154,7 @@ namespace EDITOR {
 			.position = glm::vec3{0.f, 0.f, 0.f},
 			.scale = glm::vec3{0.5f},
 			});
+		auto& mesh = entity1.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{});
 		auto& id = entity1.GetComponent<CORE::ECS::Identification>();
 
 		// Lua script
@@ -305,7 +307,7 @@ namespace EDITOR {
 		colorShader.SetUniformMat4("view", view);
 		colorShader.SetUniformMat4("projection", projection);
 		colorShader.SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
-		renderCube();
+		//renderCube();
 		// plane
 		model = glm::mat4(1.0f);
 		colorShader.SetUniformMat4("model", model);
@@ -313,6 +315,22 @@ namespace EDITOR {
 		colorShader.SetUniformMat4("projection", projection);
 		colorShader.SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 1.0f));
 		renderPlane();
+
+		auto view_ent = m_pRegistry->GetRegistry().view<CORE::ECS::MeshComponent>();
+		for (const auto& entity : view_ent)
+		{
+			CORE::ECS::Entity ent{ *m_pRegistry, entity };
+			auto& mesh = ent.GetComponent<CORE::ECS::MeshComponent>();
+			auto& transform = ent.GetComponent<CORE::ECS::TransformComponent>();
+			model = glm::mat4(1.0f);
+			model = glm::scale(model, transform.scale);
+			model = glm::translate(model, transform.position);
+			colorShader.SetUniformMat4("model", model);
+			colorShader.SetUniformMat4("view", view);
+			colorShader.SetUniformMat4("projection", projection);
+			colorShader.SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
+			mesh.Render();
+		}
 
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
     }
