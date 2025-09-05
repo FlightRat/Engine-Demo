@@ -11,7 +11,6 @@ namespace EDITOR{
 		std::unique_ptr<CORE::ECS::Registry> m_pRegistry;
 		SDL_Event m_Event;
 		bool m_bIsRunning;
-		GLuint VAO, VBO, IBO;	//for test
 
 	private:
 		Application();

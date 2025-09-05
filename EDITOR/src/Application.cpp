@@ -16,6 +16,7 @@
 #include<Core/ECS/Components/Identification.h>
 #include<Core/Resources/AssetManager.h>
 #include<Core/Systems/ScriptingSystem.h>
+#include<Core/Systems/RenderSystem.h>
 
 auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -31,12 +32,9 @@ double deltaTime = 0;
 
 void mouse_callback(double xposIn, double yposIn);
 void scroll_callback(double xoffset, double yoffset);
-void renderCube();
-void renderPlane();
 
 namespace EDITOR {
-    Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true},
-		VAO{0},	VBO{0},IBO{0}
+    Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
     {
 
     }
@@ -117,7 +115,6 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to create the asset manager!");
 			return false;
 		}
-		// add asset manager to the context
 		if (!m_pRegistry->AddToContext<std::shared_ptr<RESOURCES::AssetManager>>(assetManager))
 		{
 			ENGINE_ERROR("Failed to add the asset manager to the registry context!");
@@ -126,7 +123,6 @@ namespace EDITOR {
 
 		// Camera
 		//auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f));
-		// add camera to the context
 		if (!m_pRegistry->AddToContext<std::shared_ptr<RENDERING::Camera3D>>(camera))
 		{
 			ENGINE_ERROR("Failed to add the camera to the registry context!");
@@ -147,16 +143,23 @@ namespace EDITOR {
 			return false;
 		}
 
-		// ECS Entity & Components
-		CORE::ECS::Entity entity1{ *m_pRegistry,"Ent1","Test" };
-		// to be used
-		auto& transform = entity1.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+		// cube entity
+		CORE::ECS::Entity entity1{ *m_pRegistry,"cube","Test" };
+		auto& transform_1 = entity1.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
 			.position = glm::vec3{0.f, 0.f, 0.f},
 			.scale = glm::vec3{0.5f},
 			});
-		auto& mesh = entity1.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{});
-		auto& id = entity1.GetComponent<CORE::ECS::Identification>();
-
+		auto& mesh_1 = entity1.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{"cube"});
+		auto& id_1 = entity1.GetComponent<CORE::ECS::Identification>();
+		// plane entity
+		CORE::ECS::Entity entity2{ *m_pRegistry,"plane","Test" };
+		auto& transform_2 = entity2.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+			.position = glm::vec3{0.f, 0.f, 0.f},
+			.scale = glm::vec3{1.0f},
+			});
+		auto& mesh_2 = entity2.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{ "plane" });
+		auto& id_2 = entity2.GetComponent<CORE::ECS::Identification>();
+		
 		// Lua script
 		auto lua = std::make_shared<sol::state>();
 		if (!lua)
@@ -186,6 +189,19 @@ namespace EDITOR {
 		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::ScriptingSystem>>(scriptSystem))
 		{
 			ENGINE_ERROR("Failed to add the script system to the registry context!");
+			return false;
+		}
+		
+		// Render System
+		auto renderSystem = std::make_shared<CORE::Systems::RenderSystem>(*m_pRegistry);
+		if (!renderSystem)
+		{
+			ENGINE_ERROR("Failed to create the render system!");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::RenderSystem>>(renderSystem))
+		{
+			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
 		}
 	}
@@ -267,70 +283,20 @@ namespace EDITOR {
 
     void Application::Render()
     {
-		auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<RESOURCES::AssetManager>>();
-		auto& camera = m_pRegistry->GetContext<std::shared_ptr<RENDERING::Camera3D>>();
-
-		auto& colorShader = assetManager->GetShader("colorShader");
-		if (colorShader.ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader program has not been created correctly!");
-			return;
-		}
 
 		last = now;
 		now = SDL_GetPerformanceCounter();
-		// Calculate delta time in seconds
 		deltaTime = static_cast<double>(now - last) / SDL_GetPerformanceFrequency();
 
 		glViewport(0, 0, m_pWindow->GetWidth(), m_pWindow->GetHeight());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// view & projetc matrix
-		glm::mat4 view = camera->GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(camera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
-		glActiveTexture(GL_TEXTURE0);
-		const auto& texture = assetManager->GetTexture("mafuyu");
-		glBindTexture(GL_TEXTURE_2D, texture.GetID());
-
 		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Render();
 
-		colorShader.Enable();
-		// cube
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.5f));
-		//model = glm::scale(model, transform.scale);
-		//model = glm::translate(model, transform.position);
-		colorShader.SetUniformMat4("model", model);
-		colorShader.SetUniformMat4("view", view);
-		colorShader.SetUniformMat4("projection", projection);
-		colorShader.SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
-		//renderCube();
-		// plane
-		model = glm::mat4(1.0f);
-		colorShader.SetUniformMat4("model", model);
-		colorShader.SetUniformMat4("view", view);
-		colorShader.SetUniformMat4("projection", projection);
-		colorShader.SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 1.0f));
-		renderPlane();
-
-		auto view_ent = m_pRegistry->GetRegistry().view<CORE::ECS::MeshComponent>();
-		for (const auto& entity : view_ent)
-		{
-			CORE::ECS::Entity ent{ *m_pRegistry, entity };
-			auto& mesh = ent.GetComponent<CORE::ECS::MeshComponent>();
-			auto& transform = ent.GetComponent<CORE::ECS::TransformComponent>();
-			model = glm::mat4(1.0f);
-			model = glm::scale(model, transform.scale);
-			model = glm::translate(model, transform.position);
-			colorShader.SetUniformMat4("model", model);
-			colorShader.SetUniformMat4("view", view);
-			colorShader.SetUniformMat4("projection", projection);
-			colorShader.SetUniformVec3("color", glm::vec3(1.0f, 0.0f, 0.0f));
-			mesh.Render();
-		}
+		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::RenderSystem>>();
+		renderSystem->Render();
 
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
     }
@@ -389,111 +355,4 @@ void mouse_callback(double xposIn, double yposIn)
 void scroll_callback(double xoffset, double yoffset)
 {
 	camera->ProcessMouseScroll(static_cast<float>(yoffset));
-}
-
-unsigned int cubeVAO = 0;
-unsigned int cubeVBO = 0;
-void renderCube()
-{
-	if (cubeVAO == 0)
-	{
-		float vertices[] = {
-			// back face
-			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-			 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-			 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-			 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-			-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-			-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-			// front face
-			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-			 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-			 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-			-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-			-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-			// left face
-			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-			-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-			-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-			-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-			-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-			// right face
-			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-			 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-			 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-			 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-			 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
-			 // bottom face
-			 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-			  1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-			  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-			  1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-			 -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-			 -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-			 // top face
-			 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-			  1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-			  1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-			  1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-			 -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-			 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
-		};
-
-		glGenVertexArrays(1, &cubeVAO);
-		glGenBuffers(1, &cubeVBO);
-		// fill the data
-		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-		// attributes
-		glBindVertexArray(cubeVAO);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-	}
-	// render
-	glBindVertexArray(cubeVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-	glBindVertexArray(0);
-}
-
-unsigned int planeVAO = 0;
-unsigned int planeVBO = 0;
-void renderPlane()
-{
-	if (planeVAO == 0)
-	{
-		float planeVertices[] = {
-			// positions            // normals         // texcoords
-			 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-			-10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-			-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-
-			 10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
-			-10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
-			 10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
-		};
-		// setup plane VAO
-		glGenVertexArrays(1, &planeVAO);
-		glGenBuffers(1, &planeVBO);
-		glBindVertexArray(planeVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	}
-	glBindVertexArray(planeVAO);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
-	glBindVertexArray(0);
 }
