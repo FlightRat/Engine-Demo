@@ -1,7 +1,11 @@
 #include "ScriptingSystem.h"
 #include "../ECS/Components/ScriptComponent.h"
+#include "../ECS/Components/TransformComponent.h"
+#include "../ECS/Components/MeshComponent.h"
 #include "../ECS/Entity.h"
 #include <Logger/Logger.h>
+
+using namespace CORE::ECS;
 
 namespace CORE::Systems {
 	ScriptingSystem::ScriptingSystem(CORE::ECS::Registry& registry):m_Registry{ registry },m_bMainLoaded{false}
@@ -104,5 +108,14 @@ namespace CORE::Systems {
 		}
 	}
 
+	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry)
+	{
+		Entity::CreateLuaEntityBind(lua, registry);
+		TransformComponent::CreateLuaTransformBind(lua);
+		MeshComponent::CreateMeshLuaBind(lua);
+
+		Entity::RegisterMetaComponent<TransformComponent>();
+		Entity::RegisterMetaComponent<MeshComponent>();
+	}
 }
 

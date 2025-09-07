@@ -39,4 +39,22 @@ namespace CORE::ECS {
 		auto& registry = m_Registry.GetRegistry();
 		return registry.remove<TComponent>(m_Entity);
 	}
+
+	template<typename TComponent>
+	inline void Entity::RegisterMetaComponent()
+	{
+		using namespace entt::literals;
+		entt::meta_factory<TComponent>()
+			.type(entt::type_hash<TComponent>::value())
+			.template func<&add_component<TComponent>> ("add_component"_hs);
+	}
+
+	template <typename TComponent>
+	auto add_component(Entity& entity, const sol::table& comp, sol::this_state s)
+	{
+		auto& component = entity.AddComponent<TComponent>(
+			comp.valid() ? comp.as<TComponent>() : TComponent{}
+		);
+		return sol::make_reference(s, std::ref(component));
+	}
 }

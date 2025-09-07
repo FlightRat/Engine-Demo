@@ -1,5 +1,6 @@
 #pragma once
 #include"Registry.h"
+#include<sol/sol.hpp>
 
 namespace CORE::ECS {
 	class Entity
@@ -34,7 +35,14 @@ namespace CORE::ECS {
 
 		template <typename TComponent>
 		void RemoveComponent();
+
+		static void CreateLuaEntityBind(sol::state& lua, Registry& registry);
+
+		template <typename TComponent>
+		static void RegisterMetaComponent();
 	};
+	template <typename TComponent>
+	auto add_component(Entity& entity, const sol::table& comp, sol::this_state s);
 }
 
 #include "Entity.inl"
