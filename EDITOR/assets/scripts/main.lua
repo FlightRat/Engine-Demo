@@ -1,14 +1,14 @@
 -- Main Lua Scipt!
 
-gEntity = Entity("Test","group")
+cubeEntity = Entity("Cube","group")
+local cubeTransform = cubeEntity:add_component(Transform(0,0,0,0.5,0.5,0.5))
+local cubeMesh = cubeEntity:add_component(Mesh())
+cubeMesh:load_mesh("cube")
 
-local transform = gEntity:add_component(
-	Transform(0,0,0,0.5,0.5,0.5)
-)
-
-local mesh = gEntity:add_component(
-	Mesh()
-)
+planeEntity = Entity("Cube","group")
+local planeTransform = planeEntity:add_component(Transform(0,0,0,1.0,1.0,1.0))
+local planeMesh = planeEntity:add_component(Mesh())
+planeMesh:load_mesh("plane")
 
 main = {
 	[1] = {

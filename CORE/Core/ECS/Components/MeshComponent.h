@@ -18,7 +18,6 @@ namespace CORE::ECS {
         void load_cube();
         void load_mesh(const std::string& mesh_type);
         
-        MeshComponent();//todo: add param to decide mesh type
         void Render();
         static void CreateMeshLuaBind(sol::state& lua);
     };

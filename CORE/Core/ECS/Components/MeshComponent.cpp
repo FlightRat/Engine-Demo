@@ -1,10 +1,5 @@
 #include "MeshComponent.h"
 
-CORE::ECS::MeshComponent::MeshComponent()
-{
-    load_mesh("cube");
-}
-
 void CORE::ECS::MeshComponent::load_plane()
 {
     data.clear();
@@ -123,6 +118,7 @@ void CORE::ECS::MeshComponent::CreateMeshLuaBind(sol::state& lua)
         "type_id", &entt::type_hash<MeshComponent>::value,
         sol::call_constructor,
         sol::factories([]() {return MeshComponent(); }),
-        "render", [&](MeshComponent& mesh) {mesh.Render(); }
+        "load_mesh", [](MeshComponent& mesh, const std::string& meth_type) {mesh.load_mesh(meth_type); }
+        //"render", [&](MeshComponent& mesh) {mesh.Render(); }
     );
 }
