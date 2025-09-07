@@ -111,6 +111,7 @@ void CORE::ECS::MeshComponent::Render()
     glBindVertexArray(0);
 }
 
+/*register a "Mesh" type into lua*/
 void CORE::ECS::MeshComponent::CreateMeshLuaBind(sol::state& lua)
 {
     lua.new_usertype<MeshComponent>(

@@ -27,6 +27,8 @@ namespace CORE::ECS {
 			m_sGroup = id.group;
 		}
 	}
+
+	/* register a "Entity" type into lua */
 	void Entity::CreateLuaEntityBind(sol::state& lua, Registry& registry)
 	{
 		using namespace entt::literals;
@@ -38,14 +40,12 @@ namespace CORE::ECS {
 					return Entity{ registry, name, group };
 				}
 			),
+			// a lua "Entity" type has a "add_component" function, when this is called, it will invoke the "add_component" of the metatype which has the same id with comp
 			"add_component", [&](Entity& entity, const sol::table& comp, sol::this_state s)->sol::object {
 				if (!comp.valid())
 					return sol::lua_nil_t{};
-				const auto component = InvokeMetaFunction(
-					GetIdType(comp),
-					"add_component"_hs,
-					entity, comp, s
-				);
+				// here we use the "type_id" of comp to resolve the same component registered in entt:meta
+				const auto component = InvokeMetaFunction(GetIdType(comp), "add_component"_hs, entity, comp, s);
 				return component ? component.cast<sol::reference>() : sol::lua_nil_t{};
 			}
 		);

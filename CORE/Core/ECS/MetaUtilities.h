@@ -21,6 +21,7 @@ namespace CORE::Utils {
 		return entt::meta_any{};
 	}
 
+	/*invoke the "func_id" of id*/
 	template <typename ...Args>
 	inline auto InvokeMetaFunction(entt::id_type id, entt::id_type func_id, Args&& ...args)
 	{

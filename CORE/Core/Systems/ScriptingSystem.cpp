@@ -110,12 +110,14 @@ namespace CORE::Systems {
 
 	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry)
 	{
-		Entity::CreateLuaEntityBind(lua, registry);
-		TransformComponent::CreateLuaTransformBind(lua);
-		MeshComponent::CreateMeshLuaBind(lua);
-
-		Entity::RegisterMetaComponent<TransformComponent>();
-		Entity::RegisterMetaComponent<MeshComponent>();
+		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
+		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
+		MeshComponent::CreateMeshLuaBind(lua);					// register a "Mesh" type into lua
+		
+		//NOTE::the same registered Component in LUA and META should have the same id
+		
+		Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
+		Entity::RegisterMetaComponent<MeshComponent>();			// register MeshComponent into meta
 	}
 }
 

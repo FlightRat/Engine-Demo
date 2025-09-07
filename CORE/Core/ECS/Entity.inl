@@ -40,6 +40,7 @@ namespace CORE::ECS {
 		return registry.remove<TComponent>(m_Entity);
 	}
 
+	/*register a TComponent to meta for reflection, and it has a "add_component" function*/
 	template<typename TComponent>
 	inline void Entity::RegisterMetaComponent()
 	{
@@ -52,9 +53,7 @@ namespace CORE::ECS {
 	template <typename TComponent>
 	auto add_component(Entity& entity, const sol::table& comp, sol::this_state s)
 	{
-		auto& component = entity.AddComponent<TComponent>(
-			comp.valid() ? comp.as<TComponent>() : TComponent{}
-		);
+		auto& component = entity.AddComponent<TComponent>(comp.valid() ? comp.as<TComponent>() : TComponent{});
 		return sol::make_reference(s, std::ref(component));
 	}
 }
