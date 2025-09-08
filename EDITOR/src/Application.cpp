@@ -142,23 +142,6 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to load the shaders!");
 			return false;
 		}
-
-		// cube entity
-		//CORE::ECS::Entity entity1{ *m_pRegistry,"cube","Test" };
-		//auto& transform_1 = entity1.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-		//	.position = glm::vec3{0.f, 0.f, 0.f},
-		//	.scale = glm::vec3{0.5f},
-		//	});
-		//auto& mesh_1 = entity1.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{"cube"});
-		//auto& id_1 = entity1.GetComponent<CORE::ECS::Identification>();
-		// plane entity
-		//CORE::ECS::Entity entity2{ *m_pRegistry,"plane","Test" };
-		//auto& transform_2 = entity2.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-		//	.position = glm::vec3{0.f, 0.f, 0.f},
-		//	.scale = glm::vec3{1.0f},
-		//	});
-		//auto& mesh_2 = entity2.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{ "plane" });
-		//auto& id_2 = entity2.GetComponent<CORE::ECS::Identification>();
 		
 		// Lua script
 		auto lua = std::make_shared<sol::state>();
