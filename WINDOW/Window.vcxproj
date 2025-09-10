@@ -140,6 +140,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Windowing\Inputs\Button.h" />
+    <ClInclude Include="Windowing\Inputs\Keyboard.h" />
+    <ClInclude Include="Windowing\Inputs\Keys.h" />
     <ClInclude Include="Windowing\Window\Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +154,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Windowing\Inputs\Button.cpp" />
+    <ClCompile Include="Windowing\Inputs\Keyboard.cpp" />
     <ClCompile Include="Windowing\Window\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

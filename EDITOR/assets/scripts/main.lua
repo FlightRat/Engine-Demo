@@ -19,28 +19,28 @@ view:for_each(
 )
 
 local x_pos = 0.0
-local move_right = true
+local z_pos = 0.0
 
 main = {
 	[1] = {
 		update = function()
 			--local t = cubeEntity:get_component(Transform)
 			--print("name:"..t.xx)
-			
-			if move_right and x_pos < 10 then
-				x_pos = x_pos + 0.2 
-			elseif move_right and x_pos >= 10 then
-				move_right = false
-			end
 
-			if not move_right and x_pos > -10 then
-				x_pos = x_pos - 0.2 
-			elseif not move_right and x_pos <= -10 then
-				move_right = true
+			if Keyboard.pressed(KEY_W) then
+				z_pos = z_pos - 0.2
 			end
-
+			if Keyboard.pressed(KEY_A) then
+				x_pos = x_pos - 0.2
+			end
+			if Keyboard.pressed(KEY_S) then
+				z_pos = z_pos + 0.2
+			end
+			if Keyboard.pressed(KEY_D) then
+				x_pos = x_pos + 0.2
+			end
 			cubeTransform.position.x = x_pos
-
+			cubeTransform.position.z = z_pos
 		end
 	},
 	[2] = {

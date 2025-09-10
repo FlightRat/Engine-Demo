@@ -5,6 +5,7 @@
 #include "../ECS/Entity.h"
 #include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
+#include "../Scripting/InputManager.h"
 
 using namespace CORE::ECS;
 
@@ -116,6 +117,7 @@ namespace CORE::Systems {
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
 		MeshComponent::CreateMeshLuaBind(lua);					// register a "Mesh" type into lua
 		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);	// register glm vec into lua
+		CORE::InputManager::CreateLuaInputBindings(lua);		// register inputs stuff into lua
 		
 		//NOTE::the same registered Component in LUA and META should have the same id
 		

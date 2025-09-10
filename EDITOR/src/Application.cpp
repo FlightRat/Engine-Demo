@@ -17,8 +17,8 @@
 #include<Core/Resources/AssetManager.h>
 #include<Core/Systems/ScriptingSystem.h>
 #include<Core/Systems/RenderSystem.h>
-
-auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f));
+#include<Core/Scripting/InputManager.h>
+#include<Windowing/Inputs/Keyboard.h>
 
 const unsigned int SCR_WIDTH = 600;
 const unsigned int SCR_HEIGHT = 600;
@@ -29,9 +29,6 @@ bool firstMouse = true;
 Uint64 now = SDL_GetPerformanceCounter();
 Uint64 last = 0;
 double deltaTime = 0;
-
-void mouse_callback(double xposIn, double yposIn);
-void scroll_callback(double xoffset, double yoffset);
 
 namespace EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
@@ -122,7 +119,8 @@ namespace EDITOR {
 		}
 
 		// Camera
-		//auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f));
+		// auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);		//平视相机
+		auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, -90.0f);		//俯视相机
 		if (!m_pRegistry->AddToContext<std::shared_ptr<RENDERING::Camera3D>>(camera))
 		{
 			ENGINE_ERROR("Failed to add the camera to the registry context!");
@@ -213,6 +211,10 @@ namespace EDITOR {
 
     void Application::ProcessEvents()
     {
+		auto& camera = m_pRegistry->GetContext<std::shared_ptr<RENDERING::Camera3D>>();
+		auto& inputManager = CORE::InputManager::GetInstance();
+		auto& keyboard = inputManager.GetKeyBoard();
+
 		//process Events
 		while (SDL_PollEvent(&m_Event))
 		{
@@ -227,29 +229,34 @@ namespace EDITOR {
 			{
 				if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 					m_bIsRunning = false;
-				else if (m_Event.key.keysym.sym == SDLK_w)
+				else if (m_Event.key.keysym.sym == SDLK_UP)
 					camera->ProcessKeyboard(RENDERING::FORWARD, deltaTime);
-				else if (m_Event.key.keysym.sym == SDLK_a)
+				else if (m_Event.key.keysym.sym == SDLK_LEFT)
 					camera->ProcessKeyboard(RENDERING::LEFT, deltaTime);
-				else if (m_Event.key.keysym.sym == SDLK_s)
+				else if (m_Event.key.keysym.sym == SDLK_DOWN)
 					camera->ProcessKeyboard(RENDERING::BACKWARD, deltaTime);
-				else if (m_Event.key.keysym.sym == SDLK_d)
+				else if (m_Event.key.keysym.sym == SDLK_RIGHT)
 					camera->ProcessKeyboard(RENDERING::RIGHT, deltaTime);
+				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
+				break;
+			}
+			case SDL_KEYUP:
+			{
+				keyboard.OnKeyReleased(m_Event.key.keysym.sym);
 				break;
 			}
 			case SDL_MOUSEMOTION:
 			{
 				float xrel = static_cast<float>(m_Event.motion.xrel);
 				float yrel = static_cast<float>(m_Event.motion.yrel);
-				// 直接将相对偏移量传递给摄像机，不再需要 mouse_callback 函数
-				camera->ProcessMouseMovement(xrel, -yrel); // 注意：y轴方向可能需要反转
+				camera->ProcessMouseMovement(xrel, -yrel);
 				break;
 			}
 			case SDL_MOUSEWHEEL:
 			{
 				int xoffset = m_Event.wheel.x;
 				int yoffset = m_Event.wheel.y;
-				scroll_callback(xoffset, yoffset);
+				camera->ProcessMouseScroll(static_cast<float>(yoffset));
 				break;
 			}
 			default:
@@ -263,6 +270,10 @@ namespace EDITOR {
 		// TODO: move the camera update here
 		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Update();
+
+		auto& inputManager = CORE::InputManager::GetInstance();
+		auto& keyboard = inputManager.GetKeyBoard();
+		keyboard.Update();
     }
 
     void Application::Render()
@@ -317,26 +328,4 @@ namespace EDITOR {
 		}
 		CleanUp();
 	}
-}
-
-void mouse_callback(double xposIn, double yposIn)
-{
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
-	if (firstMouse)
-	{
-		lastX = xpos;
-		lastY = ypos;
-		firstMouse = false;
-	}
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-	lastX = xpos;
-	lastY = ypos;
-	camera->ProcessMouseMovement(xoffset, yoffset);
-}
-
-void scroll_callback(double xoffset, double yoffset)
-{
-	camera->ProcessMouseScroll(static_cast<float>(yoffset));
 }
