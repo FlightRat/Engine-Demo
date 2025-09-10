@@ -22,9 +22,7 @@ void CORE::ECS::TransformComponent::CreateLuaTransformBind(sol::state& lua)
 				};
 			}
 		),
-		"position", [](TransformComponent& transform) {return std::make_tuple(transform.position.x, transform.position.y, transform.position.z); },
-		"scale",[](TransformComponent& transform){return std::make_tuple(transform.scale.x, transform.scale.y, transform.scale.z); },
-		"set_pos", [](TransformComponent& transform, float x, float y, float z) {transform.position = glm::vec3{ x,y,z }; },
-		"set_scale", [](TransformComponent& transform, float x, float y, float z) {transform.scale = glm::vec3{ x,y,z }; }
+		"position", &TransformComponent::position,
+		"scale", &TransformComponent::scale
 	);
 }
