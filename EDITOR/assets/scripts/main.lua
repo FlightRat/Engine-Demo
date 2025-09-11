@@ -27,6 +27,7 @@ main = {
 			--local t = cubeEntity:get_component(Transform)
 			--print("name:"..t.xx)
 
+			-- Keyboard
 			if Keyboard.pressed(KEY_W) then
 				z_pos = z_pos - 0.2
 			end
@@ -41,6 +42,23 @@ main = {
 			end
 			cubeTransform.position.x = x_pos
 			cubeTransform.position.z = z_pos
+
+			--Mouse
+			if Mouse.moving() then
+				--print("Mouse is moving!")
+			end
+			if Mouse.just_pressed(MOUSE_LEFT) then
+				--print("mouse left pressed!")
+			end
+			if Mouse.pressed(MOUSE_RIGHT) then
+				--print("mouse right pressing!")
+			end
+			local y_offset = Mouse.wheel_y()
+			--print(y_offset)
+			local mouse_x, mouse_y = Mouse.screen_pos()
+			--print("Mouse pos["..mouse_x..", "..mouse_y.."]")
+
+
 		end
 	},
 	[2] = {

@@ -119,8 +119,8 @@ namespace EDITOR {
 		}
 
 		// Camera
-		// auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);		//平视相机
-		auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, -90.0f);		//俯视相机
+		auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);		//平视相机
+		// auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, -90.0f);		//俯视相机
 		if (!m_pRegistry->AddToContext<std::shared_ptr<RENDERING::Camera3D>>(camera))
 		{
 			ENGINE_ERROR("Failed to add the camera to the registry context!");
@@ -214,6 +214,7 @@ namespace EDITOR {
 		auto& camera = m_pRegistry->GetContext<std::shared_ptr<RENDERING::Camera3D>>();
 		auto& inputManager = CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
+		auto& mouse = inputManager.GetMouse();
 
 		//process Events
 		while (SDL_PollEvent(&m_Event))
@@ -245,8 +246,19 @@ namespace EDITOR {
 				keyboard.OnKeyReleased(m_Event.key.keysym.sym);
 				break;
 			}
+			case SDL_MOUSEBUTTONDOWN:
+			{
+				mouse.OnBtnPressed(m_Event.button.button);
+				break;
+			}
+			case SDL_MOUSEBUTTONUP:
+			{
+				mouse.OnBtnReleased(m_Event.button.button);
+				break;
+			}
 			case SDL_MOUSEMOTION:
 			{
+				mouse.SetMouseMoving(true);
 				float xrel = static_cast<float>(m_Event.motion.xrel);
 				float yrel = static_cast<float>(m_Event.motion.yrel);
 				camera->ProcessMouseMovement(xrel, -yrel);
@@ -254,6 +266,8 @@ namespace EDITOR {
 			}
 			case SDL_MOUSEWHEEL:
 			{
+				mouse.SetMouseWheelX(m_Event.wheel.x);
+				mouse.SetMouseWheelY(m_Event.wheel.y);
 				int xoffset = m_Event.wheel.x;
 				int yoffset = m_Event.wheel.y;
 				camera->ProcessMouseScroll(static_cast<float>(yoffset));
@@ -273,7 +287,9 @@ namespace EDITOR {
 
 		auto& inputManager = CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
+		auto& mouse = inputManager.GetMouse();
 		keyboard.Update();
+		mouse.Update();
     }
 
     void Application::Render()

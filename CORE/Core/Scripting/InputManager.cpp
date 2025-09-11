@@ -1,13 +1,13 @@
 #include "InputManager.h"
 
 namespace CORE {
-	InputManager::InputManager():m_pKeyboard{std::make_unique<Keyboard>()}
+	InputManager::InputManager():m_pKeyboard{std::make_unique<Keyboard>()}, m_pMouse{ std::make_unique<Mouse>() }
 	{
 
 	}
 
 	/*register key into lua*/
-	void InputManager::RegisterLuaKeyNames(sol::state& lua)
+	void InputManager::RegisterLuaKeyboardNames(sol::state& lua)
 	{
 		lua.set("KEY_A", ENGINE_KEY_A);
 		lua.set("KEY_B", ENGINE_KEY_B);
@@ -125,6 +125,13 @@ namespace CORE {
 		lua.set("KP_KEY_PERIOD", ENGINE_KEY_KP_PERIOD);
 	}
 
+	void InputManager::RegisterLuaMouseNames(sol::state& lua)
+	{
+		lua.set("MOUSE_LEFT", ENGINE_MOUSE_LEFT);
+		lua.set("MOUSE_MIDDLE", ENGINE_MOUSE_MIDDLE);
+		lua.set("MOUSE_RIGHT", ENGINE_MOUSE_RIGHT);
+	}
+
 	InputManager& InputManager::GetInstance()
 	{
 		static InputManager instance{};
@@ -133,10 +140,12 @@ namespace CORE {
 
 	void InputManager::CreateLuaInputBindings(sol::state& lua)
 	{
-		RegisterLuaKeyNames(lua);	// register keys into lua
+		RegisterLuaKeyboardNames(lua);	// register keyboard btn into lua
+		RegisterLuaMouseNames(lua);		// register mouse btn into lua
 
 		auto& inputManager = GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
+		auto& mouse = inputManager.GetMouse();
 
 		// register keyboard into lua
 		lua.new_usertype<Keyboard>(
@@ -145,6 +154,19 @@ namespace CORE {
 			"just_pressed", [&](int key) {return keyboard.IsKeyJustPressed(key); },
 			"just_released", [&](int key) {return keyboard.IsKeyJustReleased(key); },
 			"pressed", [&](int key) {return keyboard.IsKeyPressed(key); }
+		);
+
+		// register mouse into lua
+		lua.new_usertype<Mouse>(
+			"Mouse",
+			sol::no_constructor,
+			"pressed", [&](int btn) {return mouse.IsBtnPressed(btn); },
+			"just_pressed", [&](int btn) {return mouse.IsBtnJustPressed(btn); },
+			"just_released", [&](int btn) {return mouse.IsBtnJustReleased(btn); },
+			"screen_pos", [&]() {return mouse.GetMouseScreenPosition(); },
+			"wheel_x", [&]() {return mouse.GetMouseWheelX(); },
+			"wheel_y", [&]() {return mouse.GetMouseWheelY(); },
+			"moving", [&]() {return mouse.IsMouseMoving(); }
 		);
 	}
 }
