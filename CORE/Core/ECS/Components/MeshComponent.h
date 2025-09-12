@@ -10,13 +10,14 @@ namespace CORE::ECS {
     struct MeshComponent
     {
         glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+        std::string type;
         std::vector<float> data;
         unsigned short vertexNum;
         GLuint m_VAO, m_VBO;
 
         void load_plane();
         void load_cube();
-        void load_mesh(const std::string& mesh_type);
+        void load_mesh();
         
         inline void set_color(const glm::vec3 mesh_color) { color = mesh_color; }
 
