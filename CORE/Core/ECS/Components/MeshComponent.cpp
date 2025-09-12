@@ -4,7 +4,6 @@ void CORE::ECS::MeshComponent::load_plane()
 {
     data.clear();
     vertexNum = 6;
-    color = glm::vec3(1.0f, 1.0f, 1.0f);
     float vertices[] = {
         // positions            // normals         // texcoords
          10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
@@ -27,7 +26,6 @@ void CORE::ECS::MeshComponent::load_cube()
 {
     data.clear();
     vertexNum = 36;
-    color = glm::vec3(1.0f, 0.0f, 0.0f);
     float vertices[] = {
         // back face
         -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
@@ -119,7 +117,8 @@ void CORE::ECS::MeshComponent::CreateMeshLuaBind(sol::state& lua)
         "type_id", &entt::type_hash<MeshComponent>::value,
         sol::call_constructor,
         sol::factories([]() {return MeshComponent(); }),
-        "load_mesh", [](MeshComponent& mesh, const std::string& meth_type) {mesh.load_mesh(meth_type); }
+        "load_mesh", [](MeshComponent& mesh, const std::string& meth_type) {mesh.load_mesh(meth_type); },
+        "mesh_color", [](MeshComponent& mesh, const glm::vec3 mesh_color) {mesh.set_color(mesh_color); }
         //"render", [&](MeshComponent& mesh) {mesh.Render(); }
     );
 }

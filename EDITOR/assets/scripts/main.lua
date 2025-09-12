@@ -4,11 +4,13 @@ cubeEntity = Entity("Cube","group")
 local cubeTransform = cubeEntity:add_component(Transform(vec3(0.0),vec3(0.5)))
 local cubeMesh = cubeEntity:add_component(Mesh())
 cubeMesh:load_mesh("cube")
+cubeMesh:mesh_color(vec3(1.0, 0.0, 0.0))
 
 planeEntity = Entity("Plane","group")
 local planeTransform = planeEntity:add_component(Transform(vec3(0.0), vec3(1.0)))
 local planeMesh = planeEntity:add_component(Mesh())
 planeMesh:load_mesh("plane")
+planeMesh:mesh_color(vec3(1.0, 1.0, 1.0))
 
 local view = Registry.get_entities(Transform)
 --view:exclude(Mesh)
