@@ -67,6 +67,23 @@ namespace RESOURCES {
         }
         return *shaderItr->second;
     }
+    void AssetManager::CreateLuaAssetManager(sol::state& lua, CORE::ECS::Registry& registry)
+    {
+        auto& assetManager = registry.GetContext<std::shared_ptr<RESOURCES::AssetManager>>();
+        if (!assetManager)
+        {
+            ENGINE_ERROR("Failed to bind the asset manager to lua - Does not exist in the registry!");
+            return;
+        }
+
+        lua.new_usertype<AssetManager>(
+            "AssetManager",
+            sol::no_constructor,
+            "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){
+                return assetManager->AddTexture(texName, texPath, pixelArt);
+            }
+        );
+    }
 }
 
 

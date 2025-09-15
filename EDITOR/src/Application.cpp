@@ -128,11 +128,11 @@ namespace EDITOR {
 		}
 
 		// textures
-		if (!assetManager->AddTexture("mafuyu", "./assets/textures/mafuyu.png", false))
-		{
-			ENGINE_ERROR("Failed to create and add the texture!");
-			return false;
-		}
+		//if (!assetManager->AddTexture("mafuyu", "./assets/textures/mafuyu.png", false))
+		//{
+		//	ENGINE_ERROR("Failed to create and add the texture!");
+		//	return false;
+		//}
 
 		// shaders
 		if (!LoadShaders())
@@ -163,6 +163,7 @@ namespace EDITOR {
 			return false;
 		}
 		CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
+		CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
 		if (!scriptSystem->LoadMainScript(*lua))
 		{
 			ENGINE_ERROR("Failed to load the main lua script!");

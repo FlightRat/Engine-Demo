@@ -2,6 +2,8 @@
 #include<map>
 #include<memory>
 #include<string>
+#include<sol/sol.hpp>
+#include"../ECS/Registry.h"
 #include<Rendering/Essentials/Shader.h>
 #include<Rendering/Essentials/Texture.h> 
 
@@ -20,5 +22,7 @@ namespace RESOURCES {
 
 		bool AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath);
 		RENDERING::Shader& GetShader(const std::string& shaderName);
+
+		static void CreateLuaAssetManager(sol::state& lua, CORE::ECS::Registry& registry);
 	};
 }

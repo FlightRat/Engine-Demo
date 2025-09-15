@@ -6,6 +6,7 @@
 #include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
 #include "../Scripting/InputManager.h"
+#include"../Resources/AssetManager.h"
 
 using namespace CORE::ECS;
 
@@ -113,19 +114,37 @@ namespace CORE::Systems {
 	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry)
 	{
 		Registry::CreateLuaRegistryBind(lua, registry);			// register "runtime_view" & "Registry" into lua
+		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);	// register glm vec into lua
+		CORE::InputManager::CreateLuaInputBindings(lua);		// register inputs stuff into lua
+		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);
+
 		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
 		MeshComponent::CreateMeshLuaBind(lua);					// register a "Mesh" type into lua
-		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);	// register glm vec into lua
-		CORE::InputManager::CreateLuaInputBindings(lua);		// register inputs stuff into lua
-		
 		//NOTE::the same registered Component in LUA and META should have the same id
-		
 		Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
 		Entity::RegisterMetaComponent<MeshComponent>();			// register MeshComponent into meta
-
 		Registry::RegisterMetaComponent<TransformComponent>();
 		Registry::RegisterMetaComponent<MeshComponent>();
+	}
+
+	void ScriptingSystem::RegisterLuaFunctions(sol::state& lua)
+	{
+		lua.set_function(
+			"run_script", [&](const std::string& path)
+			{
+				try
+				{
+					lua.safe_script_file(path);
+				}
+				catch (const sol::error& error)
+				{
+					ENGINE_ERROR("Error loading Lua Script:{}", error.what());
+					return false;
+				}
+				return true;
+			}
+		);
 	}
 }
 

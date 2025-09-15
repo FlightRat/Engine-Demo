@@ -17,5 +17,6 @@ namespace CORE::Systems {
 		void Render();
 
 		static void RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry);
+		static void RegisterLuaFunctions(sol::state& lua);
 	};
 }

@@ -29,6 +29,9 @@
     <None Include="assets\shaders\texShader.vert" />
     <None Include="assets\shaders\texShader.frag" />
     <None Include="assets\scripts\main.lua" />
+    <None Include="assets\scripts\GameDemo\entityDefs.lua" />
+    <None Include="assets\scripts\GameDemo\utilities.lua" />
+    <None Include="assets\scripts\GameDemo\assetDefs.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
