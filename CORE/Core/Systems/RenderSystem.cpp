@@ -47,8 +47,8 @@ namespace CORE::Systems {
 		for (auto [_, mesh, transform] : view.each())
 		{
 			model = glm::mat4(1.0f);
-			model = glm::scale(model, transform.scale);
 			model = glm::translate(model, transform.position);
+			model = glm::scale(model, transform.scale);	// NOTE::do scale after translate!!!
 			colorShader.SetUniformMat4("model", model);
 			colorShader.SetUniformVec3("color", mesh.color);
 			mesh.Render();

@@ -44,5 +44,6 @@ function LoadEntity( def )
 		)
 		mesh:load_mesh()
 	end
-	return newEntity:id()
+	return newEntity
+	--return newEntity:id()
 end
