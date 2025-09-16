@@ -35,9 +35,14 @@ namespace CORE::ECS {
 		lua.new_usertype<Entity>(
 			"Entity",
 			sol::call_constructor,
-			sol::factories([&](const std::string& name, const std::string& group)
+			sol::factories(
+				[&](const std::string& name, const std::string& group)
 				{
 					return Entity{ registry, name, group };
+				},
+				[&](std::int32_t id)
+				{
+					return Entity{ registry, static_cast<entt::entity>(id) };
 				}
 			),
 			// a lua "Entity" type has a "add_component" function, when this is called, it will invoke the "add_component" of the metatype which has the same id with comp

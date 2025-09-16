@@ -164,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\scripts\GameDemo\assetDefs.lua" />
+    <None Include="assets\scripts\GameDemo\player.lua" />
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\entityDefs.lua" />
     <None Include="assets\scripts\main.lua" />
