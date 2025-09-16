@@ -26,6 +26,11 @@ function LoadEntity( def )
 					def.components.Transform.scale.x,
 					def.components.Transform.scale.y,
 					def.components.Transform.scale.z
+				),
+				vec3(
+					def.components.Transform.rotation.x,
+					def.components.Transform.rotation.y,
+					def.components.Transform.rotation.z
 				)
 			)
 		)

@@ -49,6 +49,7 @@ namespace CORE::Systems {
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, transform.position);
 			model = glm::scale(model, transform.scale);	// NOTE::do scale after translate!!!
+			model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));// rotate with y axis
 			colorShader.SetUniformMat4("model", model);
 			colorShader.SetUniformVec3("color", mesh.color);
 			mesh.Render();

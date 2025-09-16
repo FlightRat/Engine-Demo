@@ -7,7 +7,8 @@ EnemyDefs =
 		{
 			Transform = {
 				position = {x=0.0, y=0.0, z=-5.0},
-				scale = {x=0.75, y=0.5, z=0.75}
+				scale = {x=0.75, y=0.5, z=0.75},
+				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
 				color = {R=1.0, G=0.0, B=0.0},
@@ -22,7 +23,8 @@ EnemyDefs =
 		{
 			Transform = {
 				position = {x=-5.0, y=0.0, z=0.0},
-				scale = {x=0.25, y=0.5, z=0.25}
+				scale = {x=0.25, y=0.5, z=0.25},
+				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
 				color = {R=0.0, G=0.0, B=1.0},
@@ -41,7 +43,8 @@ PlayerDefs =
 		{
 			Transform = {
 				position = {x=0, y=0.0, z=0.0},
-				scale = {x=0.5, y=0.5, z=0.5}
+				scale = {x=0.5, y=0.5, z=0.5},
+				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
 				color = {R=0.0, G=1.0, B=0.0},
@@ -60,7 +63,8 @@ EnvirDefs =
 		{
 			Transform = {
 				position = {x=0, y=0, z=0},
-				scale = {x=1.0, y=1.0, z=1.0}
+				scale = {x=1.0, y=1.0, z=1.0},
+				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
 				color = {R=1.0, G=1.0, B=1.0},
