@@ -113,10 +113,10 @@ namespace CORE::Systems {
 
 	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry)
 	{
-		Registry::CreateLuaRegistryBind(lua, registry);			// register "runtime_view" & "Registry" into lua
-		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);	// register glm vec into lua
-		CORE::InputManager::CreateLuaInputBindings(lua);		// register inputs stuff into lua
-		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);
+		Registry::CreateLuaRegistryBind(lua, registry);					// register "runtime_view" & "Registry" into lua
+		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);			// register glm vec into lua
+		CORE::InputManager::CreateLuaInputBindings(lua);				// register inputs stuff into lua
+		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);	// register assetManager into lua
 
 		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua

@@ -29,10 +29,19 @@ function Player:UpdatePlayer()
 		transform.rotation.y = transform.rotation.y - self.m_RotateSpeed
 	end
 
-	if Keyboard.pressed(KEY_W) then
-		transform.position.z = transform.position.z - self.m_MoveSpeed
+	-- move with rotation
+	--if Keyboard.pressed(KEY_W) then
 		--transform.position.z = transform.position.z + self.m_MoveSpeed * forward.y
 		--transform.position.x = transform.position.x - self.m_MoveSpeed * forward.x
+	--end
+	--if Keyboard.pressed(KEY_S) then
+		--transform.position.z = transform.position.z - self.m_MoveSpeed
+		--transform.position.z = transform.position.z - self.m_MoveSpeed * forward.y
+		--transform.position.x = transform.position.x + self.m_MoveSpeed * forward.x
+	--end
+
+	if Keyboard.pressed(KEY_W) then
+		transform.position.z = transform.position.z - self.m_MoveSpeed
 	end
 	if Keyboard.pressed(KEY_A) then
 		transform.position.x = transform.position.x - self.m_MoveSpeed
@@ -43,5 +52,7 @@ function Player:UpdatePlayer()
 	if Keyboard.pressed(KEY_D) then
 		transform.position.x = transform.position.x + self.m_MoveSpeed
 	end
+
+	CheckPos(transform.position, 0.5, 0.5)
 
 end

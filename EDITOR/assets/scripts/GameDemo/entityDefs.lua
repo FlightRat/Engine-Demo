@@ -2,6 +2,7 @@ EnemyDefs =
 {
 	enemy_big = 
 	{
+		tag = "big",
 		group = "enemy",
 		components = 
 		{
@@ -18,6 +19,7 @@ EnemyDefs =
 	},
 	enemy_small = 
 	{
+		tag = "small",
 		group = "enemy",
 		components = 
 		{
@@ -44,7 +46,7 @@ PlayerDefs =
 			Transform = {
 				position = {x=0, y=0.0, z=0.0},
 				scale = {x=0.5, y=0.5, z=0.5},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				rotation = {x=0.0, y=-90.0, z=0.0} -- (-90бу) for move with rotation
 			},
 			Mesh = {
 				color = {R=0.0, G=1.0, B=0.0},
@@ -58,6 +60,7 @@ EnvirDefs =
 {
 	floor = 
 	{
+		tag = "floor",
 		group = "Envir",
 		components = 
 		{

@@ -49,6 +49,26 @@ function LoadEntity( def )
 		)
 		mesh:load_mesh()
 	end
-	--return newEntity
 	return newEntity:id()
+end
+
+plane_size = 20
+function  CheckPos(position, width, height )
+	local min_x = -10
+	local min_z = -10
+	local max_x = 10
+	local max_z = 10
+
+	if position.x + width < min_x then
+		position.x = position.x + plane_size + width
+	elseif position.x + width > max_x then
+		position.x = position.x - plane_size - width
+	end
+
+	if position.z + width < min_z then
+		position.z = position.z + plane_size + width
+	elseif position.z + width > max_z then
+		position.z = position.z - plane_size - width
+	end
+
 end
