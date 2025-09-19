@@ -7,6 +7,7 @@
 #include "../Scripting/GlmLuaBindings.h"
 #include "../Scripting/InputManager.h"
 #include"../Resources/AssetManager.h"
+#include<Utilities/Timer.h>
 
 using namespace CORE::ECS;
 
@@ -117,6 +118,7 @@ namespace CORE::Systems {
 		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);			// register glm vec into lua
 		CORE::InputManager::CreateLuaInputBindings(lua);				// register inputs stuff into lua
 		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);	// register assetManager into lua
+		UTIL::Timer::CreateLuaTimer(lua);								// register timer into lua
 
 		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua

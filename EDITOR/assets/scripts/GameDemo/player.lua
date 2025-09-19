@@ -12,15 +12,10 @@ function Player:Create(def)
 	return this
 end
 
-function Player:UpdatePlayer()
+function Player:Update()
 	local player = Entity(self.m_EntityID)
 	local transform = player:get_component(Transform)
 	local mesh = player:get_component(Mesh)
-
-	local forward = vec2(
-		math.cos(math.rad(transform.rotation.y)),
-		math.sin(math.rad(transform.rotation.y))
-	)
 
 	if Keyboard.pressed(KEY_Q) then
 		transform.rotation.y = transform.rotation.y + self.m_RotateSpeed
@@ -30,6 +25,10 @@ function Player:UpdatePlayer()
 	end
 
 	-- move with rotation
+	--local forward = vec2(
+		--math.cos(math.rad(transform.rotation.y)),
+		--math.sin(math.rad(transform.rotation.y))
+	--)
 	--if Keyboard.pressed(KEY_W) then
 		--transform.position.z = transform.position.z + self.m_MoveSpeed * forward.y
 		--transform.position.x = transform.position.x - self.m_MoveSpeed * forward.x

@@ -7,7 +7,7 @@ EnemyDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=0.0, z=-5.0},
+				position = {x=0.0, y=0.0, z=0.0},
 				scale = {x=0.75, y=0.5, z=0.75},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -15,7 +15,9 @@ EnemyDefs =
 				color = {R=1.0, G=0.0, B=0.0},
 				type = "cube"
 			}
-		}
+		},
+		min_speed = -3,
+		max_speed = 3
 	},
 	enemy_small = 
 	{
@@ -24,7 +26,7 @@ EnemyDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=-5.0, y=0.0, z=0.0},
+				position = {x=0.0, y=0.0, z=0.0},
 				scale = {x=0.25, y=0.5, z=0.25},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -32,7 +34,9 @@ EnemyDefs =
 				color = {R=0.0, G=0.0, B=1.0},
 				type = "cube"
 			}
-		}
+		},
+		min_speed = -1,
+		max_speed = 1
 	},
 }
 
@@ -44,7 +48,7 @@ PlayerDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0, y=0.0, z=0.0},
+				position = {x=0.0, y=0.0, z=0.0},
 				scale = {x=0.5, y=0.5, z=0.5},
 				rotation = {x=0.0, y=-90.0, z=0.0} -- (-90бу) for move with rotation
 			},

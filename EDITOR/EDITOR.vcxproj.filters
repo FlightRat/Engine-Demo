@@ -33,6 +33,7 @@
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\assetDefs.lua" />
     <None Include="assets\scripts\GameDemo\player.lua" />
+    <None Include="assets\scripts\GameDemo\enemy.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

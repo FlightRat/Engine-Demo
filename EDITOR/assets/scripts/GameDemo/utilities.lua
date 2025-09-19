@@ -72,3 +72,54 @@ function  CheckPos(position, width, height )
 	end
 
 end
+
+
+function GetRandomPosition()
+	return vec3(
+		math.random(-10,10),
+		0,
+		math.random(-10,10)
+	)
+end
+
+function GetRandomVelocity( min_speed, max_speed )
+	return vec3(
+		math.random(min_speed,max_speed),
+		0,
+		math.random(min_speed,max_speed)
+	)
+end
+
+enemy_table = {}
+function AddEnemy(enemy)
+	table.insert(enemy_table, enemy)
+end
+
+function UpdateEnemy()
+	for k,v in pairs(enemy_table) do
+		v:Update()
+	end
+end
+
+
+globalTimer = Timer()
+function SpawnEnemies()
+	if not globalTimer:is_running() then
+		globalTimer:start()
+	end
+
+	if globalTimer:elapsed_sec() > 3 then
+		local val = math.random(1, 3)
+
+		if val == 1 then
+			local enemy = Enemy:Create("enemy_small")
+			AddEnemy(enemy)
+		elseif val == 2 then
+			local enemy = Enemy:Create("enemy_big")
+			AddEnemy(enemy)
+		elseif val ==3 then
+			-- TODO
+		end
+		globalTimer:stop()
+	end
+end
