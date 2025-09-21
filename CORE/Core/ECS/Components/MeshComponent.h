@@ -22,6 +22,6 @@ namespace CORE::ECS {
         inline void set_color(const glm::vec3 mesh_color) { color = mesh_color; }
 
         void Render();
-        static void CreateMeshLuaBind(sol::state& lua);
+        static void CreateLuaMeshBind(sol::state& lua);
     };
 }

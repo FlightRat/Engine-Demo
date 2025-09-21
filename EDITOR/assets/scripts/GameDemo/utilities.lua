@@ -49,6 +49,16 @@ function LoadEntity( def )
 		)
 		mesh:load_mesh()
 	end
+
+	if def.components.CubeCollider then
+		newEntity:add_component(
+			CubeCollider(
+				def.components.CubeCollider.width,
+				def.components.CubeCollider.height
+			)
+		)
+	end
+
 	return newEntity:id()
 end
 

@@ -110,7 +110,7 @@ void CORE::ECS::MeshComponent::Render()
 }
 
 /*register a "Mesh" type into lua*/
-void CORE::ECS::MeshComponent::CreateMeshLuaBind(sol::state& lua)
+void CORE::ECS::MeshComponent::CreateLuaMeshBind(sol::state& lua)
 {
     lua.new_usertype<MeshComponent>(
         "Mesh",

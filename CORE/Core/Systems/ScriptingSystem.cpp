@@ -2,6 +2,8 @@
 #include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshComponent.h"
+#include "../ECS/Components/CubeColliderComponent.h"
+#include "../ECS/Components/SphereColliderComponent.h"
 #include "../ECS/Entity.h"
 #include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
@@ -122,12 +124,21 @@ namespace CORE::Systems {
 
 		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
-		MeshComponent::CreateMeshLuaBind(lua);					// register a "Mesh" type into lua
+		MeshComponent::CreateLuaMeshBind(lua);					// register a "Mesh" type into lua
+		CubeColliderComponent::CreateLuaCubeColliderBind(lua);
+		SphereColliderComponent::CreateLuaSphereColliderBind(lua);
+
 		//NOTE::the same registered Component in LUA and META should have the same id
+
 		Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
 		Entity::RegisterMetaComponent<MeshComponent>();			// register MeshComponent into meta
+		Entity::RegisterMetaComponent<CubeColliderComponent>();
+		Entity::RegisterMetaComponent<SphereColliderComponent>();
+
 		Registry::RegisterMetaComponent<TransformComponent>();
 		Registry::RegisterMetaComponent<MeshComponent>();
+		Registry::RegisterMetaComponent<CubeColliderComponent>();
+		Registry::RegisterMetaComponent<SphereColliderComponent>();
 	}
 
 	void ScriptingSystem::RegisterLuaFunctions(sol::state& lua)

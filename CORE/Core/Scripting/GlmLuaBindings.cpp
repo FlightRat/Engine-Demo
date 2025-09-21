@@ -1,5 +1,6 @@
 #include "GlmLuaBindings.h"
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace CORE::Scripting
 {
@@ -44,7 +45,9 @@ namespace CORE::Scripting
 			sol::meta_function::multiplication, vec2_multiply_overloads,
 			sol::meta_function::division, vec2_divide_overloads,
 			sol::meta_function::addition, vec2_addition_overload,
-			sol::meta_function::subtraction, vec2_substraction_overload
+			sol::meta_function::subtraction, vec2_substraction_overload,
+			"length", [](const glm::vec2& v) {return glm::length(v); },
+			"lengthSq", [](const glm::vec2& v) {return glm::length2(v); }
 		);
 	}
 
@@ -90,7 +93,9 @@ namespace CORE::Scripting
 			sol::meta_function::multiplication, vec3_multiply_overloads,
 			sol::meta_function::division, vec3_divide_overloads,
 			sol::meta_function::addition, vec3_addition_overload,
-			sol::meta_function::subtraction, vec3_substraction_overload
+			sol::meta_function::subtraction, vec3_substraction_overload,
+			"length", [](const glm::vec3& v) {return glm::length(v); },
+			"lengthSq", [](const glm::vec3& v) {return glm::length2(v); }
 		);
 	}
 
@@ -137,7 +142,9 @@ namespace CORE::Scripting
 			sol::meta_function::multiplication, vec4_multiply_overloads,
 			sol::meta_function::division, vec4_divide_overloads,
 			sol::meta_function::addition, vec4_addition_overload,
-			sol::meta_function::subtraction, vec4_substraction_overload
+			sol::meta_function::subtraction, vec4_substraction_overload,
+			"length", [](const glm::vec4& v) {return glm::length(v); },
+			"lengthSq", [](const glm::vec4& v) {return glm::length2(v); }
 		);
 	}
 

@@ -155,9 +155,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\Identification.h" />
     <ClInclude Include="Core\ECS\Components\MeshComponent.h" />
     <ClInclude Include="Core\ECS\Components\ScriptComponent.h" />
+    <ClInclude Include="Core\ECS\Components\SphereColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\TransformComponent.h" />
     <ClInclude Include="Core\ECS\Entity.h" />
     <ClInclude Include="Core\ECS\MetaUtilities.h" />
@@ -169,7 +171,9 @@
     <ClInclude Include="Core\Systems\ScriptingSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\ECS\Components\CubeColliderComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\MeshComponent.cpp" />
+    <ClCompile Include="Core\ECS\Components\SphereColliderComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\TransformComponent.cpp" />
     <ClCompile Include="Core\ECS\Entity.cpp" />
     <ClCompile Include="Core\ECS\MetaUtilities.cpp" />

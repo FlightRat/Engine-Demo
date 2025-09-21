@@ -34,6 +34,7 @@
     <None Include="assets\scripts\GameDemo\assetDefs.lua" />
     <None Include="assets\scripts\GameDemo\player.lua" />
     <None Include="assets\scripts\GameDemo\enemy.lua" />
+    <None Include="assets\scripts\GameDemo\collision_system.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

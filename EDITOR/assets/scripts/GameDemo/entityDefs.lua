@@ -14,6 +14,10 @@ EnemyDefs =
 			Mesh = {
 				color = {R=1.0, G=0.0, B=0.0},
 				type = "cube"
+			},
+			CubeCollider = {
+				width = 0.75,
+				height = 0.75
 			}
 		},
 		min_speed = -3,
@@ -26,13 +30,17 @@ EnemyDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=0.0, z=0.0},
+				position = {x=0.0, y=0.0, z=-5.0},
 				scale = {x=0.25, y=0.5, z=0.25},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
 				color = {R=0.0, G=0.0, B=1.0},
 				type = "cube"
+			},
+			CubeCollider = {
+				width = 0.25,
+				height = 0.25
 			}
 		},
 		min_speed = -1,
@@ -55,6 +63,10 @@ PlayerDefs =
 			Mesh = {
 				color = {R=0.0, G=1.0, B=0.0},
 				type = "cube"
+			},
+			CubeCollider = {
+				width = 0.5,
+				height = 0.5
 			}
 		}
 	}
