@@ -25,31 +25,28 @@ function Player:Update()
 	end
 
 	-- move with rotation
-	--local forward = vec2(
-		--math.cos(math.rad(transform.rotation.y)),
-		--math.sin(math.rad(transform.rotation.y))
-	--)
-	--if Keyboard.pressed(KEY_W) then
-		--transform.position.z = transform.position.z + self.m_MoveSpeed * forward.y
-		--transform.position.x = transform.position.x - self.m_MoveSpeed * forward.x
-	--end
-	--if Keyboard.pressed(KEY_S) then
-		--transform.position.z = transform.position.z - self.m_MoveSpeed
-		--transform.position.z = transform.position.z - self.m_MoveSpeed * forward.y
-		--transform.position.x = transform.position.x + self.m_MoveSpeed * forward.x
-	--end
-
+	local forward = vec3(
+		-math.cos(math.rad(transform.rotation.y)),
+		0,
+		math.sin(math.rad(transform.rotation.y))
+	)
 	if Keyboard.pressed(KEY_W) then
-		transform.position.z = transform.position.z - self.m_MoveSpeed
+		transform.position = transform.position + self.m_MoveSpeed*forward
 	end
-	if Keyboard.pressed(KEY_A) then
-		transform.position.x = transform.position.x - self.m_MoveSpeed
+	if Keyboard.pressed(KEY_S) then
+		transform.position = transform.position - self.m_MoveSpeed*forward
 	end
-		if Keyboard.pressed(KEY_S) then
-		transform.position.z = transform.position.z + self.m_MoveSpeed
-	end
-	if Keyboard.pressed(KEY_D) then
-		transform.position.x = transform.position.x + self.m_MoveSpeed
+
+	if Keyboard.just_pressed(KEY_SPACE) then
+		local bullet = Projectile:Create(
+			{
+				def = "proj_1",
+				dir = forward,
+				start_pos = transform.position,
+				rotation = transform.rotation
+			}
+		)
+		AddProjectile(bullet)
 	end
 
 	CheckPos(transform.position, 0.5, 0.5)

@@ -20,8 +20,7 @@ EnemyDefs =
 				height = 0.75
 			}
 		},
-		min_speed = -3,
-		max_speed = 3
+		max_speed = 0.3
 	},
 	enemy_small = 
 	{
@@ -43,8 +42,7 @@ EnemyDefs =
 				height = 0.25
 			}
 		},
-		min_speed = -1,
-		max_speed = 1
+		max_speed = 0.1
 	},
 }
 
@@ -90,5 +88,31 @@ EnvirDefs =
 				type = "plane"
 			}
 		}
+	}
+}
+
+ProjectileDefs = 
+{
+	proj_1 = 
+	{
+		group = "projectiles",
+		components = 
+		{
+			Transform = {
+				position = {x=0, y=0, z=0},
+				scale = {x=0.1, y=0.5, z=0.1},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			Mesh = {
+				color = {R=1.0, G=0.0, B=1.0},
+				type = "cube"
+			},
+			CubeCollider = {
+				width = 0.1,
+				height = 0.1
+			}
+		},
+		life_time = 2000,
+		proj_speed = 0.1
 	}
 }

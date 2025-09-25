@@ -86,17 +86,17 @@ end
 
 function GetRandomPosition()
 	return vec3(
-		math.random(-10,10),
+		(math.random()*2-1)*10,
 		0,
-		math.random(-10,10)
+		(math.random()*2-1)*10
 	)
 end
 
-function GetRandomVelocity( min_speed, max_speed )
+function GetRandomVelocity(max_speed)
 	return vec3(
-		math.random(min_speed,max_speed),
+		(math.random()*2-1)*max_speed,
 		0,
-		math.random(min_speed,max_speed)
+		(math.random()*2-1)*max_speed
 	)
 end
 
@@ -118,7 +118,7 @@ function SpawnEnemies()
 		globalTimer:start()
 	end
 
-	if globalTimer:elapsed_sec() > 3 then
+	if globalTimer:elapsed_sec() > 5 then
 		local val = math.random(1, 3)
 
 		if val == 1 then
@@ -131,5 +131,21 @@ function SpawnEnemies()
 			-- TODO
 		end
 		globalTimer:stop()
+	end
+end
+
+projectile_table = {}
+
+function AddProjectile(projectile)
+	table.insert(projectile_table, projectile)
+end
+
+function UpdateProjectile()
+	for k,v in pairs(projectile_table) do
+		if v:TimesUp() then
+			v:Destory()
+		else
+			v:Update()
+		end
 	end
 end
