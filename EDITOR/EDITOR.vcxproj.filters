@@ -42,6 +42,15 @@
     <Image Include="assets\textures\mafuyu.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\textures\container.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\textures\wood.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\textures\lego.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h">

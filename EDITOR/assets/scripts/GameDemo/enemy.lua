@@ -30,6 +30,6 @@ function Enemy:Update()
 
 	transform.position = transform.position + self.m_Velocity
 
-	CheckPos(transform.position, 0.5, 0.5)
+	CheckPos(transform.position, transform.scale.x, transform.scale.z)
 
 end

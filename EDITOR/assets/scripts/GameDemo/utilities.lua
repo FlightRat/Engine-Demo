@@ -39,13 +39,15 @@ function LoadEntity( def )
 	if def.components.Mesh then
 		local mesh = newEntity:add_component(
 			Mesh(
+				def.components.Mesh.type,
+				def.components.Mesh.shader,
 				vec4(
 					def.components.Mesh.color.R,
 					def.components.Mesh.color.G,
 					def.components.Mesh.color.B,
 					def.components.Mesh.color.A
 				),
-				def.components.Mesh.type
+				def.components.Mesh.texture or 0
 			)
 		)
 		mesh:load_mesh()
@@ -71,15 +73,15 @@ function  CheckPos(position, width, height )
 	local max_z = 10
 
 	if position.x + width < min_x then
-		position.x = position.x + plane_size + width
-	elseif position.x + width > max_x then
-		position.x = position.x - plane_size - width
+		position.x = position.x + width + plane_size
+	elseif position.x > max_x + width then
+		position.x = position.x + width - plane_size
 	end
 
 	if position.z + width < min_z then
-		position.z = position.z + plane_size + width
-	elseif position.z + width > max_z then
-		position.z = position.z - plane_size - width
+		position.z = position.z + height + plane_size
+	elseif position.z > max_z + width  then
+		position.z = position.z + height - plane_size
 	end
 end
 

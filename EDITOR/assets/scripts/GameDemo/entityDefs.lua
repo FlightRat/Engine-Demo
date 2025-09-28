@@ -12,8 +12,9 @@ EnemyDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=1.0, G=0.0, B=0.0, A=1.0},
-				type = "cube"
+				type = "cube",
+				shader = "colorShader",
+				color = {R=1.0, G=0.0, B=0.0, A=1.0}
 			},
 			CubeCollider = {
 				width = 0.75,
@@ -34,8 +35,9 @@ EnemyDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=0.0, G=0.0, B=1.0, A=1.0},
-				type = "cube"
+				type = "cube",
+				shader = "colorShader",
+				color = {R=0.0, G=0.0, B=1.0, A=1.0}
 			},
 			CubeCollider = {
 				width = 0.25,
@@ -59,8 +61,10 @@ PlayerDefs =
 				rotation = {x=0.0, y=-90.0, z=0.0} -- (-90бу) for move with rotation
 			},
 			Mesh = {
+				type = "cube",
+				shader = "texShader",
 				color = {R=0.0, G=1.0, B=0.0, A=1.0},
-				type = "cube"
+				texture = 2
 			},
 			CubeCollider = {
 				width = 0.5,
@@ -84,8 +88,10 @@ EnvirDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
+				type = "plane",
+				shader = "texShader",
 				color = {R=1.0, G=1.0, B=1.0, A=1.0},
-				type = "plane"
+				texture = 1
 			}
 		}
 	}
@@ -104,8 +110,9 @@ ProjectileDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=1.0, G=0.0, B=1.0, A=1.0},
-				type = "cube"
+				type = "cube",
+				shader = "colorShader",
+				color = {R=1.0, G=0.0, B=1.0, A=1.0}
 			},
 			CubeCollider = {
 				width = 0.1,

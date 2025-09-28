@@ -2,7 +2,9 @@ AssetDefs =
 {
 	textures=
 	{
-		{name="mafuyu", path="assets/textures/mafuyu.png", pixel_art=false}
+		{name="mafuyu", path="assets/textures/mafuyu.png", pixel_art=false},
+		{name="wood", path="assets/textures/wood.png", pixel_art=false},
+		{name="container", path="assets/textures/container.png", pixel_art=false}
 	}
 }
 

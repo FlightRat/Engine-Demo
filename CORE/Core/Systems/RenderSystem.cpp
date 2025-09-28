@@ -28,19 +28,32 @@ namespace CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
+		auto& texShader = assetManager->GetShader("texShader");
+		if (texShader.ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 		colorShader.Enable();
 
-		// texture
-		const auto& texture = assetManager->GetTexture("mafuyu");
+		// mafuyu
+		const auto& mafuyu = assetManager->GetTexture("mafuyu");
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture.GetID());
+		glBindTexture(GL_TEXTURE_2D, mafuyu.GetID());
+		// wood
+		const auto& wood = assetManager->GetTexture("wood");
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, wood.GetID());
+		// container
+		const auto& container = assetManager->GetTexture("container");
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, container.GetID());
 
 		// camera
 		auto& camera = m_Registry.GetContext<std::shared_ptr<Camera3D>>();
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera->Zoom), (float)600 / (float)600, 0.1f, 100.0f);
-		colorShader.SetUniformMat4("view", viewMatrix);
-		colorShader.SetUniformMat4("projection", projectionMatrix);
+
 
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = m_Registry.GetRegistry().view<MeshComponent, TransformComponent>();
@@ -50,8 +63,23 @@ namespace CORE::Systems {
 			model = glm::translate(model, transform.position);
 			model = glm::scale(model, transform.scale);	// NOTE::do scale after translate!!!
 			model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));// rotate with y axis
-			colorShader.SetUniformMat4("model", model);
-			colorShader.SetUniformVec4("color", mesh.color);
+			if (mesh.shader == "colorShader")
+			{
+				colorShader.Enable();
+				colorShader.SetUniformMat4("model", model);
+				colorShader.SetUniformMat4("view", viewMatrix);
+				colorShader.SetUniformMat4("projection", projectionMatrix);
+				colorShader.SetUniformVec4("color", mesh.color);
+			}
+			else if (mesh.shader == "texShader")
+			{
+				texShader.Enable();
+				texShader.Enable();
+				texShader.SetUniformMat4("model", model);
+				texShader.SetUniformMat4("view", viewMatrix);
+				texShader.SetUniformMat4("projection", projectionMatrix);
+				texShader.SetUniformInt("tex", mesh.texture);
+			}
 			mesh.Render();
 		}
 	}

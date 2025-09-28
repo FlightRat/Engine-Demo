@@ -6,7 +6,7 @@ namespace RENDERING{
 	bool TextureLoader::LoadTexture(const std::string& filepath, GLuint& id, int& width, int& height, bool blended)
 	{
 		int channels = 0;
-
+		
 		// clang-format off
 		unsigned char* image = SOIL_load_image(filepath.c_str(), // Filename			-- Image file to be loaded
 			&width,			  // Width				-- Width of the image
@@ -31,21 +31,8 @@ namespace RENDERING{
 		case 4: format = GL_RGBA; break;
 		}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		if (!blended)
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		}
-
-		glTexImage2D(GL_TEXTURE_2D,	// target			-- Specifies the target texture
+		glTexImage2D(
+			GL_TEXTURE_2D,	// target			-- Specifies the target texture
 			0,				// level			-- Level of detail. 0 is the base image level
 			format,			// internal format	-- The number of color components
 			width,			// width			-- width of the texture image
@@ -55,6 +42,21 @@ namespace RENDERING{
 			GL_UNSIGNED_BYTE, // type				-- The data type of the pixel data
 			image				// data
 		);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+
+		if (!blended)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		}
+		else
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
 
 		// Delete the image data from SOIL
 		SOIL_free_image_data(image);

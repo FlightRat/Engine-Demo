@@ -179,7 +179,10 @@
     <None Include="SDL2.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\textures\container.png" />
+    <Image Include="assets\textures\lego.png" />
     <Image Include="assets\textures\mafuyu.png" />
+    <Image Include="assets\textures\wood.png" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />

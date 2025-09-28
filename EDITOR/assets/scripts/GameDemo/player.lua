@@ -71,7 +71,7 @@ function Player:Update()
 		AddProjectile(bullet)
 	end
 
-	CheckPos(transform.position, 0.5, 0.5)
+	CheckPos(transform.position, transform.scale.x, transform.scale.z)
 	self:CheckDeath()
 end
 

@@ -9,8 +9,11 @@
 namespace CORE::ECS {
     struct MeshComponent
     {
-        glm::vec4 color{ glm::vec4{1.0f} };
-        std::string type;
+        std::string mesh;
+        std::string shader;
+        glm::vec4 color;
+        int texture;
+        
         std::vector<float> data;
         unsigned short vertexNum;
         GLuint m_VAO, m_VBO;
@@ -19,7 +22,9 @@ namespace CORE::ECS {
         void load_cube();
         void load_mesh();
         
+        inline void set_shader(const std::string mesh_shader) { shader = mesh_shader; }
         inline void set_color(const glm::vec4 mesh_color) { color = mesh_color; }
+        inline void set_texture(const int mesh_texture) { texture = mesh_texture; }
 
         void Render();
         static void CreateLuaMeshBind(sol::state& lua);

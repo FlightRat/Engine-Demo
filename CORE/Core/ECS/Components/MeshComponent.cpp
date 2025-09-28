@@ -80,9 +80,9 @@ void CORE::ECS::MeshComponent::load_cube()
 
 void CORE::ECS::MeshComponent::load_mesh()
 {
-    if (type == "cube")
+    if (mesh == "cube")
         load_cube();
-    else if (type == "plane")
+    else if (mesh == "plane")
         load_plane();
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
@@ -117,15 +117,19 @@ void CORE::ECS::MeshComponent::CreateLuaMeshBind(sol::state& lua)
         "type_id", &entt::type_hash<MeshComponent>::value,
         sol::call_constructor,
         sol::factories(
-            [&](glm::vec4 color, const std::string& type) {
+            [&](const std::string& mesh, const std::string& shader, glm::vec4 color, int texture) {
                 return MeshComponent{
-                    .color=color,
-                    .type=type
+                    .mesh= mesh,
+                    .shader= shader,
+                    .color = color,
+                    .texture = texture
                 }; 
             }
         ),
         "load_mesh", [](MeshComponent& mesh) {mesh.load_mesh(); },
-        "mesh_color", [](MeshComponent& mesh, const glm::vec4 mesh_color) {mesh.set_color(mesh_color); },
+        "set_shader", [](MeshComponent& mesh, const std::string mesh_shader) { mesh.set_shader(mesh_shader); },
+        "set_color", [](MeshComponent& mesh, const glm::vec4 mesh_color) {mesh.set_color(mesh_color); },
+        "set_texture", [](MeshComponent& mesh, const int mesh_texture) {mesh.set_texture(mesh_texture); },
         "color", &MeshComponent::color
         //"render", [&](MeshComponent& mesh) {mesh.Render(); }
     );
