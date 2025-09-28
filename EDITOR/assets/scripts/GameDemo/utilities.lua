@@ -136,9 +136,9 @@ function RemoveEnemy(enemy_id)
 	for k,v in pairs(enemy_table) do
 		if v.m_EneityID == enemy_id then
 			if v.m_Type == "small" then
-				--TODO
+				gData:AddScore(SMALL_ENEMY_SCORE)
 			elseif v.m_Type == "big" then
-				--TODO
+				gData:AddScore(BIG_ENEMY_SCORE)
 			end
 			local enemy = Entity(v.m_EneityID)
 			enemy:kill()

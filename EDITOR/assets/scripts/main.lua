@@ -30,7 +30,8 @@ main = {
 			UpdateEnemy()
 			UpdateProjectile()
 			SpawnEnemy()
-			print("live:"..gData:NumLives())
+			--print("live:"..gData:NumLives())
+			print("score:"..gData:GetScore())
 		end
 	},
 	[2] = {

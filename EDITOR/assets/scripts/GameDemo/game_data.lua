@@ -33,4 +33,22 @@ function GameData:RemoveLife()
 	self.m_NumLives = clamp(self.m_NumLives-1, 0, self.m_MaxLives)
 end
 
+function GameData:AddScore(value)
+	self.m_Score = clamp(self.m_Score+value, 0, 999)
+end
+
+function GameData:GetScore()
+	return self.m_Score
+end
+
+function GameData:Reset()
+	self.m_Score = 0
+	self.m_NumEnemies = 0
+	self.m_NumLives = 3
+end
+
 gData = GameData:Create()
+
+--Constants
+SMALL_ENEMY_SCORE = 5
+BIG_ENEMY_SCORE = 10
