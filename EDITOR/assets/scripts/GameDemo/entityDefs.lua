@@ -12,7 +12,7 @@ EnemyDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=1.0, G=0.0, B=0.0},
+				color = {R=1.0, G=0.0, B=0.0, A=1.0},
 				type = "cube"
 			},
 			CubeCollider = {
@@ -34,7 +34,7 @@ EnemyDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=0.0, G=0.0, B=1.0},
+				color = {R=0.0, G=0.0, B=1.0, A=1.0},
 				type = "cube"
 			},
 			CubeCollider = {
@@ -59,7 +59,7 @@ PlayerDefs =
 				rotation = {x=0.0, y=-90.0, z=0.0} -- (-90бу) for move with rotation
 			},
 			Mesh = {
-				color = {R=0.0, G=1.0, B=0.0},
+				color = {R=0.0, G=1.0, B=0.0, A=1.0},
 				type = "cube"
 			},
 			CubeCollider = {
@@ -84,7 +84,7 @@ EnvirDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=1.0, G=1.0, B=1.0},
+				color = {R=1.0, G=1.0, B=1.0, A=1.0},
 				type = "plane"
 			}
 		}
@@ -104,7 +104,7 @@ ProjectileDefs =
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			Mesh = {
-				color = {R=1.0, G=0.0, B=1.0},
+				color = {R=1.0, G=0.0, B=1.0, A=1.0},
 				type = "cube"
 			},
 			CubeCollider = {

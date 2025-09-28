@@ -39,10 +39,11 @@ function LoadEntity( def )
 	if def.components.Mesh then
 		local mesh = newEntity:add_component(
 			Mesh(
-				vec3(
+				vec4(
 					def.components.Mesh.color.R,
 					def.components.Mesh.color.G,
-					def.components.Mesh.color.B
+					def.components.Mesh.color.B,
+					def.components.Mesh.color.A
 				),
 				def.components.Mesh.type
 			)
@@ -80,9 +81,7 @@ function  CheckPos(position, width, height )
 	elseif position.z + width > max_z then
 		position.z = position.z - plane_size - width
 	end
-
 end
-
 
 function GetRandomPosition()
 	return vec3(
@@ -111,9 +110,8 @@ function UpdateEnemy()
 	end
 end
 
-
 globalTimer = Timer()
-function SpawnEnemies()
+function SpawnEnemy()
 	if not globalTimer:is_running() then
 		globalTimer:start()
 	end
@@ -134,6 +132,22 @@ function SpawnEnemies()
 	end
 end
 
+function RemoveEnemy(enemy_id)
+	for k,v in pairs(enemy_table) do
+		if v.m_EneityID == enemy_id then
+			if v.m_Type == "small" then
+				--TODO
+			elseif v.m_Type == "big" then
+				--TODO
+			end
+			local enemy = Entity(v.m_EneityID)
+			enemy:kill()
+			enemy_table[k] = nil
+			break
+		end
+	end
+end
+
 projectile_table = {}
 
 function AddProjectile(projectile)
@@ -144,6 +158,7 @@ function UpdateProjectile()
 	for k,v in pairs(projectile_table) do
 		if v:TimesUp() then
 			v:Destory()
+			projectile_table[k] = nil
 		else
 			v:Update()
 		end

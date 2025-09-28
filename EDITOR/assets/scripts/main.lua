@@ -6,6 +6,7 @@ run_script("assets/scripts/GameDemo/player.lua")
 run_script("assets/scripts/GameDemo/enemy.lua")
 run_script("assets/scripts/GameDemo/projectile.lua")
 run_script("assets/scripts/GameDemo/collision_system.lua")
+run_script("assets/scripts/GameDemo/game_data.lua")
 
 math.randomseed(os.time())
 
@@ -14,8 +15,7 @@ LoadAssets()
 local player = LoadEntity(PlayerDefs["player"])
 local floor = LoadEntity(EnvirDefs["floor"])
 --local enemy1 = LoadEntity(EnemyDefs["enemy_big"])
-local enemy2 = LoadEntity(EnemyDefs["enemy_small"])
-te = Entity(enemy2)
+--local enemy2 = LoadEntity(EnemyDefs["enemy_small"])
 
 gCollisionSystem = CollisionSystem:Create()
 
@@ -27,12 +27,10 @@ main = {
 		update = function()
 			gPlayer:Update()
 			gCollisionSystem:Update()
-			if Keyboard.pressed(KEY_F) then
-				te:kill()
-			end
-			--UpdateEnemy()
-			--UpdateProjectile()
-			--SpawnEnemies()
+			UpdateEnemy()
+			UpdateProjectile()
+			SpawnEnemy()
+			print("live:"..gData:NumLives())
 		end
 	},
 	[2] = {

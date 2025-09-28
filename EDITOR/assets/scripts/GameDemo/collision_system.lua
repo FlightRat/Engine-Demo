@@ -17,6 +17,7 @@ end
 
 function CollisionSystem:UpdateCubeCollision()
 	local entities = Registry.get_entities(CubeCollider)
+	local entitiesToDestory = {}
 	entities:for_each(
 		function(entity_a)
 			local group_a = entity_a:group()
@@ -42,17 +43,36 @@ function CollisionSystem:UpdateCubeCollision()
 					end
 					
 					if self:Intersect_Cube(entity_a, entity_b) then
-						print("ID: " ..entity_a:id().. " is colliding with ID: "..entity_b:id())
+						if group_a=="projectiles" and group_b=="enemy" then
+							collider_a.bColliding = true
+							collider_b.bColliding = true
+							table.insert(entitiesToDestory, entity_b:id())
+						elseif group_b=="projectiles" and group_a=="enemy" then
+							collider_a.bColliding = true
+							collider_b.bColliding = true
+							table.insert(entitiesToDestory, entity_a:id())
+						elseif name_a=="player" and group_b=="enemy" then
+							collider_a.bColliding = true
+							table.insert(entitiesToDestory, entity_a:id())
+						elseif name_b=="player" and group_a=="enemy" then
+							collider_b.bColliding = true
+							table.insert(entitiesToDestory, entity_b:id())
+						end
 					end
-
 					::continue::
 				end
 			)
-
 		end
-
 	)
-
+	for k, v in pairs(entitiesToDestory) do
+		local entity = Entity(v)
+		if entity:group() == "enemy" then
+			RemoveEnemy(entity:id())
+			--TODO
+		elseif entity:name() == "player" then
+			gData:RemoveLife()
+		end
+	end
 end
 
 function CollisionSystem:Intersect_Cube(entity_a, entity_b)
@@ -75,8 +95,6 @@ function CollisionSystem:Intersect_Cube(entity_a, entity_b)
 	right_b = position_b.x + collider_b.width
 	top_b = position_b.z - collider_b.width
 	bottom_b = position_b.z + collider_b.width
-
-
 
 	if (right_a <= left_b or left_a >= right_b or bottom_a <= top_b or top_a >= bottom_b) then
 		return false

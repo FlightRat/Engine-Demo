@@ -9,7 +9,7 @@
 namespace CORE::ECS {
     struct MeshComponent
     {
-        glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+        glm::vec4 color{ glm::vec4{1.0f} };
         std::string type;
         std::vector<float> data;
         unsigned short vertexNum;
@@ -19,7 +19,7 @@ namespace CORE::ECS {
         void load_cube();
         void load_mesh();
         
-        inline void set_color(const glm::vec3 mesh_color) { color = mesh_color; }
+        inline void set_color(const glm::vec4 mesh_color) { color = mesh_color; }
 
         void Render();
         static void CreateLuaMeshBind(sol::state& lua);

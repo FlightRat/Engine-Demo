@@ -15,7 +15,7 @@ function Projectile:Create(params)
 
 	this.m_EntityID = LoadEntity(projectile)
 
-	this.m_ProjectileLifeTime = projectile.life_time or 2000
+	this.m_ProjectileLifeTime = projectile.life_time or 3000
 	this.m_Speed = projectile.proj_speed or 0.1
 	this.m_LifeTimer = Timer()
 
@@ -40,5 +40,6 @@ function Projectile:TimesUp()
 end
 
 function Projectile:Destory()
-	--projectEnt:kill()
+	local projectEnt = Entity(self.m_EntityID)
+	projectEnt:kill()
 end

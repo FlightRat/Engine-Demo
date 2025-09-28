@@ -117,7 +117,7 @@ void CORE::ECS::MeshComponent::CreateLuaMeshBind(sol::state& lua)
         "type_id", &entt::type_hash<MeshComponent>::value,
         sol::call_constructor,
         sol::factories(
-            [&](glm::vec3 color, const std::string& type) {
+            [&](glm::vec4 color, const std::string& type) {
                 return MeshComponent{
                     .color=color,
                     .type=type
@@ -125,7 +125,8 @@ void CORE::ECS::MeshComponent::CreateLuaMeshBind(sol::state& lua)
             }
         ),
         "load_mesh", [](MeshComponent& mesh) {mesh.load_mesh(); },
-        "mesh_color", [](MeshComponent& mesh, const glm::vec3 mesh_color) {mesh.set_color(mesh_color); }
+        "mesh_color", [](MeshComponent& mesh, const glm::vec4 mesh_color) {mesh.set_color(mesh_color); },
+        "color", &MeshComponent::color
         //"render", [&](MeshComponent& mesh) {mesh.Render(); }
     );
 }
