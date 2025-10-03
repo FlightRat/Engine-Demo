@@ -50,6 +50,7 @@ function LoadEntity( def )
 				def.components.Mesh.texture or 0
 			)
 		)
+		mesh.bHidden = def.components.Mesh.bHidden or false
 		mesh:load_mesh()
 	end
 
@@ -118,7 +119,7 @@ function SpawnEnemy()
 		globalTimer:start()
 	end
 
-	if globalTimer:elapsed_sec() > 5 then
+	if globalTimer:elapsed_ms() > 5000 then
 		local val = math.random(1, 3)
 
 		if val == 1 then
@@ -150,6 +151,15 @@ function RemoveEnemy(enemy_id)
 	end
 end
 
+function ResetEnemy()
+	for k, v in pairs(enemy_table) do
+		local enemy = Entity(v.m_EneityID)
+		enemy:kill()
+		enemy_table[k] = nil
+	end
+end
+
+
 projectile_table = {}
 
 function AddProjectile(projectile)
@@ -164,5 +174,13 @@ function UpdateProjectile()
 		else
 			v:Update()
 		end
+	end
+end
+
+function ResetProjectile()
+	for k, v in pairs(projectile_table) do
+		local projectile = Entity(v.m_EneityID)
+		projectile:kill()
+		projectile_table[k] = nil
 	end
 end

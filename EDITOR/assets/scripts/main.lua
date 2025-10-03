@@ -7,6 +7,7 @@ run_script("assets/scripts/GameDemo/enemy.lua")
 run_script("assets/scripts/GameDemo/projectile.lua")
 run_script("assets/scripts/GameDemo/collision_system.lua")
 run_script("assets/scripts/GameDemo/game_data.lua")
+run_script("assets/scripts/GameDemo/hud.lua")
 
 math.randomseed(os.time())
 
@@ -18,20 +19,31 @@ local floor = LoadEntity(EnvirDefs["floor"])
 --local enemy2 = LoadEntity(EnemyDefs["enemy_small"])
 
 gCollisionSystem = CollisionSystem:Create()
-
+gHud = Hud:Create()
 
 gPlayer = Player:Create({id=player, move_speed=0.2})
+
+print("Score: "..0)
 
 main = {
 	[1] = {
 		update = function()
 			gPlayer:Update()
 			gCollisionSystem:Update()
+			gHud:Update()
 			UpdateEnemy()
 			UpdateProjectile()
-			SpawnEnemy()
-			--print("live:"..gData:NumLives())
-			print("score:"..gData:GetScore())
+			if not gData:IsGameOver() then
+				SpawnEnemy()
+			else
+				if Keyboard.pressed(KEY_R) then
+					gData:Reset()
+					gHud:Reset()
+					gPlayer:Reset()
+					ResetEnemy()
+					ResetProjectile()
+				end
+			end
 		end
 	},
 	[2] = {

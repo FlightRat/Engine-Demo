@@ -14,10 +14,13 @@ namespace CORE::ECS {
         glm::vec4 color;
         int texture;
         
+        bool bHidden{ false };
+
         std::vector<float> data;
         unsigned short vertexNum;
         GLuint m_VAO, m_VBO;
 
+        void load_hud_quad();
         void load_plane();
         void load_cube();
         void load_mesh();

@@ -29,6 +29,14 @@ function Player:Update()
 	local transform = player:get_component(Transform)
 	local mesh = player:get_component(Mesh)
 
+	-- hide player if dead
+	if gData:NumLives() == 0 then
+		if not self.m_bDead then
+			mesh.bHidden = true
+		end
+		self.m_bDead = true
+	end
+
 	if Keyboard.pressed(KEY_Q) then
 		transform.rotation.y = transform.rotation.y + self.m_RotateSpeed
 	end
@@ -88,10 +96,28 @@ function Player:CheckDeath()
 
 		mesh.color = vec4(mesh.color.x, mesh.color.y, mesh.color.z, 0.5)
 
-		if self.m_InvincibleTimer:elapsed_sec() > 3 then
+		if self.m_InvincibleTimer:elapsed_ms() > 3000 then
 			collider.bColliding = false
 			self.m_InvincibleTimer:stop()
 			mesh.color = vec4(mesh.color.x, mesh.color.y, mesh.color.z, 1.0)
 		end
 	end
+end
+
+function Player:Reset()
+	self.m_bDead = false
+	self.m_NumLives  = gData:NumLives()
+	self.m_InvincibleTimer:stop()
+	self.m_CoolDownTimer:stop()
+
+	local player = Entity(self.m_EntityID)
+
+	local transform = player:get_component(Transform)
+	transform.position = vec3(0.0, 0.0, 0.0)
+
+	local mesh = player:get_component(Mesh)
+	mesh.bHidden = false
+
+	local collider = player:get_component(CubeCollider)
+	collider.bColliding = false
 end

@@ -37,6 +37,9 @@
     <None Include="assets\scripts\GameDemo\collision_system.lua" />
     <None Include="assets\scripts\GameDemo\projectile.lua" />
     <None Include="assets\scripts\GameDemo\game_data.lua" />
+    <None Include="assets\scripts\GameDemo\hud.lua" />
+    <None Include="assets\shaders\hudShader.vert" />
+    <None Include="assets\shaders\hudShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

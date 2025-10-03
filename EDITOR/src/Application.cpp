@@ -207,6 +207,13 @@ namespace EDITOR {
 			return false;
 		}
 
+		// hud shader
+		if (!assetManager->AddShader("hudShader", "assets/shaders/hudShader.vert", "assets/shaders/hudShader.frag"))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		return true;
     }
 
@@ -260,8 +267,8 @@ namespace EDITOR {
 			case SDL_MOUSEMOTION:
 			{
 				mouse.SetMouseMoving(true);
-				float xrel = static_cast<float>(m_Event.motion.xrel);
-				float yrel = static_cast<float>(m_Event.motion.yrel);
+				//float xrel = static_cast<float>(m_Event.motion.xrel);
+				//float yrel = static_cast<float>(m_Event.motion.yrel);
 				//camera->ProcessMouseMovement(xrel, -yrel);
 				break;
 			}

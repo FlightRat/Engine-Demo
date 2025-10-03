@@ -62,7 +62,7 @@ PlayerDefs =
 			},
 			Mesh = {
 				type = "cube",
-				shader = "texShader",
+				shader = "colorShader",
 				color = {R=0.0, G=1.0, B=0.0, A=1.0},
 				texture = 2
 			},
@@ -121,5 +121,44 @@ ProjectileDefs =
 		},
 		life_time = 2000,
 		proj_speed = 0.1
+	}
+}
+
+HudDefs = 
+{
+	lives =
+	{
+		group = "lives",
+		components = 
+		{
+			Transform = {
+				position = {x=0, y=0, z=0},
+				scale = {x=0.05, y=0.05, z=0.05},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			Mesh = {
+				type = "hud_quad",
+				shader = "hudShader",
+				color = {R=1.0, G=1.0, B=1.0, A=1.0}
+			}
+		}
+	},
+	game_over =
+	{
+		tag = "game_over",
+		components = 
+		{
+			Transform = {
+				position = {x=0, y=0, z=0},
+				scale = {x=0.75, y=0.4, z=1.0},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			Mesh = {
+				type = "hud_quad",
+				shader = "hudShader",
+				color = {R=1.0, G=1.0, B=1.0, A=1.0},
+				bHidden = true
+			}
+		}
 	}
 }

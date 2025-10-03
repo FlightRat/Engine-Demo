@@ -22,6 +22,27 @@ void CORE::ECS::MeshComponent::load_plane()
     }
 }
 
+void CORE::ECS::MeshComponent::load_hud_quad()
+{
+    data.clear();
+    vertexNum = 6;
+    float vertices[] = {
+        // positions            // normals         // texcoords
+        -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+         1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+         1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+         1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+        -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+        -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+    };
+    size_t vertexSize = sizeof(vertices) / sizeof(float);
+    data.reserve(vertexSize);
+    for (size_t i = 0; i < vertexSize; ++i)
+    {
+        data.push_back(vertices[i]);
+    }
+}
+
 void CORE::ECS::MeshComponent::load_cube()
 {
     data.clear();
@@ -84,6 +105,8 @@ void CORE::ECS::MeshComponent::load_mesh()
         load_cube();
     else if (mesh == "plane")
         load_plane();
+    else if (mesh == "hud_quad")
+        load_hud_quad();
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
     // fill the data
@@ -130,7 +153,8 @@ void CORE::ECS::MeshComponent::CreateLuaMeshBind(sol::state& lua)
         "set_shader", [](MeshComponent& mesh, const std::string mesh_shader) { mesh.set_shader(mesh_shader); },
         "set_color", [](MeshComponent& mesh, const glm::vec4 mesh_color) {mesh.set_color(mesh_color); },
         "set_texture", [](MeshComponent& mesh, const int mesh_texture) {mesh.set_texture(mesh_texture); },
-        "color", &MeshComponent::color
+        "color", &MeshComponent::color,
+        "bHidden",&MeshComponent::bHidden
         //"render", [&](MeshComponent& mesh) {mesh.Render(); }
     );
 }
