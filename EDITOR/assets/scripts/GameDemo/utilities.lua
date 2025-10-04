@@ -157,6 +157,7 @@ function ResetEnemy()
 		enemy:kill()
 		enemy_table[k] = nil
 	end
+	globalTimer:stop()
 end
 
 

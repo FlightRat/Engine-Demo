@@ -117,6 +117,7 @@ function Player:Reset()
 
 	local mesh = player:get_component(Mesh)
 	mesh.bHidden = false
+	mesh.color = vec4(mesh.color.x, mesh.color.y, mesh.color.z, 1.0)
 
 	local collider = player:get_component(CubeCollider)
 	collider.bColliding = false
