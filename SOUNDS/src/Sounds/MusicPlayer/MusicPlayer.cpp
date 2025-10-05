@@ -57,7 +57,14 @@ namespace SOUNDS {
 
 	void MusicPlayer::SetVolume(int volume)
 	{
-		Mix_VolumeMusic(volume);
+		if (volume < 0 || volume > 100)
+		{
+			ENGINE_ERROR("Failed to set the volume with [{}], it must between 0 and 100!", volume);
+			return;
+		}
+		// scale the volume to 0~128
+		int volume_scaled = static_cast<int>((volume / 100.f) * 128);
+		Mix_VolumeMusic(volume_scaled);
 	}
 
 	bool MusicPlayer::IsPlaying()
