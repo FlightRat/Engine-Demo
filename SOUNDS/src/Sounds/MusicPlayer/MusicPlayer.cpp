@@ -4,7 +4,8 @@
 
 namespace SOUNDS {
 	MusicPlayer::MusicPlayer()
-	{
+	{	
+		// create the audio device
 		if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
 		{
 			std::string error{ Mix_GetError() };
@@ -38,23 +39,30 @@ namespace SOUNDS {
 
 	void MusicPlayer::Pause()
 	{
+		if (!Mix_PausedMusic())
+		{
+			Mix_PauseMusic();
+		}
 	}
 
 	void MusicPlayer::Resume()
 	{
+		Mix_ResumeMusic();
 	}
 
 	void MusicPlayer::Stop()
 	{
+		Mix_HaltMusic();
 	}
 
 	void MusicPlayer::SetVolume(int volume)
 	{
+		Mix_VolumeMusic(volume);
 	}
 
 	bool MusicPlayer::IsPlaying()
 	{
-		return false;
+		return Mix_PlayingMusic();
 	}
 }
 

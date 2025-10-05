@@ -183,6 +183,7 @@
     <None Include="assets\shaders\texShader.frag" />
     <None Include="assets\shaders\texShader.vert" />
     <None Include="SDL2.dll" />
+    <None Include="SDL2_mixer.dll" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\container.png" />
@@ -192,6 +193,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="assets\music\2-23am.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,6 +4,7 @@
 #include<Logger/Logger.h>
 
 namespace RESOURCES {
+    // texture
     bool AssetManager::AddTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt)
     {
         // check if texture already loaded
@@ -26,7 +27,6 @@ namespace RESOURCES {
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
     }
-
     std::shared_ptr<RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
         auto texItr = m_mapTexture.find(textureName);
@@ -38,6 +38,7 @@ namespace RESOURCES {
         return texItr->second;
     }
 
+    // shader
     bool AssetManager::AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath)
     {
         // check if shader already loaded
@@ -55,7 +56,6 @@ namespace RESOURCES {
         m_mapShader.emplace(shaderName, std::move(shader));
         return true;
     }
-
     std::shared_ptr<RENDERING::Shader> AssetManager::GetShader(const std::string& shaderName)
     {
         auto shaderItr = m_mapShader.find(shaderName);
@@ -67,6 +67,7 @@ namespace RESOURCES {
         return shaderItr->second;
     }
 
+    // music
     bool AssetManager::AddMusic(const std::string& musicName, const std::string& musicPath)
     {   
         // check if exists
@@ -104,7 +105,6 @@ namespace RESOURCES {
         
         return true;
     }
-
     std::shared_ptr<SOUNDS::Music> AssetManager::GetMusic(const std::string& musicName)
     {
         auto musicItr = m_mapMusic.find(musicName);
@@ -116,6 +116,7 @@ namespace RESOURCES {
         return musicItr->second;
     }
 
+    // lua register
     void AssetManager::CreateLuaAssetManager(sol::state& lua, CORE::ECS::Registry& registry)
     {
         auto& assetManager = registry.GetContext<std::shared_ptr<RESOURCES::AssetManager>>();

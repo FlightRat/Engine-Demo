@@ -7,6 +7,7 @@
 #include "../ECS/Entity.h"
 #include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
+#include "../Scripting/SoundLuaBindings.h"
 #include "../Scripting/InputManager.h"
 #include"../Resources/AssetManager.h"
 #include<Utilities/Timer.h>
@@ -116,11 +117,12 @@ namespace CORE::Systems {
 
 	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry)
 	{
-		Registry::CreateLuaRegistryBind(lua, registry);					// register "runtime_view" & "Registry" into lua
-		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);			// register glm vec into lua
-		CORE::InputManager::CreateLuaInputBindings(lua);				// register inputs stuff into lua
-		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);	// register assetManager into lua
-		UTIL::Timer::CreateLuaTimer(lua);								// register timer into lua
+		Registry::CreateLuaRegistryBind(lua, registry);							// register "runtime_view" & "Registry" into lua
+		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);					// register glm vec into lua
+		CORE::InputManager::CreateLuaInputBindings(lua);						// register inputs stuff into lua
+		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);			// register assetManager into lua
+		CORE::Scripting::SoundBindings::CreateSoundBindings(lua, registry);		// register sound into lua
+		UTIL::Timer::CreateLuaTimer(lua);										// register timer into lua
 
 		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua

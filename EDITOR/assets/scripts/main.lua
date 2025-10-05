@@ -23,6 +23,8 @@ gHud = Hud:Create()
 
 gPlayer = Player:Create({id=player, move_speed=0.2})
 
+Music.play("2:23am")
+
 print("Score: "..0)
 
 main = {

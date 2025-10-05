@@ -24,6 +24,10 @@ typedef std::shared_ptr<SDL_Cursor> Cursor;
 static Cursor make_shared_cursor(SDL_Cursor* cursor);
 
 typedef std::unique_ptr<SDL_Window, UTIL::SDL_Destoryer> WindowPtr;
+//定义了一个名为WindowPtr的类型，它是std::unique_ptr的特化版本：
+//管理的资源类型是SDL_Window
+//使用自定义的UTIL::SDL_Destoryer作为删除器
+//这样定义后，WindowPtr会自动管理音频资源的生命周期，当智能指针超出作用域时，会自动调用SDL_Destoryer来释放资源，避免内存泄漏
 
 typedef std::unique_ptr<Mix_Chunk, UTIL::SDL_Destoryer> SoundPtr;
 typedef std::unique_ptr<Mix_Music, UTIL::SDL_Destoryer> MusicPtr;

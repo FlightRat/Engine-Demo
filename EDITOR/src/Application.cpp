@@ -19,6 +19,7 @@
 #include<Core/Systems/RenderSystem.h>
 #include<Core/Scripting/InputManager.h>
 #include<Windowing/Inputs/Keyboard.h>
+#include<Sounds/MusicPlayer/MusicPlayer.h>
 
 const unsigned int SCR_WIDTH = 600;
 const unsigned int SCR_HEIGHT = 600;
@@ -118,6 +119,19 @@ namespace EDITOR {
 			return false;
 		}
 
+		// Music Player
+		auto musicPlayer = std::make_shared<SOUNDS::MusicPlayer>();
+		if (!musicPlayer)
+		{
+			ENGINE_ERROR("Failed to create the music player!");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<SOUNDS::MusicPlayer>>(musicPlayer))
+		{
+			ENGINE_ERROR("Failed to add the music player to the registry context!");
+			return false;
+		}
+
 		// Camera
 		// auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);		//平视相机
 		auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, -90.0f);		//俯视相机
@@ -127,13 +141,7 @@ namespace EDITOR {
 			return false;
 		}
 
-		// textures
-		//if (!assetManager->AddTexture("mafuyu", "./assets/textures/mafuyu.png", false))
-		//{
-		//	ENGINE_ERROR("Failed to create and add the texture!");
-		//	return false;
-		//}
-
+		// TODO: Add shader to lua, like texture
 		// shaders
 		if (!LoadShaders())
 		{

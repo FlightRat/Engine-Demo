@@ -9,6 +9,7 @@ using namespace RESOURCES;
 
 void CORE::Scripting::SoundBindings::CreateSoundBindings(sol::state& lua, CORE::ECS::Registry& registry)
 {
+	// get music player
 	auto& musicPlayer = registry.GetContext<std::shared_ptr<MusicPlayer>>();
 	if (!musicPlayer)
 	{
@@ -16,6 +17,7 @@ void CORE::Scripting::SoundBindings::CreateSoundBindings(sol::state& lua, CORE::
 		return;
 	}
 
+	// get asset manager
 	auto& assetManager = registry.GetContext<std::shared_ptr<AssetManager>>();
 	if (!assetManager)
 	{
@@ -23,6 +25,7 @@ void CORE::Scripting::SoundBindings::CreateSoundBindings(sol::state& lua, CORE::
 		return;
 	}
 
+	// register "Music" into lua
 	lua.new_usertype<MusicPlayer>(
 		"Music",
 		sol::no_constructor,

@@ -40,6 +40,7 @@
     <None Include="assets\scripts\GameDemo\hud.lua" />
     <None Include="assets\shaders\hudShader.vert" />
     <None Include="assets\shaders\hudShader.frag" />
+    <None Include="SDL2_mixer.dll" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
@@ -59,5 +60,10 @@
     <ClInclude Include="src\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="assets\music\2-23am.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
   </ItemGroup>
 </Project>
