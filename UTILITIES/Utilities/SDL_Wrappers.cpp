@@ -11,6 +11,18 @@ void UTIL::SDL_Destoryer::operator()(SDL_GameController* controller) const
 {
 }
 
+void UTIL::SDL_Destoryer::operator()(Mix_Chunk* chunk) const
+{
+    Mix_FreeChunk(chunk);
+    ENGINE_LOG("Freed SDL Mix_Chunk!\n");
+}
+
+void UTIL::SDL_Destoryer::operator()(Mix_Music* music) const
+{
+    Mix_FreeMusic(music);
+    ENGINE_LOG("Freed SDL Mix_Music!\n");
+}
+
 void UTIL::SDL_Destoryer::operator()(SDL_Cursor* cursor) const
 {
 }

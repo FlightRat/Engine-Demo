@@ -72,7 +72,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir).\SOUNDS\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\LUA\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -154,6 +154,9 @@
     </ProjectReference>
     <ProjectReference Include="..\SOIL\SOIL.vcxproj">
       <Project>{51e7f6d2-108b-40d0-be47-8772bad4a838}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SOUNDS\SOUNDS.vcxproj">
+      <Project>{40aaaf01-edad-4dd3-96f7-2c31eae6361d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities.vcxproj">
       <Project>{57200a04-1262-450c-907e-b274c1889cfb}</Project>

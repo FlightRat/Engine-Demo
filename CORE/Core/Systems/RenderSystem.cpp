@@ -22,37 +22,37 @@ namespace CORE::Systems {
 		auto& assetManager = m_Registry.GetContext<std::shared_ptr<AssetManager>>();
 
 		// shader
-		auto& colorShader = assetManager->GetShader("colorShader");
-		if (colorShader.ShaderProgramID() == 0)
+		auto colorShader = assetManager->GetShader("colorShader");
+		if (colorShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto& texShader = assetManager->GetShader("texShader");
-		if (texShader.ShaderProgramID() == 0)
+		auto texShader = assetManager->GetShader("texShader");
+		if (texShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto& hudShader = assetManager->GetShader("hudShader");
-		if (hudShader.ShaderProgramID() == 0)
+		auto hudShader = assetManager->GetShader("hudShader");
+		if (hudShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
 
 		// mafuyu
-		const auto& mafuyu = assetManager->GetTexture("mafuyu");
+		const auto mafuyu = assetManager->GetTexture("mafuyu");
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mafuyu.GetID());
+		glBindTexture(GL_TEXTURE_2D, mafuyu->GetID());
 		// wood
 		const auto& wood = assetManager->GetTexture("wood");
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, wood.GetID());
+		glBindTexture(GL_TEXTURE_2D, wood->GetID());
 		// container
 		const auto& container = assetManager->GetTexture("container");
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, container.GetID());
+		glBindTexture(GL_TEXTURE_2D, container->GetID());
 
 		// camera
 		auto& camera = m_Registry.GetContext<std::shared_ptr<Camera3D>>();
@@ -75,27 +75,27 @@ namespace CORE::Systems {
 			model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));// rotate with y axis
 			if (mesh.shader == "colorShader")
 			{
-				colorShader.Enable();
-				colorShader.SetUniformMat4("model", model);
-				colorShader.SetUniformMat4("view", viewMatrix);
-				colorShader.SetUniformMat4("projection", PerspectiveMatrix);
-				colorShader.SetUniformVec4("color", mesh.color);
+				colorShader->Enable();
+				colorShader->SetUniformMat4("model", model);
+				colorShader->SetUniformMat4("view", viewMatrix);
+				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
+				colorShader->SetUniformVec4("color", mesh.color);
 			}
 			else if (mesh.shader == "texShader")
 			{
-				texShader.Enable();
-				texShader.Enable();
-				texShader.SetUniformMat4("model", model);
-				texShader.SetUniformMat4("view", viewMatrix);
-				texShader.SetUniformMat4("projection", PerspectiveMatrix);
-				texShader.SetUniformInt("tex", mesh.texture);
+				texShader->Enable();
+				texShader->Enable();
+				texShader->SetUniformMat4("model", model);
+				texShader->SetUniformMat4("view", viewMatrix);
+				texShader->SetUniformMat4("projection", PerspectiveMatrix);
+				texShader->SetUniformInt("tex", mesh.texture);
 			}
 			else if (mesh.shader == "hudShader")
 			{
-				hudShader.Enable();
-				hudShader.SetUniformMat4("model", model);
-				hudShader.SetUniformMat4("projection", orthoMatrix);
-				hudShader.SetUniformVec4("color", mesh.color);
+				hudShader->Enable();
+				hudShader->SetUniformMat4("model", model);
+				hudShader->SetUniformMat4("projection", orthoMatrix);
+				hudShader->SetUniformVec4("color", mesh.color);
 			}
 			mesh.Render();
 		}

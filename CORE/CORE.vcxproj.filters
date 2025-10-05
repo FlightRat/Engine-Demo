@@ -57,6 +57,9 @@
     <ClInclude Include="Core\ECS\Components\SphereColliderComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Scripting\SoundLuaBindings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Registry.cpp">
@@ -93,6 +96,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\ECS\Components\SphereColliderComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Scripting\SoundLuaBindings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

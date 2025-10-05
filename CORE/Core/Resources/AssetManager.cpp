@@ -27,15 +27,15 @@ namespace RESOURCES {
         return true;
     }
 
-    const RENDERING::Texture& AssetManager::GetTexture(const std::string& textureName)
+    std::shared_ptr<RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
         auto texItr = m_mapTexture.find(textureName);
         if (texItr == m_mapTexture.end())
         {
             ENGINE_ERROR("Failed to get texture [{0}] -- Does not exist!", textureName);
-            return RENDERING::Texture();
+            return nullptr;
         }
-        return *texItr->second;
+        return texItr->second;
     }
 
     bool AssetManager::AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath)
@@ -56,17 +56,66 @@ namespace RESOURCES {
         return true;
     }
 
-    RENDERING::Shader& AssetManager::GetShader(const std::string& shaderName)
+    std::shared_ptr<RENDERING::Shader> AssetManager::GetShader(const std::string& shaderName)
     {
         auto shaderItr = m_mapShader.find(shaderName);
         if (shaderItr == m_mapShader.end())
         {
             ENGINE_ERROR("Failed to get shader [{0}] -- Does not exist!", shaderName);
-            RENDERING::Shader shader{};
-            return shader;
+            return nullptr;
         }
-        return *shaderItr->second;
+        return shaderItr->second;
     }
+
+    bool AssetManager::AddMusic(const std::string& musicName, const std::string& musicPath)
+    {   
+        // check if exists
+        if (m_mapMusic.find(musicName) != m_mapMusic.end())
+        {
+            ENGINE_ERROR("Failed to add Music [{0}] -- Already exists!", musicName);
+            return false;
+        }
+
+        // load music data
+        Mix_Music* music = Mix_LoadMUS(musicPath.c_str());
+        if (!music)
+        {
+            std::string error{ Mix_GetError() };
+            ENGINE_ERROR("Failed to load [{}] at path [{}]-- Mixer Error:{}", musicName, musicPath, error);
+            return false;
+        }
+
+        // sound param
+        SOUNDS::SoundParams params{
+            .name = musicName,
+            .filename = musicPath,
+            .duration = Mix_MusicDuration(music)
+        };
+
+        // music pointer
+        auto musicPtr = std::make_shared<SOUNDS::Music>(params, MusicPtr{ music });
+        if (!musicPtr)
+        {
+            ENGINE_ERROR("Failed to create the must ptr for [{}]", musicName);
+            return false;
+        }
+
+        m_mapMusic.emplace(musicName, std::move(musicPtr));
+        
+        return true;
+    }
+
+    std::shared_ptr<SOUNDS::Music> AssetManager::GetMusic(const std::string& musicName)
+    {
+        auto musicItr = m_mapMusic.find(musicName);
+        if (musicItr == m_mapMusic.end())
+        {
+            ENGINE_ERROR("Failed to get music [{0}] -- Does not exists!", musicName);
+            return nullptr;
+        }
+        return musicItr->second;
+    }
+
     void AssetManager::CreateLuaAssetManager(sol::state& lua, CORE::ECS::Registry& registry)
     {
         auto& assetManager = registry.GetContext<std::shared_ptr<RESOURCES::AssetManager>>();
@@ -81,6 +130,9 @@ namespace RESOURCES {
             sol::no_constructor,
             "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){
                 return assetManager->AddTexture(texName, texPath, pixelArt);
+            },
+            "add_music", [&](const std::string& musicName, const std::string& musicPath) {
+                return assetManager->AddMusic(musicName, musicPath);
             }
         );
     }
