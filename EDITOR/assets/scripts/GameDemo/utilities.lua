@@ -136,6 +136,7 @@ function SpawnEnemy()
 end
 
 function RemoveEnemy(enemy_id)
+	SoundFx.play("hit")	-- put this into branch below if want to play different SoundFx for different enemy
 	for k,v in pairs(enemy_table) do
 		if v.m_EneityID == enemy_id then
 			if v.m_Type == "small" then

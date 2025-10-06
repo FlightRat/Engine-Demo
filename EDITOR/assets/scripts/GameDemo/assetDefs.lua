@@ -9,6 +9,10 @@ AssetDefs =
 	music=
 	{
 		{name="2:23am",path="assets/music/2-23am.wav"}
+	},
+	soundFx=
+	{
+		{name="hit",path="assets/soundFx/hit.wav"}
 	}
 }
 
@@ -31,6 +35,15 @@ function LoadAssets()
 		end
 	end
 
-	-- TODO:Add shader here
+	-- SoundFx
+	for k, v in pairs(AssetDefs.soundFx) do
+		if not AssetManager.add_soundFx(v.name, v.path) then
+			print("Failed to load soundFx ["..v.name.."] at path ["..v.path.."]!")
+		else
+			print("Loaded soundFx["..v.name.."]")
+		end
+	end
+
+	-- TODO:Shader
 
 end

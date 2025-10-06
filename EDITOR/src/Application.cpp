@@ -20,6 +20,7 @@
 #include<Core/Scripting/InputManager.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
+#include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
 
 const unsigned int SCR_WIDTH = 600;
 const unsigned int SCR_HEIGHT = 600;
@@ -129,6 +130,19 @@ namespace EDITOR {
 		if (!m_pRegistry->AddToContext<std::shared_ptr<SOUNDS::MusicPlayer>>(musicPlayer))
 		{
 			ENGINE_ERROR("Failed to add the music player to the registry context!");
+			return false;
+		}
+
+		// SoundFx Player
+		auto soundFxPlayer = std::make_shared<SOUNDS::SoundFxPlayer>();
+		if (!soundFxPlayer)
+		{
+			ENGINE_ERROR("Failed to create the soundFx player!");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<SOUNDS::SoundFxPlayer>>(soundFxPlayer))
+		{
+			ENGINE_ERROR("Failed to add the soundFx player to the registry context!");
 			return false;
 		}
 

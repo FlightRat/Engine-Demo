@@ -1,6 +1,6 @@
 #include "Music.h"
 
-SOUNDS::Music::Music(const SoundParams& params, MusicPtr pMusic):m_Params{ params }, m_pMusic{ std::move(pMusic) }
+SOUNDS::Music::Music(const SoundParams& params, MusicPtr pMusic) :m_Params{ params }, m_pMusic{ std::move(pMusic) }
 {
 
 }

@@ -196,6 +196,7 @@
   </ItemGroup>
   <ItemGroup>
     <Media Include="assets\music\2-23am.wav" />
+    <Media Include="assets\soundFx\hit.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

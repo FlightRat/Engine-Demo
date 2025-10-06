@@ -33,7 +33,7 @@ namespace SOUNDS {
 		if (Mix_PlayMusic(music.GetMusicPtr(), loops) != 0)
 		{
 			std::string error{ Mix_GetError() };
-			ENGINE_ERROR("Failed to play music [{}] Mix Error - {}", music.GetName(), error);
+			ENGINE_ERROR("Failed to play music [{}] -- Mix Error: {}", music.GetName(), error);
 		}
 	}
 

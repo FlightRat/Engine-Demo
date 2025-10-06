@@ -65,5 +65,8 @@
     <Media Include="assets\music\2-23am.wav">
       <Filter>Resource Files</Filter>
     </Media>
+    <Media Include="assets\soundFx\hit.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
   </ItemGroup>
 </Project>

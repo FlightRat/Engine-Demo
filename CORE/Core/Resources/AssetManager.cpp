@@ -116,6 +116,55 @@ namespace RESOURCES {
         return musicItr->second;
     }
 
+    // soundFx
+    bool AssetManager::AddSoundFx(const std::string& soundFxName, const std::string& soundFxPath)
+    {
+        // check if exists
+        if (m_mapSoundFx.find(soundFxName) != m_mapSoundFx.end())
+        {
+            ENGINE_ERROR("Failed to add SoundFx [{0}] -- Already exists!", soundFxName);
+            return false;
+        }
+
+        // load soundfx data
+        Mix_Chunk* chunk = Mix_LoadWAV(soundFxPath.c_str());
+        if (!chunk)
+        {
+            std::string error{ Mix_GetError() };
+            ENGINE_ERROR("Failed to load [{}] at path [{}] -- Mixer Error [{}]", soundFxName, soundFxPath, error);
+            return false;
+        }
+
+        // params
+        SOUNDS::SoundParams params{
+            .name = soundFxName,
+            .filename = soundFxPath,
+            .duration = chunk->alen / 179.4
+        };
+
+        // chunk pointer
+        auto chunkPtr = std::make_shared<SOUNDS::SoundFx>(params, SoundFxPtr{ chunk });
+        if (!chunkPtr)
+        {
+            ENGINE_ERROR("Failed to create the must ptr for [{}]", soundFxName);
+            return false;
+        }
+
+        m_mapSoundFx.emplace(soundFxName, std::move(chunkPtr));
+
+        return true;
+    }
+    std::shared_ptr<SOUNDS::SoundFx> AssetManager::GetSoundFx(const std::string& soundFxName)
+    {
+        auto soundFxItr = m_mapSoundFx.find(soundFxName);
+        if (soundFxItr == m_mapSoundFx.end())
+        {
+            ENGINE_ERROR("Failed to get soundFx [{}] -- Does not exists!", soundFxName);
+            return nullptr;
+        }
+        return soundFxItr->second;
+    }
+
     // lua register
     void AssetManager::CreateLuaAssetManager(sol::state& lua, CORE::ECS::Registry& registry)
     {
@@ -126,6 +175,7 @@ namespace RESOURCES {
             return;
         }
 
+        //TODO: add_shader
         lua.new_usertype<AssetManager>(
             "AssetManager",
             sol::no_constructor,
@@ -134,6 +184,9 @@ namespace RESOURCES {
             },
             "add_music", [&](const std::string& musicName, const std::string& musicPath) {
                 return assetManager->AddMusic(musicName, musicPath);
+            },
+            "add_soundFx", [&](const std::string& soundFxName, const std::string& soundFxPath) {
+                return assetManager->AddSoundFx(soundFxName, soundFxPath);
             }
         );
     }

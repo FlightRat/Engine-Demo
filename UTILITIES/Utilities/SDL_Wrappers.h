@@ -29,5 +29,5 @@ typedef std::unique_ptr<SDL_Window, UTIL::SDL_Destoryer> WindowPtr;
 //使用自定义的UTIL::SDL_Destoryer作为删除器
 //这样定义后，WindowPtr会自动管理音频资源的生命周期，当智能指针超出作用域时，会自动调用SDL_Destoryer来释放资源，避免内存泄漏
 
-typedef std::unique_ptr<Mix_Chunk, UTIL::SDL_Destoryer> SoundPtr;
+typedef std::unique_ptr<Mix_Chunk, UTIL::SDL_Destoryer> SoundFxPtr;
 typedef std::unique_ptr<Mix_Music, UTIL::SDL_Destoryer> MusicPtr;
