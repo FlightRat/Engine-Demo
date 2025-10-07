@@ -15,8 +15,10 @@ LoadAssets()
 
 local player = LoadEntity(PlayerDefs["player"])
 local floor = LoadEntity(EnvirDefs["floor"])
---local enemy1 = LoadEntity(EnemyDefs["enemy_big"])
---local enemy2 = LoadEntity(EnemyDefs["enemy_small"])
+local enemy_s = Enemy:Create("enemy_small")
+local enemy_b = Enemy:Create("enemy_big")
+AddEnemy(enemy_s)
+AddEnemy(enemy_b)
 
 gCollisionSystem = CollisionSystem:Create()
 gHud = Hud:Create()
@@ -36,7 +38,7 @@ main = {
 			UpdateEnemy()
 			UpdateProjectile()
 			if not gData:IsGameOver() then
-				SpawnEnemy()
+				--SpawnEnemy()
 			else
 				if Keyboard.pressed(KEY_R) then
 					gData:Reset()

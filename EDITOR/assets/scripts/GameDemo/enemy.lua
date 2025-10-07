@@ -17,8 +17,9 @@ function Enemy:Create(def)
 	this.m_EneityID = LoadEntity(enemy)
 	local entity = Entity(this.m_EneityID)
 	local transform = entity:get_component(Transform)
-	transform.position = GetRandomPosition()
-
+	if EnemyDefs[def].random_pos then
+		transform.position = GetRandomPosition()
+	end
 	setmetatable(this, self)
 	return this
 

@@ -7,7 +7,7 @@ EnemyDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=0.0, z=0.0},
+				position = {x=-5.0, y=0.0, z=0.0},
 				scale = {x=0.75, y=0.5, z=0.75},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -21,7 +21,8 @@ EnemyDefs =
 				height = 0.75
 			}
 		},
-		max_speed = 0.3
+		max_speed = 0.0,--0.3
+		random_pos = false,
 	},
 	enemy_small = 
 	{
@@ -44,7 +45,8 @@ EnemyDefs =
 				height = 0.25
 			}
 		},
-		max_speed = 0.1
+		max_speed = 0.0,--0.1
+		random_pos = false
 	},
 }
 
