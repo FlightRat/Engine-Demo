@@ -139,6 +139,19 @@
       <Project>{57200a04-1262-450c-907e-b274c1889cfb}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Sounds\Essentials\Music.cpp" />
+    <ClCompile Include="Sounds\Essentials\SoundFx.cpp" />
+    <ClCompile Include="Sounds\MusicPlayer\MusicPlayer.cpp" />
+    <ClCompile Include="Sounds\SoundFxPlayer\SoundFxPlayer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Sounds\Essentials\Music.h" />
+    <ClInclude Include="Sounds\Essentials\SoundFx.h" />
+    <ClInclude Include="Sounds\Essentials\SoundParams.h" />
+    <ClInclude Include="Sounds\MusicPlayer\MusicPlayer.h" />
+    <ClInclude Include="Sounds\SoundFxPlayer\SoundFxPlayer.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
