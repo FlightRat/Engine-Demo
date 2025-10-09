@@ -3,8 +3,8 @@
 void PHYSICS::PhysicsWorldDestroyer::operator()(rp3d::PhysicsWorld* world) const
 {
     if (common && world)
-    {
-        ENGINE_LOG("Physics World destroyed!");
+    {   
+        //ENGINE_LOG("Physics world destroyed!");
         common->destroyPhysicsWorld(world);
     }
 }
@@ -13,7 +13,7 @@ void PHYSICS::PhysicsWorldDestroyer::operator()(rp3d::PhysicsWorld* world) const
 void PHYSICS::RigidBodyDestroyer::operator()(rp3d::RigidBody* body) const
 {
     if (world && body) {
-        ENGINE_LOG("RigidBody destroyed!");
+        //ENGINE_LOG("RigidBody destroyed!");
         world->destroyRigidBody(body);
     }
 }
@@ -21,7 +21,16 @@ void PHYSICS::RigidBodyDestroyer::operator()(rp3d::RigidBody* body) const
 void PHYSICS::BoxCollisionShapeDestroyer::operator()(rp3d::BoxShape* boxShape) const
 {
     if (common && boxShape)
+    {   //ENGINE_LOG("boxShape destroyed!");
+        common->destroyBoxShape(boxShape);
+    }
+}
+
+void PHYSICS::ColliderDestroyer::operator()(rp3d::Collider* collider) const
+{
+    if (body && collider)
     {
-        //common->destroyBoxShape(boxShape);// go wrong
+        //ENGINE_LOG("collider destroyed!");
+        body->removeCollider(collider);
     }
 }
