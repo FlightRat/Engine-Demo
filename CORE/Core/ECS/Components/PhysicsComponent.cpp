@@ -33,7 +33,7 @@ namespace CORE::ECS {
 		if (m_pAttribute.Shape == "box")
 		{
 			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(m_pPhysicsCommon, m_pAttribute.halfExtents);
-			rp3d::Transform localTransform = rp3d::Transform::identity();
+			//m_pCollider = m_pRigidBody->addCollider(m_pCollisionShape.get(), transform);
 			m_pCollider = m_pRigidBody->addCollider(m_pCollisionShape.get(), localTransform);
 		}
 		else if (m_pAttribute.Shape == "sphere")
