@@ -32,8 +32,8 @@ namespace CORE::ECS {
 		// shape
 		if (m_pAttribute.Shape == "box")
 		{
-			m_pBoxShape = PHYSICS::MakeSharedBoxCollisionShape(m_pPhysicsCommon, m_pAttribute.halfExtents);
-			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pBoxShape);
+			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(m_pPhysicsCommon, m_pAttribute.halfExtents);
+			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		}
 		else if (m_pAttribute.Shape == "sphere")
 		{

@@ -27,7 +27,7 @@ namespace CORE::ECS {
 		std::shared_ptr<PhysicsCommon> m_pPhysicsCommon;
 		std::shared_ptr<PhysicsWorld> m_pPhysicsWorld;
 		std::shared_ptr<RigidBody> m_pRigidBody;
-		std::shared_ptr<BoxShape> m_pBoxShape;
+		std::shared_ptr<CollisionShape> m_pCollisionShape;
 		std::shared_ptr<Collider> m_pCollider;
 
 	public:

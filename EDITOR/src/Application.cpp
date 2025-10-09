@@ -250,29 +250,29 @@ namespace EDITOR {
 		}
 
 		// test dynamic cube
-		//CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
-		//auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-		//	.position = glm::vec3(0.0f, 0.5f, 0.0f),
-		//	.scale = glm::vec3(0.5f),
-		//	.rotation = glm::vec3(0.0f)
-		//	});
-		//auto& cube_mesh = cube.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
-		//	.mesh = "cube",
-		//	.shader = "colorShader",
-		//	.color=glm::vec4(0.0f,1.0f,0.0f,1.0f),
-		//	.texture = 0
-		//	});
-		//cube_mesh.load_mesh();
-		//auto& cube_physics = cube.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
-		//	CORE::ECS::PhysicsAttributes{
-		//		.Type=BodyType::DYNAMIC,
-		//		.Shape="box",
-		//		.halfExtents={0.5,0.5,0.5},
-		//		.position= cube_transform.position,
-		//	},
-		//	physicsCommon,
-		//	physicsWorld));
-		//cube_physics.Init();
+		CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
+		auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+			.position = glm::vec3(0.0f, 10.0f, 0.0f),
+			.scale = glm::vec3(0.5f),
+			.rotation = glm::vec3(0.0f)
+			});
+		auto& cube_mesh = cube.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+			.mesh = "cube",
+			.shader = "colorShader",
+			.color=glm::vec4(0.0f,1.0f,0.0f,1.0f),
+			.texture = 0
+			});
+		cube_mesh.load_mesh();
+		auto& cube_physics = cube.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+			CORE::ECS::PhysicsAttributes{
+				.Type=BodyType::DYNAMIC,
+				.Shape="box",
+				.halfExtents={0.5,0.5,0.5},
+				.position= cube_transform.position,
+			},
+			physicsCommon,
+			physicsWorld));
+		cube_physics.Init();
 
 		// test static floor
 		CORE::ECS::Entity floor{ *m_pRegistry,"","" };
