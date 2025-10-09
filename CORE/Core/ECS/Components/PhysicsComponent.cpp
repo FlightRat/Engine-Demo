@@ -2,8 +2,8 @@
 #include<Logger/Logger.h>
 
 namespace CORE::ECS {
-	PhysicsComponent::PhysicsComponent(PhysicsAttributes pAttributes, std::shared_ptr<PhysicsCommon> pPhysicsCommon, std::shared_ptr<PhysicsWorld> pPhysicsWorld):
-		m_pAttribute{pAttributes}, m_pPhysicsCommon{pPhysicsCommon}, m_pPhysicsWorld{pPhysicsWorld}
+	PhysicsComponent::PhysicsComponent(PhysicsAttributes pAttributes, std::shared_ptr<PhysicsCommon> pPhysicsCommon, std::shared_ptr<PhysicsWorld> pPhysicsWorld)
+		:m_pAttribute{pAttributes},m_pPhysicsCommon{pPhysicsCommon},m_pPhysicsWorld{pPhysicsWorld}
 	{
 	}
 
