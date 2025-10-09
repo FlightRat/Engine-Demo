@@ -13,10 +13,12 @@
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/Components/TransformComponent.h>
 #include<Core/ECS/Components/MeshComponent.h>
+#include<Core/ECS/Components/PhysicsComponent.h>
 #include<Core/ECS/Components/Identification.h>
 #include<Core/Resources/AssetManager.h>
 #include<Core/Systems/ScriptingSystem.h>
 #include<Core/Systems/RenderSystem.h>
+#include<Core/Systems/PhysicsSystem.h>
 #include<Core/Scripting/InputManager.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
@@ -38,8 +40,8 @@ namespace EDITOR {
 
     }
 
-    bool Application::Initialize()
-    {
+	bool Application::Initialize()
+	{
 		ENGINE_INIT_LOGS(true, true);
 
 		// Init SDL
@@ -146,6 +148,43 @@ namespace EDITOR {
 			return false;
 		}
 
+		// Physics Common
+		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
+		if (!physicsCommon)
+		{
+			ENGINE_ERROR("Failed to create the physics common!");
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon))
+		{
+			ENGINE_ERROR("Failed to add the physics common to the registry context!");
+			return false;
+		}
+
+		// Physics World
+		std::shared_ptr<PhysicsWorld> physicsWorld = PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
+		if(!physicsWorld)
+		{
+			ENGINE_ERROR("Failed to create the physics world!");
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld))
+		{
+			ENGINE_ERROR("Failed to add the physics world to the registry context!");
+			return false;
+		}
+
+		// Physics System
+		auto physicsSystem = std::make_shared<CORE::Systems::PhysicsSystem>(*m_pRegistry);
+		if (!physicsSystem)
+		{
+			ENGINE_ERROR("Failed to create the physics system!");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::PhysicsSystem>>(physicsSystem))
+		{
+			ENGINE_ERROR("Failed to add the physics system to the registry context!");
+			return false;
+		}
+
 		// Camera
 		auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);		//平视相机
 		//auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, -90.0f);		//俯视相机
@@ -162,7 +201,7 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to load the shaders!");
 			return false;
 		}
-		
+
 		// Lua script
 		auto lua = std::make_shared<sol::state>();
 		if (!lua)
@@ -171,7 +210,7 @@ namespace EDITOR {
 			return false;
 		}
 		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
-		if(!m_pRegistry->AddToContext<std::shared_ptr<sol::state>>(lua))
+		if (!m_pRegistry->AddToContext<std::shared_ptr<sol::state>>(lua))
 		{
 			ENGINE_ERROR("Failed to add the sol::state to the registry context!");
 			return false;
@@ -196,7 +235,7 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to add the script system to the registry context!");
 			return false;
 		}
-		
+
 		// Render System
 		auto renderSystem = std::make_shared<CORE::Systems::RenderSystem>(*m_pRegistry);
 		if (!renderSystem)
@@ -209,6 +248,56 @@ namespace EDITOR {
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
 		}
+
+		// test dynamic cube
+		CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
+		auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+			.position = glm::vec3(0.0f, 5.0f, 0.0f),
+			.scale = glm::vec3(1.0f),
+			.rotation = glm::vec3(0.0f)
+			});
+		auto& cube_mesh = cube.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+			.mesh = "cube",
+			.shader = "colorShader",
+			.color=glm::vec4(0.0f,1.0f,0.0f,1.0f),
+			.texture = 0
+			});
+		cube_mesh.load_mesh();
+		auto& cube_physics = cube.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+			CORE::ECS::PhysicsAttributes{
+				.Type=BodyType::DYNAMIC,
+				.Shape="box",
+				.halfExtents={0.5,0.5,0.5},
+				.position= cube_transform.position,
+			},
+			physicsCommon,
+			physicsWorld));
+		cube_physics.Init();
+
+		// test static floor
+		CORE::ECS::Entity floor{ *m_pRegistry,"","" };
+		auto& floor_transform = floor.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+			.position = glm::vec3(0.0f,0.0f,0.0f),
+			.scale = glm::vec3(1.0f),
+			.rotation = glm::vec3(0.0f)
+			});
+		auto& floor_mesh = floor.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+			.mesh = "plane",
+			.shader = "colorShader",
+			.color=glm::vec4(1.0f, 1.0f, 1.0f,1.0f),
+			.texture = 0
+			});
+		floor_mesh.load_mesh();
+		auto& floor_physics = floor.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+			CORE::ECS::PhysicsAttributes{
+				.Type=BodyType::STATIC,
+				.Shape="box",
+				.halfExtents={10.0, 0.5, 10.0},
+				.position= floor_transform.position,
+			},
+			physicsCommon,
+			physicsWorld));
+		floor_physics.Init();
 	}
 
     bool Application::LoadShaders()
@@ -320,6 +409,12 @@ namespace EDITOR {
 		auto& mouse = inputManager.GetMouse();
 		keyboard.Update();
 		mouse.Update();
+
+		auto& pw = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& ps = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::PhysicsSystem>>();
+		const decimal timeStep = 1.0f / 60.0f;
+		pw->update(timeStep);
+		ps->Update(m_pRegistry->GetRegistry());
     }
 
     void Application::Render()
@@ -344,6 +439,29 @@ namespace EDITOR {
 
     void Application::CleanUp()
     {
+		if (m_pRegistry) {
+
+			// 1. **强制销毁所有依赖于 PhysicsWorld 的组件。**
+			//    这会触发所有 PhysicsComponent 的析构函数，从而调用 RigidBodyDestroyer
+			//    安全地从 PhysicsWorld 中移除所有 RigidBody。
+			m_pRegistry->GetRegistry().clear(); // entt::registry::clear() 销毁所有实体和组件
+
+			// 2. **手动销毁 PhysicsWorld。**
+			//    它在 PhysicsCommon 之前被销毁。
+			if (auto pw_ptr = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>()) {
+				// GetContext 返回一个 shared_ptr，重置它会触发 PhysicsWorldDestroyer。
+				pw_ptr.reset();
+			}
+
+			// 3. **手动销毁 PhysicsCommon。**
+			if (auto pc_ptr = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsCommon>>()) {
+				// 重置它会触发其析构函数，清理剩余内存。
+				pc_ptr.reset();
+			}
+
+			// 4. **销毁 ECS Registry (如果 ECS Registry 包含其他需要清理的资源)**
+			m_pRegistry.reset();
+		}
 		SDL_Quit();
     }
 

@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir)\WINDOW;$(SolutionDir)\Dependencies\SDL\include;$(SolutionDir)\UTILITIES;$(SolutionDir)\SOUNDS;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir)\WINDOW;$(SolutionDir)\Dependencies\SDL\include;$(SolutionDir)\UTILITIES;$(SolutionDir)\SOUNDS;$(SolutionDir)\PHYSICS;$(SolutionDir)\Dependencies\ReactPhysics3D\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(IncludePath)</IncludePath>
@@ -116,7 +116,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>lua53.lib;SDL2.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua53.lib;SDL2.lib;SDL2_mixer.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -141,6 +141,9 @@
     <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
       <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\PHYSICS\PHYSICS.vcxproj">
+      <Project>{00835d04-1da9-49ca-b79d-cfbd09e5d57b}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\RENDERING\RENDERING.vcxproj">
       <Project>{51cc6e2b-2094-407b-a2bb-c1c65b712213}</Project>
     </ProjectReference>
@@ -161,6 +164,7 @@
     <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\Identification.h" />
     <ClInclude Include="Core\ECS\Components\MeshComponent.h" />
+    <ClInclude Include="Core\ECS\Components\PhysicsComponent.h" />
     <ClInclude Include="Core\ECS\Components\ScriptComponent.h" />
     <ClInclude Include="Core\ECS\Components\SphereColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\TransformComponent.h" />
@@ -171,12 +175,14 @@
     <ClInclude Include="Core\Resources\AssetManager.h" />
     <ClInclude Include="Core\Scripting\GlmLuaBindings.h" />
     <ClInclude Include="Core\Scripting\SoundLuaBindings.h" />
+    <ClInclude Include="Core\Systems\PhysicsSystem.h" />
     <ClInclude Include="Core\Systems\RenderSystem.h" />
     <ClInclude Include="Core\Systems\ScriptingSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Components\CubeColliderComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\MeshComponent.cpp" />
+    <ClCompile Include="Core\ECS\Components\PhysicsComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\SphereColliderComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\TransformComponent.cpp" />
     <ClCompile Include="Core\ECS\Entity.cpp" />
@@ -186,6 +192,7 @@
     <ClCompile Include="Core\Scripting\GlmLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\InputManager.cpp" />
     <ClCompile Include="Core\Scripting\SoundLuaBindings.cpp" />
+    <ClCompile Include="Core\Systems\PhysicsSystem.cpp" />
     <ClCompile Include="Core\Systems\RenderSystem.cpp" />
     <ClCompile Include="Core\Systems\ScriptingSystem.cpp" />
   </ItemGroup>

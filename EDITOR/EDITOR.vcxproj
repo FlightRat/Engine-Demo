@@ -72,8 +72,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir).\SOUNDS;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\LUA\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir).\SOUNDS;$(SolutionDir).\PHYSICS;$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(IncludePath)</IncludePath>
@@ -116,7 +116,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;opengl32.lib;lua53.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;opengl32.lib;lua53.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

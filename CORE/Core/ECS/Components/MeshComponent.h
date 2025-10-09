@@ -18,7 +18,7 @@ namespace CORE::ECS {
 
         std::vector<float> data;
         unsigned short vertexNum;
-        GLuint m_VAO, m_VBO;
+        GLuint m_VAO, m_VBO;    //TODO: delete the vao/vbo
 
         void load_hud_quad();
         void load_plane();
