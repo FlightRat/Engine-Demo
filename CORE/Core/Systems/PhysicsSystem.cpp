@@ -21,7 +21,6 @@ namespace CORE::Systems {
 				continue;
 			const Transform& rb_transform = pRigidBody->getTransform();
 			const Vector3& rb_pos = rb_transform.getPosition();
-			rb_transform.getOrientation();
 			transform.position.x = rb_pos.x;
 			transform.position.y = rb_pos.y;
 			transform.position.z = rb_pos.z;

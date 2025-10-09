@@ -26,10 +26,12 @@ namespace CORE::ECS {
 
 		std::shared_ptr<PhysicsCommon> m_pPhysicsCommon;
 		std::shared_ptr<PhysicsWorld> m_pPhysicsWorld;
-		std::shared_ptr<rp3d::RigidBody> m_pRigidBody;
-		//std::shared_ptr<rp3d::Collider> m_pCollider;
+		std::shared_ptr<RigidBody> m_pRigidBody;
+		//std::shared_ptr<Collider> m_pCollider;
 		rp3d::Collider* m_pCollider;
-		std::shared_ptr<rp3d::CollisionShape> m_pCollisionShape;
+		
+		std::shared_ptr<CollisionShape> m_pCollisionShape;
+		//rp3d::CollisionShape* m_pCollisionShape;
 
 	public:
 		PhysicsComponent(PhysicsAttributes pAttributes, std::shared_ptr<PhysicsCommon> pPhysicsCommon, std::shared_ptr<PhysicsWorld> pPhysicsWorld);

@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(SolutionDir).\LOGGER\Logger;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -136,6 +136,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Physics\RP3D_Wrappers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
+      <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

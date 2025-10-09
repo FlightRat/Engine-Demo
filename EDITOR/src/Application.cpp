@@ -252,8 +252,8 @@ namespace EDITOR {
 		// test dynamic cube
 		CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
 		auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-			.position = glm::vec3(0.0f, 5.0f, 0.0f),
-			.scale = glm::vec3(1.0f),
+			.position = glm::vec3(0.0f, 0.5f, 0.0f),
+			.scale = glm::vec3(0.5f),
 			.rotation = glm::vec3(0.0f)
 			});
 		auto& cube_mesh = cube.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
@@ -277,7 +277,7 @@ namespace EDITOR {
 		// test static floor
 		CORE::ECS::Entity floor{ *m_pRegistry,"","" };
 		auto& floor_transform = floor.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-			.position = glm::vec3(0.0f,0.0f,0.0f),
+			.position = glm::vec3(0.0f, 0.0f, 0.0f),
 			.scale = glm::vec3(1.0f),
 			.rotation = glm::vec3(0.0f)
 			});
@@ -292,7 +292,7 @@ namespace EDITOR {
 			CORE::ECS::PhysicsAttributes{
 				.Type=BodyType::STATIC,
 				.Shape="box",
-				.halfExtents={10.0, 0.5, 10.0},
+				.halfExtents={10.0, 0.01, 10.0},
 				.position= floor_transform.position,
 			},
 			physicsCommon,
@@ -439,29 +439,6 @@ namespace EDITOR {
 
     void Application::CleanUp()
     {
-		if (m_pRegistry) {
-
-			// 1. **强制销毁所有依赖于 PhysicsWorld 的组件。**
-			//    这会触发所有 PhysicsComponent 的析构函数，从而调用 RigidBodyDestroyer
-			//    安全地从 PhysicsWorld 中移除所有 RigidBody。
-			m_pRegistry->GetRegistry().clear(); // entt::registry::clear() 销毁所有实体和组件
-
-			// 2. **手动销毁 PhysicsWorld。**
-			//    它在 PhysicsCommon 之前被销毁。
-			if (auto pw_ptr = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>()) {
-				// GetContext 返回一个 shared_ptr，重置它会触发 PhysicsWorldDestroyer。
-				pw_ptr.reset();
-			}
-
-			// 3. **手动销毁 PhysicsCommon。**
-			if (auto pc_ptr = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsCommon>>()) {
-				// 重置它会触发其析构函数，清理剩余内存。
-				pc_ptr.reset();
-			}
-
-			// 4. **销毁 ECS Registry (如果 ECS Registry 包含其他需要清理的资源)**
-			m_pRegistry.reset();
-		}
 		SDL_Quit();
     }
 

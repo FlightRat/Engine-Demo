@@ -9,18 +9,14 @@ namespace PHYSICS {
 	struct PhysicsWorldDestroyer
 	{
 		std::shared_ptr<PhysicsCommon> common;
-
 		PhysicsWorldDestroyer(std::shared_ptr<PhysicsCommon> c):common(c){}
-
 		void operator()(rp3d::PhysicsWorld* world) const;
 	};
 
 	struct RigidBodyDestroyer
 	{
 		std::shared_ptr<PhysicsWorld> world;
-
 		RigidBodyDestroyer(std::shared_ptr<PhysicsWorld> w) : world(w) {}
-
 		void operator()(rp3d::RigidBody* body) const;
 	};
 
