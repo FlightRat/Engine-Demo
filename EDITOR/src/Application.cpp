@@ -268,7 +268,8 @@ namespace EDITOR {
 				.Type=BodyType::DYNAMIC,
 				.Shape="box",
 				.halfExtents={0.5,0.5,0.5},
-				.position= cube_transform.position,
+				.position=cube_transform.position,
+				.rotation=cube_transform.rotation
 			},
 			physicsCommon,
 			physicsWorld));
@@ -293,7 +294,8 @@ namespace EDITOR {
 				.Type=BodyType::STATIC,
 				.Shape="box",
 				.halfExtents={10.0, 0.01, 10.0},
-				.position= floor_transform.position,
+				.position=floor_transform.position,
+				.rotation=floor_transform.rotation
 			},
 			physicsCommon,
 			physicsWorld));

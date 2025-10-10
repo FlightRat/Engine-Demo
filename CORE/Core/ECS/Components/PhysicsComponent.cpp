@@ -16,9 +16,12 @@ namespace CORE::ECS {
 		}
 
 		// position
-		rp3d::Vector3 position(m_pAttribute.position.x, m_pAttribute.position.y, m_pAttribute.position.z);
-		rp3d::Quaternion orientation = rp3d::Quaternion::identity();
-		rp3d::Transform transform(position, orientation);
+		rp3d::Vector3 rb_position(m_pAttribute.position.x, m_pAttribute.position.y, m_pAttribute.position.z);
+		// rotation
+		glm::vec3 eulerDegree(m_pAttribute.rotation.x, m_pAttribute.rotation.y, m_pAttribute.rotation.z);
+		glm::quat gl_quat = glm::quat(glm::radians(eulerDegree));
+		rp3d::Quaternion rb_rotation = rp3d::Quaternion(gl_quat.x, gl_quat.y, gl_quat.z, gl_quat.w);
+		rp3d::Transform transform(rb_position, rb_rotation);
 
 		// rigid body
 		m_pRigidBody = PHYSICS::MakeSharedRigidBody(m_pPhysicsWorld, transform);

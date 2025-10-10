@@ -3,6 +3,8 @@
 #include<sol/sol.hpp>
 #include<entt.hpp>
 #include<glm/glm.hpp>
+#include<glm/gtx/quaternion.hpp>
+#include<glm/gtc/quaternion.hpp>
 
 using namespace reactphysics3d;
 
