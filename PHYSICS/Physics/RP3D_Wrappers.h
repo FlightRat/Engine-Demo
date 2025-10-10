@@ -34,6 +34,12 @@ namespace PHYSICS {
 		void operator()(rp3d::BoxShape* boxShape) const;
 	};
 
+	struct SphereCollisionShapeDestroyer
+	{
+		std::shared_ptr<PhysicsCommon> common;
+		SphereCollisionShapeDestroyer(std::shared_ptr<PhysicsCommon> c):common(c){}
+		void operator()(rp3d::SphereShape* sphereShape) const;
+	};
 
 	static std::shared_ptr<PhysicsWorld> MakeSharedPhysicsWorld(std::shared_ptr<PhysicsCommon> common)
 	{
@@ -57,5 +63,11 @@ namespace PHYSICS {
 	{
 		rp3d::BoxShape* rawBoxShape = common->createBoxShape(extent);
 		return std::shared_ptr<rp3d::BoxShape>(rawBoxShape, BoxCollisionShapeDestroyer(common));
+	}
+
+	static std::shared_ptr<SphereShape> MakeSharedSphereCollisionShape(std::shared_ptr<PhysicsCommon> common, const decimal radius)
+	{
+		rp3d::SphereShape* rawSphereShape = common->createSphereShape(radius);
+		return std::shared_ptr<rp3d::SphereShape>(rawSphereShape, SphereCollisionShapeDestroyer(common));
 	}
 }

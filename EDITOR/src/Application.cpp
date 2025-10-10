@@ -252,7 +252,7 @@ namespace EDITOR {
 		// test dynamic cube
 		CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
 		auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-			.position = glm::vec3(0.0f, 10.0f, 0.0f),
+			.position = glm::vec3(0.0f, 5.0f, -5.0f),
 			.scale = glm::vec3(0.5f),
 			.rotation = glm::vec3(0.0f)
 			});
@@ -274,6 +274,32 @@ namespace EDITOR {
 			physicsCommon,
 			physicsWorld));
 		cube_physics.Init();
+
+		//test sphere
+		CORE::ECS::Entity sphere{ *m_pRegistry, "sphere", "" };
+		auto& sphere_transform = sphere.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+			.position = glm::vec3(0.0f, 5.0f, 5.0f),
+			.scale = glm::vec3(0.5f),
+			.rotation = glm::vec3(0.0f)
+			});
+		auto& sphere_mesh = sphere.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+			.mesh = "sphere",
+			.shader = "colorShader",
+			.color = glm::vec4(0.0f,1.0f,0.0f,1.0f),
+			.texture = 0
+			});
+		sphere_mesh.load_mesh();
+		auto& sphere_physics = sphere.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+			CORE::ECS::PhysicsAttributes{
+				.Type = BodyType::DYNAMIC,
+				.Shape = "sphere",
+				.radius = {1.0},
+				.position = sphere_transform.position,
+				.rotation = sphere_transform.rotation
+			},
+			physicsCommon,
+			physicsWorld));
+		sphere_physics.Init();
 
 		// test static floor
 		CORE::ECS::Entity floor{ *m_pRegistry,"","" };

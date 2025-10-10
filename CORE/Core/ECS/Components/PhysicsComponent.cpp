@@ -40,7 +40,8 @@ namespace CORE::ECS {
 		}
 		else if (m_pAttribute.Shape == "sphere")
 		{
-			//TODO
+			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(m_pPhysicsCommon, m_pAttribute.radius);
+			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		}
 	}
 

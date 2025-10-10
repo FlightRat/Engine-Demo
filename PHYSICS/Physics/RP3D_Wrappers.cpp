@@ -27,6 +27,14 @@ namespace PHYSICS{
         }
     }
 
+    void SphereCollisionShapeDestroyer::operator()(rp3d::SphereShape* sphereShape) const
+    {
+        if (common && sphereShape)
+        {   //ENGINE_LOG("sphereShape destroyed!");
+            common->destroySphereShape(sphereShape);
+        }
+    }
+
     void ColliderDestroyer::operator()(rp3d::Collider* collider) const
     {
         if (body && collider)

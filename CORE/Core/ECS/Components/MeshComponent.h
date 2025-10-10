@@ -23,6 +23,7 @@ namespace CORE::ECS {
         void load_hud_quad();
         void load_plane();
         void load_cube();
+        void load_sphere();
         void load_mesh();
         
         inline void set_shader(const std::string mesh_shader) { shader = mesh_shader; }
