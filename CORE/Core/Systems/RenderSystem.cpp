@@ -1,5 +1,7 @@
 #include "RenderSystem.h"
 #include<glm/glm.hpp>
+#include<glm/gtx/quaternion.hpp>
+#include<glm/gtc/quaternion.hpp>
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Essentials/Shader.h>
 #include<Logger/Logger.h>
@@ -70,9 +72,16 @@ namespace CORE::Systems {
 				continue;
 			}
 			model = glm::mat4(1.0f);
+			//translate
 			model = glm::translate(model, transform.position);
-			model = glm::scale(model, transform.scale);	// NOTE::do scale after translate!!!
-			model = glm::rotate(model, glm::radians(transform.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));// rotate with y axis
+			//rotation
+			glm::vec3 eulerAngle(transform.rotation.x, transform.rotation.y, transform.rotation.z);
+			glm::quat quaternion = glm::quat(glm::radians(eulerAngle));
+			glm::mat4 rotation = glm::toMat4(quaternion);
+			model = model * rotation;
+			//scale
+			model = glm::scale(model, transform.scale);
+
 			if (mesh.shader == "colorShader")
 			{
 				colorShader->Enable();

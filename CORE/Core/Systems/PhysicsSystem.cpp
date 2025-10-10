@@ -20,10 +20,23 @@ namespace CORE::Systems {
 			if (!pRigidBody)
 				continue;
 			const Transform& rb_transform = pRigidBody->getTransform();
+
+			//position
 			const Vector3& rb_pos = rb_transform.getPosition();
 			transform.position.x = rb_pos.x;
 			transform.position.y = rb_pos.y;
 			transform.position.z = rb_pos.z;
+
+			//rotation
+			const Quaternion& rp3d_quat = rb_transform.getOrientation();
+			glm::quat quat(
+				static_cast<float>(rp3d_quat.w),
+				static_cast<float>(rp3d_quat.x),
+				static_cast<float>(rp3d_quat.y),
+				static_cast<float>(rp3d_quat.z)
+			);
+			transform.rotation = glm::eulerAngles(quat);
+			transform.rotation = glm::degrees(transform.rotation);
 		}
 	}
 
