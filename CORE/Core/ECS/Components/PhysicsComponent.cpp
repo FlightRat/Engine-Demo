@@ -2,14 +2,18 @@
 #include<Logger/Logger.h>
 
 namespace CORE::ECS {
-	PhysicsComponent::PhysicsComponent(PhysicsAttributes pAttributes, std::shared_ptr<PhysicsCommon> pPhysicsCommon, std::shared_ptr<PhysicsWorld> pPhysicsWorld)
-		:m_pAttribute{pAttributes},m_pPhysicsCommon{pPhysicsCommon},m_pPhysicsWorld{pPhysicsWorld}
+	PhysicsComponent::PhysicsComponent(PhysicsAttributes pAttributes):m_pAttribute{pAttributes}
 	{
 	}
 
-	void PhysicsComponent::Init()
+	void PhysicsComponent::Init(std::shared_ptr<PhysicsCommon> common, std::shared_ptr<PhysicsWorld> world)
 	{
-		if (!m_pPhysicsWorld)
+		if (!common)
+		{
+			ENGINE_ERROR("Failed to initialize the physics component - Physics common is nullptr!");
+			return;
+		}
+		if (!world)
 		{
 			ENGINE_ERROR("Failed to initialize the physics component - Physics world is nullptr!");
 			return;
@@ -24,7 +28,7 @@ namespace CORE::ECS {
 		rp3d::Transform transform(rb_position, rb_rotation);
 
 		// rigid body
-		m_pRigidBody = PHYSICS::MakeSharedRigidBody(m_pPhysicsWorld, transform);
+		m_pRigidBody = PHYSICS::MakeSharedRigidBody(world, transform);
 		if (!m_pRigidBody)
 		{
 			ENGINE_ERROR("Failed to create the rigid body!");
@@ -35,12 +39,12 @@ namespace CORE::ECS {
 		// shape
 		if (m_pAttribute.Shape == "box")
 		{
-			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(m_pPhysicsCommon, m_pAttribute.halfExtents);
+			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(common, m_pAttribute.halfExtents);
 			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		}
 		else if (m_pAttribute.Shape == "sphere")
 		{
-			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(m_pPhysicsCommon, m_pAttribute.radius);
+			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.radius);
 			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		}
 	}

@@ -270,10 +270,8 @@ namespace EDITOR {
 				.halfExtents={0.5,0.5,0.5},
 				.position=cube_transform.position,
 				.rotation=cube_transform.rotation
-			},
-			physicsCommon,
-			physicsWorld));
-		cube_physics.Init();
+			}));
+		cube_physics.Init(physicsCommon, physicsWorld);
 
 		//test sphere
 		CORE::ECS::Entity sphere{ *m_pRegistry, "sphere", "" };
@@ -296,10 +294,8 @@ namespace EDITOR {
 				.radius = {1.0},
 				.position = sphere_transform.position,
 				.rotation = sphere_transform.rotation
-			},
-			physicsCommon,
-			physicsWorld));
-		sphere_physics.Init();
+			}));
+		sphere_physics.Init(physicsCommon, physicsWorld);
 
 		// test static floor
 		CORE::ECS::Entity floor{ *m_pRegistry,"","" };
@@ -322,10 +318,8 @@ namespace EDITOR {
 				.halfExtents={10.0, 0.0005, 10.0},
 				.position=floor_transform.position,
 				.rotation=floor_transform.rotation
-			},
-			physicsCommon,
-			physicsWorld));
-		floor_physics.Init();
+			}));
+		floor_physics.Init(physicsCommon, physicsWorld);
 	}
 
     bool Application::LoadShaders()

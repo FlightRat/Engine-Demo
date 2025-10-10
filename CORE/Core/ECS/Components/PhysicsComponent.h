@@ -25,18 +25,15 @@ namespace CORE::ECS {
 	class PhysicsComponent
 	{
 		PhysicsAttributes m_pAttribute;
-
-		std::shared_ptr<PhysicsCommon> m_pPhysicsCommon;
-		std::shared_ptr<PhysicsWorld> m_pPhysicsWorld;
 		std::shared_ptr<RigidBody> m_pRigidBody;
 		std::shared_ptr<CollisionShape> m_pCollisionShape;
 		std::shared_ptr<Collider> m_pCollider;
 
 	public:
-		PhysicsComponent(PhysicsAttributes pAttributes, std::shared_ptr<PhysicsCommon> pPhysicsCommon, std::shared_ptr<PhysicsWorld> pPhysicsWorld);
+		PhysicsComponent(PhysicsAttributes pAttributes);
 		~PhysicsComponent() = default;
 
-		void Init();
+		void Init(std::shared_ptr<PhysicsCommon> common, std::shared_ptr<PhysicsWorld> world);
 		rp3d::RigidBody* GetRigidBody() { return m_pRigidBody.get(); }
 
 		static void CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry);
