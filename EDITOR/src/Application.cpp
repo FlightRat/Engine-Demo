@@ -293,7 +293,7 @@ namespace EDITOR {
 			CORE::ECS::PhysicsAttributes{
 				.Type=BodyType::STATIC,
 				.Shape="box",
-				.halfExtents={10.0, 0.01, 10.0},
+				.halfExtents={10.0, 0.0005, 10.0},
 				.position=floor_transform.position,
 				.rotation=floor_transform.rotation
 			},
