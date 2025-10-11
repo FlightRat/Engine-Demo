@@ -55,6 +55,12 @@
     <Image Include="assets\textures\lego.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\textures\football.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\textures\brick.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h">

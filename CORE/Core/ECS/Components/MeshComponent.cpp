@@ -282,12 +282,14 @@ void CORE::ECS::MeshComponent::CreateLuaMeshBind(sol::state& lua)
         sol::call_constructor,
         sol::factories(
             [&](const std::string& mesh, const std::string& shader, glm::vec4 color, int texture) {
-                return MeshComponent{
+                MeshComponent m{
                     .mesh= mesh,
                     .shader= shader,
                     .color = color,
                     .texture = texture
-                }; 
+                };
+                m.load_mesh();
+                return m;
             }
         ),
         "load_mesh", [](MeshComponent& mesh) {mesh.load_mesh(); },

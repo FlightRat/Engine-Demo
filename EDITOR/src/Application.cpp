@@ -250,76 +250,76 @@ namespace EDITOR {
 		}
 
 		// test dynamic cube
-		CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
-		auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-			.position = glm::vec3(0.0f, 5.0f, -5.0f),
-			.scale = glm::vec3(0.5f),
-			.rotation = glm::vec3(0.0f)
-			});
-		auto& cube_mesh = cube.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
-			.mesh = "cube",
-			.shader = "colorShader",
-			.color=glm::vec4(0.0f,1.0f,0.0f,1.0f),
-			.texture = 0
-			});
-		cube_mesh.load_mesh();
-		auto& cube_physics = cube.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
-			CORE::ECS::PhysicsAttributes{
-				.position = cube_transform.position,
-				.rotation = cube_transform.rotation,
-				.Type=BodyType::DYNAMIC,
-				.Shape="box",
-				.box_halfExtents={0.5,0.5,0.5}
-			}));
-		cube_physics.Init(physicsCommon, physicsWorld);
+		//CORE::ECS::Entity cube{*m_pRegistry ,"cube", ""};
+		//auto& cube_transform = cube.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+		//	.position = glm::vec3(0.0f, 5.0f, -5.0f),
+		//	.scale = glm::vec3(0.5f),
+		//	.rotation = glm::vec3(0.0f)
+		//	});
+		//auto& cube_mesh = cube.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+		//	.mesh = "cube",
+		//	.shader = "colorShader",
+		//	.color=glm::vec4(0.0f,1.0f,0.0f,1.0f),
+		//	.texture = 0
+		//	});
+		//cube_mesh.load_mesh();
+		//auto& cube_physics = cube.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+		//	CORE::ECS::PhysicsAttributes{
+		//		.position = cube_transform.position,
+		//		.rotation = cube_transform.rotation,
+		//		.Type=BodyType::DYNAMIC,
+		//		.Shape="box",
+		//		.box_halfExtents={0.5,0.5,0.5}
+		//	}));
+		//cube_physics.Init(physicsCommon, physicsWorld);
 
-		//test sphere
-		CORE::ECS::Entity sphere{ *m_pRegistry, "sphere", "" };
-		auto& sphere_transform = sphere.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-			.position = glm::vec3(0.0f, 5.0f, 5.0f),
-			.scale = glm::vec3(0.5f),
-			.rotation = glm::vec3(0.0f)
-			});
-		auto& sphere_mesh = sphere.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
-			.mesh = "sphere",
-			.shader = "colorShader",
-			.color = glm::vec4(0.0f,1.0f,0.0f,1.0f),
-			.texture = 0
-			});
-		sphere_mesh.load_mesh();
-		auto& sphere_physics = sphere.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
-			CORE::ECS::PhysicsAttributes{
-				.position = sphere_transform.position,
-				.rotation = sphere_transform.rotation,
-				.Type = BodyType::DYNAMIC,
-				.Shape = "sphere",
-				.sphere_radius = {1.0}
-			}));
-		sphere_physics.Init(physicsCommon, physicsWorld);
+		////test sphere
+		//CORE::ECS::Entity sphere{ *m_pRegistry, "sphere", "" };
+		//auto& sphere_transform = sphere.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+		//	.position = glm::vec3(0.0f, 5.0f, 5.0f),
+		//	.scale = glm::vec3(0.5f),
+		//	.rotation = glm::vec3(0.0f)
+		//	});
+		//auto& sphere_mesh = sphere.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+		//	.mesh = "sphere",
+		//	.shader = "colorShader",
+		//	.color = glm::vec4(0.0f,1.0f,0.0f,1.0f),
+		//	.texture = 0
+		//	});
+		//sphere_mesh.load_mesh();
+		//auto& sphere_physics = sphere.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+		//	CORE::ECS::PhysicsAttributes{
+		//		.position = sphere_transform.position,
+		//		.rotation = sphere_transform.rotation,
+		//		.Type = BodyType::DYNAMIC,
+		//		.Shape = "sphere",
+		//		.sphere_radius = {0.5}
+		//	}));
+		//sphere_physics.Init(physicsCommon, physicsWorld);
 
-		// test static floor
-		CORE::ECS::Entity floor{ *m_pRegistry,"","" };
-		auto& floor_transform = floor.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
-			.position = glm::vec3(0.0f, 0.0f, 0.0f),
-			.scale = glm::vec3(1.0f),
-			.rotation = glm::vec3(0.0f)
-			});
-		auto& floor_mesh = floor.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
-			.mesh = "plane",
-			.shader = "colorShader",
-			.color=glm::vec4(1.0f, 1.0f, 1.0f,1.0f),
-			.texture = 0
-			});
-		floor_mesh.load_mesh();
-		auto& floor_physics = floor.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
-			CORE::ECS::PhysicsAttributes{
-				.position = floor_transform.position,
-				.rotation = floor_transform.rotation,
-				.Type=BodyType::STATIC,
-				.Shape="box",
-				.box_halfExtents={10.0, 0.0005, 10.0},
-			}));
-		floor_physics.Init(physicsCommon, physicsWorld);
+		//// test static floor
+		//CORE::ECS::Entity floor{ *m_pRegistry,"","" };
+		//auto& floor_transform = floor.AddComponent<CORE::ECS::TransformComponent>(CORE::ECS::TransformComponent{
+		//	.position = glm::vec3(0.0f, 0.0f, 0.0f),
+		//	.scale = glm::vec3(1.0f),
+		//	.rotation = glm::vec3(0.0f)
+		//	});
+		//auto& floor_mesh = floor.AddComponent<CORE::ECS::MeshComponent>(CORE::ECS::MeshComponent{
+		//	.mesh = "plane",
+		//	.shader = "colorShader",
+		//	.color=glm::vec4(1.0f, 1.0f, 1.0f,1.0f),
+		//	.texture = 0
+		//	});
+		//floor_mesh.load_mesh();
+		//auto& floor_physics = floor.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
+		//	CORE::ECS::PhysicsAttributes{
+		//		.position = floor_transform.position,
+		//		.rotation = floor_transform.rotation,
+		//		.Type=BodyType::STATIC,
+		//		.Shape="box",
+		//		.box_halfExtents={10.0, 0.0005, 10.0},
+		//	}));
+		//floor_physics.Init(physicsCommon, physicsWorld);
 	}
 
     bool Application::LoadShaders()

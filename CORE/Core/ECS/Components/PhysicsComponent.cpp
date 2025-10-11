@@ -80,7 +80,7 @@ namespace CORE::ECS {
 			sol::factories(
 				[] {return PhysicsAttributes{}; }
 			),
-			"postion", &PhysicsAttributes::position,
+			"position", &PhysicsAttributes::position,
 			"rotation", &PhysicsAttributes::rotation,
 			"enable_gravity", &PhysicsAttributes::rb_EnableGravity,
 			"type", &PhysicsAttributes::Type,
@@ -112,7 +112,27 @@ namespace CORE::ECS {
 					pc.Init(common, world);
 					return pc;
 				}
-			)
+			),
+			"linear_impulse",[](PhysicsComponent& pc){},
+			"set_linear_velocity", [](PhysicsComponent& pc, const glm::vec3 velocity) {
+				auto body = pc.GetRigidBody();
+				body->setLinearVelocity(Vector3(velocity.x, velocity.y, velocity.z));
+			},
+			"get_linear_velocity", [](PhysicsComponent& pc) {
+				auto body = pc.GetRigidBody();
+				const Vector3 velocity = body->getLinearVelocity();
+				return glm::vec3(velocity.x, velocity.y, velocity.z);
+			},
+			"angular_impulse",[](PhysicsComponent& pc) {},
+			"set_angular_velocity", [](PhysicsComponent& pc, const glm::vec3 velocity) {
+				auto body = pc.GetRigidBody();
+				body->setAngularVelocity(Vector3(velocity.x, velocity.y, velocity.z));
+			},
+			"get_angular_velocity", [](PhysicsComponent& pc) {
+				auto body = pc.GetRigidBody();
+				const Vector3 velocity = body->getAngularVelocity();
+				return glm::vec3(velocity.x, velocity.y, velocity.z);
+			}
 		);
 	}
 }

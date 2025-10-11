@@ -43,18 +43,30 @@ namespace CORE::Systems {
 			return;
 		}
 
-		// mafuyu
-		const auto mafuyu = assetManager->GetTexture("mafuyu");
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mafuyu->GetID());
+		//// mafuyu
+		//const auto mafuyu = assetManager->GetTexture("mafuyu");
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, mafuyu->GetID());
+		//// football
+		//const auto& football = assetManager->GetTexture("football");
+		//glActiveTexture(GL_TEXTURE3);
+		//glBindTexture(GL_TEXTURE_2D, football->GetID());
+		//// brick
+		//const auto& brick = assetManager->GetTexture("brick");
+		//glActiveTexture(GL_TEXTURE4);
+		//glBindTexture(GL_TEXTURE_2D, brick->GetID());
 		// wood
 		const auto& wood = assetManager->GetTexture("wood");
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, wood->GetID());
 		// container
 		const auto& container = assetManager->GetTexture("container");
-		glActiveTexture(GL_TEXTURE2);
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, container->GetID());
+		// rust
+		const auto& rust = assetManager->GetTexture("rust");
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, rust->GetID());
 
 		// camera
 		auto& camera = m_Registry.GetContext<std::shared_ptr<Camera3D>>();
