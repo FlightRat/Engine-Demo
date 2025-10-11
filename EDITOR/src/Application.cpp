@@ -269,7 +269,7 @@ namespace EDITOR {
 				.rotation = cube_transform.rotation,
 				.Type=BodyType::DYNAMIC,
 				.Shape="box",
-				.halfExtents={0.5,0.5,0.5}
+				.box_halfExtents={0.5,0.5,0.5}
 			}));
 		cube_physics.Init(physicsCommon, physicsWorld);
 
@@ -293,7 +293,7 @@ namespace EDITOR {
 				.rotation = sphere_transform.rotation,
 				.Type = BodyType::DYNAMIC,
 				.Shape = "sphere",
-				.radius = {1.0}
+				.sphere_radius = {1.0}
 			}));
 		sphere_physics.Init(physicsCommon, physicsWorld);
 
@@ -317,7 +317,7 @@ namespace EDITOR {
 				.rotation = floor_transform.rotation,
 				.Type=BodyType::STATIC,
 				.Shape="box",
-				.halfExtents={10.0, 0.0005, 10.0},
+				.box_halfExtents={10.0, 0.0005, 10.0},
 			}));
 		floor_physics.Init(physicsCommon, physicsWorld);
 	}

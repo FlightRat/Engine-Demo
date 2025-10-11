@@ -22,13 +22,13 @@ namespace CORE::ECS {
 		float rb_Mass{ 1.0f };
 		float rb_LinearDamping{ 0.0f };
 		float rb_AngularDamping{ 0.0f };
-		Vector3 rb_LinearAxisFactor{ Vector3(1, 1, 1) };
-		Vector3 rb_AngularAxisFactor{ Vector3(1, 1, 1) };
+		glm::vec3 rb_LinearAxisFactor{ 1.0f, 1.0f, 1.0f };
+		glm::vec3 rb_AngularAxisFactor{ 1.0f, 1.0f, 1.0f };
 
 		// shape
 		std::string Shape{"box"};
-		const Vector3 halfExtents{ 1.0, 1.0, 1.0 };
-		const decimal radius{ 1.0 };
+		glm::vec3 box_halfExtents{ 1.0, 1.0, 1.0 };
+		decimal sphere_radius{ 1.0 };
 
 		// collider
 		float c_Bounciness{ 0.5f };

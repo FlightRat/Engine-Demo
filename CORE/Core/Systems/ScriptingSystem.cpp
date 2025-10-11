@@ -4,6 +4,7 @@
 #include "../ECS/Components/MeshComponent.h"
 #include "../ECS/Components/CubeColliderComponent.h"
 #include "../ECS/Components/SphereColliderComponent.h"
+#include "../ECS/Components/PhysicsComponent.h"
 #include "../ECS/Entity.h"
 #include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
@@ -124,23 +125,26 @@ namespace CORE::Systems {
 		CORE::Scripting::SoundBindings::CreateSoundBindings(lua, registry);		// register sound into lua
 		UTIL::Timer::CreateLuaTimer(lua);										// register timer into lua
 
-		Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
+		CORE::ECS::Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
 		MeshComponent::CreateLuaMeshBind(lua);					// register a "Mesh" type into lua
 		CubeColliderComponent::CreateLuaCubeColliderBind(lua);
 		SphereColliderComponent::CreateLuaSphereColliderBind(lua);
+		PhysicsComponent::CreateLuaPhysicsBind(lua, registry.GetRegistry());
 
 		//NOTE::the same registered Component in LUA and META should have the same id
 
-		Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
-		Entity::RegisterMetaComponent<MeshComponent>();			// register MeshComponent into meta
-		Entity::RegisterMetaComponent<CubeColliderComponent>();
-		Entity::RegisterMetaComponent<SphereColliderComponent>();
+		CORE::ECS::Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
+		CORE::ECS::Entity::RegisterMetaComponent<MeshComponent>();			// register MeshComponent into meta
+		CORE::ECS::Entity::RegisterMetaComponent<CubeColliderComponent>();
+		CORE::ECS::Entity::RegisterMetaComponent<SphereColliderComponent>();
+		CORE::ECS::Entity::RegisterMetaComponent<PhysicsComponent>();
 
 		Registry::RegisterMetaComponent<TransformComponent>();
 		Registry::RegisterMetaComponent<MeshComponent>();
 		Registry::RegisterMetaComponent<CubeColliderComponent>();
 		Registry::RegisterMetaComponent<SphereColliderComponent>();
+		Registry::RegisterMetaComponent<PhysicsComponent>();
 	}
 
 	void ScriptingSystem::RegisterLuaFunctions(sol::state& lua)

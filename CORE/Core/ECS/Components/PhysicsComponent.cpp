@@ -43,17 +43,17 @@ namespace CORE::ECS {
 		m_pRigidBody->setMass(m_pAttribute.rb_Mass);
 		m_pRigidBody->setLinearDamping(m_pAttribute.rb_LinearDamping);
 		m_pRigidBody->setAngularDamping(m_pAttribute.rb_AngularDamping);
-		m_pRigidBody->setLinearLockAxisFactor(m_pAttribute.rb_LinearAxisFactor);
-		m_pRigidBody->setAngularLockAxisFactor(m_pAttribute.rb_AngularAxisFactor);
+		m_pRigidBody->setLinearLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_LinearAxisFactor.x, m_pAttribute.rb_LinearAxisFactor.y, m_pAttribute.rb_LinearAxisFactor.z));
+		m_pRigidBody->setAngularLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_AngularAxisFactor.x, m_pAttribute.rb_AngularAxisFactor.y, m_pAttribute.rb_AngularAxisFactor.z));
 
 		// shape
 		if (m_pAttribute.Shape == "box")
 		{
-			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(common, m_pAttribute.halfExtents);
+			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(common, rp3d::Vector3(m_pAttribute.box_halfExtents.x, m_pAttribute.box_halfExtents.y, m_pAttribute.box_halfExtents.z));
 		}
 		else if (m_pAttribute.Shape == "sphere")
 		{
-			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.radius);
+			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.sphere_radius);
 		}
 
 		// collider
@@ -66,6 +66,54 @@ namespace CORE::ECS {
 
 	void PhysicsComponent::CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry)
 	{
+		lua.new_enum<BodyType>(
+			"BodyType", {
+				{"Static",BodyType::STATIC},
+				{"Dynamic",BodyType::DYNAMIC},
+				{"Kinematic",BodyType::KINEMATIC}
+			}
+		);
+
+		lua.new_usertype<PhysicsAttributes>(
+			"PhysicsAttributes",
+			sol::call_constructor,
+			sol::factories(
+				[] {return PhysicsAttributes{}; }
+			),
+			"postion", &PhysicsAttributes::position,
+			"rotation", &PhysicsAttributes::rotation,
+			"enable_gravity", &PhysicsAttributes::rb_EnableGravity,
+			"type", &PhysicsAttributes::Type,
+			"mass", &PhysicsAttributes::rb_Mass,
+			"linear_damping", &PhysicsAttributes::rb_LinearDamping,
+			"linear_axis_factor", &PhysicsAttributes::rb_LinearAxisFactor,
+			"angular_axis_damping", &PhysicsAttributes::rb_AngularDamping,
+			"angular_axis_factor", &PhysicsAttributes::rb_AngularAxisFactor,
+			"shape", &PhysicsAttributes::Shape,
+			"box_halfExtents", &PhysicsAttributes::box_halfExtents,
+			"sphere_radius", &PhysicsAttributes::sphere_radius,
+			"bounciness", &PhysicsAttributes::c_Bounciness,
+			"friction", &PhysicsAttributes::c_FrictionCoefficient,
+			"mass_density", &PhysicsAttributes::c_MassDensity
+		);
+
+		auto& common = registry.ctx().get<std::shared_ptr<PhysicsCommon>>();
+		auto& world = registry.ctx().get<std::shared_ptr<PhysicsWorld>>();
+		if (!common || ! world)
+			return;
+
+		lua.new_usertype<PhysicsComponent>(
+			"Physics",
+			"type_id",&entt::type_hash<PhysicsComponent>::value,
+			sol::call_constructor,
+			sol::factories(
+				[&](const PhysicsAttributes& attr) {
+					PhysicsComponent pc{ attr };
+					pc.Init(common, world);
+					return pc;
+				}
+			)
+		);
 	}
 }
 
