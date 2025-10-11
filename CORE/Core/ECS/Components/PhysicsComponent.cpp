@@ -2,6 +2,10 @@
 #include<Logger/Logger.h>
 
 namespace CORE::ECS {
+	PhysicsComponent::PhysicsComponent() :m_pAttribute{ PhysicsAttributes {} }
+	{
+	}
+
 	PhysicsComponent::PhysicsComponent(PhysicsAttributes pAttributes):m_pAttribute{pAttributes}
 	{
 	}
@@ -35,18 +39,29 @@ namespace CORE::ECS {
 			return;
 		}
 		m_pRigidBody->setType(m_pAttribute.Type);
+		m_pRigidBody->enableGravity(m_pAttribute.rb_EnableGravity);
+		m_pRigidBody->setMass(m_pAttribute.rb_Mass);
+		m_pRigidBody->setLinearDamping(m_pAttribute.rb_LinearDamping);
+		m_pRigidBody->setAngularDamping(m_pAttribute.rb_AngularDamping);
+		m_pRigidBody->setLinearLockAxisFactor(m_pAttribute.rb_LinearAxisFactor);
+		m_pRigidBody->setAngularLockAxisFactor(m_pAttribute.rb_AngularAxisFactor);
 
 		// shape
 		if (m_pAttribute.Shape == "box")
 		{
 			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(common, m_pAttribute.halfExtents);
-			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		}
 		else if (m_pAttribute.Shape == "sphere")
 		{
 			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.radius);
-			m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		}
+
+		// collider
+		m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
+		Material& c_material = m_pCollider->getMaterial();
+		c_material.setBounciness(m_pAttribute.c_Bounciness);
+		c_material.setFrictionCoefficient(m_pAttribute.c_FrictionCoefficient);
+		c_material.setMassDensity(m_pAttribute.c_MassDensity);
 	}
 
 	void PhysicsComponent::CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry)

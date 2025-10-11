@@ -265,11 +265,11 @@ namespace EDITOR {
 		cube_mesh.load_mesh();
 		auto& cube_physics = cube.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
 			CORE::ECS::PhysicsAttributes{
+				.position = cube_transform.position,
+				.rotation = cube_transform.rotation,
 				.Type=BodyType::DYNAMIC,
 				.Shape="box",
-				.halfExtents={0.5,0.5,0.5},
-				.position=cube_transform.position,
-				.rotation=cube_transform.rotation
+				.halfExtents={0.5,0.5,0.5}
 			}));
 		cube_physics.Init(physicsCommon, physicsWorld);
 
@@ -289,11 +289,11 @@ namespace EDITOR {
 		sphere_mesh.load_mesh();
 		auto& sphere_physics = sphere.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
 			CORE::ECS::PhysicsAttributes{
+				.position = sphere_transform.position,
+				.rotation = sphere_transform.rotation,
 				.Type = BodyType::DYNAMIC,
 				.Shape = "sphere",
-				.radius = {1.0},
-				.position = sphere_transform.position,
-				.rotation = sphere_transform.rotation
+				.radius = {1.0}
 			}));
 		sphere_physics.Init(physicsCommon, physicsWorld);
 
@@ -313,11 +313,11 @@ namespace EDITOR {
 		floor_mesh.load_mesh();
 		auto& floor_physics = floor.AddComponent<CORE::ECS::PhysicsComponent>(CORE::ECS::PhysicsComponent(
 			CORE::ECS::PhysicsAttributes{
+				.position = floor_transform.position,
+				.rotation = floor_transform.rotation,
 				.Type=BodyType::STATIC,
 				.Shape="box",
 				.halfExtents={10.0, 0.0005, 10.0},
-				.position=floor_transform.position,
-				.rotation=floor_transform.rotation
 			}));
 		floor_physics.Init(physicsCommon, physicsWorld);
 	}

@@ -12,14 +12,28 @@ namespace CORE::ECS {
 
 	struct PhysicsAttributes
 	{
+		glm::vec3 position{ 0.0f };
+		glm::vec3 rotation{ 0.0f };
+		glm::vec3 scale{ 1.0f };
+
+		// rigidbody
 		BodyType Type{ BodyType::STATIC };
+		bool rb_EnableGravity{ true };
+		float rb_Mass{ 1.0f };
+		float rb_LinearDamping{ 0.0f };
+		float rb_AngularDamping{ 0.0f };
+		Vector3 rb_LinearAxisFactor{ Vector3(1, 1, 1) };
+		Vector3 rb_AngularAxisFactor{ Vector3(1, 1, 1) };
+
+		// shape
 		std::string Shape{"box"};
 		const Vector3 halfExtents{ 1.0, 1.0, 1.0 };
 		const decimal radius{ 1.0 };
 
-		glm::vec3 position{ 0.0f };
-		glm::vec3 scale{ 1.0f };
-		glm::vec3 rotation{ 0.0f };
+		// collider
+		float c_Bounciness{ 0.5f };
+		float c_FrictionCoefficient{ 0.3f };
+		float c_MassDensity{ 1.0f };
 	};
 
 	class PhysicsComponent
@@ -30,6 +44,7 @@ namespace CORE::ECS {
 		std::shared_ptr<Collider> m_pCollider;
 
 	public:
+		PhysicsComponent();
 		PhysicsComponent(PhysicsAttributes pAttributes);
 		~PhysicsComponent() = default;
 
