@@ -9,6 +9,8 @@ namespace ENGINE_WINDOWING::INPUTS {
             button.Reset();
         m_WheelX = 0;
         m_WheelY = 0;
+        m_offsetX = 0;
+        m_offsetY = 0;
         m_bMouseMoving = false;
     }
 
@@ -92,10 +94,15 @@ namespace ENGINE_WINDOWING::INPUTS {
         return btnItr->second.bJustReleased;
     }
 
+    const std::tuple<int, int> Mouse::GetMouseOffset()
+    {
+        return std::make_tuple(m_offsetX, m_offsetY);
+    }
+
     const std::tuple<int, int> Mouse::GetMouseScreenPosition()
     {
-        SDL_GetMouseState(&m_X, &m_Y);
-        return std::make_tuple(m_X, m_Y);
+        SDL_GetMouseState(&m_PosX, &m_PosY);
+        return std::make_tuple(m_PosX, m_PosY);
     }
 
 }

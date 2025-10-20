@@ -24,9 +24,10 @@ namespace ENGINE_RENDERING {
 		return glm::lookAt(Position, Position + Front, Up);
 	}
 
-	void Camera3D::ProcessKeyboard(Camera_Movement direction, float deltaTime)
+	//TODO:add delta time
+	void Camera3D::ProcessKeyboard(Camera_Movement direction)
 	{
-		float velocity = MovementSpeed * deltaTime;
+		float velocity = MovementSpeed;
 		if (direction == FORWARD)
 			Position += Front * velocity;
 		if (direction == BACKWARD)

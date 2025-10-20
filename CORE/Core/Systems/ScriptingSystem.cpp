@@ -10,6 +10,7 @@
 #include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
 #include "../Scripting/SoundLuaBindings.h"
+#include "../Scripting/CameraLuaBindings.h"
 #include "../Scripting/InputManager.h"
 #include"../Resources/AssetManager.h"
 #include<Utilities/Timer.h>
@@ -121,9 +122,10 @@ namespace ENGINE_CORE::Systems {
 	{
 		Registry::CreateLuaRegistryBind(lua, registry);							// register "runtime_view" & "Registry" into lua
 		ENGINE_CORE::Scripting::GLMBindings::CreateGLMBindings(lua);					// register glm vec into lua
+		ENGINE_CORE::Scripting::SoundBindings::CreateSoundBindings(lua, registry);		// register sound into lua
+		ENGINE_CORE::Scripting::CameraBindings::CreateCameraBindings(lua, registry);
 		ENGINE_CORE::InputManager::CreateLuaInputBindings(lua);						// register inputs stuff into lua
 		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);			// register assetManager into lua
-		ENGINE_CORE::Scripting::SoundBindings::CreateSoundBindings(lua, registry);		// register sound into lua
 		ENGINE_UTIL::Timer::CreateLuaTimer(lua);										// register timer into lua
 
 		ENGINE_CORE::ECS::Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua

@@ -1,4 +1,6 @@
 #include "InputManager.h"
+#include <glm/glm.hpp>
+
 
 namespace ENGINE_CORE {
 	InputManager::InputManager():m_pKeyboard{std::make_unique<Keyboard>()}, m_pMouse{ std::make_unique<Mouse>() }
@@ -163,9 +165,14 @@ namespace ENGINE_CORE {
 			"pressed", [&](int btn) {return mouse.IsBtnPressed(btn); },
 			"just_pressed", [&](int btn) {return mouse.IsBtnJustPressed(btn); },
 			"just_released", [&](int btn) {return mouse.IsBtnJustReleased(btn); },
-			"screen_pos", [&]() {return mouse.GetMouseScreenPosition(); },
-			"wheel_x", [&]() {return mouse.GetMouseWheelX(); },
-			"wheel_y", [&]() {return mouse.GetMouseWheelY(); },
+			//"screen_pos", [&]() {return mouse.GetMouseScreenPosition(); },
+			"offset", [&]() {
+				auto [x, y] = mouse.GetMouseOffset();
+				float xrel = static_cast<float>(x);
+				float yrel = static_cast<float>(y);
+				return glm::vec2(xrel, yrel); },
+			"wheel_x", [&]() {return static_cast<float>(mouse.GetMouseWheelX()); },
+			"wheel_y", [&]() {return static_cast<float>(mouse.GetMouseWheelY()); },
 			"moving", [&]() {return mouse.IsMouseMoving(); }
 		);
 	}

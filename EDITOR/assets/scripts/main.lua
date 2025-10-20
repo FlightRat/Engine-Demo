@@ -21,6 +21,8 @@ local floor = LoadEntity(EnvirDefs["floor"])
 
 local ball_entity = Entity(ball)
 
+local cam = Camera:get()
+
 function controlEntity(entity)
 	local physics = entity:get_component(Physics)
 	local velocity = physics:get_linear_velocity()
@@ -38,10 +40,29 @@ function controlEntity(entity)
 	end
 end
 
+function controlCamera()
+	if Keyboard.pressed(KEY_UP) then
+		cam.process_key(Camera_Movement.Cam_Forward)
+	end
+	if Keyboard.pressed(KEY_DOWN) then
+		cam.process_key(Camera_Movement.Cam_Backward)
+	end
+	if Keyboard.pressed(KEY_LEFT) then
+		cam.process_key(Camera_Movement.Cam_Left)
+	end
+	if Keyboard.pressed(KEY_RIGHT) then
+		cam.process_key(Camera_Movement.Cam_Right)
+	end
+	cam.process_mouse(Mouse.offset())
+	cam.process_scroll(Mouse.wheel_y())
+end
+
+
 main = {
 	[1] = {
 		update = function()
 		controlEntity(ball_entity)
+		controlCamera()
 		end
 	},
 	[2] = {

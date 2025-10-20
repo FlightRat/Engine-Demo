@@ -35,9 +35,9 @@ double deltaTime = 0;
 
 namespace ENGINE_EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
-    {
+	{
 
-    }
+	}
 
 	bool Application::Initialize()
 	{
@@ -221,6 +221,8 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create the script system!");
 			return false;
 		}
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
 		if (!scriptSystem->LoadMainScript(*lua))
 		{
 			ENGINE_ERROR("Failed to load the main lua script!");
@@ -231,8 +233,6 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the script system to the registry context!");
 			return false;
 		}
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
 
 		// Render System
 		auto renderSystem = std::make_shared<ENGINE_CORE::Systems::RenderSystem>(*m_pRegistry);
@@ -249,8 +249,8 @@ namespace ENGINE_EDITOR {
 
 	}
 
-    bool Application::LoadShaders()
-    {
+	bool Application::LoadShaders()
+	{
 		auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
 
 		// color shader
@@ -275,10 +275,10 @@ namespace ENGINE_EDITOR {
 		}
 
 		return true;
-    }
+	}
 
-    void Application::ProcessEvents()
-    {
+	void Application::ProcessEvents()
+	{
 		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
@@ -298,14 +298,6 @@ namespace ENGINE_EDITOR {
 			{
 				if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 					m_bIsRunning = false;
-				else if (m_Event.key.keysym.sym == SDLK_UP)
-					camera->ProcessKeyboard(ENGINE_RENDERING::FORWARD, deltaTime);
-				else if (m_Event.key.keysym.sym == SDLK_LEFT)
-					camera->ProcessKeyboard(ENGINE_RENDERING::LEFT, deltaTime);
-				else if (m_Event.key.keysym.sym == SDLK_DOWN)
-					camera->ProcessKeyboard(ENGINE_RENDERING::BACKWARD, deltaTime);
-				else if (m_Event.key.keysym.sym == SDLK_RIGHT)
-					camera->ProcessKeyboard(ENGINE_RENDERING::RIGHT, deltaTime);
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;
 			}
@@ -327,28 +319,24 @@ namespace ENGINE_EDITOR {
 			case SDL_MOUSEMOTION:
 			{
 				mouse.SetMouseMoving(true);
-				float xrel = static_cast<float>(m_Event.motion.xrel);
-				float yrel = static_cast<float>(m_Event.motion.yrel);
-				camera->ProcessMouseMovement(xrel, -yrel);
+				mouse.SetMouseOffset(m_Event.motion.xrel, m_Event.motion.yrel);
 				break;
 			}
 			case SDL_MOUSEWHEEL:
 			{
 				mouse.SetMouseWheelX(m_Event.wheel.x);
 				mouse.SetMouseWheelY(m_Event.wheel.y);
-				int xoffset = m_Event.wheel.x;
-				int yoffset = m_Event.wheel.y;
-				camera->ProcessMouseScroll(static_cast<float>(yoffset));
+
 				break;
 			}
 			default:
 				break;
 			}
 		}
-    }
+	}
 
-    void Application::Update()
-    {
+	void Application::Update()
+	{
 		// TODO: move the camera update here
 		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Update();
@@ -364,10 +352,10 @@ namespace ENGINE_EDITOR {
 		const decimal timeStep = 1.0f / 60.0f;
 		physicsWorld->update(timeStep);
 		physicsSystem->Update(m_pRegistry->GetRegistry());
-    }
+	}
 
-    void Application::Render()
-    {
+	void Application::Render()
+	{
 
 		last = now;
 		now = SDL_GetPerformanceCounter();
@@ -384,12 +372,12 @@ namespace ENGINE_EDITOR {
 		renderSystem->Render();
 
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
-    }
+	}
 
-    void Application::CleanUp()
-    {
+	void Application::CleanUp()
+	{
 		SDL_Quit();
-    }
+	}
 
 	Application& Application::GetInstance()
 	{
