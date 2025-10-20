@@ -9,7 +9,7 @@
 #include "../Resources/AssetManager.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshFilter.h"
-#include "../ECS/Components/MeshRenderer.h"
+#include "../ECS/Components/MeshRender.h"
 
 using namespace CORE::ECS;
 using namespace RENDERING;
@@ -77,7 +77,7 @@ namespace CORE::Systems {
 
 
 		glm::mat4 model = glm::mat4(1.0f);
-		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRenderer>();
+		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender>();
 		for (auto [_, transform, meshF, meshR] : view.each())
 		{
 			if (!meshR.shouldRender)

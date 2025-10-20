@@ -36,31 +36,47 @@ function LoadEntity( def )
 		)
 	end
 
-	if def.components.Mesh then
-		local mesh = newEntity:add_component(
-			Mesh(
-				def.components.Mesh.type,
-				def.components.Mesh.shader,
-				vec4(
-					def.components.Mesh.color.R,
-					def.components.Mesh.color.G,
-					def.components.Mesh.color.B,
-					def.components.Mesh.color.A
-				),
-				def.components.Mesh.texture or 0
+	if def.components.MeshFilter then
+		local meshF = newEntity:add_component(
+			MeshFilter(
+				def.components.MeshFilter.type
 			)
 		)
-		mesh.bHidden = def.components.Mesh.bHidden or false
-		mesh:load_mesh()
 	end
 
-	if def.components.CubeCollider then
-		newEntity:add_component(
-			CubeCollider(
-				def.components.CubeCollider.width,
-				def.components.CubeCollider.height
+	if def.components.MeshRender then
+		local meshR = newEntity:add_component(
+			MeshRender(
+				def.components.MeshRender.shader,
+				vec4(
+					def.components.MeshRender.color.R,
+					def.components.MeshRender.color.G,
+					def.components.MeshRender.color.B,
+					def.components.MeshRender.color.A
+				),
+				def.components.MeshRender.texture or 0
 			)
 		)
+	end
+
+	--TODO: more attributes!!!
+	if def.components.Physics then
+		local physicsAttr = PhysicsAttributes()
+		physicsAttr.position = vec3(
+			def.components.Transform.position.x,
+			def.components.Transform.position.y,
+			def.components.Transform.position.z
+		)
+		physicsAttr.rotation = vec3(
+			def.components.Transform.rotation.x,
+			def.components.Transform.rotation.y,
+			def.components.Transform.rotation.z
+		)
+		physicsAttr.type = def.components.Physics.type
+		physicsAttr.shape = def.components.Physics.shape
+		physicsAttr.box_halfExtents = def.components.Physics.box_halfExtents or vec3(1.0, 1.0, 1.0)
+		physicsAttr.sphere_radius = def.components.Physics.sphere_radius or 0.5
+		local physics = newEntity:add_component(Physics(physicsAttr))
 	end
 
 	return newEntity:id()

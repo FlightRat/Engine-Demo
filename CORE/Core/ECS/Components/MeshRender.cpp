@@ -1,7 +1,7 @@
-#include "MeshRenderer.h"
+#include "MeshRender.h"
 #include <entt.hpp>
 
-void CORE::ECS::MeshRenderer::UploadMesh(MeshFilter mf)
+void CORE::ECS::MeshRender::UploadMesh(MeshFilter mf)
 {
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
@@ -23,15 +23,15 @@ void CORE::ECS::MeshRenderer::UploadMesh(MeshFilter mf)
     m_loaded = { true };
 }
 
-void CORE::ECS::MeshRenderer::CreateLuaMeshRendererBind(sol::state& lua)
+void CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
 {
-    lua.new_usertype<MeshRenderer>(
-        "MeshRenderer",
-        "type_id", &entt::type_hash<MeshRenderer>::value,
+    lua.new_usertype<MeshRender>(
+        "MeshRender",
+        "type_id", &entt::type_hash<MeshRender>::value,
         sol::call_constructor,
         sol::factories(
             [&](const std::string& shader, glm::vec4 color, int texture) {
-                MeshRenderer MR{
+                MeshRender MR{
                     .shader = shader,
                     .color = color,
                     .texture = texture

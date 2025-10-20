@@ -6,7 +6,7 @@
 #include"MeshFilter.h"
 
 namespace CORE::ECS {
-	struct MeshRenderer
+	struct MeshRender
 	{
 		bool m_loaded{ false };
 		bool shouldRender{ true };

@@ -2,7 +2,7 @@
 #include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshFilter.h"
-#include "../ECS/Components/MeshRenderer.h"
+#include "../ECS/Components/MeshRender.h"
 #include "../ECS/Components/CubeColliderComponent.h"
 #include "../ECS/Components/SphereColliderComponent.h"
 #include "../ECS/Components/PhysicsComponent.h"
@@ -131,21 +131,21 @@ namespace CORE::Systems {
 		CubeColliderComponent::CreateLuaCubeColliderBind(lua);
 		SphereColliderComponent::CreateLuaSphereColliderBind(lua);
 		MeshFilter::CreateLuaMeshFilterBind(lua);
-		MeshRenderer::CreateLuaMeshRendererBind(lua);
+		MeshRender::CreateLuaMeshRendererBind(lua);
 		PhysicsComponent::CreateLuaPhysicsBind(lua, registry.GetRegistry());
 
 		//NOTE::the same registered Component in LUA and META should have the same id
 
 		CORE::ECS::Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
 		CORE::ECS::Entity::RegisterMetaComponent<MeshFilter>();
-		CORE::ECS::Entity::RegisterMetaComponent<MeshRenderer>();
+		CORE::ECS::Entity::RegisterMetaComponent<MeshRender>();
 		CORE::ECS::Entity::RegisterMetaComponent<CubeColliderComponent>();
 		CORE::ECS::Entity::RegisterMetaComponent<SphereColliderComponent>();
 		CORE::ECS::Entity::RegisterMetaComponent<PhysicsComponent>();
 
 		Registry::RegisterMetaComponent<TransformComponent>();
 		Registry::RegisterMetaComponent<MeshFilter>();
-		Registry::RegisterMetaComponent<MeshRenderer>();
+		Registry::RegisterMetaComponent<MeshRender>();
 		Registry::RegisterMetaComponent<CubeColliderComponent>();
 		Registry::RegisterMetaComponent<SphereColliderComponent>();
 		Registry::RegisterMetaComponent<PhysicsComponent>();
