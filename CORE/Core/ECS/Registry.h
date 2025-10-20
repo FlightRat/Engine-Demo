@@ -2,7 +2,7 @@
 #include<entt.hpp>
 #include<sol/sol.hpp>
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	class Registry
 	{
 	private:

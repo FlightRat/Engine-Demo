@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
-namespace CORE::Scripting
+namespace ENGINE_CORE::Scripting
 {
 	// vec2 
 	void CreateVec2Bind(sol::state& lua)

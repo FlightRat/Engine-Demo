@@ -5,10 +5,10 @@
 #include <Sounds/SoundFxPlayer/SoundFxPlayer.h>
 #include <Logger/Logger.h>
 
-using namespace SOUNDS;
-using namespace RESOURCES;
+using namespace ENGINE_SOUNDS;
+using namespace ENGINE_RESOURCES;
 
-void CORE::Scripting::SoundBindings::CreateSoundBindings(sol::state& lua, CORE::ECS::Registry& registry)
+void ENGINE_CORE::Scripting::SoundBindings::CreateSoundBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
 {
 	// get music player
 	auto& musicPlayer = registry.GetContext<std::shared_ptr<MusicPlayer>>();

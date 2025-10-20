@@ -2,9 +2,9 @@
 #include"Components/Identification.h"
 #include"MetaUtilities.h"
 
-using namespace CORE::Utils;
+using namespace ENGINE_CORE::Utils;
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	Entity::Entity(Registry& registry):Entity(registry, "GameObject", "")
 	{
 	}

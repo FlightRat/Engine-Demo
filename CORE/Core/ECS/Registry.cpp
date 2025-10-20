@@ -2,14 +2,14 @@
 #include "Entity.h"
 #include "MetaUtilities.h"
 
-using namespace CORE::Utils;
+using namespace ENGINE_CORE::Utils;
 
-CORE::ECS::Registry::Registry():m_pRegistry{ nullptr }
+ENGINE_CORE::ECS::Registry::Registry():m_pRegistry{ nullptr }
 {
 	m_pRegistry = std::make_unique<entt::registry>();
 }
 
-void CORE::ECS::Registry::CreateLuaRegistryBind(sol::state& lua, Registry& registry)
+void ENGINE_CORE::ECS::Registry::CreateLuaRegistryBind(sol::state& lua, Registry& registry)
 {
 	using namespace entt::literals;
 

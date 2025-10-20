@@ -1,7 +1,7 @@
 #pragma once
 #include<string>
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	struct Identification
 	{
 		std::string name{ "GameObject" }, group{ "" };

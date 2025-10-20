@@ -1,7 +1,7 @@
 #pragma once
 #include"Registry.h"
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	template<typename TContext>
 	inline TContext Registry::AddToContext(TContext context)
 	{

@@ -2,7 +2,7 @@
 #include "../Essentials/Music.h"
 #include <Logger/Logger.h>
 
-namespace SOUNDS {
+namespace ENGINE_SOUNDS {
 	MusicPlayer::MusicPlayer()
 	{	
 		// create the audio device

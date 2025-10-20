@@ -1,7 +1,7 @@
 #include "MetaUtilities.h"
 
 /*get the id_type of comp, which is used to link between lua and meta*/
-entt::id_type CORE::Utils::GetIdType(const sol::table& comp)
+entt::id_type ENGINE_CORE::Utils::GetIdType(const sol::table& comp)
 {
     // check if comp is registered to lua
     if (!comp.valid())

@@ -1,7 +1,7 @@
 #include "PhysicsComponent.h"
 #include<Logger/Logger.h>
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	PhysicsComponent::PhysicsComponent() :m_pAttribute{ PhysicsAttributes {} }
 	{
 	}
@@ -32,7 +32,7 @@ namespace CORE::ECS {
 		rp3d::Transform transform(rb_position, rb_rotation);
 
 		// rigid body
-		m_pRigidBody = PHYSICS::MakeSharedRigidBody(world, transform);
+		m_pRigidBody = ENGINE_PHYSICS::MakeSharedRigidBody(world, transform);
 		if (!m_pRigidBody)
 		{
 			ENGINE_ERROR("Failed to create the rigid body!");
@@ -49,15 +49,15 @@ namespace CORE::ECS {
 		// shape
 		if (m_pAttribute.Shape == "box")
 		{
-			m_pCollisionShape = PHYSICS::MakeSharedBoxCollisionShape(common, rp3d::Vector3(m_pAttribute.box_halfExtents.x, m_pAttribute.box_halfExtents.y, m_pAttribute.box_halfExtents.z));
+			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedBoxCollisionShape(common, rp3d::Vector3(m_pAttribute.box_halfExtents.x, m_pAttribute.box_halfExtents.y, m_pAttribute.box_halfExtents.z));
 		}
 		else if (m_pAttribute.Shape == "sphere")
 		{
-			m_pCollisionShape = PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.sphere_radius);
+			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.sphere_radius);
 		}
 
 		// collider
-		m_pCollider = PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
+		m_pCollider = ENGINE_PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 		Material& c_material = m_pCollider->getMaterial();
 		c_material.setBounciness(m_pAttribute.c_Bounciness);
 		c_material.setFrictionCoefficient(m_pAttribute.c_FrictionCoefficient);

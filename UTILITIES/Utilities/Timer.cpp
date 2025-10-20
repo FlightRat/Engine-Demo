@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-namespace UTIL {
+namespace ENGINE_UTIL {
     void Timer::Start()
     {
         if (!m_bIsRunning)

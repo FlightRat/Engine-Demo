@@ -2,7 +2,7 @@
 #include"Texture.h"
 #include<memory>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	class TextureLoader
 	{
 	private:

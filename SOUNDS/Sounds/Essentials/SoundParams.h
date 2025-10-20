@@ -1,6 +1,6 @@
 #pragma once
 #include<string>
-namespace SOUNDS {
+namespace ENGINE_SOUNDS {
 	struct SoundParams
 	{
 		std::string name{ "" }, description{ "" }, filename{ "" };

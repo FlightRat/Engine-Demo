@@ -3,7 +3,7 @@
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	// Default camera values
 	const float YAW = -90.0f;
 	const float PITCH = 0.0f;

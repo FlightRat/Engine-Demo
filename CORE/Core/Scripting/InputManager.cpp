@@ -1,6 +1,6 @@
 #include "InputManager.h"
 
-namespace CORE {
+namespace ENGINE_CORE {
 	InputManager::InputManager():m_pKeyboard{std::make_unique<Keyboard>()}, m_pMouse{ std::make_unique<Mouse>() }
 	{
 

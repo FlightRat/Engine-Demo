@@ -3,7 +3,7 @@
 #include<string>
 #include<Logger/Logger.h>
 
-namespace WINDOWING {
+namespace ENGINE_WINDOWING {
 	class Window
 	{
 	private:

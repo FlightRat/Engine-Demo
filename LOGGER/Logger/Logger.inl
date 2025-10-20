@@ -12,7 +12,7 @@ constexpr WORD RED = 4;
 constexpr WORD YELLOW = 6;
 constexpr WORD WHITE = 7;
 
-namespace LOGGER {
+namespace ENGINE_LOGGER {
 	template <typename... Args>
 	void Logger::Log(const std::string& message, Args&&... args)
 	{

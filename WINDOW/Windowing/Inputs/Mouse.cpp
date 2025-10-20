@@ -2,7 +2,7 @@
 #include<SDL.h>
 #include<Logger/Logger.h>
 
-namespace WINDOWING::INPUTS {
+namespace ENGINE_WINDOWING::INPUTS {
     void Mouse::Update()
     {
         for (auto& [btn, button] : m_mapButtons)

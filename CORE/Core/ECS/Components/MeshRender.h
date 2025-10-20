@@ -5,7 +5,7 @@
 #include<string>
 #include"MeshFilter.h"
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	struct MeshRender
 	{
 		bool m_loaded{ false };

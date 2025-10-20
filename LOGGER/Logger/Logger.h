@@ -5,12 +5,12 @@
 #include<vector>
 #include<cassert>
 
-#define ENGINE_LOG(x, ...) LOGGER::Logger::GetInstance().Log(x, __VA_ARGS__);
-#define ENGINE_WARN(x, ...) LOGGER::Logger::GetInstance().Warn(x, __VA_ARGS__);
-#define ENGINE_ERROR(x, ...) LOGGER::Logger::GetInstance().Error(std::source_location::current(), x, __VA_ARGS__)
-#define ENGINE_INIT_LOGS(console, retain) LOGGER::Logger::GetInstance().Init(console, retain);
+#define ENGINE_LOG(x, ...) ENGINE_LOGGER::Logger::GetInstance().Log(x, __VA_ARGS__);
+#define ENGINE_WARN(x, ...) ENGINE_LOGGER::Logger::GetInstance().Warn(x, __VA_ARGS__);
+#define ENGINE_ERROR(x, ...) ENGINE_LOGGER::Logger::GetInstance().Error(std::source_location::current(), x, __VA_ARGS__)
+#define ENGINE_INIT_LOGS(console, retain) ENGINE_LOGGER::Logger::GetInstance().Init(console, retain);
 
-namespace LOGGER {
+namespace ENGINE_LOGGER {
 	struct LogEntry
 	{
 		// Log info struct£ºinclude an enum type and a string log

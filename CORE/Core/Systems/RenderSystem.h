@@ -1,13 +1,13 @@
 #pragma once
 #include"../ECS/Registry.h"
 
-namespace CORE::Systems {
+namespace ENGINE_CORE::Systems {
 	class RenderSystem
 	{
 	private:
-		CORE::ECS::Registry& m_Registry;
+		ENGINE_CORE::ECS::Registry& m_Registry;
 	public:
-		RenderSystem(CORE::ECS::Registry& registry);
+		RenderSystem(ENGINE_CORE::ECS::Registry& registry);
 		~RenderSystem() = default;
 		void Render();
 	};

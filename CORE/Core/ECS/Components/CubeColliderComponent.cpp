@@ -1,7 +1,7 @@
 #include "CubeColliderComponent.h"
 #include<entt.hpp>
 
-void CORE::ECS::CubeColliderComponent::CreateLuaCubeColliderBind(sol::state& lua)
+void ENGINE_CORE::ECS::CubeColliderComponent::CreateLuaCubeColliderBind(sol::state& lua)
 {
 	lua.new_usertype<CubeColliderComponent>(
 		"CubeCollider",

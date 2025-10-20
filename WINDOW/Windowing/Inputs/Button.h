@@ -1,6 +1,6 @@
 #pragma once
 
-namespace WINDOWING::INPUTS {
+namespace ENGINE_WINDOWING::INPUTS {
 	struct Button
 	{
 		bool bIsPressed{ false }, bJustPressed{ false }, bJustReleased{ false };

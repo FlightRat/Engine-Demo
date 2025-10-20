@@ -4,7 +4,7 @@
 #include<glad/glad.h>
 #include<glm/glm.hpp>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	class Shader
 	{
 	private:

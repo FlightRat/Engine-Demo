@@ -1,6 +1,6 @@
 #include "Texture.h"
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	Texture::Texture() :Texture(0, 0, 0, TextureType::NONE)
 	{
 	}

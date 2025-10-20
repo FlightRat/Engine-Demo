@@ -4,7 +4,7 @@
 #include<vector>
 #include<string>
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
     struct Vertex
     {
         glm::vec3 pos_;

@@ -1,7 +1,7 @@
 #include "Keyboard.h"
 #include<Logger/Logger.h>
 
-namespace WINDOWING::INPUTS {
+namespace ENGINE_WINDOWING::INPUTS {
 	Keyboard::Keyboard(): m_mapButtons{ 
 						{ ENGINE_KEY_BACKSPACE, Button{} },
 						{ ENGINE_KEY_TAB, Button{} },

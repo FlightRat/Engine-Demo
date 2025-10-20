@@ -1,7 +1,7 @@
 #pragma once
 #include"Entity.h"
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	template <typename TComponent, typename ...Args>
 	TComponent& Entity::AddComponent(Args&& ...args)
 	{

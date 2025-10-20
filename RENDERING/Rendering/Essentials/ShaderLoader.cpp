@@ -2,7 +2,7 @@
 #include<iostream>
 #include<fstream>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
     GLuint ShaderLoader::CreateProgram(const std::string& vertexShader, const std::string& fragmentShader)
     {
         const GLuint program = glCreateProgram();

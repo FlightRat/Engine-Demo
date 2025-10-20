@@ -4,7 +4,7 @@
 
 int main()
 {
-	auto& app = EDITOR::Application::GetInstance();
+	auto& app = ENGINE_EDITOR::Application::GetInstance();
 	app.Run();
 	return 0;
 }

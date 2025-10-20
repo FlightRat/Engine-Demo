@@ -1,7 +1,7 @@
 #include "RP3D_Wrappers.h"
 #include<Logger.h>
 
-namespace PHYSICS{
+namespace ENGINE_PHYSICS{
     void PhysicsWorldDestroyer::operator()(rp3d::PhysicsWorld* world) const
     {
         if (common && world)

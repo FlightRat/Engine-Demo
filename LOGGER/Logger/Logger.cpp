@@ -1,6 +1,6 @@
 #include "Logger.h"
 
-namespace LOGGER
+namespace ENGINE_LOGGER
 {
     Logger::LogTime::LogTime(const std::string& date):
         day{date.substr(0,3)},dayNumber{date.substr(8,2)},month{date.substr(4,3)},year{date.substr(20,4)}, time{date.substr(11,8)}

@@ -11,12 +11,12 @@
 #include "../ECS/Components/MeshFilter.h"
 #include "../ECS/Components/MeshRender.h"
 
-using namespace CORE::ECS;
-using namespace RENDERING;
-using namespace RESOURCES;
+using namespace ENGINE_CORE::ECS;
+using namespace ENGINE_RENDERING;
+using namespace ENGINE_RESOURCES;
 
-namespace CORE::Systems {
-	RenderSystem::RenderSystem(CORE::ECS::Registry& registry):m_Registry{registry}
+namespace ENGINE_CORE::Systems {
+	RenderSystem::RenderSystem(ENGINE_CORE::ECS::Registry& registry):m_Registry{registry}
 	{
 	}
 

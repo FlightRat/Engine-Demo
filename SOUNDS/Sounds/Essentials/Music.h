@@ -2,7 +2,7 @@
 #include<Utilities/SDL_Wrappers.h>
 #include"SoundParams.h"
 
-namespace SOUNDS {
+namespace ENGINE_SOUNDS {
 	class Music
 	{
 	private:

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace SOUNDS {
+namespace ENGINE_SOUNDS {
 	class MusicPlayer
 	{
 	public:

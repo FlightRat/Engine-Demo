@@ -1,7 +1,7 @@
 #include "MeshFilter.h"
 #include <entt.hpp>
 
-void CORE::ECS::MeshFilter::load_mesh()
+void ENGINE_CORE::ECS::MeshFilter::load_mesh()
 {
     if (mesh == "cube")
         load_cube();
@@ -13,7 +13,7 @@ void CORE::ECS::MeshFilter::load_mesh()
         load_hud_quad();
 }
 
-void CORE::ECS::MeshFilter::load_hud_quad()
+void ENGINE_CORE::ECS::MeshFilter::load_hud_quad()
 {
     // 1. 清除旧数据
     vertex_data.clear();
@@ -58,7 +58,7 @@ void CORE::ECS::MeshFilter::load_hud_quad()
     // 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void CORE::ECS::MeshFilter::load_plane()
+void ENGINE_CORE::ECS::MeshFilter::load_plane()
 {
     // 1. 清除旧数据
     vertex_data.clear();
@@ -105,7 +105,7 @@ void CORE::ECS::MeshFilter::load_plane()
     // 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void CORE::ECS::MeshFilter::load_cube()
+void ENGINE_CORE::ECS::MeshFilter::load_cube()
 {
     // 1. 清除旧数据
     vertex_data.clear();
@@ -189,7 +189,7 @@ void CORE::ECS::MeshFilter::load_cube()
     index_data.assign(indices, indices + index_count);
 }
 
-void CORE::ECS::MeshFilter::load_sphere()
+void ENGINE_CORE::ECS::MeshFilter::load_sphere()
 {
     // 1. 清除旧数据
     vertex_data.clear();
@@ -267,7 +267,7 @@ void CORE::ECS::MeshFilter::load_sphere()
     // 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, index_data.size(), GL_UNSIGNED_INT, 0);
 }
 
-void CORE::ECS::MeshFilter::CreateLuaMeshFilterBind(sol::state& lua)
+void ENGINE_CORE::ECS::MeshFilter::CreateLuaMeshFilterBind(sol::state& lua)
 {
     lua.new_usertype<MeshFilter>(
         "MeshFilter",

@@ -14,10 +14,10 @@
 #include"../Resources/AssetManager.h"
 #include<Utilities/Timer.h>
 
-using namespace CORE::ECS;
+using namespace ENGINE_CORE::ECS;
 
-namespace CORE::Systems {
-	ScriptingSystem::ScriptingSystem(CORE::ECS::Registry& registry):m_Registry{ registry },m_bMainLoaded{false}
+namespace ENGINE_CORE::Systems {
+	ScriptingSystem::ScriptingSystem(ENGINE_CORE::ECS::Registry& registry):m_Registry{ registry },m_bMainLoaded{false}
 	{
 	}
 
@@ -54,9 +54,9 @@ namespace CORE::Systems {
 		sol::table render_script = main_lua[2];
 		sol::function render = render_script["render"];
 
-		CORE::ECS::Entity mainLuaScript{ m_Registry, "main_script", "" };
-		mainLuaScript.AddComponent<CORE::ECS::ScriptComponent>(
-			CORE::ECS::ScriptComponent{
+		ENGINE_CORE::ECS::Entity mainLuaScript{ m_Registry, "main_script", "" };
+		mainLuaScript.AddComponent<ENGINE_CORE::ECS::ScriptComponent>(
+			ENGINE_CORE::ECS::ScriptComponent{
 				.update = update,
 				.render = render,
 			}
@@ -75,14 +75,14 @@ namespace CORE::Systems {
 			return;
 		}
 
-		auto view = m_Registry.GetRegistry().view<CORE::ECS::ScriptComponent>();
+		auto view = m_Registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
 
 		for (const auto& entity : view) 
 		{
-			CORE::ECS::Entity ent{ m_Registry, entity };
+			ENGINE_CORE::ECS::Entity ent{ m_Registry, entity };
 			if (ent.GetName() != "main_script")
 				continue;
-			auto& script = ent.GetComponent<CORE::ECS::ScriptComponent>();
+			auto& script = ent.GetComponent<ENGINE_CORE::ECS::ScriptComponent>();
 			auto error = script.update(entity);
 			if (!error.valid())
 			{
@@ -100,14 +100,14 @@ namespace CORE::Systems {
 			return;
 		}
 
-		auto view = m_Registry.GetRegistry().view<CORE::ECS::ScriptComponent>();
+		auto view = m_Registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
 
 		for (const auto& entity : view)
 		{
-			CORE::ECS::Entity ent{ m_Registry, entity };
+			ENGINE_CORE::ECS::Entity ent{ m_Registry, entity };
 			if (ent.GetName() != "main_script")
 				continue;
-			auto& script = ent.GetComponent<CORE::ECS::ScriptComponent>();
+			auto& script = ent.GetComponent<ENGINE_CORE::ECS::ScriptComponent>();
 			auto error = script.render(entity);
 			if (!error.valid())
 			{
@@ -117,16 +117,16 @@ namespace CORE::Systems {
 		}
 	}
 
-	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry)
+	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
 	{
 		Registry::CreateLuaRegistryBind(lua, registry);							// register "runtime_view" & "Registry" into lua
-		CORE::Scripting::GLMBindings::CreateGLMBindings(lua);					// register glm vec into lua
-		CORE::InputManager::CreateLuaInputBindings(lua);						// register inputs stuff into lua
-		RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);			// register assetManager into lua
-		CORE::Scripting::SoundBindings::CreateSoundBindings(lua, registry);		// register sound into lua
-		UTIL::Timer::CreateLuaTimer(lua);										// register timer into lua
+		ENGINE_CORE::Scripting::GLMBindings::CreateGLMBindings(lua);					// register glm vec into lua
+		ENGINE_CORE::InputManager::CreateLuaInputBindings(lua);						// register inputs stuff into lua
+		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManager(lua, registry);			// register assetManager into lua
+		ENGINE_CORE::Scripting::SoundBindings::CreateSoundBindings(lua, registry);		// register sound into lua
+		ENGINE_UTIL::Timer::CreateLuaTimer(lua);										// register timer into lua
 
-		CORE::ECS::Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
+		ENGINE_CORE::ECS::Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
 		CubeColliderComponent::CreateLuaCubeColliderBind(lua);
 		SphereColliderComponent::CreateLuaSphereColliderBind(lua);
@@ -136,12 +136,12 @@ namespace CORE::Systems {
 
 		//NOTE::the same registered Component in LUA and META should have the same id
 
-		CORE::ECS::Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
-		CORE::ECS::Entity::RegisterMetaComponent<MeshFilter>();
-		CORE::ECS::Entity::RegisterMetaComponent<MeshRender>();
-		CORE::ECS::Entity::RegisterMetaComponent<CubeColliderComponent>();
-		CORE::ECS::Entity::RegisterMetaComponent<SphereColliderComponent>();
-		CORE::ECS::Entity::RegisterMetaComponent<PhysicsComponent>();
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<MeshFilter>();
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<MeshRender>();
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<CubeColliderComponent>();
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<SphereColliderComponent>();
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<PhysicsComponent>();
 
 		Registry::RegisterMetaComponent<TransformComponent>();
 		Registry::RegisterMetaComponent<MeshFilter>();

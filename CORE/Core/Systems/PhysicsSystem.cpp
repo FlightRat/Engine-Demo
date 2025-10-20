@@ -3,11 +3,11 @@
 #include "../ECS/Components/PhysicsComponent.h"
 #include <Logger/Logger.h>
 
-using namespace CORE::ECS;
+using namespace ENGINE_CORE::ECS;
 using namespace reactphysics3d;
 
-namespace CORE::Systems {
-	PhysicsSystem::PhysicsSystem(CORE::ECS::Registry& registry):m_Registry{registry}
+namespace ENGINE_CORE::Systems {
+	PhysicsSystem::PhysicsSystem(ENGINE_CORE::ECS::Registry& registry):m_Registry{registry}
 	{
 	}
 

@@ -2,21 +2,21 @@
 #include "../ECS/Registry.h"
 #include <sol/sol.hpp>
 
-namespace CORE::Systems {
+namespace ENGINE_CORE::Systems {
 	class ScriptingSystem
 	{
 	private:
-		CORE::ECS::Registry& m_Registry;
+		ENGINE_CORE::ECS::Registry& m_Registry;
 		bool m_bMainLoaded;
 	public:
-		ScriptingSystem(CORE::ECS::Registry& registry);
+		ScriptingSystem(ENGINE_CORE::ECS::Registry& registry);
 		~ScriptingSystem() = default;
 
 		bool LoadMainScript(sol::state& lua);
 		void Update();
 		void Render();
 
-		static void RegisterLuaBindings(sol::state& lua, CORE::ECS::Registry& registry);
+		static void RegisterLuaBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry);
 		static void RegisterLuaFunctions(sol::state& lua);
 	};
 }

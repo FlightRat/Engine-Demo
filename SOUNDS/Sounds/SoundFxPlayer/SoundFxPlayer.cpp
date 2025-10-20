@@ -2,7 +2,7 @@
 #include "../Essentials/SoundFx.h"
 #include <Logger/Logger.h>
 
-namespace SOUNDS {
+namespace ENGINE_SOUNDS {
 	void SoundFxPlayer::Play(SoundFx& soundFx, int loops, int channel)
 	{
 		if (!soundFx.GetSoundFxPtr())

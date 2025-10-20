@@ -2,7 +2,7 @@
 #include<iostream>
 #include<Logger/Logger.h>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	Shader::Shader():Shader(0, "", ""){ }
 
 	Shader::Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath):

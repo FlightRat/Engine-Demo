@@ -1,7 +1,7 @@
 #include "Window.h"
 #include<iostream>
 
-namespace WINDOWING
+namespace ENGINE_WINDOWING
 {
 	void Window::CreateNewWindow(Uint32 flags)
 	{

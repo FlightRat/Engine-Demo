@@ -3,12 +3,12 @@
 #include<Windowing/Window/Window.h>
 #include<Core/ECS/Registry.h>
 
-namespace EDITOR{
+namespace ENGINE_EDITOR{
 	class Application
 	{
 	private:
-		std::unique_ptr<WINDOWING::Window> m_pWindow;
-		std::unique_ptr<CORE::ECS::Registry> m_pRegistry;
+		std::unique_ptr<ENGINE_WINDOWING::Window> m_pWindow;
+		std::unique_ptr<ENGINE_CORE::ECS::Registry> m_pRegistry;
 		SDL_Event m_Event;
 		bool m_bIsRunning;
 

@@ -33,7 +33,7 @@ Uint64 now = SDL_GetPerformanceCounter();
 Uint64 last = 0;
 double deltaTime = 0;
 
-namespace EDITOR {
+namespace ENGINE_EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
     {
 
@@ -74,7 +74,7 @@ namespace EDITOR {
 		SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
 		// Create the window
-		m_pWindow = std::make_unique<WINDOWING::Window>("Test", SCR_WIDTH, SCR_HEIGHT, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
+		m_pWindow = std::make_unique<ENGINE_WINDOWING::Window>("Test", SCR_WIDTH, SCR_HEIGHT, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
 		if (!m_pWindow->GetWindow())
 		{
 			ENGINE_ERROR("Failed to create the window!");
@@ -106,42 +106,42 @@ namespace EDITOR {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// ECS Registry
-		m_pRegistry = std::make_unique<CORE::ECS::Registry>();
+		m_pRegistry = std::make_unique<ENGINE_CORE::ECS::Registry>();
 
 		// Asset Manager
-		auto assetManager = std::make_shared<RESOURCES::AssetManager>();
+		auto assetManager = std::make_shared<ENGINE_RESOURCES::AssetManager>();
 		if (!assetManager)
 		{
 			ENGINE_ERROR("Failed to create the asset manager!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<RESOURCES::AssetManager>>(assetManager))
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>(assetManager))
 		{
 			ENGINE_ERROR("Failed to add the asset manager to the registry context!");
 			return false;
 		}
 
 		// Music Player
-		auto musicPlayer = std::make_shared<SOUNDS::MusicPlayer>();
+		auto musicPlayer = std::make_shared<ENGINE_SOUNDS::MusicPlayer>();
 		if (!musicPlayer)
 		{
 			ENGINE_ERROR("Failed to create the music player!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<SOUNDS::MusicPlayer>>(musicPlayer))
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::MusicPlayer>>(musicPlayer))
 		{
 			ENGINE_ERROR("Failed to add the music player to the registry context!");
 			return false;
 		}
 
 		// SoundFx Player
-		auto soundFxPlayer = std::make_shared<SOUNDS::SoundFxPlayer>();
+		auto soundFxPlayer = std::make_shared<ENGINE_SOUNDS::SoundFxPlayer>();
 		if (!soundFxPlayer)
 		{
 			ENGINE_ERROR("Failed to create the soundFx player!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<SOUNDS::SoundFxPlayer>>(soundFxPlayer))
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::SoundFxPlayer>>(soundFxPlayer))
 		{
 			ENGINE_ERROR("Failed to add the soundFx player to the registry context!");
 			return false;
@@ -160,7 +160,7 @@ namespace EDITOR {
 		}
 
 		// Physics World
-		std::shared_ptr<PhysicsWorld> physicsWorld = PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
+		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
 		if(!physicsWorld)
 		{
 			ENGINE_ERROR("Failed to create the physics world!");
@@ -172,22 +172,22 @@ namespace EDITOR {
 		}
 
 		// Physics System
-		auto physicsSystem = std::make_shared<CORE::Systems::PhysicsSystem>(*m_pRegistry);
+		auto physicsSystem = std::make_shared<ENGINE_CORE::Systems::PhysicsSystem>(*m_pRegistry);
 		if (!physicsSystem)
 		{
 			ENGINE_ERROR("Failed to create the physics system!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::PhysicsSystem>>(physicsSystem))
+		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::PhysicsSystem>>(physicsSystem))
 		{
 			ENGINE_ERROR("Failed to add the physics system to the registry context!");
 			return false;
 		}
 
 		// Camera
-		auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);		//平视相机
+		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);		//平视相机
 		//auto camera = std::make_shared<RENDERING::Camera3D>(glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, -90.0f);		//俯视相机
-		if (!m_pRegistry->AddToContext<std::shared_ptr<RENDERING::Camera3D>>(camera))
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera))
 		{
 			ENGINE_ERROR("Failed to add the camera to the registry context!");
 			return false;
@@ -216,33 +216,33 @@ namespace EDITOR {
 		}
 
 		// Script System
-		auto scriptSystem = std::make_shared<CORE::Systems::ScriptingSystem>(*m_pRegistry);
+		auto scriptSystem = std::make_shared<ENGINE_CORE::Systems::ScriptingSystem>(*m_pRegistry);
 		if (!scriptSystem)
 		{
 			ENGINE_ERROR("Failed to create the script system!");
 			return false;
 		}
-		CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
-		CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
 		if (!scriptSystem->LoadMainScript(*lua))
 		{
 			ENGINE_ERROR("Failed to load the main lua script!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::ScriptingSystem>>(scriptSystem))
+		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::ScriptingSystem>>(scriptSystem))
 		{
 			ENGINE_ERROR("Failed to add the script system to the registry context!");
 			return false;
 		}
 
 		// Render System
-		auto renderSystem = std::make_shared<CORE::Systems::RenderSystem>(*m_pRegistry);
+		auto renderSystem = std::make_shared<ENGINE_CORE::Systems::RenderSystem>(*m_pRegistry);
 		if (!renderSystem)
 		{
 			ENGINE_ERROR("Failed to create the render system!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< CORE::Systems::RenderSystem>>(renderSystem))
+		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::RenderSystem>>(renderSystem))
 		{
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
@@ -323,7 +323,7 @@ namespace EDITOR {
 
     bool Application::LoadShaders()
     {
-		auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<RESOURCES::AssetManager>>();
+		auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
 
 		// color shader
 		if (!assetManager->AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
@@ -351,8 +351,8 @@ namespace EDITOR {
 
     void Application::ProcessEvents()
     {
-		auto& camera = m_pRegistry->GetContext<std::shared_ptr<RENDERING::Camera3D>>();
-		auto& inputManager = CORE::InputManager::GetInstance();
+		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
 
@@ -371,13 +371,13 @@ namespace EDITOR {
 				if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 					m_bIsRunning = false;
 				else if (m_Event.key.keysym.sym == SDLK_UP)
-					camera->ProcessKeyboard(RENDERING::FORWARD, deltaTime);
+					camera->ProcessKeyboard(ENGINE_RENDERING::FORWARD, deltaTime);
 				else if (m_Event.key.keysym.sym == SDLK_LEFT)
-					camera->ProcessKeyboard(RENDERING::LEFT, deltaTime);
+					camera->ProcessKeyboard(ENGINE_RENDERING::LEFT, deltaTime);
 				else if (m_Event.key.keysym.sym == SDLK_DOWN)
-					camera->ProcessKeyboard(RENDERING::BACKWARD, deltaTime);
+					camera->ProcessKeyboard(ENGINE_RENDERING::BACKWARD, deltaTime);
 				else if (m_Event.key.keysym.sym == SDLK_RIGHT)
-					camera->ProcessKeyboard(RENDERING::RIGHT, deltaTime);
+					camera->ProcessKeyboard(ENGINE_RENDERING::RIGHT, deltaTime);
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;
 			}
@@ -422,17 +422,17 @@ namespace EDITOR {
     void Application::Update()
     {
 		// TODO: move the camera update here
-		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::ScriptingSystem>>();
+		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Update();
 
-		auto& inputManager = CORE::InputManager::GetInstance();
+		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
 		keyboard.Update();
 		mouse.Update();
 
 		auto& pw = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		auto& ps = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::PhysicsSystem>>();
+		auto& ps = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
 		const decimal timeStep = 1.0f / 60.0f;
 		pw->update(timeStep);
 		ps->Update(m_pRegistry->GetRegistry());
@@ -449,10 +449,10 @@ namespace EDITOR {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::ScriptingSystem>>();
+		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Render();
 
-		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<CORE::Systems::RenderSystem>>();
+		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
 		renderSystem->Render();
 
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());

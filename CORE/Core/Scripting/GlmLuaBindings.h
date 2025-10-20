@@ -1,7 +1,7 @@
 #pragma once
 #include<sol/sol.hpp>
 
-namespace CORE::Scripting {
+namespace ENGINE_CORE::Scripting {
 	struct GLMBindings
 	{
 		static void CreateGLMBindings(sol::state& lua);

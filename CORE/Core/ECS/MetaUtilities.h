@@ -4,7 +4,7 @@
 #include<Logger/Logger.h>
 
 
-namespace CORE::Utils {
+namespace ENGINE_CORE::Utils {
 	[[nodiscard]] entt::id_type GetIdType(const sol::table& comp);
 
 	template <typename ...Args>

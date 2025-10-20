@@ -2,7 +2,7 @@
 #include<entt.hpp>
 
 /*register a "Transform" type into lua*/
-void CORE::ECS::TransformComponent::CreateLuaTransformBind(sol::state& lua)
+void ENGINE_CORE::ECS::TransformComponent::CreateLuaTransformBind(sol::state& lua)
 {
 	lua.new_usertype<TransformComponent>(
 		"Transform",

@@ -2,7 +2,7 @@
 #include"Shader.h"
 #include<memory>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	class ShaderLoader 
 	{
 	private:

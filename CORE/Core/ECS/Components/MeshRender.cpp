@@ -1,7 +1,7 @@
 #include "MeshRender.h"
 #include <entt.hpp>
 
-void CORE::ECS::MeshRender::UploadMesh(MeshFilter mf)
+void ENGINE_CORE::ECS::MeshRender::UploadMesh(MeshFilter mf)
 {
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
@@ -23,7 +23,7 @@ void CORE::ECS::MeshRender::UploadMesh(MeshFilter mf)
     m_loaded = { true };
 }
 
-void CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
+void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
 {
     lua.new_usertype<MeshRender>(
         "MeshRender",

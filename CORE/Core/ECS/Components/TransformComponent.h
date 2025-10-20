@@ -2,7 +2,7 @@
 #include<glm/glm.hpp>
 #include<sol/sol.hpp>
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	struct TransformComponent
 	{
 		glm::vec3 position{ glm::vec3{0.0f} };

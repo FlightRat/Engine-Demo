@@ -1,7 +1,7 @@
 #include "SphereColliderComponent.h"
 #include<entt.hpp>
 
-void CORE::ECS::SphereColliderComponent::CreateLuaSphereColliderBind(sol::state& lua)
+void ENGINE_CORE::ECS::SphereColliderComponent::CreateLuaSphereColliderBind(sol::state& lua)
 {
 	lua.new_usertype<SphereColliderComponent>(
 		"SphereCollider",

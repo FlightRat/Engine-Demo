@@ -2,7 +2,7 @@
 #include"SoundParams.h"
 #include<Utilities/SDL_Wrappers.h>
 
-namespace SOUNDS {
+namespace ENGINE_SOUNDS {
 	class SoundFx
 	{
 	private:

@@ -1,7 +1,7 @@
 #pragma once
 #include<sol/sol.hpp>
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 	struct ScriptComponent
 	{
 		sol::protected_function update{ sol::lua_nil };

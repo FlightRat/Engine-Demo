@@ -3,7 +3,7 @@
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
 
-namespace RESOURCES {
+namespace ENGINE_RESOURCES {
     // texture
     bool AssetManager::AddTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt)
     {
@@ -14,8 +14,8 @@ namespace RESOURCES {
             return false;
         }
 
-        auto texture = std::move(RENDERING::TextureLoader::Create(
-            pixelArt ? RENDERING::Texture::TextureType::PIXEL : RENDERING::Texture::TextureType::BLENDED,
+        auto texture = std::move(ENGINE_RENDERING::TextureLoader::Create(
+            pixelArt ? ENGINE_RENDERING::Texture::TextureType::PIXEL : ENGINE_RENDERING::Texture::TextureType::BLENDED,
             texturePath
         ));
         if (!texture)
@@ -27,7 +27,7 @@ namespace RESOURCES {
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
     }
-    std::shared_ptr<RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
+    std::shared_ptr<ENGINE_RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
         auto texItr = m_mapTexture.find(textureName);
         if (texItr == m_mapTexture.end())
@@ -47,7 +47,7 @@ namespace RESOURCES {
             ENGINE_ERROR("Failed to add shader [{0}] -- Already exists!", shaderName);
             return false;
         }
-        auto shader = std::move(RENDERING::ShaderLoader::Create(vertexPath, fragmentPath));
+        auto shader = std::move(ENGINE_RENDERING::ShaderLoader::Create(vertexPath, fragmentPath));
         if (!shader)
         {
             ENGINE_ERROR("Failed to load shader [{0}] at vert path [{1}] and frag path [{2}]", shaderName, vertexPath, fragmentPath);
@@ -56,7 +56,7 @@ namespace RESOURCES {
         m_mapShader.emplace(shaderName, std::move(shader));
         return true;
     }
-    std::shared_ptr<RENDERING::Shader> AssetManager::GetShader(const std::string& shaderName)
+    std::shared_ptr<ENGINE_RENDERING::Shader> AssetManager::GetShader(const std::string& shaderName)
     {
         auto shaderItr = m_mapShader.find(shaderName);
         if (shaderItr == m_mapShader.end())
@@ -87,14 +87,14 @@ namespace RESOURCES {
         }
 
         // sound param
-        SOUNDS::SoundParams params{
+        ENGINE_SOUNDS::SoundParams params{
             .name = musicName,
             .filename = musicPath,
             .duration = Mix_MusicDuration(music)
         };
 
         // music pointer
-        auto musicPtr = std::make_shared<SOUNDS::Music>(params, MusicPtr{ music });
+        auto musicPtr = std::make_shared<ENGINE_SOUNDS::Music>(params, MusicPtr{ music });
         if (!musicPtr)
         {
             ENGINE_ERROR("Failed to create the must ptr for [{}]", musicName);
@@ -105,7 +105,7 @@ namespace RESOURCES {
         
         return true;
     }
-    std::shared_ptr<SOUNDS::Music> AssetManager::GetMusic(const std::string& musicName)
+    std::shared_ptr<ENGINE_SOUNDS::Music> AssetManager::GetMusic(const std::string& musicName)
     {
         auto musicItr = m_mapMusic.find(musicName);
         if (musicItr == m_mapMusic.end())
@@ -136,14 +136,14 @@ namespace RESOURCES {
         }
 
         // params
-        SOUNDS::SoundParams params{
+        ENGINE_SOUNDS::SoundParams params{
             .name = soundFxName,
             .filename = soundFxPath,
             .duration = chunk->alen / 179.4
         };
 
         // chunk pointer
-        auto chunkPtr = std::make_shared<SOUNDS::SoundFx>(params, SoundFxPtr{ chunk });
+        auto chunkPtr = std::make_shared<ENGINE_SOUNDS::SoundFx>(params, SoundFxPtr{ chunk });
         if (!chunkPtr)
         {
             ENGINE_ERROR("Failed to create the must ptr for [{}]", soundFxName);
@@ -154,7 +154,7 @@ namespace RESOURCES {
 
         return true;
     }
-    std::shared_ptr<SOUNDS::SoundFx> AssetManager::GetSoundFx(const std::string& soundFxName)
+    std::shared_ptr<ENGINE_SOUNDS::SoundFx> AssetManager::GetSoundFx(const std::string& soundFxName)
     {
         auto soundFxItr = m_mapSoundFx.find(soundFxName);
         if (soundFxItr == m_mapSoundFx.end())
@@ -166,9 +166,9 @@ namespace RESOURCES {
     }
 
     // lua register
-    void AssetManager::CreateLuaAssetManager(sol::state& lua, CORE::ECS::Registry& registry)
+    void AssetManager::CreateLuaAssetManager(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
     {
-        auto& assetManager = registry.GetContext<std::shared_ptr<RESOURCES::AssetManager>>();
+        auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
         if (!assetManager)
         {
             ENGINE_ERROR("Failed to bind the asset manager to lua - Does not exist in the registry!");

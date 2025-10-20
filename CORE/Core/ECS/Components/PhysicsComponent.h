@@ -8,7 +8,7 @@
 
 using namespace reactphysics3d;
 
-namespace CORE::ECS {
+namespace ENGINE_CORE::ECS {
 
 	struct PhysicsAttributes
 	{

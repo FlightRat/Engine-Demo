@@ -4,7 +4,7 @@
 
 using namespace reactphysics3d;
 
-namespace PHYSICS {
+namespace ENGINE_PHYSICS {
 
 	struct PhysicsWorldDestroyer
 	{

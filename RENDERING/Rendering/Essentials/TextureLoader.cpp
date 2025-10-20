@@ -2,7 +2,7 @@
 #include<SOIL/SOIL.h>
 #include<Logger/Logger.h>
 
-namespace RENDERING{
+namespace ENGINE_RENDERING{
 	bool TextureLoader::LoadTexture(const std::string& filepath, GLuint& id, int& width, int& height, bool blended)
 	{
 		int channels = 0;

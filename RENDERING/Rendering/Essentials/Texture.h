@@ -2,7 +2,7 @@
 #include<glad/glad.h>
 #include<string>
 
-namespace RENDERING {
+namespace ENGINE_RENDERING {
 	class Texture
 	{
 	public: enum class TextureType { PIXEL = 0, BLENDED, NONE };

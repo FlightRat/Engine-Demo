@@ -4,7 +4,7 @@
 #include <memory>
 #include <sol/sol.hpp>
 
-using namespace WINDOWING::INPUTS;
+using namespace ENGINE_WINDOWING::INPUTS;
 
 /*
 整体思路：
@@ -20,7 +20,7 @@ using namespace WINDOWING::INPUTS;
 	状态修改：检测到"SDLK_a"输入，修改map中"SDLK_a"，即“ENGINE_KEY_A”的状态
 */
 
-namespace CORE {
+namespace ENGINE_CORE {
 	class InputManager
 	{
 	private:

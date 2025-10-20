@@ -3,7 +3,7 @@
 #include "Button.h"
 #include <map>
 
-namespace WINDOWING::INPUTS {
+namespace ENGINE_WINDOWING::INPUTS {
 	class Keyboard
 	{
 	private:

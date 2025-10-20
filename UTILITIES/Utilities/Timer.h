@@ -4,7 +4,7 @@
 
 using namespace std::chrono;
 
-namespace UTIL {
+namespace ENGINE_UTIL {
 	class Timer
 	{
 	private:
