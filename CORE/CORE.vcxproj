@@ -163,7 +163,8 @@
   <ItemGroup>
     <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\Identification.h" />
-    <ClInclude Include="Core\ECS\Components\MeshComponent.h" />
+    <ClInclude Include="Core\ECS\Components\MeshFilter.h" />
+    <ClInclude Include="Core\ECS\Components\MeshRenderer.h" />
     <ClInclude Include="Core\ECS\Components\PhysicsComponent.h" />
     <ClInclude Include="Core\ECS\Components\ScriptComponent.h" />
     <ClInclude Include="Core\ECS\Components\SphereColliderComponent.h" />
@@ -181,7 +182,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Components\CubeColliderComponent.cpp" />
-    <ClCompile Include="Core\ECS\Components\MeshComponent.cpp" />
+    <ClCompile Include="Core\ECS\Components\MeshFilter.cpp" />
+    <ClCompile Include="Core\ECS\Components\MeshRenderer.cpp" />
     <ClCompile Include="Core\ECS\Components\PhysicsComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\SphereColliderComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\TransformComponent.cpp" />

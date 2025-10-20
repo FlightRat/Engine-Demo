@@ -1,7 +1,8 @@
 #include "ScriptingSystem.h"
 #include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
-#include "../ECS/Components/MeshComponent.h"
+#include "../ECS/Components/MeshFilter.h"
+#include "../ECS/Components/MeshRenderer.h"
 #include "../ECS/Components/CubeColliderComponent.h"
 #include "../ECS/Components/SphereColliderComponent.h"
 #include "../ECS/Components/PhysicsComponent.h"
@@ -127,21 +128,24 @@ namespace CORE::Systems {
 
 		CORE::ECS::Entity::CreateLuaEntityBind(lua, registry);				// register a "Entity" type into lua
 		TransformComponent::CreateLuaTransformBind(lua);		// register a "Transform" type into lua
-		MeshComponent::CreateLuaMeshBind(lua);					// register a "Mesh" type into lua
 		CubeColliderComponent::CreateLuaCubeColliderBind(lua);
 		SphereColliderComponent::CreateLuaSphereColliderBind(lua);
+		MeshFilter::CreateLuaMeshFilterBind(lua);
+		MeshRenderer::CreateLuaMeshRendererBind(lua);
 		PhysicsComponent::CreateLuaPhysicsBind(lua, registry.GetRegistry());
 
 		//NOTE::the same registered Component in LUA and META should have the same id
 
 		CORE::ECS::Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
-		CORE::ECS::Entity::RegisterMetaComponent<MeshComponent>();			// register MeshComponent into meta
+		CORE::ECS::Entity::RegisterMetaComponent<MeshFilter>();
+		CORE::ECS::Entity::RegisterMetaComponent<MeshRenderer>();
 		CORE::ECS::Entity::RegisterMetaComponent<CubeColliderComponent>();
 		CORE::ECS::Entity::RegisterMetaComponent<SphereColliderComponent>();
 		CORE::ECS::Entity::RegisterMetaComponent<PhysicsComponent>();
 
 		Registry::RegisterMetaComponent<TransformComponent>();
-		Registry::RegisterMetaComponent<MeshComponent>();
+		Registry::RegisterMetaComponent<MeshFilter>();
+		Registry::RegisterMetaComponent<MeshRenderer>();
 		Registry::RegisterMetaComponent<CubeColliderComponent>();
 		Registry::RegisterMetaComponent<SphereColliderComponent>();
 		Registry::RegisterMetaComponent<PhysicsComponent>();

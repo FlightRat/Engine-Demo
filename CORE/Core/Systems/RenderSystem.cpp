@@ -7,8 +7,9 @@
 #include<Logger/Logger.h>
 #include "../ECS/Entity.h"
 #include "../Resources/AssetManager.h"
-#include "../ECS/Components/MeshComponent.h"
 #include "../ECS/Components/TransformComponent.h"
+#include "../ECS/Components/MeshFilter.h"
+#include "../ECS/Components/MeshRenderer.h"
 
 using namespace CORE::ECS;
 using namespace RENDERING;
@@ -76,12 +77,16 @@ namespace CORE::Systems {
 
 
 		glm::mat4 model = glm::mat4(1.0f);
-		auto view = m_Registry.GetRegistry().view<MeshComponent, TransformComponent>();
-		for (auto [_, mesh, transform] : view.each())
+		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRenderer>();
+		for (auto [_, transform, meshF, meshR] : view.each())
 		{
-			if (mesh.bHidden)
+			if (!meshR.shouldRender)
 			{
 				continue;
+			}
+			if (!meshR.m_loaded)
+			{
+				meshR.UploadMesh(meshF);
 			}
 			model = glm::mat4(1.0f);
 			//translate
@@ -94,31 +99,34 @@ namespace CORE::Systems {
 			//scale
 			model = glm::scale(model, transform.scale);
 
-			if (mesh.shader == "colorShader")
+			if (meshR.shader == "colorShader")
 			{
 				colorShader->Enable();
 				colorShader->SetUniformMat4("model", model);
 				colorShader->SetUniformMat4("view", viewMatrix);
 				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
-				colorShader->SetUniformVec4("color", mesh.color);
+				colorShader->SetUniformVec4("color", meshR.color);
 			}
-			else if (mesh.shader == "texShader")
+			else if (meshR.shader == "texShader")
 			{
 				texShader->Enable();
 				texShader->Enable();
 				texShader->SetUniformMat4("model", model);
 				texShader->SetUniformMat4("view", viewMatrix);
 				texShader->SetUniformMat4("projection", PerspectiveMatrix);
-				texShader->SetUniformInt("tex", mesh.texture);
+				texShader->SetUniformInt("tex", meshR.texture);
 			}
-			else if (mesh.shader == "hudShader")
+			else if (meshR.shader == "hudShader")
 			{
 				hudShader->Enable();
 				hudShader->SetUniformMat4("model", model);
 				hudShader->SetUniformMat4("projection", orthoMatrix);
-				hudShader->SetUniformVec4("color", mesh.color);
+				hudShader->SetUniformVec4("color", meshR.color);
 			}
-			mesh.Render();
+
+			glBindVertexArray(meshR.m_VAO);
+			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(meshF.index_data.size()), GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
 		}
 	}
 }

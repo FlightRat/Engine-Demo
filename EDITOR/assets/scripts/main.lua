@@ -32,7 +32,8 @@ LoadAssets()
 --floor
 local floor = Entity("", "")
 local floor_transform = floor:add_component(Transform(vec3(0.0,0.0,0.0),vec3(1.0,1.0,1.0),vec3(0.0,0.0,0.0)))
-local floor_mesh = floor:add_component(Mesh("plane","colorShader",vec4(1.0,1.0,1.0,1.0),0))
+local floor_meshF = floor:add_component(MeshFilter("plane"))
+local floor_meshR = floor:add_component(MeshRenderer("colorShader",vec4(1.0,1.0,1.0,1.0),0))
 local floor_physicsAttr = PhysicsAttributes()
 floor_physicsAttr.position = floor_transform.position
 floor_physicsAttr.rotation = floor_transform.rotation
@@ -44,7 +45,8 @@ local floor_physics = floor:add_component(Physics(floor_physicsAttr))
 --cube
 local cube = Entity("", "")
 local cube_transform = cube:add_component(Transform(vec3(0.0,5.0,-5.0),vec3(0.5,0.5,0.5),vec3(0.0,0.0,0.0)))
-local cube_mesh = cube:add_component(Mesh("cube","texShader",vec4(0.0,1.0,0.0,1.0),1))
+local cube_meshF = cube:add_component(MeshFilter("cube"))
+local cube_meshR = cube:add_component(MeshRenderer("texShader",vec4(0.0,1.0,0.0,1.0),1))
 local cube_physicsAttr = PhysicsAttributes()
 cube_physicsAttr.position = cube_transform.position
 cube_physicsAttr.rotation = cube_transform.rotation
@@ -56,7 +58,8 @@ local cube_physics = cube:add_component(Physics(cube_physicsAttr))
 --sphere
 local sphere = Entity("", "")
 local sphere_transform = sphere:add_component(Transform(vec3(0.0,5.0,5.0),vec3(0.5,0.5,0.5),vec3(0.0,0.0,0.0)))
-local sphere_mesh = sphere:add_component(Mesh("sphere","texShader",vec4(0.0,0.0,1.0,1.0),2))
+local sphere_mesF = sphere:add_component(MeshFilter("sphere"))
+local sphere_mesR = sphere:add_component(MeshRenderer("texShader",vec4(0.0,0.0,1.0,1.0),2))
 local sphere_physicsAttr = PhysicsAttributes()
 sphere_physicsAttr.position = sphere_transform.position
 sphere_physicsAttr.rotation = sphere_transform.rotation

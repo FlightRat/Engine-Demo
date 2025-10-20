@@ -12,7 +12,6 @@
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/Components/TransformComponent.h>
-#include<Core/ECS/Components/MeshComponent.h>
 #include<Core/ECS/Components/PhysicsComponent.h>
 #include<Core/ECS/Components/Identification.h>
 #include<Core/Resources/AssetManager.h>
