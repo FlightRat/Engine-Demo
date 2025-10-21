@@ -119,20 +119,21 @@ namespace ENGINE_CORE::ECS {
 					return pc;
 				}
 			),
+			"attributes", &PhysicsComponent::m_pAttribute,
 			"linear_impulse",[](PhysicsComponent& pc){},
+			"angular_impulse", [](PhysicsComponent& pc) {},
 			"set_linear_velocity", [](PhysicsComponent& pc, const glm::vec3 velocity) {
 				auto body = pc.GetRigidBody();
 				body->setLinearVelocity(Vector3(velocity.x, velocity.y, velocity.z));
+			},
+			"set_angular_velocity", [](PhysicsComponent& pc, const glm::vec3 velocity) {
+				auto body = pc.GetRigidBody();
+				body->setAngularVelocity(Vector3(velocity.x, velocity.y, velocity.z));
 			},
 			"get_linear_velocity", [](PhysicsComponent& pc) {
 				auto body = pc.GetRigidBody();
 				const Vector3 velocity = body->getLinearVelocity();
 				return glm::vec3(velocity.x, velocity.y, velocity.z);
-			},
-			"angular_impulse",[](PhysicsComponent& pc) {},
-			"set_angular_velocity", [](PhysicsComponent& pc, const glm::vec3 velocity) {
-				auto body = pc.GetRigidBody();
-				body->setAngularVelocity(Vector3(velocity.x, velocity.y, velocity.z));
 			},
 			"get_angular_velocity", [](PhysicsComponent& pc) {
 				auto body = pc.GetRigidBody();

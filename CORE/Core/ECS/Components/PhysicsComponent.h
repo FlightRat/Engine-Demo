@@ -52,6 +52,7 @@ namespace ENGINE_CORE::ECS {
 
 		void Init(std::shared_ptr<PhysicsCommon> common, std::shared_ptr<PhysicsWorld> world);
 		rp3d::RigidBody* GetRigidBody() { return m_pRigidBody.get(); }
+		PhysicsAttributes GetAttr() { return m_pAttribute; }
 
 		static void CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry);
 	};

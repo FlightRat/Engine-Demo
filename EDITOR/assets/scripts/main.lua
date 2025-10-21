@@ -28,19 +28,29 @@ local cam = Camera:get()
 --gFollowCam = FollowCamera(ball_entity)
 
 function controlEntity(entity)
+	local transform = entity:get_component(Transform)
 	local physics = entity:get_component(Physics)
-	local velocity = physics:get_linear_velocity()
+	local physics_attr = physics.attributes
+	local physics_velocity = physics:get_linear_velocity()
 	if Keyboard.pressed(KEY_D) then
-		physics:set_linear_velocity(vec3(5, velocity.y, velocity.z))
+		physics:set_linear_velocity(vec3(5, physics_velocity.y, physics_velocity.z))
 	end
 	if Keyboard.pressed(KEY_A) then
-		physics:set_linear_velocity(vec3(-5, velocity.y, velocity.z))
+		physics:set_linear_velocity(vec3(-5, physics_velocity.y, physics_velocity.z))
 	end
 	if Keyboard.pressed(KEY_W) then
-		physics:set_linear_velocity(vec3(velocity.x, velocity.y, -5))
+		physics:set_linear_velocity(vec3(physics_velocity.x, physics_velocity.y, -5))
 	end
 	if Keyboard.pressed(KEY_S) then
-		physics:set_linear_velocity(vec3(velocity.x, velocity.y, 5))
+		physics:set_linear_velocity(vec3(physics_velocity.x, physics_velocity.y, 5))
+	end
+	if Keyboard.pressed(KEY_Q) then
+		--transform.rotation.y = transform.rotation.y + 5
+		--physics_attr.rotation.y = physics_attr.rotation.y + 5
+	end
+	if Keyboard.pressed(KEY_E) then
+		--transform.rotation.y = transform.rotation.y - 5
+		--physics_attr.rotation.y = physics_attr.rotation.y - 5
 	end
 end
 
@@ -65,7 +75,7 @@ end
 main = {
 	[1] = {
 		update = function()
-		controlEntity(capsule_entity)
+		controlEntity(ball_entity)
 		controlCamera()
 		--gFollowCam:update()
 		end

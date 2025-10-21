@@ -49,6 +49,7 @@ ObjDefs =
 				type = BodyType.Dynamic,
 				shape = "box",
 				box_halfExtents = vec3(0.5, 0.5, 0.5)
+				--,angular_axis_factor = vec3(0.0, 1.0, 0.0)--lock rotation only in y
 			}
 		}
 	},
@@ -75,8 +76,7 @@ ObjDefs =
 				type = BodyType.Dynamic,
 				shape = "capsule",
 				capsule_halfHeight = 0.5,
-				capsule_radius = 0.5,
-				angular_axis_factor = vec3(0.0, 1.0, 0.0)
+				capsule_radius = 0.5
 			}
 		}
 	}
