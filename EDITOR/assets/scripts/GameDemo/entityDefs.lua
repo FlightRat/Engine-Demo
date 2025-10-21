@@ -7,7 +7,7 @@ ObjDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=5.0, z=5.0},
+				position = {x=2.0, y=0.5, z=0.0},
 				scale = {x=0.5, y=0.5, z=0.5},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -33,7 +33,7 @@ ObjDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=5.0, z=-5.0},
+				position = {x=-2.0, y=0.5, z=0.0},
 				scale = {x=0.5, y=0.5, z=0.5},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -52,6 +52,33 @@ ObjDefs =
 			}
 		}
 	},
+	capsule=
+	{
+		tag="capsule",
+		group="",
+		components = 
+		{
+			Transform = {
+				position = {x=0.0, y=1.0, z=0.0},
+				scale = {x=0.5, y=0.5, z=0.5},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			MeshFilter = {
+				type = "capsule"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				color = {R=0.0, G=0.0, B=1.0, A=1.0},
+				texture = 0
+			},
+			Physics = {
+				type = BodyType.Dynamic,
+				shape = "capsule",
+				capsule_halfHeight = 0.5,
+				capsule_radius = 0.5
+			}
+		}
+	}
 }
 
 EnvirDefs = 

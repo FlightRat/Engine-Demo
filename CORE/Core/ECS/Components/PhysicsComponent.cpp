@@ -55,6 +55,10 @@ namespace ENGINE_CORE::ECS {
 		{
 			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.sphere_radius);
 		}
+		else if (m_pAttribute.Shape == "capsule")
+		{
+			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedCapsuleCollisionShape(common, m_pAttribute.capsule_radius, m_pAttribute.capsule_halfHeight);
+		}
 
 		// collider
 		m_pCollider = ENGINE_PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
@@ -92,6 +96,8 @@ namespace ENGINE_CORE::ECS {
 			"shape", &PhysicsAttributes::Shape,
 			"box_halfExtents", &PhysicsAttributes::box_halfExtents,
 			"sphere_radius", &PhysicsAttributes::sphere_radius,
+			"capsule_radius", &PhysicsAttributes::capsule_radius,
+			"capsule_halfHeight", &PhysicsAttributes::capsule_halfHeight,
 			"bounciness", &PhysicsAttributes::c_Bounciness,
 			"friction", &PhysicsAttributes::c_FrictionCoefficient,
 			"mass_density", &PhysicsAttributes::c_MassDensity

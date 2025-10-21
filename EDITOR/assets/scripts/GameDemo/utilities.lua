@@ -75,7 +75,9 @@ function LoadEntity( def )
 		physicsAttr.type = def.components.Physics.type
 		physicsAttr.shape = def.components.Physics.shape
 		physicsAttr.box_halfExtents = def.components.Physics.box_halfExtents or vec3(1.0, 1.0, 1.0)
-		physicsAttr.sphere_radius = def.components.Physics.sphere_radius or 0.5
+		physicsAttr.sphere_radius = def.components.Physics.sphere_radius or 1.0
+		physicsAttr.capsule_radius = def.components.Physics.capsule_radius or 1.0
+		physicsAttr.capsule_halfHeight = def.components.Physics.capsule_halfHeight or 1.0
 		local physics = newEntity:add_component(Physics(physicsAttr))
 	end
 

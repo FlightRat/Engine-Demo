@@ -35,6 +35,14 @@ namespace ENGINE_PHYSICS{
         }
     }
 
+    void CapsuleCollisionShapeDestroyer::operator()(rp3d::CapsuleShape* capsuleShape) const
+    {
+        if (common && capsuleShape)
+        {   //ENGINE_LOG("sphereShape destroyed!");
+            common->destroyCapsuleShape(capsuleShape);
+        }
+    }
+
     void ColliderDestroyer::operator()(rp3d::Collider* collider) const
     {
         if (body && collider)

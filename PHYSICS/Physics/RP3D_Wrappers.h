@@ -41,6 +41,13 @@ namespace ENGINE_PHYSICS {
 		void operator()(rp3d::SphereShape* sphereShape) const;
 	};
 
+	struct CapsuleCollisionShapeDestroyer
+	{
+		std::shared_ptr<PhysicsCommon> common;
+		CapsuleCollisionShapeDestroyer(std::shared_ptr<PhysicsCommon> c) :common(c) {}
+		void operator()(rp3d::CapsuleShape* capsuleShape) const;
+	};
+
 	static std::shared_ptr<PhysicsWorld> MakeSharedPhysicsWorld(std::shared_ptr<PhysicsCommon> common)
 	{
 		PhysicsWorld* rawWorld = common->createPhysicsWorld();
@@ -59,9 +66,9 @@ namespace ENGINE_PHYSICS {
 		return std::shared_ptr<Collider>(rawCollider, ColliderDestroyer(body));
 	}
 
-	static std::shared_ptr<BoxShape> MakeSharedBoxCollisionShape(std::shared_ptr<PhysicsCommon> common, const Vector3 extent)
+	static std::shared_ptr<BoxShape> MakeSharedBoxCollisionShape(std::shared_ptr<PhysicsCommon> common, const Vector3 halfExtent)
 	{
-		rp3d::BoxShape* rawBoxShape = common->createBoxShape(extent);
+		rp3d::BoxShape* rawBoxShape = common->createBoxShape(halfExtent);
 		return std::shared_ptr<rp3d::BoxShape>(rawBoxShape, BoxCollisionShapeDestroyer(common));
 	}
 
@@ -69,5 +76,11 @@ namespace ENGINE_PHYSICS {
 	{
 		rp3d::SphereShape* rawSphereShape = common->createSphereShape(radius);
 		return std::shared_ptr<rp3d::SphereShape>(rawSphereShape, SphereCollisionShapeDestroyer(common));
+	}
+
+	static std::shared_ptr<CapsuleShape> MakeSharedCapsuleCollisionShape(std::shared_ptr<PhysicsCommon> common, const decimal radius, const decimal halfHeight)
+	{
+		rp3d::CapsuleShape* rawCapsuleShape = common->createCapsuleShape(radius, 2*halfHeight);
+		return std::shared_ptr<rp3d::CapsuleShape>(rawCapsuleShape, CapsuleCollisionShapeDestroyer(common));
 	}
 }

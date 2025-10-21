@@ -23,6 +23,7 @@ namespace ENGINE_CORE::ECS {
         void load_plane();
         void load_cube();
         void load_sphere();
+        void load_capsule();
         static void CreateLuaMeshFilterBind(sol::state& lua);
 	};
 }

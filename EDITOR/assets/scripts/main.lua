@@ -17,10 +17,12 @@ Music.play("2:23am")
 
 local ball = LoadEntity(ObjDefs["ball"])
 local cube = LoadEntity(ObjDefs["cube"])
+local capsule = LoadEntity(ObjDefs["capsule"])
 local floor = LoadEntity(EnvirDefs["floor"])
 
 local ball_entity = Entity(ball)
 local cube_entity = Entity(cube)
+local capsule_entity = Entity(capsule)
 
 local cam = Camera:get()
 --gFollowCam = FollowCamera(ball_entity)
@@ -63,7 +65,7 @@ end
 main = {
 	[1] = {
 		update = function()
-		controlEntity(cube_entity)
+		controlEntity(capsule_entity)
 		controlCamera()
 		--gFollowCam:update()
 		end

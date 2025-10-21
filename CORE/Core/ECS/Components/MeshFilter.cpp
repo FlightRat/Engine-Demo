@@ -5,10 +5,12 @@ void ENGINE_CORE::ECS::MeshFilter::load_mesh()
 {
     if (mesh == "cube")
         load_cube();
-    else if (mesh == "plane")
-        load_plane();
     else if (mesh == "sphere")
         load_sphere();
+    else if (mesh == "capsule")
+        load_capsule();
+    else if (mesh == "plane")
+        load_plane();
     else if (mesh == "hud_quad")
         load_hud_quad();
 }
@@ -265,6 +267,196 @@ void ENGINE_CORE::ECS::MeshFilter::load_sphere()
 
     // 渲染注意事项：
     // 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, index_data.size(), GL_UNSIGNED_INT, 0);
+}
+
+void ENGINE_CORE::ECS::MeshFilter::load_capsule()
+{
+    // 1. 清除旧数据
+    vertex_data.clear();
+    index_data.clear();
+
+    const float RADIUS = 1.0f;          // 半球和圆柱体的半径
+    const float HALF_HEIGHT = 1.0f;     // 圆柱体的一半高度 (总高度为 2.0)
+    const unsigned int SEGMENTS = 32;   // 沿圆周和垂直方向的细分数
+    const unsigned int Y_SEGMENTS_HALF = SEGMENTS / 2; // 半球的堆栈数
+    const float PI = 3.14159265359f;
+
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec2> uv;
+    std::vector<glm::vec3> normals;
+    std::vector<unsigned int> indices;
+
+    unsigned int base_vertex_index = 0; // 当前顶点块在最终数组中的起始索引
+
+    // -----------------------------------------------------------
+    // A. 顶部半球 (Y > 0): 从赤道 (phi=PI/2) 到北极 (phi=0)
+    // -----------------------------------------------------------
+    for (unsigned int y = 0; y <= Y_SEGMENTS_HALF; ++y)
+    {
+        for (unsigned int x = 0; x <= SEGMENTS; ++x)
+        {
+            float xSegment = (float)x / (float)SEGMENTS;
+            float ySegment = (float)y / (float)SEGMENTS;
+
+            float phi = (0.5f - ySegment) * PI; // 角度从 PI/2 减小到 0
+
+            float xPos_s = RADIUS * std::cos(xSegment * 2.0f * PI) * std::sin(phi);
+            float zPos_s = RADIUS * std::sin(xSegment * 2.0f * PI) * std::sin(phi);
+            float yPos_s = RADIUS * std::cos(phi);
+
+            // 向上平移 + HALF_HEIGHT
+            glm::vec3 pos = glm::vec3(xPos_s, yPos_s + HALF_HEIGHT, zPos_s);
+            // 法线相对于半球中心 (0, HALF_HEIGHT, 0)
+            glm::vec3 normal = glm::normalize(pos - glm::vec3(0.0f, HALF_HEIGHT, 0.0f));
+
+            positions.push_back(pos);
+            normals.push_back(normal);
+            uv.push_back(glm::vec2(xSegment, ySegment * 2.0f));
+        }
+    }
+
+    // 索引生成 (顶部半球)
+    for (unsigned int y = 0; y < Y_SEGMENTS_HALF; ++y)
+    {
+        for (unsigned int x = 0; x < SEGMENTS; ++x)
+        {
+            unsigned int p0 = y * (SEGMENTS + 1) + x;
+            unsigned int p1 = y * (SEGMENTS + 1) + x + 1;
+            unsigned int p2 = (y + 1) * (SEGMENTS + 1) + x + 1;
+            unsigned int p3 = (y + 1) * (SEGMENTS + 1) + x;
+
+            indices.push_back(base_vertex_index + p0);
+            indices.push_back(base_vertex_index + p2);
+            indices.push_back(base_vertex_index + p1);
+
+            indices.push_back(base_vertex_index + p0);
+            indices.push_back(base_vertex_index + p3);
+            indices.push_back(base_vertex_index + p2);
+        }
+    }
+
+    // 更新基础顶点索引到圆柱体起点
+    base_vertex_index = positions.size();
+
+
+    // -----------------------------------------------------------
+    // B. 中间圆柱体 (Y 范围: -HALF_HEIGHT 到 HALF_HEIGHT)
+    // -----------------------------------------------------------
+    const unsigned int H_SEGMENTS = 1; // 圆柱体只需上下两层顶点
+
+    for (unsigned int y = 0; y <= H_SEGMENTS; ++y)
+    {
+        float y_normalized = (float)y / (float)H_SEGMENTS; // 0.0 或 1.0
+
+        for (unsigned int x = 0; x <= SEGMENTS; ++x)
+        {
+            float xSegment = (float)x / (float)SEGMENTS;
+
+            // XZ 平面上的圆周
+            float xPos = RADIUS * std::cos(xSegment * 2.0f * PI);
+            float zPos = RADIUS * std::sin(xSegment * 2.0f * PI);
+
+            // Y 坐标从 -HALF_HEIGHT 到 HALF_HEIGHT
+            float yPos = -HALF_HEIGHT + y_normalized * (2.0f * HALF_HEIGHT);
+
+            positions.push_back(glm::vec3(xPos, yPos, zPos));
+            normals.push_back(glm::normalize(glm::vec3(xPos, 0.0f, zPos))); // 法线指向外侧
+            uv.push_back(glm::vec2(xSegment, y_normalized));
+        }
+    }
+
+    // 索引生成 (中间圆柱体)
+    for (unsigned int y = 0; y < H_SEGMENTS; ++y)
+    {
+        for (unsigned int x = 0; x < SEGMENTS; ++x)
+        {
+            unsigned int p0 = y * (SEGMENTS + 1) + x;
+            unsigned int p1 = y * (SEGMENTS + 1) + x + 1;
+            unsigned int p2 = (y + 1) * (SEGMENTS + 1) + x + 1;
+            unsigned int p3 = (y + 1) * (SEGMENTS + 1) + x;
+
+            indices.push_back(base_vertex_index + p0);
+            indices.push_back(base_vertex_index + p2);
+            indices.push_back(base_vertex_index + p1);
+
+            indices.push_back(base_vertex_index + p0);
+            indices.push_back(base_vertex_index + p3);
+            indices.push_back(base_vertex_index + p2);
+        }
+    }
+
+    // 更新基础顶点索引到底部半球起点
+    base_vertex_index = positions.size();
+
+
+    // -----------------------------------------------------------
+    // C. 底部半球 (Y < 0): 从赤道 (phi=0) 到南极 (phi=PI/2)
+    // -----------------------------------------------------------
+    // 我们只需要 Y_SEGMENTS_HALF 数量的堆栈，从圆柱体底部往下延伸
+    for (unsigned int y = 0; y <= Y_SEGMENTS_HALF; ++y) // y 从 0 开始，生成 Y_SEGMENTS_HALF + 1 层
+    {
+        for (unsigned int x = 0; x <= SEGMENTS; ++x)
+        {
+            float xSegment = (float)x / (float)SEGMENTS;
+            float ySegment_rel = (float)y / (float)Y_SEGMENTS_HALF; // 相对归一化 [0.0, 1.0]
+
+            // 角度 phi: 从 0 (赤道) 增加到 PI/2 (南极)
+            float phi = ySegment_rel * PI / 2.0f;
+
+            float xPos_s = RADIUS * std::cos(xSegment * 2.0f * PI) * std::sin(phi);
+            float zPos_s = RADIUS * std::sin(xSegment * 2.0f * PI) * std::sin(phi);
+            float yPos_s = -RADIUS * std::cos(phi); // Y 分量为负
+
+            // 向下平移 - HALF_HEIGHT
+            glm::vec3 pos = glm::vec3(xPos_s, yPos_s - HALF_HEIGHT, zPos_s);
+            // 法线相对于半球中心 (0, -HALF_HEIGHT, 0)
+            glm::vec3 normal = glm::normalize(pos - glm::vec3(0.0f, -HALF_HEIGHT, 0.0f));
+
+            positions.push_back(pos);
+            normals.push_back(normal);
+            // 底部 UV 从 1.0 递减到 0.0
+            uv.push_back(glm::vec2(xSegment, 1.0f - ySegment_rel));
+        }
+    }
+
+    // 索引生成 (底部半球)
+    for (unsigned int y = 0; y < Y_SEGMENTS_HALF; ++y)
+    {
+        for (unsigned int x = 0; x < SEGMENTS; ++x)
+        {
+            // 注意：p0, p1, p2, p3 是相对于当前顶点块 (base_vertex_index) 的相对索引
+            unsigned int p0 = y * (SEGMENTS + 1) + x;
+            unsigned int p1 = y * (SEGMENTS + 1) + x + 1;
+            unsigned int p2 = (y + 1) * (SEGMENTS + 1) + x + 1;
+            unsigned int p3 = (y + 1) * (SEGMENTS + 1) + x;
+
+            // 三角形 1: p0, p2, p1
+            indices.push_back(base_vertex_index + p0);
+            indices.push_back(base_vertex_index + p2);
+            indices.push_back(base_vertex_index + p1);
+
+            // 三角形 2: p0, p3, p2
+            indices.push_back(base_vertex_index + p0);
+            indices.push_back(base_vertex_index + p3);
+            indices.push_back(base_vertex_index + p2);
+        }
+    }
+
+
+    // -----------------------------------------------------------
+    // D. 组织最终的 Vertex 数据
+    // -----------------------------------------------------------
+    for (size_t i = 0; i < positions.size(); ++i)
+    {
+        Vertex v;
+        v.pos_ = positions[i];
+        v.normal_ = normals[i];
+        v.uv_ = uv[i];
+        vertex_data.push_back(v);
+    }
+
+    // 拷贝索引数据
+    index_data = indices;
 }
 
 void ENGINE_CORE::ECS::MeshFilter::CreateLuaMeshFilterBind(sol::state& lua)

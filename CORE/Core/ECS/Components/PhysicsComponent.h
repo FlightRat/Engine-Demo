@@ -29,6 +29,8 @@ namespace ENGINE_CORE::ECS {
 		std::string Shape{"box"};
 		glm::vec3 box_halfExtents{ 1.0, 1.0, 1.0 };
 		decimal sphere_radius{ 1.0 };
+		decimal capsule_radius{ 1.0 };
+		decimal capsule_halfHeight{ 1.0 };
 
 		// collider
 		float c_Bounciness{ 0.5f };
