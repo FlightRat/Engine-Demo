@@ -59,25 +59,37 @@ function LoadEntity( def )
 		)
 	end
 
-	--TODO: more attributes!!!
+	
 	if def.components.Physics then
+	--TODO: more attributes!!!
 		local physicsAttr = PhysicsAttributes()
 		physicsAttr.position = vec3(
 			def.components.Transform.position.x,
 			def.components.Transform.position.y,
-			def.components.Transform.position.z
-		)
+			def.components.Transform.position.z)
 		physicsAttr.rotation = vec3(
 			def.components.Transform.rotation.x,
 			def.components.Transform.rotation.y,
-			def.components.Transform.rotation.z
-		)
+			def.components.Transform.rotation.z)
+		-- rigidbody
 		physicsAttr.type = def.components.Physics.type
+		-- collider
 		physicsAttr.shape = def.components.Physics.shape
 		physicsAttr.box_halfExtents = def.components.Physics.box_halfExtents or vec3(1.0, 1.0, 1.0)
 		physicsAttr.sphere_radius = def.components.Physics.sphere_radius or 1.0
 		physicsAttr.capsule_radius = def.components.Physics.capsule_radius or 1.0
 		physicsAttr.capsule_halfHeight = def.components.Physics.capsule_halfHeight or 1.0
+		-- basic physics attribute
+		physicsAttr.enable_gravity = def.components.Physics.enable_gravity or true
+		physicsAttr.mass = def.components.Physics.mass or 1.0
+		physicsAttr.mass_density = def.components.Physics.mass_density or 1.0
+		physicsAttr.bounciness = def.components.Physics.bounciness or 0.5
+		physicsAttr.friction = def.components.Physics.friction or 0.3
+		-- linear/angular
+		physicsAttr.linear_damping = def.components.Physics.linear_damping or 0.0
+		physicsAttr.angular_damping = def.components.Physics.angular_damping or 0.0
+		physicsAttr.linear_axis_factor = def.components.Physics.linear_axis_factor or vec3(1.0, 1.0, 1.0)
+		physicsAttr.angular_axis_factor = def.components.Physics.angular_axis_factor or vec3(1.0, 1.0, 1.0)
 		local physics = newEntity:add_component(Physics(physicsAttr))
 	end
 

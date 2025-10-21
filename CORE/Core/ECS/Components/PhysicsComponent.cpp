@@ -91,7 +91,7 @@ namespace ENGINE_CORE::ECS {
 			"mass", &PhysicsAttributes::rb_Mass,
 			"linear_damping", &PhysicsAttributes::rb_LinearDamping,
 			"linear_axis_factor", &PhysicsAttributes::rb_LinearAxisFactor,
-			"angular_axis_damping", &PhysicsAttributes::rb_AngularDamping,
+			"angular_damping", &PhysicsAttributes::rb_AngularDamping,
 			"angular_axis_factor", &PhysicsAttributes::rb_AngularAxisFactor,
 			"shape", &PhysicsAttributes::Shape,
 			"box_halfExtents", &PhysicsAttributes::box_halfExtents,

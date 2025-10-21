@@ -30,16 +30,16 @@ local cam = Camera:get()
 function controlEntity(entity)
 	local physics = entity:get_component(Physics)
 	local velocity = physics:get_linear_velocity()
-	if Keyboard.just_pressed(KEY_D) then
+	if Keyboard.pressed(KEY_D) then
 		physics:set_linear_velocity(vec3(5, velocity.y, velocity.z))
 	end
-	if Keyboard.just_pressed(KEY_A) then
+	if Keyboard.pressed(KEY_A) then
 		physics:set_linear_velocity(vec3(-5, velocity.y, velocity.z))
 	end
-	if Keyboard.just_pressed(KEY_W) then
+	if Keyboard.pressed(KEY_W) then
 		physics:set_linear_velocity(vec3(velocity.x, velocity.y, -5))
 	end
-	if Keyboard.just_pressed(KEY_S) then
+	if Keyboard.pressed(KEY_S) then
 		physics:set_linear_velocity(vec3(velocity.x, velocity.y, 5))
 	end
 end

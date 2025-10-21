@@ -75,7 +75,8 @@ ObjDefs =
 				type = BodyType.Dynamic,
 				shape = "capsule",
 				capsule_halfHeight = 0.5,
-				capsule_radius = 0.5
+				capsule_radius = 0.5,
+				angular_axis_factor = vec3(0.0, 1.0, 0.0)
 			}
 		}
 	}
