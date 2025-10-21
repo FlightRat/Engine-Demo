@@ -8,11 +8,6 @@ using namespace ENGINE_RENDERING;
 
 void ENGINE_CORE::Scripting::CameraBindings::CreateCameraBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
 {
-	auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
-	auto& keyboard = inputManager.GetKeyBoard();
-	auto& mouse = inputManager.GetMouse();
-	// TODO:can add some checks~
-
 	auto& camera = registry.GetContext<std::shared_ptr<Camera3D>>();
 	if (!camera)
 	{
