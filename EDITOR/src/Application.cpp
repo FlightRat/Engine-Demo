@@ -22,16 +22,9 @@
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
+#include <Core/CoreUtilities/CoreEngineData.h>
 
-const unsigned int SCR_WIDTH = 600;
-const unsigned int SCR_HEIGHT = 600;
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
-
-Uint64 now = SDL_GetPerformanceCounter();
-Uint64 last = 0;
-double deltaTime = 0;
+double accumulator = 0; //TODO:where should it be???
 
 namespace ENGINE_EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
@@ -74,7 +67,11 @@ namespace ENGINE_EDITOR {
 		SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
 		// Create the window
-		m_pWindow = std::make_unique<ENGINE_WINDOWING::Window>("Test", SCR_WIDTH, SCR_HEIGHT, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, SDL_WINDOW_OPENGL);
+		m_pWindow = std::make_unique<ENGINE_WINDOWING::Window>(
+			"Test", 
+			ENGINE_CORE::CoreEngineData::GetInstance().WindowWidth(), 
+			ENGINE_CORE::CoreEngineData::GetInstance().WindowHeight(),
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, false, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 		if (!m_pWindow->GetWindow())
 		{
 			ENGINE_ERROR("Failed to create the window!");
@@ -329,6 +326,19 @@ namespace ENGINE_EDITOR {
 
 				break;
 			}
+			case SDL_WINDOWEVENT: // MODIFICATION: 监听窗口事件
+			{
+				if (m_Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+				{
+					int newWidth = m_Event.window.data1;
+					int newHeight = m_Event.window.data2;
+					m_pWindow->SetWidth(newWidth);
+					m_pWindow->SetHeight(newHeight);
+					ENGINE_CORE::CoreEngineData::GetInstance().SetWindowWidth(newWidth);
+					ENGINE_CORE::CoreEngineData::GetInstance().SetWindowHeight(newHeight);
+				}
+				break;
+			}
 			default:
 				break;
 			}
@@ -337,6 +347,13 @@ namespace ENGINE_EDITOR {
 
 	void Application::Update()
 	{
+		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
+		double deltaTime = ENGINE_CORE::CoreEngineData::GetInstance().GetDeltaTime();
+		// maybe should move deltatime into lua instead, but the way, the physics velocity need delta too
+
+		const decimal timeStep = ENGINE_CORE::CoreEngineData::GetInstance().GetPhysicsTimeStep();
+		accumulator += deltaTime;
+
 		// TODO: move the camera update here
 		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Update();
@@ -349,18 +366,17 @@ namespace ENGINE_EDITOR {
 
 		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		const decimal timeStep = 1.0f / 60.0f;
-		physicsWorld->update(timeStep);
-		physicsSystem->Update(m_pRegistry->GetRegistry());
+		//physicsWorld->update(timeStep);
+		while (accumulator >= timeStep) {
+			physicsWorld->update(timeStep);
+			accumulator -= timeStep;
+		}//会导致开始时黑屏比较久
+		decimal factor = accumulator / timeStep;
+		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
 	}
 
 	void Application::Render()
 	{
-
-		last = now;
-		now = SDL_GetPerformanceCounter();
-		deltaTime = static_cast<double>(now - last) / SDL_GetPerformanceFrequency();
-
 		glViewport(0, 0, m_pWindow->GetWidth(), m_pWindow->GetHeight());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

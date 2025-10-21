@@ -15,6 +15,7 @@
 #include "../Scripting/InputManager.h"
 #include"../Resources/AssetManager.h"
 #include<Utilities/Timer.h>
+#include "../CoreUtilities/CoreEngineData.h"
 
 using namespace ENGINE_CORE::ECS;
 
@@ -174,6 +175,23 @@ namespace ENGINE_CORE::Systems {
 				return true;
 			}
 		);
+
+		lua.set_function("ENGINE_GetTicks", [] { return SDL_GetTicks(); }); // todo:where to use???
+
+		auto& engine = CoreEngineData::GetInstance();
+		lua.set_function("ENGINE_DeltaTime", [&] { return engine.GetDeltaTime(); });
+		lua.set_function("ENGINE_WindowWidth", [&] { return engine.WindowWidth(); });
+		lua.set_function("ENGINE_WindowHeight", [&] { return engine.WindowHeight(); });
+		// Physics Enable functions
+		lua.set_function("ENGINE_DisablePhysics", [&] { engine.DisablePhysics(); });
+		lua.set_function("ENGINE_EnablePhysics", [&] { engine.EnablePhysics(); });
+		lua.set_function("ENGINE_IsPhysicsEnabled", [&] { return engine.IsPhysicsEnabled(); });
+		// Render Colliders Enable functions
+		lua.set_function("ENGINE_DisableCollisionRendering", [&] { engine.DisableColliderRender(); });
+		lua.set_function("ENGINE_EnableCollisionRendering", [&] { engine.EnableColliderRender(); });
+		lua.set_function("ENGINE_CollisionRenderingEnabled", [&] { return engine.RenderCollidersEnabled(); });
+		// Path
+		lua.set_function("ENGINE_GetProjecPath", [&] { return engine.GetProjectPath(); });
 	}
 }
 

@@ -11,15 +11,26 @@ namespace ENGINE_CORE::Systems {
 	{
 	}
 
-	void PhysicsSystem::Update(entt::registry& registry)
+	void PhysicsSystem::Update(entt::registry& registry, rp3d::decimal factor)
 	{
 		auto view = m_Registry.GetRegistry().view<TransformComponent, PhysicsComponent>();
 		for (auto [entity, transform, physics] : view.each())
 		{
+			// previous transform
+			glm::vec3 pre_pos = transform.position;
+			glm::vec3 pre_rot = transform.rotation;
+			rp3d::Vector3 pre_rb_position(pre_pos.x, pre_pos.y, pre_pos.z);
+			glm::vec3 pre_eulerDegree(pre_rot.x, pre_rot.y, pre_rot.z);
+			glm::quat pre_gl_quat = glm::quat(glm::radians(pre_eulerDegree));
+			rp3d::Quaternion pre_rb_rotation = rp3d::Quaternion(pre_gl_quat.x, pre_gl_quat.y, pre_gl_quat.z, pre_gl_quat.w);
+			rp3d::Transform prevTransform(pre_rb_position, pre_rb_rotation);
+
 			auto pRigidBody = physics.GetRigidBody();
 			if (!pRigidBody)
 				continue;
-			const Transform& rb_transform = pRigidBody->getTransform();
+			const Transform& currTransform = pRigidBody->getTransform();
+
+			Transform rb_transform = Transform::interpolateTransforms(prevTransform, currTransform, factor);
 
 			//position
 			const Vector3& rb_pos = rb_transform.getPosition();

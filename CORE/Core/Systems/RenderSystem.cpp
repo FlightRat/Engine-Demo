@@ -10,6 +10,7 @@
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshFilter.h"
 #include "../ECS/Components/MeshRender.h"
+#include "../CoreUtilities/CoreEngineData.h"
 
 using namespace ENGINE_CORE::ECS;
 using namespace ENGINE_RENDERING;
@@ -73,8 +74,8 @@ namespace ENGINE_CORE::Systems {
 		auto& camera = m_Registry.GetContext<std::shared_ptr<Camera3D>>();
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)600 / (float)600, 0.1f, 100.0f);
-
+		//glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)600 / (float)600, 0.1f, 100.0f);
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)ENGINE_CORE::CoreEngineData::GetInstance().WindowWidth() / (float)ENGINE_CORE::CoreEngineData::GetInstance().WindowHeight(), 0.1f, 100.0f);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender>();
