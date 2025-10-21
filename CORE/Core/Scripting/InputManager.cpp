@@ -140,7 +140,7 @@ namespace ENGINE_CORE {
 		return instance;
 	}
 
-	void InputManager::CreateLuaInputBindings(sol::state& lua)
+	void InputManager::CreateLuaInputBind(sol::state& lua)
 	{
 		RegisterLuaKeyboardNames(lua);	// register keyboard btn into lua
 		RegisterLuaMouseNames(lua);		// register mouse btn into lua

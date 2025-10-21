@@ -164,7 +164,7 @@ namespace ENGINE_CORE::Scripting
 		));
 	}
 
-	void GLMBindings::CreateGLMBindings(sol::state& lua)
+	void GLMBindings::CreateLuaGlmBind(sol::state& lua)
 	{
 		CreateVec2Bind(lua);
 		CreateVec3Bind(lua);

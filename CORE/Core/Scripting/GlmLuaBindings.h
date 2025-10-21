@@ -4,6 +4,6 @@
 namespace ENGINE_CORE::Scripting {
 	struct GLMBindings
 	{
-		static void CreateGLMBindings(sol::state& lua);
+		static void CreateLuaGlmBind(sol::state& lua);
 	};
 }

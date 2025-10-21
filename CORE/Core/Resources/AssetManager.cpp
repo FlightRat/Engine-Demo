@@ -166,7 +166,7 @@ namespace ENGINE_RESOURCES {
     }
 
     // lua register
-    void AssetManager::CreateLuaAssetManager(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
+    void AssetManager::CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
     {
         auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
         if (!assetManager)

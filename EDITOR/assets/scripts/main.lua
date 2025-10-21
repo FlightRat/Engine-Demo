@@ -20,8 +20,10 @@ local cube = LoadEntity(ObjDefs["cube"])
 local floor = LoadEntity(EnvirDefs["floor"])
 
 local ball_entity = Entity(ball)
+local cube_entity = Entity(cube)
 
 local cam = Camera:get()
+--gFollowCam = FollowCamera(ball_entity)
 
 function controlEntity(entity)
 	local physics = entity:get_component(Physics)
@@ -61,8 +63,9 @@ end
 main = {
 	[1] = {
 		update = function()
-		controlEntity(ball_entity)
+		controlEntity(cube_entity)
 		controlCamera()
+		--gFollowCam:update()
 		end
 	},
 	[2] = {

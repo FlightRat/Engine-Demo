@@ -63,7 +63,7 @@ namespace ENGINE_UTIL {
         return ElapsedMS() / 1000;
     }
 
-    void Timer::CreateLuaTimer(sol::state& lua)
+    void Timer::CreateLuaTimerBind(sol::state& lua)
     {
         lua.new_usertype<Timer>(
             "Timer",

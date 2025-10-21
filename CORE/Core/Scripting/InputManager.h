@@ -39,7 +39,7 @@ namespace ENGINE_CORE {
 
 	public:
 		static InputManager& GetInstance();
-		static void CreateLuaInputBindings(sol::state& lua);
+		static void CreateLuaInputBind(sol::state& lua);
 
 		inline Keyboard& GetKeyBoard() { return *m_pKeyboard; }
 		inline Mouse& GetMouse() { return *m_pMouse; }

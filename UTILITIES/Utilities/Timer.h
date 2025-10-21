@@ -26,6 +26,6 @@ namespace ENGINE_UTIL {
 		inline const bool IsRunning() const { return m_bIsRunning; }
 		inline const bool IsPaused() const { return m_bIsPaused; }
 
-		static void CreateLuaTimer(sol::state& lua);
+		static void CreateLuaTimerBind(sol::state& lua);
 	};
 }

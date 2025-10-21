@@ -8,7 +8,7 @@
 using namespace ENGINE_SOUNDS;
 using namespace ENGINE_RESOURCES;
 
-void ENGINE_CORE::Scripting::SoundBindings::CreateSoundBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
+void ENGINE_CORE::Scripting::SoundBindings::CreateLuaSoundBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
 {
 	// get music player
 	auto& musicPlayer = registry.GetContext<std::shared_ptr<MusicPlayer>>();

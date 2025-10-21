@@ -15,6 +15,14 @@ namespace ENGINE_CORE::ECS {
 		Entity(Registry& registry, const entt::entity& entity);
 		~Entity() = default;
 
+		Entity& operator=(const Entity& other)
+		{
+			this->m_Entity = other.m_Entity;
+			this->m_sName = other.m_sName;
+			this->m_sGroup = other.m_sGroup;
+			return *this;
+		}
+
 		inline std::uint32_t Kill() { return m_Registry.GetRegistry().destroy(m_Entity);}
 		inline entt::entity& GetEntity() { return m_Entity; }
 		inline entt::registry& GetRegistry() { return m_Registry.GetRegistry(); }

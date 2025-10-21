@@ -6,7 +6,7 @@
 
 using namespace ENGINE_RENDERING;
 
-void ENGINE_CORE::Scripting::CameraBindings::CreateCameraBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
+void ENGINE_CORE::Scripting::CameraBindings::CreateLuaCameraBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
 {
 	auto& camera = registry.GetContext<std::shared_ptr<Camera3D>>();
 	if (!camera)
