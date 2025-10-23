@@ -38,6 +38,8 @@ namespace ENGINE_RENDERING {
 		Camera3D(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
 		Camera3D(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
 
+		void LookAt(const glm::vec3& target);
+
 		inline glm::vec3 GetPosition() const { return Position; }
 		inline float GetZoom() const { return Zoom; }
 		inline void SetPosition(glm::vec3 newPosition) { Position = newPosition; }

@@ -27,7 +27,8 @@ local player_glass_entity = Entity(player_glass)
 player_glass_entity:set_parent(player_body)
 
 local cam = Camera:get()
---gFollowCam = FollowCamera(ball_entity)
+local offset = vec3(0.0, 5.0, -10.0)
+gFollowCam = FollowCamera(player_body_entity, offset)
 
 function controlPlayer_physics()
 	local body_physics = player_body_entity:get_component(Physics)
@@ -78,8 +79,8 @@ main = {
 	[1] = {
 		update = function()
 		controlPlayer_physics()
-		controlCamera()
-		--gFollowCam:update()
+		--controlCamera()
+		gFollowCam:update()
 		end
 	},
 	[2] = {

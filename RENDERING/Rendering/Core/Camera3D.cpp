@@ -24,6 +24,14 @@ namespace ENGINE_RENDERING {
 		return glm::lookAt(Position, Position + Front, Up);
 	}
 
+	void Camera3D::LookAt(const glm::vec3& target)
+	{
+		glm::vec3 direction = glm::normalize(target - Position);
+		Yaw = glm::degrees(atan2(direction.z, direction.x));
+		Pitch = glm::degrees(asin(direction.y));
+		updateCameraVectors();
+	}
+
 	//TODO:add delta time
 	void Camera3D::ProcessKeyboard(Camera_Movement direction)
 	{
