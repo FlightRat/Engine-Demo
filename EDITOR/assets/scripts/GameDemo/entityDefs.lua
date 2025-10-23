@@ -7,8 +7,8 @@ ObjDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=2.0, y=0.5, z=0.0},
-				scale = {x=0.5, y=0.5, z=0.5},
+				position = {x=5.0, y=1.0, z=0.0},
+				scale = {x=1.0, y=1.0, z=1.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			MeshFilter = {
@@ -22,7 +22,7 @@ ObjDefs =
 			Physics = {
 				type = BodyType.Dynamic,
 				shape = "sphere",
-				sphere_radius = 0.5
+				sphere_radius = 1.0
 			}
 		}
 	},
@@ -33,8 +33,8 @@ ObjDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=-2.0, y=0.5, z=0.0},
-				scale = {x=0.5, y=0.5, z=0.5},
+				position = {x=-5.0, y=1.0, z=0.0},
+				scale = {x=1.0, y=1.0, z=1.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			MeshFilter = {
@@ -48,8 +48,7 @@ ObjDefs =
 			Physics = {
 				type = BodyType.Dynamic,
 				shape = "box",
-				box_halfExtents = vec3(0.5, 0.5, 0.5)
-				--,angular_axis_factor = vec3(0.0, 1.0, 0.0)--lock rotation only in y
+				box_halfExtents = vec3(1.0, 1.0, 1.0)
 			}
 		}
 	},
@@ -68,7 +67,7 @@ ObjDefs =
 				type = "capsule"
 			},
 			MeshRender = {
-				shader = "colorShader",
+				shader = "texShader",
 				color = {R=0.0, G=0.0, B=1.0, A=1.0},
 				texture = 0
 			},
@@ -76,7 +75,11 @@ ObjDefs =
 				type = BodyType.Dynamic,
 				shape = "capsule",
 				capsule_halfHeight = 0.5,
-				capsule_radius = 0.5
+				capsule_radius = 0.5,
+				friction = 0.3,
+				linear_damping = 5.0,
+				angular_damping = 5.0,
+				angular_axis_factor = vec3(0.0, 1.0, 0.0)--lock rotation only in y
 			}
 		}
 	}
@@ -92,7 +95,7 @@ EnvirDefs =
 		{
 			Transform = {
 				position = {x=0, y=0, z=0},
-				scale = {x=1.0, y=1.0, z=1.0},
+				scale = {x=2.0, y=1.0, z=2.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			MeshFilter = {
@@ -106,7 +109,33 @@ EnvirDefs =
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
-				box_halfExtents = vec3(10.0, 0.0005, 10.0)
+				box_halfExtents = vec3(20.0, 0.0005, 20.0)
+			}
+		}
+	},
+	platform1 = 
+	{
+		tag = "platform1",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = {x=0, y=2, z=5},
+				scale = {x=2.0, y=0.5, z=2.0},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				color = {R=1.0, G=0.0, B=0.0, A=1.0},
+				texture = 0
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(2.0, 0.5, 2.0)
 			}
 		}
 	}

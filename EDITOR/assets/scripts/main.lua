@@ -19,9 +19,8 @@ local ball = LoadEntity(ObjDefs["ball"])
 local cube = LoadEntity(ObjDefs["cube"])
 local capsule = LoadEntity(ObjDefs["capsule"])
 local floor = LoadEntity(EnvirDefs["floor"])
+local platform1 = LoadEntity(EnvirDefs["platform1"])
 
-local ball_entity = Entity(ball)
-local cube_entity = Entity(cube)
 local capsule_entity = Entity(capsule)
 
 local cam = Camera:get()
@@ -44,13 +43,16 @@ function controlEntity(entity)
 	if Keyboard.pressed(KEY_S) then
 		physics:set_linear_velocity(vec3(physics_velocity.x, physics_velocity.y, 5))
 	end
-	if Keyboard.pressed(KEY_Q) then
-		--transform.rotation.y = transform.rotation.y + 5
-		--physics_attr.rotation.y = physics_attr.rotation.y + 5
+	if Keyboard.just_pressed(KEY_Q) then
+		physics:set_angular_velocity(vec3(0,5,0))
+		print(transform.rotation.y)
 	end
-	if Keyboard.pressed(KEY_E) then
-		--transform.rotation.y = transform.rotation.y - 5
-		--physics_attr.rotation.y = physics_attr.rotation.y - 5
+	if Keyboard.just_pressed(KEY_E) then
+		physics:set_angular_velocity(vec3(0,-5,0))
+		print(transform.rotation.y)
+	end
+	if Keyboard.just_pressed(KEY_SPACE) then
+		physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
 	end
 end
 
@@ -75,7 +77,7 @@ end
 main = {
 	[1] = {
 		update = function()
-		controlEntity(ball_entity)
+		controlEntity(capsule_entity)
 		controlCamera()
 		--gFollowCam:update()
 		end

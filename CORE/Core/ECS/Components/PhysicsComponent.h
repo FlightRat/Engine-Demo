@@ -40,6 +40,9 @@ namespace ENGINE_CORE::ECS {
 
 	class PhysicsComponent
 	{
+		rp3d::Transform m_previousTransform;
+		rp3d::Transform m_currentTransform;
+
 		PhysicsAttributes m_pAttribute;
 		std::shared_ptr<RigidBody> m_pRigidBody;
 		std::shared_ptr<CollisionShape> m_pCollisionShape;
@@ -51,6 +54,13 @@ namespace ENGINE_CORE::ECS {
 		~PhysicsComponent() = default;
 
 		void Init(std::shared_ptr<PhysicsCommon> common, std::shared_ptr<PhysicsWorld> world);
+
+		void SetPreviousTransform(const rp3d::Transform& transform) { m_previousTransform = transform; }
+		const rp3d::Transform& GetPreviousTransform() const { return m_previousTransform; }
+
+		const rp3d::Transform& GetCurrentTransform() const { return m_currentTransform; }
+		void SetCurrentTransform(const rp3d::Transform& transform) { m_currentTransform = transform; }
+
 		rp3d::RigidBody* GetRigidBody() { return m_pRigidBody.get(); }
 		PhysicsAttributes GetAttr() { return m_pAttribute; }
 

@@ -32,6 +32,8 @@ namespace ENGINE_CORE::ECS {
 		rp3d::Transform transform(rb_position, rb_rotation);
 
 		// rigid body
+		m_previousTransform = transform;
+		m_currentTransform = transform;
 		m_pRigidBody = ENGINE_PHYSICS::MakeSharedRigidBody(world, transform);
 		if (!m_pRigidBody)
 		{
@@ -120,8 +122,14 @@ namespace ENGINE_CORE::ECS {
 				}
 			),
 			"attributes", &PhysicsComponent::m_pAttribute,
-			"linear_impulse",[](PhysicsComponent& pc){},
-			"angular_impulse", [](PhysicsComponent& pc) {},
+			"linear_impulse",[](PhysicsComponent& pc, const glm::vec3 impulse){
+				auto body = pc.GetRigidBody();
+				body->applyLocalForceAtCenterOfMass(Vector3(impulse.x, impulse.y, impulse.z));
+			},
+			"angular_impulse", [](PhysicsComponent& pc, const glm::vec3 impulse) {
+				auto body = pc.GetRigidBody();
+				body->applyLocalTorque(Vector3(impulse.x, impulse.y, impulse.z));
+			},
 			"set_linear_velocity", [](PhysicsComponent& pc, const glm::vec3 velocity) {
 				auto body = pc.GetRigidBody();
 				body->setLinearVelocity(Vector3(velocity.x, velocity.y, velocity.z));
