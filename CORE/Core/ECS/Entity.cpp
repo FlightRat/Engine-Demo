@@ -73,6 +73,14 @@ namespace ENGINE_CORE::ECS {
 			"set_parent", [](Entity& entity, int32_t parent_id) {
 				auto& id = entity.GetComponent<Identification>();
 				id.parent_id = parent_id;
+			},
+			"has_parent", [](Entity& entity) {
+				auto& id = entity.GetComponent<Identification>();
+				return(id.parent_id == -1);
+			},
+			"remove_parent", [](Entity& entity) {
+				auto& id = entity.GetComponent<Identification>();
+				id.parent_id = -1;
 			}
 		);
 	}
