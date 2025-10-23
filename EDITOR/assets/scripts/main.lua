@@ -15,45 +15,46 @@ LoadAssets()
 
 Music.play("2:23am")
 
+local player_body = LoadEntity(PlayerDefs["body"])
+local player_glass = LoadEntity(PlayerDefs["glass"])
 local ball = LoadEntity(ObjDefs["ball"])
 local cube = LoadEntity(ObjDefs["cube"])
-local capsule = LoadEntity(ObjDefs["capsule"])
 local floor = LoadEntity(EnvirDefs["floor"])
 local platform1 = LoadEntity(EnvirDefs["platform1"])
 
-local capsule_entity = Entity(capsule)
+local player_body_entity = Entity(player_body)
+local player_glass_entity = Entity(player_glass)
 
 local cam = Camera:get()
 --gFollowCam = FollowCamera(ball_entity)
 
-function controlEntity(entity)
-	local transform = entity:get_component(Transform)
-	local physics = entity:get_component(Physics)
-	local physics_attr = physics.attributes
-	local physics_velocity = physics:get_linear_velocity()
-	if Keyboard.pressed(KEY_D) then
-		physics:set_linear_velocity(vec3(5, physics_velocity.y, physics_velocity.z))
+function controlPlayer_physics()
+	local body_physics = player_body_entity:get_component(Physics)
+	local body_transform = player_body_entity:get_component(Transform)
+	local glass_transform = player_glass_entity:get_component(Transform)
+	if Keyboard.pressed(KEY_W) then
+		body_physics:linear_impulse(vec3(0.0, 0.0, 100.0))
 	end
 	if Keyboard.pressed(KEY_A) then
-		physics:set_linear_velocity(vec3(-5, physics_velocity.y, physics_velocity.z))
+		body_physics:linear_impulse(vec3(100.0, 0.0, 0.0))
 	end
-	if Keyboard.pressed(KEY_W) then
-		physics:set_linear_velocity(vec3(physics_velocity.x, physics_velocity.y, -5))
+	if Keyboard.pressed(KEY_D) then
+		body_physics:linear_impulse(vec3(-100.0, 0.0, 0.0))
 	end
 	if Keyboard.pressed(KEY_S) then
-		physics:set_linear_velocity(vec3(physics_velocity.x, physics_velocity.y, 5))
+		body_physics:linear_impulse(vec3(0.0, 0.0, -100.0))
 	end
-	if Keyboard.just_pressed(KEY_Q) then
-		physics:set_angular_velocity(vec3(0,5,0))
-		print(transform.rotation.y)
+	if Keyboard.pressed(KEY_Q) then
+		body_physics:angular_impulse(vec3(0.0, 100.0, 0.0))
 	end
-	if Keyboard.just_pressed(KEY_E) then
-		physics:set_angular_velocity(vec3(0,-5,0))
-		print(transform.rotation.y)
+	if Keyboard.pressed(KEY_E) then
+		body_physics:angular_impulse(vec3(0.0,-100.0, 0.0))
 	end
 	if Keyboard.just_pressed(KEY_SPACE) then
-		physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
+		body_physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
 	end
+	glass_transform.position = body_transform.position
+	glass_transform.rotation_quat = body_transform.rotation_quat
 end
 
 function controlCamera()
@@ -77,7 +78,7 @@ end
 main = {
 	[1] = {
 		update = function()
-		controlEntity(capsule_entity)
+		controlPlayer_physics()
 		controlCamera()
 		--gFollowCam:update()
 		end

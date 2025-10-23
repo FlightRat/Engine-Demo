@@ -93,9 +93,7 @@ namespace ENGINE_CORE::Systems {
 			//translate
 			model = glm::translate(model, transform.position);
 			//rotation
-			glm::vec3 eulerAngle(transform.rotation.x, transform.rotation.y, transform.rotation.z);
-			glm::quat quaternion = glm::quat(glm::radians(eulerAngle));
-			glm::mat4 rotation = glm::toMat4(quaternion);
+			glm::mat4 rotation = glm::toMat4(transform.rotation_quat);
 			model = model * rotation;
 			//scale
 			model = glm::scale(model, transform.scale);

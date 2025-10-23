@@ -42,7 +42,8 @@ namespace ENGINE_CORE::Systems {
 				static_cast<float>(rp3d_quat.y),
 				static_cast<float>(rp3d_quat.z)
 			);
-			transform.rotation = glm::degrees(glm::eulerAngles(quat));
+			transform.rotation_quat = quat;
+			transform.rotation_eular = glm::degrees(glm::eulerAngles(quat));
 		}
 	}
 

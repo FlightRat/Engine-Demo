@@ -1,9 +1,71 @@
+--[[
+	cube 默认边长为2
+	sphere 默认半径为1
+	capsule 默认半径1，半高1（总高4）
+]]--
+
+PlayerDefs =
+{
+	body=
+	{
+		tag = "body",
+		group = "player",
+		components = 
+		{
+			Transform = {
+				position = {x=0.0, y=1.0, z=0.0},
+				scale = {x=0.5, y=0.5, z=0.5},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			MeshFilter = {
+				type = "capsule"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				color = {R=0.678, G=0.847, B=902.0, A=1.0},
+				texture = 0
+			},
+			Physics = {
+				type = BodyType.Dynamic,
+				shape = "capsule",
+				capsule_halfHeight = 0.5,
+				capsule_radius = 0.5,
+				friction = 0.3,
+				linear_damping = 5.0,
+				angular_damping = 10.0,
+				angular_axis_factor = vec3(0.0, 1.0, 0.0)--lock rotation only in y
+			}
+		}
+	},
+	glass = 
+	{
+		tag = "glass",
+		group = "player",
+		components = 
+		{
+			Transform = {
+				position = {x=0.0, y=1.5, z=0.25},
+				scale = {x=0.5, y=0.1, z=0.25},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				color = {R=1.0, G=0.647, B=0.0, A=1.0},
+				texture = 0
+			}
+		}
+	}
+}
+
 ObjDefs =
 {
 	ball = 
 	{
-		tag = "ball",
-		group = "",
+		tag = "glass",
+		group = "player",
 		components = 
 		{
 			Transform = {
@@ -49,37 +111,6 @@ ObjDefs =
 				type = BodyType.Dynamic,
 				shape = "box",
 				box_halfExtents = vec3(1.0, 1.0, 1.0)
-			}
-		}
-	},
-	capsule=
-	{
-		tag="capsule",
-		group="",
-		components = 
-		{
-			Transform = {
-				position = {x=0.0, y=1.0, z=0.0},
-				scale = {x=0.5, y=0.5, z=0.5},
-				rotation = {x=0.0, y=0.0, z=0.0}
-			},
-			MeshFilter = {
-				type = "capsule"
-			},
-			MeshRender = {
-				shader = "texShader",
-				color = {R=0.0, G=0.0, B=1.0, A=1.0},
-				texture = 0
-			},
-			Physics = {
-				type = BodyType.Dynamic,
-				shape = "capsule",
-				capsule_halfHeight = 0.5,
-				capsule_radius = 0.5,
-				friction = 0.3,
-				linear_damping = 5.0,
-				angular_damping = 5.0,
-				angular_axis_factor = vec3(0.0, 1.0, 0.0)--lock rotation only in y
 			}
 		}
 	}
