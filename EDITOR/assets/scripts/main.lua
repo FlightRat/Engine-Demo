@@ -24,6 +24,7 @@ local platform1 = LoadEntity(EnvirDefs["platform1"])
 
 local player_body_entity = Entity(player_body)
 local player_glass_entity = Entity(player_glass)
+player_glass_entity:set_parent(player_body)
 
 local cam = Camera:get()
 --gFollowCam = FollowCamera(ball_entity)
@@ -53,8 +54,8 @@ function controlPlayer_physics()
 	if Keyboard.just_pressed(KEY_SPACE) then
 		body_physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
 	end
-	glass_transform.position = body_transform.position
-	glass_transform.rotation_quat = body_transform.rotation_quat
+	--glass_transform.position = body_transform.position
+	--glass_transform.rotation_quat = body_transform.rotation_quat
 end
 
 function controlCamera()

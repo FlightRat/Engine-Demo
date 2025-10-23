@@ -68,7 +68,12 @@ namespace ENGINE_CORE::ECS {
 			"name", &Entity::GetName,
 			"group",&Entity::GetGroup,
 			"kill",&Entity::Kill,
-			"id", [](Entity& entity) {return static_cast<int32_t>(entity.GetEntity()); }
+			"id", [](Entity& entity) {return static_cast<int32_t>(entity.GetEntity()); },
+			//parent
+			"set_parent", [](Entity& entity, int32_t parent_id) {
+				auto& id = entity.GetComponent<Identification>();
+				id.parent_id = parent_id;
+			}
 		);
 	}
 }

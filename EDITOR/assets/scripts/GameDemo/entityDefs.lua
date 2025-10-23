@@ -44,8 +44,8 @@ PlayerDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=1.5, z=0.25},
-				scale = {x=0.5, y=0.1, z=0.25},
+				position = {x=0.0, y=1.0, z=0.5},
+				scale = {x=1.0, y=0.2, z=0.5},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
 			MeshFilter = {

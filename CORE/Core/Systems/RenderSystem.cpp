@@ -8,6 +8,7 @@
 #include "../ECS/Entity.h"
 #include "../Resources/AssetManager.h"
 #include "../ECS/Components/TransformComponent.h"
+#include "../ECS/Components/Identification.h"
 #include "../ECS/Components/MeshFilter.h"
 #include "../ECS/Components/MeshRender.h"
 #include "../CoreUtilities/CoreEngineData.h"
@@ -78,8 +79,8 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)ENGINE_CORE::CoreEngineData::GetInstance().WindowWidth() / (float)ENGINE_CORE::CoreEngineData::GetInstance().WindowHeight(), 0.1f, 100.0f);
 
 		glm::mat4 model = glm::mat4(1.0f);
-		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender>();
-		for (auto [_, transform, meshF, meshR] : view.each())
+		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
 			if (!meshR.shouldRender)
 			{
@@ -97,6 +98,19 @@ namespace ENGINE_CORE::Systems {
 			model = model * rotation;
 			//scale
 			model = glm::scale(model, transform.scale);
+			if (id.parent_id != -1)
+			{
+				auto parent_entity = static_cast<entt::entity>(id.parent_id);
+				if (m_Registry.GetRegistry().valid(parent_entity))
+				{
+					auto parent_transform = m_Registry.GetRegistry().get<TransformComponent>(parent_entity);
+					glm::mat4 parentModel = glm::mat4(1.0f);
+					parentModel = glm::translate(parentModel, parent_transform.position);
+					parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
+					parentModel = glm::scale(parentModel, parent_transform.scale);
+					model = parentModel * model;
+				}
+			}
 
 			if (meshR.shader == "colorShader")
 			{
