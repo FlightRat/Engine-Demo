@@ -61,6 +61,9 @@ namespace ENGINE_CORE::ECS {
 		const rp3d::Transform& GetCurrentTransform() const { return m_currentTransform; }
 		void SetCurrentTransform(const rp3d::Transform& transform) { m_currentTransform = transform; }
 
+		void SetDebug(const bool debug) { m_pRigidBody->setIsDebugEnabled(debug); 
+		}
+
 		rp3d::RigidBody* GetRigidBody() { return m_pRigidBody.get(); }
 		PhysicsAttributes GetAttr() { return m_pAttribute; }
 

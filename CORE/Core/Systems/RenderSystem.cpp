@@ -20,11 +20,15 @@ using namespace ENGINE_RESOURCES;
 namespace ENGINE_CORE::Systems {
 	RenderSystem::RenderSystem(ENGINE_CORE::ECS::Registry& registry):m_Registry{registry}
 	{
+		glGenVertexArrays(1, &m_DebugVAO);
+		glGenBuffers(1, &m_DebugVBO);
 	}
 
 	void RenderSystem::Render()
 	{
 		auto& assetManager = m_Registry.GetContext<std::shared_ptr<AssetManager>>();
+		auto& physicsWorld = m_Registry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 		// shader
 		auto colorShader = assetManager->GetShader("colorShader");
@@ -41,6 +45,12 @@ namespace ENGINE_CORE::Systems {
 		}
 		auto hudShader = assetManager->GetShader("hudShader");
 		if (hudShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		auto debugShader = assetManager->GetShader("debugShader");
+		if (debugShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
@@ -140,6 +150,33 @@ namespace ENGINE_CORE::Systems {
 			glBindVertexArray(meshR.m_VAO);
 			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(meshF.index_data.size()), GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
+		}
+		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
+		{
+			debugShader->Enable();
+			model = glm::mat4(1.0f);
+			debugShader->SetUniformMat4("model", model);
+			debugShader->SetUniformMat4("view", viewMatrix);
+			debugShader->SetUniformMat4("projection", PerspectiveMatrix);
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+			const uint nbTriangles = physicsDebugger.getNbTriangles();
+			GLsizei sizeVertices = static_cast<GLsizei>(nbTriangles * sizeof(rp3d::DebugRenderer::DebugTriangle));
+
+			glBindVertexArray(m_DebugVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+
+			const void* data = physicsDebugger.getTrianglesArray();
+			glBufferData(GL_ARRAY_BUFFER, sizeVertices, data, GL_STATIC_DRAW);
+
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(rp3d::Vector3) + sizeof(rp3d::uint32), (char*)nullptr);
+			glEnableVertexAttribArray(1);
+			glVertexAttribIPointer(1, 3, GL_UNSIGNED_INT, sizeof(rp3d::Vector3) + sizeof(rp3d::uint32), (void*)sizeof(rp3d::Vector3));
+			
+			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 	}
 }

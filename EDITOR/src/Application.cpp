@@ -168,6 +168,8 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
+
 		// Physics System
 		auto physicsSystem = std::make_shared<ENGINE_CORE::Systems::PhysicsSystem>(*m_pRegistry);
 		if (!physicsSystem)
@@ -271,6 +273,13 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// physicsDebugShader
+		if (!assetManager->AddShader("debugShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -280,6 +289,9 @@ namespace ENGINE_EDITOR {
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
+
+		auto& engine = ENGINE_CORE::CoreEngineData::GetInstance();
+		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 
 		//process Events
 		while (SDL_PollEvent(&m_Event))
@@ -295,6 +307,16 @@ namespace ENGINE_EDITOR {
 			{
 				if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 					m_bIsRunning = false;
+				if (m_Event.key.keysym.sym == SDLK_0)
+				{
+					engine.ToggleRenderCollisions();
+					physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
+					auto view = m_pRegistry->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
+					for (auto [entity, physics] : view.each())
+					{
+						physics.SetDebug(engine.RenderCollidersEnabled());
+					}
+				}
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;
 			}
@@ -366,11 +388,11 @@ namespace ENGINE_EDITOR {
 
 		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		physicsWorld->update(timeStep);
-		//while (accumulator >= timeStep) {
-		//	physicsWorld->update(timeStep);
-		//	accumulator -= timeStep;
-		//}//会导致开始时黑屏比较久
+		//physicsWorld->update(timeStep);
+		while (accumulator >= timeStep) {
+			physicsWorld->update(timeStep);
+			accumulator -= timeStep;
+		}//会导致开始时黑屏一会
 		decimal factor = accumulator / timeStep;
 		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
 	}

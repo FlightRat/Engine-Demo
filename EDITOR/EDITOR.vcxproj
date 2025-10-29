@@ -180,6 +180,8 @@
     <None Include="assets\shaders\colorShader.vert" />
     <None Include="assets\shaders\hudShader.frag" />
     <None Include="assets\shaders\hudShader.vert" />
+    <None Include="assets\shaders\physicsDebugShader.frag" />
+    <None Include="assets\shaders\physicsDebugShader.vert" />
     <None Include="assets\shaders\texShader.frag" />
     <None Include="assets\shaders\texShader.vert" />
     <None Include="SDL2.dll" />
