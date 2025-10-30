@@ -6,7 +6,9 @@ namespace ENGINE_CORE::ECS {
 	{
 	}
 
-	PhysicsComponent::PhysicsComponent(PhysicsAttributes pAttributes):m_pAttribute{pAttributes}
+	PhysicsComponent::PhysicsComponent(const PhysicsAttributes& pAttributes):
+		m_pRigidBody{ nullptr }, m_pCollisionShape{ nullptr }, m_pCollider{nullptr}, 
+		m_pAttribute{ pAttributes }, m_pUserData{ nullptr }
 	{
 	}
 
@@ -40,7 +42,7 @@ namespace ENGINE_CORE::ECS {
 			ENGINE_ERROR("Failed to create the rigid body!");
 			return;
 		}
-		m_pRigidBody->setType(m_pAttribute.Type);
+		m_pRigidBody->setType(m_pAttribute.rb_type);
 		m_pRigidBody->enableGravity(m_pAttribute.rb_EnableGravity);
 		m_pRigidBody->setMass(m_pAttribute.rb_Mass);
 		m_pRigidBody->setLinearDamping(m_pAttribute.rb_LinearDamping);
@@ -49,15 +51,15 @@ namespace ENGINE_CORE::ECS {
 		m_pRigidBody->setAngularLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_AngularAxisFactor.x, m_pAttribute.rb_AngularAxisFactor.y, m_pAttribute.rb_AngularAxisFactor.z));
 
 		// shape
-		if (m_pAttribute.Shape == "box")
+		if (m_pAttribute.shape == "box")
 		{
 			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedBoxCollisionShape(common, rp3d::Vector3(m_pAttribute.box_halfExtents.x, m_pAttribute.box_halfExtents.y, m_pAttribute.box_halfExtents.z));
 		}
-		else if (m_pAttribute.Shape == "sphere")
+		else if (m_pAttribute.shape == "sphere")
 		{
 			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.sphere_radius);
 		}
-		else if (m_pAttribute.Shape == "capsule")
+		else if (m_pAttribute.shape == "capsule")
 		{
 			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedCapsuleCollisionShape(common, m_pAttribute.capsule_radius, m_pAttribute.capsule_halfHeight);
 		}
@@ -68,6 +70,12 @@ namespace ENGINE_CORE::ECS {
 		c_material.setBounciness(m_pAttribute.c_Bounciness);
 		c_material.setFrictionCoefficient(m_pAttribute.c_FrictionCoefficient);
 		c_material.setMassDensity(m_pAttribute.c_MassDensity);
+
+		// user data
+		m_pUserData = std::make_shared<ENGINE_PHYSICS::UserData>();
+		m_pUserData->userData = m_pAttribute.objectData;
+		m_pUserData->type_id = entt::type_hash< ENGINE_PHYSICS::ObjectData>::value();
+		m_pRigidBody->setUserData(m_pUserData.get());
 	}
 
 	void PhysicsComponent::CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry)
@@ -80,29 +88,91 @@ namespace ENGINE_CORE::ECS {
 			}
 		);
 
+		lua.new_usertype<ENGINE_PHYSICS::ObjectData>(
+			"ObjectData",
+			"type_id", entt::type_hash<ENGINE_PHYSICS::ObjectData>::value,
+			sol::call_constructor,
+			sol::factories(
+				[](const std::string& tag, const std::string& group, bool bCollider, bool bTrigger, std::uint32_t entityID)
+				{
+					return ENGINE_PHYSICS::ObjectData{
+						.tag = tag,
+						.group = group,
+						.bCollider = bCollider,
+						.bTrigger = bTrigger,
+						.entityID = entityID
+					};
+				},
+				[](const sol::table& objectData)
+				{
+					return ENGINE_PHYSICS::ObjectData{
+						.tag = objectData["tag"].get_or(std::string{""}),
+						.group = objectData["group"].get_or(std::string{""}),
+						.bCollider = objectData["bCollider"].get_or(false),
+						.bTrigger = objectData["bTrigger"].get_or(false),
+						.entityID = objectData["tag"].get_or((std::uint32_t)entt::null)
+					};
+				}
+			),
+			"to_string", &ENGINE_PHYSICS::ObjectData::to_string
+		);
+
 		lua.new_usertype<PhysicsAttributes>(
 			"PhysicsAttributes",
 			sol::call_constructor,
 			sol::factories(
-				[] {return PhysicsAttributes{}; }
+				[] {return PhysicsAttributes{}; },
+				[](const sol::table& physAttr)
+				{
+					return PhysicsAttributes
+					{
+						.position = glm::vec3{physAttr["position"]["x"].get_or(0.0f), physAttr["position"]["y"].get_or(0.0f), physAttr["position"]["z"].get_or(0.0f)},
+						.rotation = glm::vec3{physAttr["rotation"]["x"].get_or(0.0f), physAttr["rotation"]["y"].get_or(0.0f), physAttr["rotation"]["z"].get_or(0.0f)},
+						.rb_type = physAttr["type"].get_or(BodyType::STATIC),
+						.rb_EnableGravity = physAttr["enable_gravity"].get_or(true),
+						.rb_Mass = physAttr["mass"].get_or(1.0f),
+						.rb_LinearDamping = physAttr["linear_damping"].get_or(0.0f),
+						.rb_AngularDamping = physAttr["angular_damping"].get_or(0.0f),
+						.rb_LinearAxisFactor = glm::vec3{physAttr["linear_axis_factor"]["x"].get_or(1.0f), physAttr["linear_axis_factor"]["y"].get_or(1.0f), physAttr["linear_axis_factor"]["z"].get_or(1.0f)},
+						.rb_AngularAxisFactor = glm::vec3{physAttr["angular_axis_factor"]["x"].get_or(1.0f), physAttr["angular_axis_factor"]["y"].get_or(1.0f), physAttr["angular_axis_factor"]["z"].get_or(1.0f)},
+						//
+						.shape = physAttr["shape"].get_or(std::string{"box"}),
+						.box_halfExtents = glm::vec3{physAttr["box_halfExtents"]["x"].get_or(1.0f), physAttr["box_halfExtents"]["y"].get_or(1.0f), physAttr["box_halfExtents"]["z"].get_or(1.0f)},
+						.sphere_radius = physAttr["sphere_radius"].get_or(1.0f),
+						.capsule_radius = physAttr["capsule_radius"].get_or(1.0f),
+						.capsule_halfHeight = physAttr["capsule_halfHeight"].get_or(1.0f),
+						//
+						.c_Bounciness = physAttr["bounciness"].get_or(0.5f),
+						.c_FrictionCoefficient = physAttr["friction"].get_or(0.3f),
+						.c_MassDensity = physAttr["mass_density"].get_or(1.0f),
+						.objectData = ENGINE_PHYSICS::ObjectData{
+							.tag = physAttr["objectData"]["tag"].get_or(std::string{""}),
+							.group = physAttr["objectData"]["group"].get_or(std::string{""}),
+							.bCollider = physAttr["objectData"]["bCollider"].get_or(false),
+							.bTrigger = physAttr["objectData"]["bTrigger"].get_or(false),
+							.entityID = physAttr["objectData"]["tag"].get_or((std::uint32_t)entt::null)
+						}
+					};
+				}
 			),
 			"position", &PhysicsAttributes::position,
 			"rotation", &PhysicsAttributes::rotation,
 			"enable_gravity", &PhysicsAttributes::rb_EnableGravity,
-			"type", &PhysicsAttributes::Type,
+			"type", &PhysicsAttributes::rb_type,
 			"mass", &PhysicsAttributes::rb_Mass,
 			"linear_damping", &PhysicsAttributes::rb_LinearDamping,
 			"linear_axis_factor", &PhysicsAttributes::rb_LinearAxisFactor,
 			"angular_damping", &PhysicsAttributes::rb_AngularDamping,
 			"angular_axis_factor", &PhysicsAttributes::rb_AngularAxisFactor,
-			"shape", &PhysicsAttributes::Shape,
+			"shape", &PhysicsAttributes::shape,
 			"box_halfExtents", &PhysicsAttributes::box_halfExtents,
 			"sphere_radius", &PhysicsAttributes::sphere_radius,
 			"capsule_radius", &PhysicsAttributes::capsule_radius,
 			"capsule_halfHeight", &PhysicsAttributes::capsule_halfHeight,
 			"bounciness", &PhysicsAttributes::c_Bounciness,
 			"friction", &PhysicsAttributes::c_FrictionCoefficient,
-			"mass_density", &PhysicsAttributes::c_MassDensity
+			"mass_density", &PhysicsAttributes::c_MassDensity,
+			"objectData",&PhysicsAttributes::objectData
 		);
 
 		auto& common = registry.ctx().get<std::shared_ptr<PhysicsCommon>>();

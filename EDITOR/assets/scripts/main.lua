@@ -74,6 +74,14 @@ function controlCamera()
 	cam.process_scroll(Mouse.wheel_y())
 end
 
+local objectData = ObjectData("tag", "group", true, true, 666)
+local userData = UserData.create_user_data(objectData)
+local data1 = userData:get_user_data()
+print(data1:to_string())
+
+userData:set_user_data(ObjectData("new tag", "new group", false, false, 996))
+local data2 = userData:get_user_data()
+print(data2:to_string())
 
 main = {
 	[1] = {

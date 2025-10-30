@@ -78,6 +78,9 @@
     <ClInclude Include="Core\CoreUtilities\CoreEngineData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Scripting\UserDataLuaBindings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Registry.cpp">
@@ -137,12 +140,18 @@
     <ClCompile Include="Core\CoreUtilities\CoreEngineData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Scripting\UserDataLuaBindings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\ECS\Entity.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Core\ECS\Registry.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Core\Scripting\UserDataLuaBindings.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -1,5 +1,6 @@
 #pragma once
 #include<Physics/RP3D_Wrappers.h>
+#include<Physics/UserData.h>
 #include<sol/sol.hpp>
 #include<entt.hpp>
 #include<glm/glm.hpp>
@@ -17,7 +18,7 @@ namespace ENGINE_CORE::ECS {
 		glm::vec3 scale{ 1.0f };
 
 		// rigidbody
-		BodyType Type{ BodyType::STATIC };
+		BodyType rb_type{ BodyType::STATIC };
 		bool rb_EnableGravity{ true };
 		float rb_Mass{ 1.0f };
 		float rb_LinearDamping{ 0.0f };
@@ -26,7 +27,7 @@ namespace ENGINE_CORE::ECS {
 		glm::vec3 rb_AngularAxisFactor{ 1.0f, 1.0f, 1.0f };
 
 		// shape
-		std::string Shape{"box"};
+		std::string shape{"box"};
 		glm::vec3 box_halfExtents{ 1.0, 1.0, 1.0 };
 		decimal sphere_radius{ 1.0 };
 		decimal capsule_radius{ 1.0 };
@@ -36,6 +37,8 @@ namespace ENGINE_CORE::ECS {
 		float c_Bounciness{ 0.5f };
 		float c_FrictionCoefficient{ 0.3f };
 		float c_MassDensity{ 1.0f };
+
+		ENGINE_PHYSICS::ObjectData objectData{};
 	};
 
 	class PhysicsComponent
@@ -47,10 +50,11 @@ namespace ENGINE_CORE::ECS {
 		std::shared_ptr<RigidBody> m_pRigidBody;
 		std::shared_ptr<CollisionShape> m_pCollisionShape;
 		std::shared_ptr<Collider> m_pCollider;
+		std::shared_ptr<ENGINE_PHYSICS::UserData> m_pUserData;
 
 	public:
 		PhysicsComponent();
-		PhysicsComponent(PhysicsAttributes pAttributes);
+		PhysicsComponent(const PhysicsAttributes& pAttributes);
 		~PhysicsComponent() = default;
 
 		void Init(std::shared_ptr<PhysicsCommon> common, std::shared_ptr<PhysicsWorld> world);
@@ -61,11 +65,12 @@ namespace ENGINE_CORE::ECS {
 		const rp3d::Transform& GetCurrentTransform() const { return m_currentTransform; }
 		void SetCurrentTransform(const rp3d::Transform& transform) { m_currentTransform = transform; }
 
-		void SetDebug(const bool debug) { m_pRigidBody->setIsDebugEnabled(debug); 
-		}
+		void SetDebug(const bool debug) { m_pRigidBody->setIsDebugEnabled(debug); }
 
 		rp3d::RigidBody* GetRigidBody() { return m_pRigidBody.get(); }
 		PhysicsAttributes GetAttr() { return m_pAttribute; }
+
+		ENGINE_PHYSICS::UserData* GetUserData(){ return m_pUserData.get(); }
 
 		static void CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry);
 	};

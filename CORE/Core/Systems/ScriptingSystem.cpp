@@ -11,6 +11,7 @@
 #include "../Scripting/GlmLuaBindings.h"
 #include "../Scripting/SoundLuaBindings.h"
 #include "../Scripting/CameraLuaBindings.h"
+#include "../Scripting/UserDataLuaBindings.h"
 #include "../CoreUtilities/FollowCamera.h"
 #include "../Scripting/InputManager.h"
 #include"../Resources/AssetManager.h"
@@ -127,6 +128,7 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::Scripting::GLMBindings::CreateLuaGlmBind(lua);
 		ENGINE_CORE::Scripting::SoundBindings::CreateLuaSoundBind(lua, registry);
 		ENGINE_CORE::Scripting::CameraBindings::CreateLuaCameraBind(lua, registry);
+		ENGINE_CORE::Scripting::UserDataBindings::CreateLuaUserDataBind(lua);
 		ENGINE_CORE::FollowCamera::CreateLuaFollowCameraBind(lua, registry);
 		ENGINE_CORE::InputManager::CreateLuaInputBind(lua);
 		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);
@@ -156,6 +158,8 @@ namespace ENGINE_CORE::Systems {
 		Registry::RegisterMetaComponent<CubeColliderComponent>();
 		Registry::RegisterMetaComponent<SphereColliderComponent>();
 		Registry::RegisterMetaComponent<PhysicsComponent>();
+
+		ENGINE_CORE::Scripting::UserDataBindings::register_meta_user_data<ENGINE_PHYSICS::ObjectData>();
 	}
 
 	void ScriptingSystem::RegisterLuaFunctions(sol::state& lua)
