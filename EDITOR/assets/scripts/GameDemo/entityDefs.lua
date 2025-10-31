@@ -22,7 +22,7 @@ PlayerDefs =
 			},
 			MeshRender = {
 				shader = "colorShader",
-				color = {R=0.678, G=0.847, B=902.0, A=1.0},
+				color = {R=0.678, G=0.847, B=1.0, A=1.0},
 				texture = 0
 			},
 			Physics = {
@@ -121,7 +121,7 @@ ObjDefs =
 	cube_2 = 
 	{
 		tag = "cube_2",
-		group = "",
+		group = "trigger",
 		components = 
 		{
 			Transform = {

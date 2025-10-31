@@ -10,7 +10,7 @@ namespace ENGINE_CORE::ECS {
 	{
 		bool m_loaded{ false };
 		bool shouldRender{ true };
-		std::string shader;
+		std::string shader;	// TODO:find better way for the shader
 		glm::vec4 color;
 		int texture;
 

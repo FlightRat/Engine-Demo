@@ -20,12 +20,24 @@ local player_glass_entity = Entity(player_glass)
 local player_body_entity = Entity(player_body)
 player_glass_entity:set_parent(player_body)
 local player_physics = player_body_entity:get_component(Physics)
+local player_mesh = player_body_entity:get_component(MeshRender)
 function controlPlayer_physics()
-	-- print player contact info
+
+	-- print player contact detect
+	local touching_trigger = false
 	local player_data = player_physics:user_data():get_user_data()
 	for k,v in pairs(player_data.contactEntities) do
-		print("player is contacting "..v.tag)
+		--print("player is contacting "..v.tag)
+		if(v.group == "trigger") then
+			touching_trigger=true
+		end
 	end
+	if touching_trigger then
+		player_mesh.color = vec4(1.0,0.0,0.0,1.0)
+	else
+		player_mesh.color = vec4(0.678, 0.847, 1.0, 1.0)
+	end
+
 
 	-- keyboard control
 	if Keyboard.pressed(KEY_W) then

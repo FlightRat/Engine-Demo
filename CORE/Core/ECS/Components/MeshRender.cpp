@@ -38,6 +38,7 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
                 };
                 return MR;
             }
-        )
+        ),
+        "color",&MeshRender::color
     );
 }
