@@ -81,6 +81,7 @@ function LoadEntity( def )
 		-- rigidbody
 		physicsAttr.type = def.components.Physics.type
 		-- collider
+		physicsAttr.trigger = def.components.Physics.b_Trigger or false
 		physicsAttr.shape = def.components.Physics.shape
 		physicsAttr.box_halfExtents = def.components.Physics.box_halfExtents or vec3(1.0, 1.0, 1.0)
 		physicsAttr.sphere_radius = def.components.Physics.sphere_radius or 1.0
@@ -100,7 +101,7 @@ function LoadEntity( def )
 		-- objectData
 		physicsAttr.objectData=ObjectData(
 			tag,group, 
-			def.components.Physics.b_Collider or false, 
+			def.components.Physics.b_Collider or true, 
 			def.components.Physics.b_Trigger or false, 
 			newEntity:id())
 		local physics = newEntity:add_component(Physics(physicsAttr))

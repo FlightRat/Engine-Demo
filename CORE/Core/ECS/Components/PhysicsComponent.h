@@ -34,6 +34,7 @@ namespace ENGINE_CORE::ECS {
 		decimal capsule_halfHeight{ 1.0 };
 
 		// collider
+		bool c_Trigger{ false };
 		float c_Bounciness{ 0.5f };
 		float c_FrictionCoefficient{ 0.3f };
 		float c_MassDensity{ 1.0f };

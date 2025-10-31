@@ -62,14 +62,14 @@ PlayerDefs =
 
 ObjDefs =
 {
-	ball = 
+	ball_1 = 
 	{
-		tag = "sphere",
+		tag = "ball_1",
 		group = "",
 		components = 
 		{
 			Transform = {
-				position = {x=5.0, y=2.0, z=0.0},
+				position = {x=5.0, y=1.0, z=5.0},
 				scale = {x=1.0, y=1.0, z=1.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -82,20 +82,20 @@ ObjDefs =
 				texture = 2
 			},
 			Physics = {
-				type = BodyType.Static,
+				type = BodyType.Dynamic,
 				shape = "sphere",
 				sphere_radius = 1.0
 			}
 		}
 	},
-	cube = 
+	cube_1 = 
 	{
-		tag = "cube",
+		tag = "cube_1",
 		group = "",
 		components = 
 		{
 			Transform = {
-				position = {x=-5.0, y=2.0, z=0.0},
+				position = {x=-5.0, y=1.0, z=5.0},
 				scale = {x=1.0, y=1.0, z=1.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -108,9 +108,37 @@ ObjDefs =
 				texture = 1
 			},
 			Physics = {
-				type = BodyType.Static,
+				type = BodyType.Dynamic,
 				shape = "box",
 				box_halfExtents = vec3(1.0, 1.0, 1.0)
+				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
+			}
+		}
+	},
+	cube_2 = 
+	{
+		tag = "cube_2",
+		group = "",
+		components = 
+		{
+			Transform = {
+				position = {x=-10.0, y=1.0, z=5.0},
+				scale = {x=0.5, y=0.5, z=0.5},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				color = {R=0.0, G=1.0, B=0.0, A=1.0},
+				texture = 0
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				b_Trigger = true,
+				box_halfExtents = vec3(0.5, 0.5, 0.5)
 				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
 			}
 		}
@@ -148,7 +176,7 @@ EnvirDefs =
 	},
 	platform1 = 
 	{
-		tag = "platform",
+		tag = "platform_1",
 		group = "Envir",
 		components = 
 		{

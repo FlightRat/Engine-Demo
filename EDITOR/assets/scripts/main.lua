@@ -17,8 +17,9 @@ Music.play("2:23am")
 
 local player_body = LoadEntity(PlayerDefs["body"])
 local player_glass = LoadEntity(PlayerDefs["glass"])
-local ball = LoadEntity(ObjDefs["ball"])
-local cube = LoadEntity(ObjDefs["cube"])
+local ball_1 = LoadEntity(ObjDefs["ball_1"])
+local cube_1 = LoadEntity(ObjDefs["cube_1"])
+local cube_2 = LoadEntity(ObjDefs["cube_2"])
 local floor = LoadEntity(EnvirDefs["floor"])
 local platform1 = LoadEntity(EnvirDefs["platform1"])
 
@@ -96,7 +97,8 @@ main = {
 		--controlCamera()
 		gFollowCam:update()
 
-		local dataPairs = ContactListener.GetUserDataPairs()
+		-- print all contact pairs
+		--local dataPairs = ContactListener.GetUserDataPairs()
 		--for i, a, b in pairs(dataPairs) do
 			--print(a.tag.." is contacting "..b.tag)
 		--end

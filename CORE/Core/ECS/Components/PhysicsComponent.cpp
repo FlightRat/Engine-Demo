@@ -66,6 +66,7 @@ namespace ENGINE_CORE::ECS {
 
 		// collider
 		m_pCollider = ENGINE_PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
+		m_pCollider->setIsTrigger(m_pAttribute.c_Trigger);
 		Material& c_material = m_pCollider->getMaterial();
 		c_material.setBounciness(m_pAttribute.c_Bounciness);
 		c_material.setFrictionCoefficient(m_pAttribute.c_FrictionCoefficient);
@@ -170,6 +171,7 @@ namespace ENGINE_CORE::ECS {
 			"angular_damping", &PhysicsAttributes::rb_AngularDamping,
 			"angular_axis_factor", &PhysicsAttributes::rb_AngularAxisFactor,
 			"shape", &PhysicsAttributes::shape,
+			"trigger", &PhysicsAttributes::c_Trigger,
 			"box_halfExtents", &PhysicsAttributes::box_halfExtents,
 			"sphere_radius", &PhysicsAttributes::sphere_radius,
 			"capsule_radius", &PhysicsAttributes::capsule_radius,
