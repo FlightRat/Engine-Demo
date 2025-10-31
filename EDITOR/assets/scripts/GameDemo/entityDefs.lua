@@ -110,7 +110,10 @@ ObjDefs =
 			Physics = {
 				type = BodyType.Dynamic,
 				shape = "box",
-				box_halfExtents = vec3(1.0, 1.0, 1.0)
+				box_halfExtents = vec3(1.0, 1.0, 1.0),
+				mass = 5.0,
+				linear_damping = 2.0,
+				angular_damping = 2.0
 				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
 			}
 		}

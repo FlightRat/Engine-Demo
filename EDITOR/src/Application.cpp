@@ -403,11 +403,11 @@ namespace ENGINE_EDITOR {
 
 		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		physicsWorld->update(timeStep);
-		//while (accumulator >= timeStep) {
-		//	physicsWorld->update(timeStep);
-		//	accumulator -= timeStep;
-		//}//会导致开始时黑屏一会
+		//physicsWorld->update(timeStep);
+		while (accumulator >= timeStep) {
+			physicsWorld->update(timeStep);
+			accumulator -= timeStep;
+		}//会导致开始时黑屏一会
 		decimal factor = accumulator / timeStep;
 		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
 	}
