@@ -89,6 +89,12 @@ main = {
 		controlPlayer_physics()
 		--controlCamera()
 		gFollowCam:update()
+
+		local dataPairs = ContactListener.GetUserDataPairs()
+		for i, a, b in pairs(dataPairs) do
+			print(a.tag.." is contacting "..b.tag)
+		end
+
 		end
 	},
 	[2] = {

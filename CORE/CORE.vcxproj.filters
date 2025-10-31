@@ -81,6 +81,9 @@
     <ClInclude Include="Core\Scripting\UserDataLuaBindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Scripting\ContactListenerLuaBindings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Registry.cpp">
@@ -141,6 +144,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\Scripting\UserDataLuaBindings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Scripting\ContactListenerLuaBindings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

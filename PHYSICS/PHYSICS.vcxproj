@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="Physics\ContactListener.cpp" />
     <ClCompile Include="Physics\RP3D_Wrappers.cpp" />
+    <ClCompile Include="Physics\UserData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">

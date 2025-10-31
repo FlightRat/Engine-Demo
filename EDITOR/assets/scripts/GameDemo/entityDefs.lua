@@ -8,7 +8,7 @@ PlayerDefs =
 {
 	body=
 	{
-		tag = "body",
+		tag = "player",
 		group = "player",
 		components = 
 		{
@@ -64,12 +64,12 @@ ObjDefs =
 {
 	ball = 
 	{
-		tag = "glass",
-		group = "player",
+		tag = "sphere",
+		group = "",
 		components = 
 		{
 			Transform = {
-				position = {x=5.0, y=1.0, z=0.0},
+				position = {x=5.0, y=2.0, z=0.0},
 				scale = {x=1.0, y=1.0, z=1.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -82,7 +82,7 @@ ObjDefs =
 				texture = 2
 			},
 			Physics = {
-				type = BodyType.Dynamic,
+				type = BodyType.Static,
 				shape = "sphere",
 				sphere_radius = 1.0
 			}
@@ -95,7 +95,7 @@ ObjDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=-5.0, y=1.0, z=0.0},
+				position = {x=-5.0, y=2.0, z=0.0},
 				scale = {x=1.0, y=1.0, z=1.0},
 				rotation = {x=0.0, y=0.0, z=0.0}
 			},
@@ -108,9 +108,10 @@ ObjDefs =
 				texture = 1
 			},
 			Physics = {
-				type = BodyType.Dynamic,
+				type = BodyType.Static,
 				shape = "box",
 				box_halfExtents = vec3(1.0, 1.0, 1.0)
+				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
 			}
 		}
 	}
@@ -141,12 +142,13 @@ EnvirDefs =
 				type = BodyType.Static,
 				shape = "box",
 				box_halfExtents = vec3(20.0, 0.0005, 20.0)
+				--box_halfExtents = {x=20.0, y=0.0005, z=20.0}
 			}
 		}
 	},
 	platform1 = 
 	{
-		tag = "platform1",
+		tag = "platform",
 		group = "Envir",
 		components = 
 		{
@@ -167,6 +169,7 @@ EnvirDefs =
 				type = BodyType.Static,
 				shape = "box",
 				box_halfExtents = vec3(2.0, 0.5, 2.0)
+				--box_halfExtents = {x=2.0, y=0.5, z=2.0}
 			}
 		}
 	}

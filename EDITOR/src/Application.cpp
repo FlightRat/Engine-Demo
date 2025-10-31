@@ -23,6 +23,7 @@
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
 #include <Core/CoreUtilities/CoreEngineData.h>
+#include <Physics/ContactListener.h>
 
 double accumulator = 0; //TODO:where should it be???
 
@@ -182,6 +183,20 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the physics system to the registry context!");
 			return false;
 		}
+
+		// Contact Listener
+		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
+		if (!contactListener)
+		{
+			ENGINE_ERROR("Failed to create the contact listener!");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener))
+		{
+			ENGINE_ERROR("Failed to add the contact listener to the registry context!");
+			return false;
+		}
+		physicsWorld->setEventListener(contactListener.get());
 
 		// Camera
 		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
@@ -388,11 +403,11 @@ namespace ENGINE_EDITOR {
 
 		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		//physicsWorld->update(timeStep);
-		while (accumulator >= timeStep) {
-			physicsWorld->update(timeStep);
-			accumulator -= timeStep;
-		}//会导致开始时黑屏一会
+		physicsWorld->update(timeStep);
+		//while (accumulator >= timeStep) {
+		//	physicsWorld->update(timeStep);
+		//	accumulator -= timeStep;
+		//}//会导致开始时黑屏一会
 		decimal factor = accumulator / timeStep;
 		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
 	}

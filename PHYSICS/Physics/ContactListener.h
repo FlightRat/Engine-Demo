@@ -6,16 +6,12 @@ namespace ENGINE_PHYSICS {
 	class ContactListener :public EventListener
 	{
 	private:
-		UserData* m_pUserDataA{ nullptr };
-		UserData* m_pUserDataB{ nullptr };
-
-		void SetUserContacts(UserData* a, UserData* b);
+		std::vector<std::pair<UserData*, UserData*>> m_ContactPairs;
 
 	public:
 		void onContact(const CollisionCallback::CallbackData& callbackData) override;
 		void onTrigger(const OverlapCallback::CallbackData& callbackData) override;
 
-		UserData* GetUserDataA() { return m_pUserDataA; }
-		UserData* GetUserDataB() { return m_pUserDataB; }
+		std::vector<std::pair<UserData*, UserData*>> GetContactPairs() { return m_ContactPairs; }
 	};
 }

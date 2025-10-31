@@ -175,6 +175,7 @@
     <ClInclude Include="Core\ECS\MetaUtilities.h" />
     <ClInclude Include="Core\ECS\Registry.h" />
     <ClInclude Include="Core\Scripting\CameraLuaBindings.h" />
+    <ClInclude Include="Core\Scripting\ContactListenerLuaBindings.h" />
     <ClInclude Include="Core\Scripting\InputManager.h" />
     <ClInclude Include="Core\Resources\AssetManager.h" />
     <ClInclude Include="Core\Scripting\GlmLuaBindings.h" />
@@ -198,6 +199,7 @@
     <ClCompile Include="Core\ECS\Registry.cpp" />
     <ClCompile Include="Core\Resources\AssetManager.cpp" />
     <ClCompile Include="Core\Scripting\CameraLuaBindings.cpp" />
+    <ClCompile Include="Core\Scripting\ContactListenerLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\GlmLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\InputManager.cpp" />
     <ClCompile Include="Core\Scripting\SoundLuaBindings.cpp" />

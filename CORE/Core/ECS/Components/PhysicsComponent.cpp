@@ -74,7 +74,7 @@ namespace ENGINE_CORE::ECS {
 		// user data
 		m_pUserData = std::make_shared<ENGINE_PHYSICS::UserData>();
 		m_pUserData->userData = m_pAttribute.objectData;
-		m_pUserData->type_id = entt::type_hash< ENGINE_PHYSICS::ObjectData>::value();
+		m_pUserData->type_id = entt::type_hash<ENGINE_PHYSICS::ObjectData>::value();
 		m_pRigidBody->setUserData(m_pUserData.get());
 	}
 
@@ -114,6 +114,12 @@ namespace ENGINE_CORE::ECS {
 					};
 				}
 			),
+			"tag", &ENGINE_PHYSICS::ObjectData::tag,
+			"group", &ENGINE_PHYSICS::ObjectData::group,
+			"entityID", &ENGINE_PHYSICS::ObjectData::entityID,
+			"bCollider", &ENGINE_PHYSICS::ObjectData::bCollider,
+			"bTrigger", &ENGINE_PHYSICS::ObjectData::bTrigger,
+			"contactEntities", &ENGINE_PHYSICS::ObjectData::contactEntities,
 			"to_string", &ENGINE_PHYSICS::ObjectData::to_string
 		);
 
@@ -124,8 +130,7 @@ namespace ENGINE_CORE::ECS {
 				[] {return PhysicsAttributes{}; },
 				[](const sol::table& physAttr)
 				{
-					return PhysicsAttributes
-					{
+					return PhysicsAttributes{
 						.position = glm::vec3{physAttr["position"]["x"].get_or(0.0f), physAttr["position"]["y"].get_or(0.0f), physAttr["position"]["z"].get_or(0.0f)},
 						.rotation = glm::vec3{physAttr["rotation"]["x"].get_or(0.0f), physAttr["rotation"]["y"].get_or(0.0f), physAttr["rotation"]["z"].get_or(0.0f)},
 						.rb_type = physAttr["type"].get_or(BodyType::STATIC),

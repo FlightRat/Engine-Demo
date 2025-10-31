@@ -12,6 +12,7 @@
 #include "../Scripting/SoundLuaBindings.h"
 #include "../Scripting/CameraLuaBindings.h"
 #include "../Scripting/UserDataLuaBindings.h"
+#include "../Scripting/ContactListenerLuaBindings.h"
 #include "../CoreUtilities/FollowCamera.h"
 #include "../Scripting/InputManager.h"
 #include"../Resources/AssetManager.h"
@@ -129,6 +130,7 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::Scripting::SoundBindings::CreateLuaSoundBind(lua, registry);
 		ENGINE_CORE::Scripting::CameraBindings::CreateLuaCameraBind(lua, registry);
 		ENGINE_CORE::Scripting::UserDataBindings::CreateLuaUserDataBind(lua);
+		ENGINE_CORE::Scripting::ContactListenerBindings::CreateLuaContactListenerBind(lua, registry);
 		ENGINE_CORE::FollowCamera::CreateLuaFollowCameraBind(lua, registry);
 		ENGINE_CORE::InputManager::CreateLuaInputBind(lua);
 		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);

@@ -59,9 +59,16 @@ function LoadEntity( def )
 		)
 	end
 
-	
+	--TODO do the default in C++
 	if def.components.Physics then
-	--TODO: more attributes!!!
+	--[[
+		attr_table = def.components.Physics
+		position = {x=def.components.Transform.position.x, y=def.components.Transform.position.y, z=def.components.Transform.position.z}
+		rotation = {x=def.components.Transform.rotation.x, y=def.components.Transform.rotation.y, z=def.components.Transform.rotation.z}
+		table.insert(attr_table, position)
+		table.insert(attr_table, rotation)
+		local physicsAttr = PhysicsAttributes(attr_table)
+	]]--
 		local physicsAttr = PhysicsAttributes()
 		physicsAttr.position = vec3(
 			def.components.Transform.position.x,
@@ -90,6 +97,12 @@ function LoadEntity( def )
 		physicsAttr.angular_damping = def.components.Physics.angular_damping or 0.0
 		physicsAttr.linear_axis_factor = def.components.Physics.linear_axis_factor or vec3(1.0, 1.0, 1.0)
 		physicsAttr.angular_axis_factor = def.components.Physics.angular_axis_factor or vec3(1.0, 1.0, 1.0)
+		-- objectData
+		physicsAttr.objectData=ObjectData(
+			tag,group, 
+			def.components.Physics.b_Collider or false, 
+			def.components.Physics.b_Trigger or false, 
+			newEntity:id())
 		local physics = newEntity:add_component(Physics(physicsAttr))
 	end
 
