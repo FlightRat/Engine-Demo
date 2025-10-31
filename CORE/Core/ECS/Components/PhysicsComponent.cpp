@@ -222,7 +222,8 @@ namespace ENGINE_CORE::ECS {
 				auto body = pc.GetRigidBody();
 				const Vector3 velocity = body->getAngularVelocity();
 				return glm::vec3(velocity.x, velocity.y, velocity.z);
-			}
+			},
+			"user_data",&PhysicsComponent::GetUserData
 		);
 	}
 }

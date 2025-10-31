@@ -46,8 +46,8 @@ namespace ENGINE_PHYSICS {
 				{
 					auto a_any = std::any_cast<ObjectData>(a_data->userData);
 					auto b_any = std::any_cast<ObjectData>(b_data->userData);
-			/*		if (a_any.entityID > b_any.entityID)
-						std::swap(a_any, b_any);*/
+					//if (a_any.entityID > b_any.entityID)
+					//	std::swap(a_any, b_any);
 
 
 					if (!a_any.RemoveContact(b_any))

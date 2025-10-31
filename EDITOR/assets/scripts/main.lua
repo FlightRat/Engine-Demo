@@ -33,7 +33,13 @@ gFollowCam = FollowCamera(player_body_entity, offset)
 function controlPlayer_physics()
 	local body_physics = player_body_entity:get_component(Physics)
 	local body_transform = player_body_entity:get_component(Transform)
-	local glass_transform = player_glass_entity:get_component(Transform)
+
+	-- print player contact info
+	local player_data = body_physics:user_data():get_user_data()
+	for k,v in pairs(player_data.contactEntities) do
+		print("player is contacting "..v.tag)
+	end
+
 	if Keyboard.pressed(KEY_W) then
 		body_physics:linear_impulse(vec3(0.0, 0.0, 100.0))
 	end
@@ -91,9 +97,9 @@ main = {
 		gFollowCam:update()
 
 		local dataPairs = ContactListener.GetUserDataPairs()
-		for i, a, b in pairs(dataPairs) do
-			print(a.tag.." is contacting "..b.tag)
-		end
+		--for i, a, b in pairs(dataPairs) do
+			--print(a.tag.." is contacting "..b.tag)
+		--end
 
 		end
 	},
