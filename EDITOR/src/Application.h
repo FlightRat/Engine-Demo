@@ -21,6 +21,12 @@ namespace ENGINE_EDITOR{
 		void Render();
 		void CleanUp();
 		
+		// ImgGui test
+		bool InitImGui();
+		void Begin();
+		void End();
+		void RenderImGui();
+
 	public:
 		static Application& GetInstance();
 		~Application();

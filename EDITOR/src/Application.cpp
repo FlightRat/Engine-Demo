@@ -24,6 +24,11 @@
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
 #include <Core/CoreUtilities/CoreEngineData.h>
 #include <Physics/ContactListener.h>
+#include<Physics/ContactListener.h>
+#include<imgui.h>
+#include<backends/imgui_impl_sdl2.h>
+#include<backends/imgui_impl_opengl3.h>
+#include<SDL_opengl.h>
 
 double accumulator = 0; //TODO:where should it be???
 
@@ -89,7 +94,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext());
-		SDL_SetRelativeMouseMode(SDL_TRUE);
+		SDL_SetRelativeMouseMode(SDL_FALSE);
 		SDL_GL_SetSwapInterval(1);
 
 		//Initialze Glad
@@ -102,6 +107,12 @@ namespace ENGINE_EDITOR {
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		if (!InitImGui())
+		{
+			ENGINE_ERROR("Failed to initialize ImGui!");
+			return false;
+		}
 
 		// ECS Registry
 		m_pRegistry = std::make_unique<ENGINE_CORE::ECS::Registry>();
@@ -311,6 +322,7 @@ namespace ENGINE_EDITOR {
 		//process Events
 		while (SDL_PollEvent(&m_Event))
 		{
+			ImGui_ImplSDL2_ProcessEvent(&m_Event);
 			switch (m_Event.type)
 			{
 			case SDL_QUIT:
@@ -386,8 +398,13 @@ namespace ENGINE_EDITOR {
 	{
 		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
 		double deltaTime = ENGINE_CORE::CoreEngineData::GetInstance().GetDeltaTime();
-		// maybe should move deltatime into lua instead, but the way, the physics velocity need delta too
-
+		// maybe should move deltatime into lua instead, by the way, the physics velocity need delta too
+		const double MAX_DELTA_TIME = 0.25;
+		if (deltaTime > MAX_DELTA_TIME)
+		{
+			deltaTime = MAX_DELTA_TIME;
+		}
+		
 		const decimal timeStep = ENGINE_CORE::CoreEngineData::GetInstance().GetPhysicsTimeStep();
 		accumulator += deltaTime;
 
@@ -403,11 +420,10 @@ namespace ENGINE_EDITOR {
 
 		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		//physicsWorld->update(timeStep);
 		while (accumulator >= timeStep) {
 			physicsWorld->update(timeStep);
 			accumulator -= timeStep;
-		}//会导致开始时黑屏一会
+		}
 		decimal factor = accumulator / timeStep;
 		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
 	}
@@ -424,12 +440,74 @@ namespace ENGINE_EDITOR {
 		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
 		renderSystem->Render();
 
+		Begin();
+		RenderImGui();
+		End();
+
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
 	}
 
 	void Application::CleanUp()
 	{
 		SDL_Quit();
+	}
+
+	bool Application::InitImGui()
+	{
+		const char* glslVersion = "#version 450";
+		IMGUI_CHECKVERSION();
+		if (!ImGui::CreateContext())
+		{
+			ENGINE_ERROR("Failed to create ImGui Context");
+			return false;
+		}
+
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+		if (!ImGui_ImplSDL2_InitForOpenGL(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext()))
+		{
+			ENGINE_ERROR("Failed to initialize ImGui SDL2 for OpenGL!");
+			return false;
+		}
+		if (!ImGui_ImplOpenGL3_Init(glslVersion))
+		{
+			ENGINE_ERROR("Failed to initialize ImGui OpenGL3!");
+			return false;
+		}
+
+		return true;
+	}
+
+	void Application::Begin()
+	{
+		// start a new frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void Application::End()
+	{
+		ImGui::Render(); // generate data for imgui to render
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			SDL_GLContext backupContext = SDL_GL_GetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), backupContext);
+		}
+	}
+
+	void Application::RenderImGui()
+	{
+		ImGui::ShowDemoWindow();
 	}
 
 	Application& Application::GetInstance()

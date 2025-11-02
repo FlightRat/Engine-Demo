@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{8250dc10-eb12-4dce-9a23-b4695363e1c9}</ProjectGuid>
-    <RootNamespace>EDITOR</RootNamespace>
+    <ProjectGuid>{094567f9-2935-46b4-b62b-daa5ab8397b2}</ProjectGuid>
+    <RootNamespace>ImGui</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>EDITOR</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -41,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -72,12 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir).\SOUNDS;$(SolutionDir).\PHYSICS;$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(SolutionDir).\ImGui\src;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\SOIL\include;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\ImGui\src;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir).\Dependencies\SDL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -102,6 +97,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -116,8 +113,10 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;opengl32.lib;lua53.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <Lib>
+      <AdditionalDependencies>SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -127,86 +126,36 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\backends\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="src\imgui.cpp" />
+    <ClCompile Include="src\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui_tables.cpp" />
+    <ClCompile Include="src\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CORE\CORE.vcxproj">
-      <Project>{a599468f-36e3-4f69-b68c-a05379e648f3}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GLAD\GLAD.vcxproj">
-      <Project>{90fc090c-3046-40d5-ae1e-d04e8aec83cc}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\ImGui\ImGui.vcxproj">
-      <Project>{094567f9-2935-46b4-b62b-daa5ab8397b2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
-      <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\PHYSICS\PHYSICS.vcxproj">
-      <Project>{00835d04-1da9-49ca-b79d-cfbd09e5d57b}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\RENDERING\RENDERING.vcxproj">
-      <Project>{51cc6e2b-2094-407b-a2bb-c1c65b712213}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SOIL\SOIL.vcxproj">
-      <Project>{51e7f6d2-108b-40d0-be47-8772bad4a838}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SOUNDS\SOUNDS.vcxproj">
-      <Project>{40aaaf01-edad-4dd3-96f7-2c31eae6361d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Utilities\Utilities.vcxproj">
-      <Project>{57200a04-1262-450c-907e-b274c1889cfb}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Window\Window.vcxproj">
-      <Project>{a930181f-2110-4d57-84ce-2d7dc0f44357}</Project>
-    </ProjectReference>
+    <ClInclude Include="src\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="src\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="src\backends\imgui_impl_sdl2.h" />
+    <ClInclude Include="src\imconfig.h" />
+    <ClInclude Include="src\imgui.h" />
+    <ClInclude Include="src\imgui_internal.h" />
+    <ClInclude Include="src\imstb_rectpack.h" />
+    <ClInclude Include="src\imstb_textedit.h" />
+    <ClInclude Include="src\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\scripts\GameDemo\assetDefs.lua" />
-    <None Include="assets\scripts\GameDemo\collision_system.lua" />
-    <None Include="assets\scripts\GameDemo\enemy.lua" />
-    <None Include="assets\scripts\GameDemo\game_data.lua" />
-    <None Include="assets\scripts\GameDemo\hud.lua" />
-    <None Include="assets\scripts\GameDemo\player.lua" />
-    <None Include="assets\scripts\GameDemo\projectile.lua" />
-    <None Include="assets\scripts\GameDemo\utilities.lua" />
-    <None Include="assets\scripts\GameDemo\entityDefs.lua" />
-    <None Include="assets\scripts\main.lua" />
-    <None Include="assets\shaders\colorShader.frag" />
-    <None Include="assets\shaders\colorShader.vert" />
-    <None Include="assets\shaders\hudShader.frag" />
-    <None Include="assets\shaders\hudShader.vert" />
-    <None Include="assets\shaders\physicsDebugShader.frag" />
-    <None Include="assets\shaders\physicsDebugShader.vert" />
-    <None Include="assets\shaders\texShader.frag" />
-    <None Include="assets\shaders\texShader.vert" />
-    <None Include="SDL2.dll" />
-    <None Include="SDL2_mixer.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="assets\textures\brick.png" />
-    <Image Include="assets\textures\container.png" />
-    <Image Include="assets\textures\football.png" />
-    <Image Include="assets\textures\lego.png" />
-    <Image Include="assets\textures\mafuyu.png" />
-    <Image Include="assets\textures\wood.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\Application.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="assets\music\2-23am.wav" />
-    <Media Include="assets\soundFx\hit.wav" />
+    <Text Include="src\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
