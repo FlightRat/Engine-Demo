@@ -21,6 +21,8 @@ namespace ENGINE_RENDERING {
 	class Camera3D
 	{
 	public:
+		int Width = {600};
+		int Height = { 600 };
 		// camera Attributes
 		glm::vec3 Position;
 		glm::vec3 Front;
@@ -39,6 +41,11 @@ namespace ENGINE_RENDERING {
 		Camera3D(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
 
 		void LookAt(const glm::vec3& target);
+
+		inline int GetWidth() const { return Width; }
+		inline int GetHeight() const { return Height; }
+		inline void SetWidth(int width) { Width = width; }
+		inline void SetHeight(int height) { Height = height; }
 
 		inline glm::vec3 GetPosition() const { return Position; }
 		inline float GetZoom() const { return Zoom; }

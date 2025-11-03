@@ -11,6 +11,7 @@ run_script("assets/scripts/GameDemo/hud.lua")
 
 math.randomseed(os.time())
 LoadAssets()
+Music.set_volume(20)
 Music.play("2:23am")
 
 -- player

@@ -4,6 +4,7 @@
 #include<glm/gtc/quaternion.hpp>
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Essentials/Shader.h>
+#include<Rendering/Buffers/Framebuffer.h>
 #include<Logger/Logger.h>
 #include "../ECS/Entity.h"
 #include "../Resources/AssetManager.h"
@@ -24,7 +25,7 @@ namespace ENGINE_CORE::Systems {
 		glGenBuffers(1, &m_DebugVBO);
 	}
 
-	void RenderSystem::Render()
+	void RenderSystem::Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
 	{
 		auto& assetManager = m_Registry.GetContext<std::shared_ptr<AssetManager>>();
 		auto& physicsWorld = m_Registry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
@@ -56,18 +57,6 @@ namespace ENGINE_CORE::Systems {
 			return;
 		}
 
-		//// mafuyu
-		//const auto mafuyu = assetManager->GetTexture("mafuyu");
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, mafuyu->GetID());
-		//// football
-		//const auto& football = assetManager->GetTexture("football");
-		//glActiveTexture(GL_TEXTURE3);
-		//glBindTexture(GL_TEXTURE_2D, football->GetID());
-		//// brick
-		//const auto& brick = assetManager->GetTexture("brick");
-		//glActiveTexture(GL_TEXTURE4);
-		//glBindTexture(GL_TEXTURE_2D, brick->GetID());
 		// wood
 		const auto& wood = assetManager->GetTexture("wood");
 		glActiveTexture(GL_TEXTURE0);
@@ -82,11 +71,9 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_2D, rust->GetID());
 
 		// camera
-		auto& camera = m_Registry.GetContext<std::shared_ptr<Camera3D>>();
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-		//glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)600 / (float)600, 0.1f, 100.0f);
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)ENGINE_CORE::CoreEngineData::GetInstance().WindowWidth() / (float)ENGINE_CORE::CoreEngineData::GetInstance().WindowHeight(), 0.1f, 100.0f);
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
@@ -174,7 +161,7 @@ namespace ENGINE_CORE::Systems {
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(rp3d::Vector3) + sizeof(rp3d::uint32), (char*)nullptr);
 			glEnableVertexAttribArray(1);
 			glVertexAttribIPointer(1, 3, GL_UNSIGNED_INT, sizeof(rp3d::Vector3) + sizeof(rp3d::uint32), (void*)sizeof(rp3d::Vector3));
-			
+
 			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}

@@ -5,10 +5,11 @@
 #include<SOIL/SOIL.h>
 #include<glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
+#include<Rendering/Essentials/ShaderLoader.h>
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Core/Camera3D.h>
+#include<Rendering/Buffers/Framebuffer.h>
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/Components/TransformComponent.h>
@@ -22,13 +23,14 @@
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
-#include <Core/CoreUtilities/CoreEngineData.h>
-#include <Physics/ContactListener.h>
+#include<Core/CoreUtilities/CoreEngineData.h>
+#include<Physics/ContactListener.h>
 #include<Physics/ContactListener.h>
 #include<imgui.h>
 #include<backends/imgui_impl_sdl2.h>
 #include<backends/imgui_impl_opengl3.h>
 #include<SDL_opengl.h>
+#include"editor/displays/SceneDisplay.h"
 
 double accumulator = 0; //TODO:where should it be???
 
@@ -73,11 +75,14 @@ namespace ENGINE_EDITOR {
 		SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
 		// Create the window
+		SDL_DisplayMode displayMode;
+		SDL_GetCurrentDisplayMode(0, &displayMode);
 		m_pWindow = std::make_unique<ENGINE_WINDOWING::Window>(
-			"Test", 
-			ENGINE_CORE::CoreEngineData::GetInstance().WindowWidth(), 
-			ENGINE_CORE::CoreEngineData::GetInstance().WindowHeight(),
-			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, false, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+			"Test",
+			displayMode.w,
+			displayMode.h,
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, true, 
+			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MOUSE_CAPTURE | SDL_WINDOW_MAXIMIZED);
 		if (!m_pWindow->GetWindow())
 		{
 			ENGINE_ERROR("Failed to create the window!");
@@ -272,6 +277,32 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// test framebuffer
+		auto framebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
+		if (!framebuffer)
+		{
+			ENGINE_ERROR("Failed to create the framebuffer");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>(framebuffer))
+		{
+			ENGINE_ERROR("Failed to add the framebuffer to the registry context!");
+			return false;
+		}
+	
+		// scene display
+		auto sceneDisplay = std::make_shared<ENGINE_EDIOTR::SceneDisplay>(*m_pRegistry);
+		if (!sceneDisplay)
+		{
+			ENGINE_ERROR("Failed to create the SceneDisplay");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>(sceneDisplay))
+		{
+			ENGINE_ERROR("Failed to add the SceneDisplay to the registry context!");
+			return false;
+		}
+	
 	}
 
 	bool Application::LoadShaders()
@@ -383,8 +414,8 @@ namespace ENGINE_EDITOR {
 					int newHeight = m_Event.window.data2;
 					m_pWindow->SetWidth(newWidth);
 					m_pWindow->SetHeight(newHeight);
-					ENGINE_CORE::CoreEngineData::GetInstance().SetWindowWidth(newWidth);
-					ENGINE_CORE::CoreEngineData::GetInstance().SetWindowHeight(newHeight);
+					//ENGINE_CORE::CoreEngineData::GetInstance().SetWindowWidth(newWidth);
+					//ENGINE_CORE::CoreEngineData::GetInstance().SetWindowHeight(newHeight);
 				}
 				break;
 			}
@@ -430,19 +461,31 @@ namespace ENGINE_EDITOR {
 
 	void Application::Render()
 	{
-		glViewport(0, 0, m_pWindow->GetWidth(), m_pWindow->GetHeight());
+		//TODO: add w&h param for camera, and set them here, then pass the camera into render func
+		auto& framebuffer = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
+		framebuffer->Bind();
+
+		glViewport(0, 0, framebuffer->Width(), framebuffer->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// camera
+		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		camera->SetWidth(framebuffer->Width());
+		camera->SetHeight(framebuffer->Height());
+
 		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Render();
-
 		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		renderSystem->Render();
+		renderSystem->Render(camera);
+
+		framebuffer->Unbind();
 
 		Begin();
 		RenderImGui();
 		End();
+
+		framebuffer->CheckResize();
 
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
 	}
@@ -507,6 +550,9 @@ namespace ENGINE_EDITOR {
 
 	void Application::RenderImGui()
 	{
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
+		auto& sceneDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>();
+		sceneDisplay->Draw();
 		ImGui::ShowDemoWindow();
 	}
 

@@ -3,6 +3,7 @@
 #include<glad/glad.h>
 #include<glm/glm.hpp>
 #include <Physics/RP3D_Wrappers.h>
+#include <Rendering/Core/Camera3D.h>
 
 namespace ENGINE_CORE::Systems {
 	class RenderSystem
@@ -12,7 +13,7 @@ namespace ENGINE_CORE::Systems {
 	public:
 		RenderSystem(ENGINE_CORE::ECS::Registry& registry);
 		~RenderSystem() = default;
-		void Render();
+		void Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera);
 
 		GLuint m_DebugVAO, m_DebugVBO;
 	};
