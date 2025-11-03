@@ -39,7 +39,7 @@ namespace ENGINE_RENDERING {
 
 	void Framebuffer::CleanUp()
 	{
-		glDeleteBuffers(1, &m_FboID);
+		glDeleteFramebuffers(1, &m_FboID);
 		if (m_bUseRbo)
 			glDeleteRenderbuffers(1, &m_RboID);
 		if (m_pTexture)
