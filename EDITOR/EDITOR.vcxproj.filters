@@ -46,6 +46,7 @@
     <None Include="assets\scripts\GameDemo\collision_system.lua" />
     <None Include="assets\shaders\physicsDebugShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
+    <None Include="imgui.ini" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
