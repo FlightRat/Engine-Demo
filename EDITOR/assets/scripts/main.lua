@@ -14,6 +14,7 @@ LoadAssets()
 Music.set_volume(20)
 Music.play("2:23am")
 
+--[[
 -- player
 local player_body = LoadEntity(PlayerDefs["body"])
 local player_glass = LoadEntity(PlayerDefs["glass"])
@@ -91,35 +92,126 @@ function controlCamera()
 	cam.process_mouse(Mouse.offset())
 	cam.process_scroll(Mouse.wheel_y())
 end
+--]]
 
--- user data example
---[[
-local objectData = ObjectData("tag", "group", true, true, 666)
-local userData = UserData.create_user_data(objectData)
-local data1 = userData:get_user_data()
-print(data1:to_string())
-userData:set_user_data(ObjectData("new tag", "new group", false, false, 996))
-local data2 = userData:get_user_data()
-print(data2:to_string())
-]]--
+gStateStack = StateStack()
+
+TitleState = {}
+TitleState.__index = TitleState
+
+GameState = {}
+GameState.__index = GameState
+
+function GameState:Create(stack)
+	local this = 
+	{
+		m_Stack = stack
+	}
+	local state = state("Game State")
+	state:set_variable_table(this)
+	state:set_on_enter(
+		function()
+			print("Enter Game State")
+		end
+	)
+	state:set_on_exit(
+		function()
+			print("Exit Game State")
+		end
+	)
+	state:set_on_update(
+		function(dt)
+			print("Update Game State")
+		end
+	)
+	state:set_on_render(
+		function()
+			print("Render Game state")
+		end
+	)
+	state:set_handle_inputs(
+		function()
+			this:HandleInputs()
+		end
+	)
+	setmetatable(this, self)
+	return state
+end
+
+function GameState:HandleInputs()
+	if Keyboard.just_pressed(KEY_BACKSPACE) then
+		self.m_Stack:pop()
+		return
+	end
+end
+
+function TitleState:Create(stack)
+	local this = 
+	{
+		m_Stack = stack,
+		m_Title = Entity("Title", "")
+	}
+	this.m_Title:add_component(Transform(vec3(0.0,0.0,0.0),vec3(0.5,0.5,1.0),vec3(0.0,0.0,0.0)))
+	this.m_Title:add_component(MeshFilter("hud_quad"))
+	this.m_Title:add_component(MeshRender("hudShader", vec4(1.0,1.0,1.0,1.0), 0))
+
+	local state = state("Title State")
+	state:set_variable_table(this)
+	state:set_on_enter(
+		function()
+			print("Enter Title State")
+		end
+	)
+	state:set_on_exit(
+		function()
+			this:OnExit()
+		end
+	)
+	state:set_on_update(
+		function(dt)
+			print("Update Title State")
+		end
+	)
+	state:set_on_render(
+		function()
+			print("Render Title state")
+		end
+	)
+	state:set_handle_inputs(
+		function()
+			this:HandleInputs()
+		end
+	)
+	setmetatable(this, self)
+	return state
+end
+
+function TitleState:HandleInputs()
+	if Keyboard.just_pressed(KEY_ENTER) then
+		self.m_Stack:change_state(GameState:Create(self.m_Stack))
+		return
+	end
+end
+
+function TitleState:OnExit()
+	self.m_Title:kill()
+end
+
+local title = TitleState:Create(gStateStack)
+gStateStack:change_state(title)
 
 main = {
 	[1] = {
 		update = function()
-		controlPlayer_physics()
-		--controlCamera()
-		gFollowCam:update()
-
-		-- print all contact pairs
-		--local dataPairs = ContactListener.GetUserDataPairs()
-		--for i, a, b in pairs(dataPairs) do
-			--print(a.tag.." is contacting "..b.tag)
-		--end
-
+			--controlPlayer_physics()
+			--controlCamera()
+			--gFollowCam:update()
+			gStateStack:update(ENGINE_DeltaTime())
 		end
 	},
 	[2] = {
 		render = function()
+			gStateStack:render()
 		end
 	},
 }

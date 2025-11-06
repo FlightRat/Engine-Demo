@@ -7,17 +7,20 @@
 #include "../ECS/Components/SphereColliderComponent.h"
 #include "../ECS/Components/PhysicsComponent.h"
 #include "../ECS/Entity.h"
-#include <Logger/Logger.h>
 #include "../Scripting/GlmLuaBindings.h"
 #include "../Scripting/SoundLuaBindings.h"
 #include "../Scripting/CameraLuaBindings.h"
 #include "../Scripting/UserDataLuaBindings.h"
 #include "../Scripting/ContactListenerLuaBindings.h"
-#include "../CoreUtilities/FollowCamera.h"
 #include "../Scripting/InputManager.h"
-#include"../Resources/AssetManager.h"
-#include<Utilities/Timer.h>
+#include "../CoreUtilities/FollowCamera.h"
 #include "../CoreUtilities/CoreEngineData.h"
+#include"../Resources/AssetManager.h"
+#include"../States/State.h"
+#include"../States/StateStack.h"
+#include<Utilities/Timer.h>
+#include <Logger/Logger.h>
+
 
 using namespace ENGINE_CORE::ECS;
 
@@ -133,6 +136,8 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::Scripting::ContactListenerBindings::CreateLuaContactListenerBind(lua, registry);
 		ENGINE_CORE::FollowCamera::CreateLuaFollowCameraBind(lua, registry);
 		ENGINE_CORE::InputManager::CreateLuaInputBind(lua);
+		ENGINE_CORE::State::CreateLuaStateBind(lua);
+		ENGINE_CORE::StateStack::CreateLuaStateStackBind(lua);
 		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);
 		ENGINE_UTIL::Timer::CreateLuaTimerBind(lua);
 
