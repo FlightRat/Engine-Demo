@@ -2,6 +2,7 @@
 #include <Logger/Logger.h>
 
 namespace ENGINE_CORE {
+	/*check if state exists in the stack, if not, mark it as "add" and hold it*/
 	void StateStack::Push(State& state)
 	{
 		auto hasState = std::find_if(m_States.begin(), m_States.end(), [&](const auto& s) {return s.name == state.name; });
@@ -14,6 +15,7 @@ namespace ENGINE_CORE {
 		assert(false && "Trying to add a state that is already in the stack!");
 	}
 
+	/* mark the last state in stack to be killed */
 	void StateStack::Pop()
 	{
 		if (m_States.empty())
@@ -25,6 +27,7 @@ namespace ENGINE_CORE {
 		top.bKillState = true;
 	}
 
+	/* pop and push*/
 	void StateStack::ChangeState(State& state)
 	{
 		if (!m_States.empty())
@@ -32,6 +35,12 @@ namespace ENGINE_CORE {
 		Push(state);
 	}
 
+	/*
+	* 1.if hold a state to be added, push it into stack and call "on_enter"
+	* 2.check and call the "on_update" of top state
+	* 3.check and call the "handle_inputs" of top state
+	* 4.check and call the "on_exit" of top state if should be killed
+	*/
 	void StateStack::Update(const double dt)
 	{
 		if (m_pStateHolder && m_pStateHolder->bAddState)
@@ -60,7 +69,7 @@ namespace ENGINE_CORE {
 			return;
 
 		auto& topState = m_States.back();
-		if (topState.on_render.valid())
+		if (topState.on_update.valid())
 		{
 			try
 			{
@@ -127,6 +136,7 @@ namespace ENGINE_CORE {
 		}
 	}
 
+	/* call the "render" function of all the states -- TODO: maybe should only call the render of top state */
 	void StateStack::Render()
 	{
 		for (const auto& state : m_States)
@@ -150,6 +160,7 @@ namespace ENGINE_CORE {
 		}
 	}
 
+	/* get the top state of the stack*/
 	State& StateStack::GetTop()
 	{
 		assert(!m_States.empty() && "Cannot get top from an empty stack!");
