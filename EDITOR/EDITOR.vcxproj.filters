@@ -47,6 +47,8 @@
     <None Include="assets\shaders\physicsDebugShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
     <None Include="imgui.ini" />
+    <None Include="assets\scripts\GameDemo\GameState.lua" />
+    <None Include="assets\scripts\GameDemo\TitleState.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
