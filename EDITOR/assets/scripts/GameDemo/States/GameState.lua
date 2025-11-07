@@ -19,7 +19,7 @@ function GameState:Create(stack)
 	state:set_variable_table(this)
 	state:set_on_enter(function() this:OnEnter() end)
 	state:set_on_exit(function() this:OnExit() end)
-	state:set_on_update(function() this:OnUpdate() end)
+	state:set_on_update(function(dt) this:OnUpdate(dt) end)
 	state:set_on_render(function() this:OnRender() end)
 	state:set_handle_inputs(function() this:HandleInputs() end)
 	setmetatable(this, self)
@@ -29,8 +29,12 @@ end
 function GameState:OnEnter()
 	Music.set_volume(20)
 	Music.play("2:23am")
-
-	local player_id = LoadEntity(PlayerDefs["body"])
+	
+	-- create a character, and activate
+	local character = Character:Create({name = "body"})
+	local player_id = character.m_EntityID
+	AddActiveCharacter(player_id, character)
+	
 	self.m_Player = Entity(player_id)
 	self.m_Glass = Entity(LoadEntity(PlayerDefs["glass"]))
 	self.m_Glass:set_parent(player_id)
@@ -57,6 +61,7 @@ end
 
 function GameState:OnUpdate(dt)
 	self.m_FollowCam:update()
+	UpdateActiveCharacters(dt)
 	Control_Physics(self.m_Player)
 end
 
@@ -72,44 +77,5 @@ function GameState:HandleInputs()
 end
 
 function Control_Physics(player)
-	local mesh_render = player:get_component(MeshRender)
-	local physics = player:get_component(Physics)
 
-	-- print player contact detect
-	local touching_trigger = false
-	local player_data = physics:user_data():get_user_data()
-	for k,v in pairs(player_data.contactEntities) do
-		--print("player is contacting "..v.tag)
-		if(v.group == "trigger") then
-			touching_trigger=true
-		end
-	end
-	if touching_trigger then
-		mesh_render.color = vec4(1.0,0.0,0.0,1.0)
-	else
-		mesh_render.color = vec4(0.678, 0.847, 1.0, 1.0)
-	end
-
-	-- keyboard control
-	if Keyboard.pressed(KEY_W) then
-		physics:linear_impulse(vec3(0.0, 0.0, 100.0))
-	end
-	if Keyboard.pressed(KEY_A) then
-		physics:linear_impulse(vec3(100.0, 0.0, 0.0))
-	end
-	if Keyboard.pressed(KEY_D) then
-		physics:linear_impulse(vec3(-100.0, 0.0, 0.0))
-	end
-	if Keyboard.pressed(KEY_S) then
-		physics:linear_impulse(vec3(0.0, 0.0, -100.0))
-	end
-	if Keyboard.pressed(KEY_Q) then
-		physics:angular_impulse(vec3(0.0, 100.0, 0.0))
-	end
-	if Keyboard.pressed(KEY_E) then
-		physics:angular_impulse(vec3(0.0,-100.0, 0.0))
-	end
-	if Keyboard.just_pressed(KEY_SPACE) then
-		physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
-	end
 end

@@ -44,6 +44,9 @@
     <None Include="assets\scripts\GameDemo\States\GameState.lua" />
     <None Include="assets\scripts\GameDemo\States\TitleState.lua" />
     <None Include="assets\scripts\GameDemo\script_list.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\playerDefs.lua" />
+    <None Include="assets\scripts\GameDemo\Character\character.lua" />
+    <None Include="assets\scripts\GameDemo\Character\player_states\move_state.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
