@@ -144,7 +144,6 @@ EnvirDefs =
 			}
 		}
 	}
-
 }
 
 ProjectileDefs = 
