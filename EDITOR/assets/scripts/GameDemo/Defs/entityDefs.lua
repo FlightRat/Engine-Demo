@@ -4,7 +4,7 @@
 	capsule 默认半径1，半高1（总高4）
 ]]--
 
-ObjDefs =
+EnvirDefs = 
 {
 	ball_1 = 
 	{
@@ -89,37 +89,6 @@ ObjDefs =
 				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
 			}
 		}
-	}
-}
-
-EnvirDefs = 
-{
-	floor = 
-	{
-		tag = "floor",
-		group = "Envir",
-		components = 
-		{
-			Transform = {
-				position = {x=0, y=0, z=0},
-				scale = {x=2.0, y=1.0, z=2.0},
-				rotation = {x=0.0, y=0.0, z=0.0}
-			},
-			MeshFilter = {
-				type = "plane"
-			},
-			MeshRender = {
-				shader = "colorShader",
-				color = {R=1.0, G=1.0, B=1.0, A=1.0},
-				texture = 1
-			},
-			Physics = {
-				type = BodyType.Static,
-				shape = "box",
-				box_halfExtents = vec3(20.0, 0.0005, 20.0)
-				--box_halfExtents = {x=20.0, y=0.0005, z=20.0}
-			}
-		}
 	},
 	platform1 = 
 	{
@@ -147,7 +116,35 @@ EnvirDefs =
 				--box_halfExtents = {x=2.0, y=0.5, z=2.0}
 			}
 		}
+	},
+	ground = 
+	{
+		tag = "ground",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = {x=0, y=0, z=0},
+				scale = {x=2.0, y=1.0, z=2.0},
+				rotation = {x=0.0, y=0.0, z=0.0}
+			},
+			MeshFilter = {
+				type = "plane"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				color = {R=1.0, G=1.0, B=1.0, A=1.0},
+				texture = 1
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(20.0, 0.0005, 20.0)
+				--box_halfExtents = {x=20.0, y=0.0005, z=20.0}
+			}
+		}
 	}
+
 }
 
 ProjectileDefs = 
