@@ -32,23 +32,18 @@
     <None Include="assets\shaders\texShader.vert" />
     <None Include="assets\shaders\texShader.frag" />
     <None Include="assets\scripts\main.lua" />
-    <None Include="assets\scripts\GameDemo\entityDefs.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\entityDefs.lua" />
     <None Include="assets\scripts\GameDemo\utilities.lua" />
-    <None Include="assets\scripts\GameDemo\assetDefs.lua" />
-    <None Include="assets\scripts\GameDemo\player.lua" />
-    <None Include="assets\scripts\GameDemo\enemy.lua" />
-    <None Include="assets\scripts\GameDemo\projectile.lua" />
-    <None Include="assets\scripts\GameDemo\game_data.lua" />
-    <None Include="assets\scripts\GameDemo\hud.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
     <None Include="assets\shaders\hudShader.vert" />
     <None Include="assets\shaders\hudShader.frag" />
     <None Include="SDL2_mixer.dll" />
-    <None Include="assets\scripts\GameDemo\collision_system.lua" />
     <None Include="assets\shaders\physicsDebugShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
     <None Include="imgui.ini" />
-    <None Include="assets\scripts\GameDemo\GameState.lua" />
-    <None Include="assets\scripts\GameDemo\TitleState.lua" />
+    <None Include="assets\scripts\GameDemo\States\GameState.lua" />
+    <None Include="assets\scripts\GameDemo\States\TitleState.lua" />
+    <None Include="assets\scripts\GameDemo\script_list.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
@@ -69,6 +64,9 @@
     <Image Include="assets\textures\brick.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\textures\rust.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h">
@@ -83,6 +81,15 @@
       <Filter>Resource Files</Filter>
     </Media>
     <Media Include="assets\soundFx\hit.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="assets\soundFx\jumping.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="assets\soundFx\landing.wav">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="assets\soundFx\shooting.wav">
       <Filter>Resource Files</Filter>
     </Media>
   </ItemGroup>

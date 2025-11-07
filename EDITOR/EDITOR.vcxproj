@@ -173,17 +173,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\scripts\GameDemo\assetDefs.lua" />
-    <None Include="assets\scripts\GameDemo\collision_system.lua" />
-    <None Include="assets\scripts\GameDemo\enemy.lua" />
-    <None Include="assets\scripts\GameDemo\GameState.lua" />
-    <None Include="assets\scripts\GameDemo\game_data.lua" />
-    <None Include="assets\scripts\GameDemo\hud.lua" />
-    <None Include="assets\scripts\GameDemo\player.lua" />
-    <None Include="assets\scripts\GameDemo\projectile.lua" />
-    <None Include="assets\scripts\GameDemo\TitleState.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
+    <None Include="assets\scripts\GameDemo\States\GameState.lua" />
+    <None Include="assets\scripts\GameDemo\script_list.lua" />
+    <None Include="assets\scripts\GameDemo\States\TitleState.lua" />
     <None Include="assets\scripts\GameDemo\utilities.lua" />
-    <None Include="assets\scripts\GameDemo\entityDefs.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\entityDefs.lua" />
     <None Include="assets\scripts\main.lua" />
     <None Include="assets\shaders\colorShader.frag" />
     <None Include="assets\shaders\colorShader.vert" />
@@ -203,6 +198,7 @@
     <Image Include="assets\textures\football.png" />
     <Image Include="assets\textures\lego.png" />
     <Image Include="assets\textures\mafuyu.png" />
+    <Image Include="assets\textures\rust.png" />
     <Image Include="assets\textures\wood.png" />
   </ItemGroup>
   <ItemGroup>
@@ -212,6 +208,9 @@
   <ItemGroup>
     <Media Include="assets\music\2-23am.wav" />
     <Media Include="assets\soundFx\hit.wav" />
+    <Media Include="assets\soundFx\jumping.wav" />
+    <Media Include="assets\soundFx\landing.wav" />
+    <Media Include="assets\soundFx\shooting.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

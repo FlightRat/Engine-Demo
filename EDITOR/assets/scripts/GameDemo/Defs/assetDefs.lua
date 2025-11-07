@@ -15,7 +15,11 @@ AssetDefs =
 	},
 	soundFx=
 	{
-		{name="hit",path="assets/soundFx/hit.wav"}
+		-- TODO: go wrong when more than 2
+		{name="hit",path="assets/soundFx/hit.wav"},
+		{name="jump",path="assets/soundFx/jumping.wav"},
+		--{name="land",path="assets/soundFx/landing.wav"},
+		--{name="shoot",path="assets/soundFx/shooting.wav"},
 	}
 }
 

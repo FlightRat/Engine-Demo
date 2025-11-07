@@ -18,6 +18,7 @@
 #include"../Resources/AssetManager.h"
 #include"../States/State.h"
 #include"../States/StateStack.h"
+#include"../States/StateMachine.h"
 #include<Utilities/Timer.h>
 #include <Logger/Logger.h>
 
@@ -138,6 +139,7 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::InputManager::CreateLuaInputBind(lua);
 		ENGINE_CORE::State::CreateLuaStateBind(lua);
 		ENGINE_CORE::StateStack::CreateLuaStateStackBind(lua);
+		ENGINE_CORE::StateMachine::CreateLuaStateMachineBind(lua);
 		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);
 		ENGINE_UTIL::Timer::CreateLuaTimerBind(lua);
 
@@ -172,7 +174,7 @@ namespace ENGINE_CORE::Systems {
 	void ScriptingSystem::RegisterLuaFunctions(sol::state& lua)
 	{
 		lua.set_function(
-			"run_script", [&](const std::string& path)
+			"ENGINE_RunScript", [&](const std::string& path)
 			{
 				try
 				{
@@ -184,6 +186,33 @@ namespace ENGINE_CORE::Systems {
 					return false;
 				}
 				return true;
+			}
+		);
+
+		lua.set_function(
+			"ENGINE_LoadScriptTable", [&](const sol::table& scriptList) {
+				if (!scriptList.valid())
+				{
+					ENGINE_ERROR("Failed to load script list: invalid!");
+					return;
+				}
+				for (const auto& [index, script] : scriptList)
+				{
+					try
+					{
+						auto result = lua.safe_script_file(script.as<std::string>());
+						if (!result.valid())
+						{
+							sol::error error = result;
+							throw error;
+						}
+					}
+					catch(const sol::error& error)
+					{
+						ENGINE_ERROR("Failed to load script: {}, Error: {}", script.as<std::string>(), error.what());
+						return;
+					}
+				}
 			}
 		);
 

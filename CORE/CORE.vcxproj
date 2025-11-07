@@ -182,6 +182,7 @@
     <ClInclude Include="Core\Scripting\SoundLuaBindings.h" />
     <ClInclude Include="Core\Scripting\UserDataLuaBindings.h" />
     <ClInclude Include="Core\States\State.h" />
+    <ClInclude Include="Core\States\StateMachine.h" />
     <ClInclude Include="Core\States\StateStack.h" />
     <ClInclude Include="Core\Systems\PhysicsSystem.h" />
     <ClInclude Include="Core\Systems\RenderSystem.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="Core\Scripting\SoundLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\UserDataLuaBindings.cpp" />
     <ClCompile Include="Core\States\State.cpp" />
+    <ClCompile Include="Core\States\StateMachine.cpp" />
     <ClCompile Include="Core\States\StateStack.cpp" />
     <ClCompile Include="Core\Systems\PhysicsSystem.cpp" />
     <ClCompile Include="Core\Systems\RenderSystem.cpp" />

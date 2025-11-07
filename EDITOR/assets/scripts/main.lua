@@ -1,15 +1,6 @@
 -- Main Lua Scipt!
-run_script("assets/scripts/GameDemo/utilities.lua")
-run_script("assets/scripts/GameDemo/assetDefs.lua")
-run_script("assets/scripts/GameDemo/entityDefs.lua")
-run_script("assets/scripts/GameDemo/player.lua")
-run_script("assets/scripts/GameDemo/enemy.lua")
-run_script("assets/scripts/GameDemo/projectile.lua")
-run_script("assets/scripts/GameDemo/collision_system.lua")
-run_script("assets/scripts/GameDemo/game_data.lua")
-run_script("assets/scripts/GameDemo/hud.lua")
-run_script("assets/scripts/GameDemo/GameState.lua")
-run_script("assets/scripts/GameDemo/TitleState.lua")
+ENGINE_RunScript("assets/scripts/GameDemo/script_list.lua")
+ENGINE_LoadScriptTable(ScriptList)
 
 math.randomseed(os.time())
 LoadAssets()
