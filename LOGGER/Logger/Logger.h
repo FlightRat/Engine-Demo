@@ -2,6 +2,8 @@
 #include<string>
 #include<string_view>
 #include<source_location>
+#include<string_view>
+#include<string>
 #include<vector>
 #include<cassert>
 
@@ -49,6 +51,10 @@ namespace ENGINE_LOGGER {
 
 		template <typename... Args>
 		void Error(std::source_location location, const std::string& message, Args&&... args);
+
+		void LuaLog(const std::string_view message);
+		void LuaWarn(const std::string_view message);
+		void LuaError(const std::string_view message);
 	};
 }
 

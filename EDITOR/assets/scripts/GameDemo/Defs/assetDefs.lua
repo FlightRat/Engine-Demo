@@ -27,27 +27,27 @@ function LoadAssets()
 	-- Texture
 	for k, v in pairs(AssetDefs.textures) do
 		if not AssetManager.add_texture(v.name, v.path, v.pixel_art) then
-			print("Failed to load texture ["..v.name.."] at path ["..v.path.."]!")
+			ENGINE_Error("Failed to load texture [%s] at path [%s]", v.name, v.path)
 		else
-			print("Loaded texture["..v.name.."]")
+			ENGINE_Log("Loaded texture [%s]", v.name)
 		end
 	end
 	
 	-- Music
 	for k, v in pairs(AssetDefs.music) do
 		if not AssetManager.add_music(v.name, v.path) then
-			print("Failed to load music ["..v.name.."] at path ["..v.path.."]!")
+			ENGINE_Error("Failed to load music [%s] at path [%s]", v.name, v.path)
 		else
-			print("Loaded music["..v.name.."]")
+			ENGINE_Log("Loaded music [%s]", v.name) --equal to£º"Logger.log(string.format("Loaded music [%s]", v.name))"
 		end
 	end
 
 	-- SoundFx
 	for k, v in pairs(AssetDefs.soundFx) do
 		if not AssetManager.add_soundFx(v.name, v.path) then
-			print("Failed to load soundFx ["..v.name.."] at path ["..v.path.."]!")
+			ENGINE_Error("Failed to load soundFx [%s] at path [%s]", v.name, v.path)
 		else
-			print("Loaded soundFx["..v.name.."]")
+			ENGINE_Log("Loaded soundFx [%s]", v.name)
 		end
 	end
 
