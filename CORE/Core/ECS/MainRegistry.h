@@ -5,6 +5,18 @@
 
 namespace ENGINE_RESOURCES { class AssetManager; }
 namespace ENGINE_SOUNDS { class MusicPlayer; class SoundFxPlayer; }
+namespace ENGINE_PHYSICS { class ContactListener; }
+namespace ENGINE_RENDERING
+{
+	class Framebuffer;
+	class Camera3D;
+}
+namespace ENGINE_CORE::Systems
+{
+	class RenderSystem;
+	class PhysicsSystem;
+	class ScriptingSystem;
+}
 
 namespace ENGINE_CORE::ECS {
 	class MainRegistry
@@ -18,6 +30,7 @@ namespace ENGINE_CORE::ECS {
 		MainRegistry(const MainRegistry&) = delete;
 		MainRegistry& operator =(const MainRegistry&) = delete;
 	public:
+		Registry* GetRegistry();
 		static MainRegistry& GetInstance();
 		bool Initialize();
 
@@ -36,5 +49,10 @@ namespace ENGINE_CORE::ECS {
 		ENGINE_RESOURCES::AssetManager& GetAssetManager();
 		ENGINE_SOUNDS::MusicPlayer& GetMusicPlayer();
 		ENGINE_SOUNDS::SoundFxPlayer& GetSoundFxPlayer();
+
+		ENGINE_CORE::Systems::PhysicsSystem& GetPhysicsSystem();
+		ENGINE_CORE::Systems::RenderSystem& GetRenderSystem();
+		ENGINE_CORE::Systems::ScriptingSystem& GetScriptingSystem();
+		ENGINE_RENDERING::Camera3D& GetCamera3D();
 	};
 }

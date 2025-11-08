@@ -27,7 +27,6 @@
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
 #include<Physics/ContactListener.h>
-#include<Physics/ContactListener.h>
 #include<imgui.h>
 #include<imgui_internal.h>
 #include<backends/imgui_impl_sdl2.h>
@@ -39,7 +38,7 @@
 double accumulator = 0; //TODO:where should it be???
 
 namespace ENGINE_EDITOR {
-    Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
+    Application::Application():m_pWindow{nullptr}, m_Event{},m_bIsRunning{true}
 	{
 
 	}
@@ -117,53 +116,11 @@ namespace ENGINE_EDITOR {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		if (!InitImGui())
+		if (!ImGui_Init())
 		{
 			ENGINE_ERROR("Failed to initialize ImGui!");
 			return false;
 		}
-
-		// ECS Registry
-		m_pRegistry = std::make_unique<ENGINE_CORE::ECS::Registry>();
-
-		// Asset Manager
-		//auto assetManager = std::make_shared<ENGINE_RESOURCES::AssetManager>();
-		//if (!assetManager)
-		//{
-		//	ENGINE_ERROR("Failed to create the asset manager!");
-		//	return false;
-		//}
-		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>(assetManager))
-		//{
-		//	ENGINE_ERROR("Failed to add the asset manager to the registry context!");
-		//	return false;
-		//}
-
-		// Music Player
-		//auto musicPlayer = std::make_shared<ENGINE_SOUNDS::MusicPlayer>();
-		//if (!musicPlayer)
-		//{
-		//	ENGINE_ERROR("Failed to create the music player!");
-		//	return false;
-		//}
-		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::MusicPlayer>>(musicPlayer))
-		//{
-		//	ENGINE_ERROR("Failed to add the music player to the registry context!");
-		//	return false;
-		//}
-
-		// SoundFx Player
-		//auto soundFxPlayer = std::make_shared<ENGINE_SOUNDS::SoundFxPlayer>();
-		//if (!soundFxPlayer)
-		//{
-		//	ENGINE_ERROR("Failed to create the soundFx player!");
-		//	return false;
-		//}
-		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::SoundFxPlayer>>(soundFxPlayer))
-		//{
-		//	ENGINE_ERROR("Failed to add the soundFx player to the registry context!");
-		//	return false;
-		//}
 
 		auto& mainRegistry = MAIN_REGISTRY();
 		if (!mainRegistry.Initialize())
@@ -172,135 +129,13 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// Physics Common
-		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
-		if (!physicsCommon)
-		{
-			ENGINE_ERROR("Failed to create the physics common!");
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon))
-		{
-			ENGINE_ERROR("Failed to add the physics common to the registry context!");
-			return false;
-		}
-
-		// Physics World
-		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
-		if(!physicsWorld)
-		{
-			ENGINE_ERROR("Failed to create the physics world!");
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld))
-		{
-			ENGINE_ERROR("Failed to add the physics world to the registry context!");
-			return false;
-		}
-
-		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
-
-		// Physics System
-		auto physicsSystem = std::make_shared<ENGINE_CORE::Systems::PhysicsSystem>(*m_pRegistry);
-		if (!physicsSystem)
-		{
-			ENGINE_ERROR("Failed to create the physics system!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::PhysicsSystem>>(physicsSystem))
-		{
-			ENGINE_ERROR("Failed to add the physics system to the registry context!");
-			return false;
-		}
-
-		// Contact Listener
-		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
-		if (!contactListener)
-		{
-			ENGINE_ERROR("Failed to create the contact listener!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener))
-		{
-			ENGINE_ERROR("Failed to add the contact listener to the registry context!");
-			return false;
-		}
-		physicsWorld->setEventListener(contactListener.get());
-
-		// Camera
-		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera))
-		{
-			ENGINE_ERROR("Failed to add the camera to the registry context!");
-			return false;
-		}
-
-		// TODO: Add shader to lua, like texture
-		// shaders
+		// shaders TODO: Add shader to lua, like texture
 		if (!LoadShaders())
 		{
 			ENGINE_ERROR("Failed to load the shaders!");
 			return false;
 		}
 
-		// Lua script
-		auto lua = std::make_shared<sol::state>();
-		if (!lua)
-		{
-			ENGINE_ERROR("Failed to create the lua state!");
-			return false;
-		}
-		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
-		if (!m_pRegistry->AddToContext<std::shared_ptr<sol::state>>(lua))
-		{
-			ENGINE_ERROR("Failed to add the sol::state to the registry context!");
-			return false;
-		}
-
-		// Script System
-		auto scriptSystem = std::make_shared<ENGINE_CORE::Systems::ScriptingSystem>(*m_pRegistry);
-		if (!scriptSystem)
-		{
-			ENGINE_ERROR("Failed to create the script system!");
-			return false;
-		}
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
-		if (!scriptSystem->LoadMainScript(*lua))
-		{
-			ENGINE_ERROR("Failed to load the main lua script!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::ScriptingSystem>>(scriptSystem))
-		{
-			ENGINE_ERROR("Failed to add the script system to the registry context!");
-			return false;
-		}
-
-		// Render System
-		auto renderSystem = std::make_shared<ENGINE_CORE::Systems::RenderSystem>(*m_pRegistry);
-		if (!renderSystem)
-		{
-			ENGINE_ERROR("Failed to create the render system!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::RenderSystem>>(renderSystem))
-		{
-			ENGINE_ERROR("Failed to add the render system to the registry context!");
-			return false;
-		}
-
-		// test framebuffer
-		auto framebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
-		if (!framebuffer)
-		{
-			ENGINE_ERROR("Failed to create the framebuffer");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>(framebuffer))
-		{
-			ENGINE_ERROR("Failed to add the framebuffer to the registry context!");
-			return false;
-		}
-		
 		CreateDisplays();
 
 		return true;
@@ -308,7 +143,6 @@ namespace ENGINE_EDITOR {
 
 	bool Application::LoadShaders()
 	{
-		//auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// color shader
@@ -344,13 +178,14 @@ namespace ENGINE_EDITOR {
 
 	void Application::ProcessEvents()
 	{
-		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& camera = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
 
 		auto& engine = ENGINE_CORE::CoreEngineData::GetInstance();
-		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& physicsWorld = mainRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 
 		//process Events
 		while (SDL_PollEvent(&m_Event))
@@ -371,7 +206,7 @@ namespace ENGINE_EDITOR {
 				{
 					engine.ToggleRenderCollisions();
 					physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
-					auto view = m_pRegistry->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
+					auto view = mainRegistry.GetRegistry()->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
 					for (auto [entity, physics] : view.each())
 					{
 						physics.SetDebug(engine.RenderCollidersEnabled());
@@ -429,6 +264,7 @@ namespace ENGINE_EDITOR {
 
 	void Application::Update()
 	{
+		auto& mainRegistry = MAIN_REGISTRY();
 		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
 		double deltaTime = ENGINE_CORE::CoreEngineData::GetInstance().GetDeltaTime();
 		// maybe should move deltatime into lua instead, by the way, the physics velocity need delta too
@@ -442,7 +278,7 @@ namespace ENGINE_EDITOR {
 		accumulator += deltaTime;
 
 		// TODO: move the camera update here
-		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+		auto& scriptSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Update();
 
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
@@ -451,20 +287,21 @@ namespace ENGINE_EDITOR {
 		keyboard.Update();
 		mouse.Update();
 
-		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
+		auto& physicsWorld = mainRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& physicsSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
 		while (accumulator >= timeStep) {
 			physicsWorld->update(timeStep);
 			accumulator -= timeStep;
 		}
 		decimal factor = accumulator / timeStep;
-		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
+		physicsSystem->Update(mainRegistry.GetRegistry()->GetRegistry(), factor);
 	}
 
 	void Application::Render()
 	{
+		auto& mainRegistry = MAIN_REGISTRY();
 		//TODO: add w&h param for camera, and set them here, then pass the camera into render func
-		auto& framebuffer = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
+		auto& framebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
 		framebuffer->Bind();
 
 		glViewport(0, 0, framebuffer->Width(), framebuffer->Height());
@@ -472,20 +309,20 @@ namespace ENGINE_EDITOR {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// camera
-		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		auto& camera = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		camera->SetWidth(framebuffer->Width());
 		camera->SetHeight(framebuffer->Height());
 
-		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+		auto& scriptSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		scriptSystem->Render();
-		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
+		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
 		renderSystem->Render(camera);
 
 		framebuffer->Unbind();
 
-		Begin();
-		RenderImGui();
-		End();
+		ImGui_Begin();
+		ImGui_Render();
+		ImGui_End();
 
 		framebuffer->CheckResize();
 
@@ -499,20 +336,21 @@ namespace ENGINE_EDITOR {
 
 	bool Application::CreateDisplays()
 	{
+		auto& mainRegistry = MAIN_REGISTRY();
 		auto pDisplayHolder = std::make_shared<ENGINE_EDIOTR::DisplayHolder>();
 		if (!pDisplayHolder)
 		{
 			ENGINE_ERROR("Failed to create the DisplayHolder");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>(pDisplayHolder))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>(pDisplayHolder))
 		{
 			ENGINE_ERROR("Failed to add the DisplayHolder to the registry context!");
 			return false;
 		}
 	
 		// scene display
-		auto pSceneDisplay = std::make_unique<ENGINE_EDIOTR::SceneDisplay>(*m_pRegistry);
+		auto pSceneDisplay = std::make_unique<ENGINE_EDIOTR::SceneDisplay>(*mainRegistry.GetRegistry());
 		if (!pSceneDisplay)
 		{
 			ENGINE_ERROR("Failed to create the SceneDisplay");
@@ -533,7 +371,7 @@ namespace ENGINE_EDITOR {
 		return true;
 	}
 
-	bool Application::InitImGui()
+	bool Application::ImGui_Init()
 	{
 		const char* glslVersion = "#version 450";
 		IMGUI_CHECKVERSION();
@@ -563,7 +401,7 @@ namespace ENGINE_EDITOR {
 		return true;
 	}
 
-	void Application::Begin()
+	void Application::ImGui_Begin()
 	{
 		// start a new frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -571,7 +409,7 @@ namespace ENGINE_EDITOR {
 		ImGui::NewFrame();
 	}
 
-	void Application::End()
+	void Application::ImGui_End()
 	{
 		ImGui::Render(); // generate data for imgui to render
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -586,14 +424,9 @@ namespace ENGINE_EDITOR {
 		}
 	}
 
-	void Application::RenderImGui()
+	void Application::ImGui_Render()
 	{
-		//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
-		//auto& sceneDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>();
-		//sceneDisplay->Draw();
-		//auto& logDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::LogDisplay>>();
-		//logDisplay->Draw();
-		//ImGui::ShowDemoWindow();
+		auto& mainRegistry = MAIN_REGISTRY();
 
 		const auto dockSpaceId = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
 		if (static auto firstTime = true; firstTime) [[unlikely]]
@@ -609,7 +442,7 @@ namespace ENGINE_EDITOR {
 			ImGui::DockBuilderDockWindow("Logs", logNodeId);
 			ImGui::DockBuilderFinish(dockSpaceId);
 		}
-		auto& pDisplayHolder = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
+		auto& pDisplayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
 		for (const auto& pDisplay : pDisplayHolder->displays)
 		{
 			pDisplay->Draw();
