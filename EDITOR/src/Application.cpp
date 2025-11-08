@@ -27,10 +27,13 @@
 #include<Physics/ContactListener.h>
 #include<Physics/ContactListener.h>
 #include<imgui.h>
+#include <imgui_internal.h>
 #include<backends/imgui_impl_sdl2.h>
 #include<backends/imgui_impl_opengl3.h>
 #include<SDL_opengl.h>
+#include"editor/displays/IDisplay.h"
 #include"editor/displays/SceneDisplay.h"
+#include"editor/displays/LogDisplay.h"
 
 double accumulator = 0; //TODO:where should it be???
 
@@ -289,20 +292,10 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the framebuffer to the registry context!");
 			return false;
 		}
-	
-		// scene display
-		auto sceneDisplay = std::make_shared<ENGINE_EDIOTR::SceneDisplay>(*m_pRegistry);
-		if (!sceneDisplay)
-		{
-			ENGINE_ERROR("Failed to create the SceneDisplay");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>(sceneDisplay))
-		{
-			ENGINE_ERROR("Failed to add the SceneDisplay to the registry context!");
-			return false;
-		}
-	
+		
+		CreateDisplays();
+
+		return true;
 	}
 
 	bool Application::LoadShaders()
@@ -495,6 +488,42 @@ namespace ENGINE_EDITOR {
 		SDL_Quit();
 	}
 
+	bool Application::CreateDisplays()
+	{
+		auto pDisplayHolder = std::make_shared<ENGINE_EDIOTR::DisplayHolder>();
+		if (!pDisplayHolder)
+		{
+			ENGINE_ERROR("Failed to create the DisplayHolder");
+			return false;
+		}
+		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>(pDisplayHolder))
+		{
+			ENGINE_ERROR("Failed to add the DisplayHolder to the registry context!");
+			return false;
+		}
+	
+		// scene display
+		auto pSceneDisplay = std::make_unique<ENGINE_EDIOTR::SceneDisplay>(*m_pRegistry);
+		if (!pSceneDisplay)
+		{
+			ENGINE_ERROR("Failed to create the SceneDisplay");
+			return false;
+		}
+
+		// log display
+		auto pLogDisplay = std::make_unique<ENGINE_EDIOTR::LogDisplay>();
+		if (!pLogDisplay)
+		{
+			ENGINE_ERROR("Failed to create the LogDisplay");
+			return false;
+		}
+		
+		pDisplayHolder->displays.push_back(std::move(pSceneDisplay));
+		pDisplayHolder->displays.push_back(std::move(pLogDisplay));
+
+		return true;
+	}
+
 	bool Application::InitImGui()
 	{
 		const char* glslVersion = "#version 450";
@@ -550,9 +579,32 @@ namespace ENGINE_EDITOR {
 
 	void Application::RenderImGui()
 	{
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
-		auto& sceneDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>();
-		sceneDisplay->Draw();
+		//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
+		//auto& sceneDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>();
+		//sceneDisplay->Draw();
+		//auto& logDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::LogDisplay>>();
+		//logDisplay->Draw();
+		//ImGui::ShowDemoWindow();
+
+		const auto dockSpaceId = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
+		if (static auto firstTime = true; firstTime) [[unlikely]]
+		{
+			firstTime = false;
+			ImGui::DockBuilderRemoveNode(dockSpaceId);
+			ImGui::DockBuilderAddNode(dockSpaceId);
+			auto centerNodeId = dockSpaceId;
+			const auto leftNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Left, 0.2f, nullptr, &centerNodeId);
+			const auto logNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Down, 0.2f, nullptr, &centerNodeId);
+			ImGui::DockBuilderDockWindow("Dear ImGui Demo", leftNodeId);
+			ImGui::DockBuilderDockWindow("Scene", centerNodeId);
+			ImGui::DockBuilderDockWindow("Logs", logNodeId);
+			ImGui::DockBuilderFinish(dockSpaceId);
+		}
+		auto& pDisplayHolder = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
+		for (const auto& pDisplay : pDisplayHolder->displays)
+		{
+			pDisplay->Draw();
+		}
 		ImGui::ShowDemoWindow();
 	}
 

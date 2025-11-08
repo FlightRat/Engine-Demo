@@ -137,6 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\editor\displays\LogDisplay.cpp" />
     <ClCompile Include="src\editor\displays\SceneDisplay.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
@@ -206,6 +207,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\editor\displays\IDisplay.h" />
+    <ClInclude Include="src\editor\displays\LogDisplay.h" />
     <ClInclude Include="src\editor\displays\SceneDisplay.h" />
   </ItemGroup>
   <ItemGroup>

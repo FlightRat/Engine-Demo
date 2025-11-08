@@ -35,7 +35,10 @@ namespace ENGINE_LOGGER {
 		}
 
 		if (m_bRetainLogs)
+		{
 			m_LogEntries.emplace_back(LogEntry::LogType::INFO, ss.str());
+			m_bLogAdded = true;
+		}
 	}
 
 	template <typename... Args>
@@ -61,7 +64,10 @@ namespace ENGINE_LOGGER {
 		}
 
 		if (m_bRetainLogs)
+		{
 			m_LogEntries.emplace_back(LogEntry::LogType::WARN, ss.str());
+			m_bLogAdded = true;
+		}
 	}
 
 	template <typename... Args>
@@ -92,6 +98,9 @@ namespace ENGINE_LOGGER {
 		}
 
 		if (m_bRetainLogs)
+		{
 			m_LogEntries.emplace_back(LogEntry::LogType::ERR, ss.str());
+			m_bLogAdded = true;
+		}
 	}
 }

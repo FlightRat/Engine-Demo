@@ -22,6 +22,7 @@ namespace ENGINE_EDITOR{
 		void CleanUp();
 		
 		// ImgGui test
+		bool CreateDisplays();
 		bool InitImGui();
 		void Begin();
 		void End();

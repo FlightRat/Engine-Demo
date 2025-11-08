@@ -1,8 +1,10 @@
 #pragma once
 #include<Core/ECS/Registry.h>
+#include"IDisplay.h"
 
-namespace ENGINE_EDIOTR {
-	class SceneDisplay
+namespace ENGINE_EDIOTR 
+{
+	class SceneDisplay:public IDisplay
 	{
 	private:
 		ENGINE_CORE::ECS::Registry& m_Registry;
@@ -10,6 +12,6 @@ namespace ENGINE_EDIOTR {
 		SceneDisplay(ENGINE_CORE::ECS::Registry& registry);
 		~SceneDisplay() = default;
 
-		void Draw();
+		virtual void Draw() override;
 	};
 }

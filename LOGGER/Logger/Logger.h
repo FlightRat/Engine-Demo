@@ -10,7 +10,11 @@
 #define ENGINE_LOG(x, ...) ENGINE_LOGGER::Logger::GetInstance().Log(x, __VA_ARGS__);
 #define ENGINE_WARN(x, ...) ENGINE_LOGGER::Logger::GetInstance().Warn(x, __VA_ARGS__);
 #define ENGINE_ERROR(x, ...) ENGINE_LOGGER::Logger::GetInstance().Error(std::source_location::current(), x, __VA_ARGS__)
-#define ENGINE_INIT_LOGS(console, retain) ENGINE_LOGGER::Logger::GetInstance().Init(console, retain);
+#define ENGINE_INIT_LOGS(console, retain) ENGINE_LOGGER::Logger::GetInstance().Init(console, retain)
+#define ENGINE_GET_LOGS() ENGINE_LOGGER::Logger::GetInstance().GetLogs()
+#define ENGINE_CLEAR_LOGS() ENGINE_LOGGER::Logger::GetInstance().ClearLogs()
+#define ENGINE_LOG_ADDED() ENGINE_LOGGER::Logger::GetInstance().LogAdded()
+#define ENGINE_RESET_ADDED() ENGINE_LOGGER::Logger::GetInstance().ResetLogAdded()
 
 namespace ENGINE_LOGGER {
 	struct LogEntry
@@ -55,6 +59,11 @@ namespace ENGINE_LOGGER {
 		void LuaLog(const std::string_view message);
 		void LuaWarn(const std::string_view message);
 		void LuaError(const std::string_view message);
+
+		inline const std::vector<LogEntry>& GetLogs() { return m_LogEntries; }
+		inline void ClearLogs() { m_LogEntries.clear(); }
+		inline const bool LogAdded() { return m_bLogAdded; }
+		inline void ResetLogAdded() { m_bLogAdded = false; }
 	};
 }
 
