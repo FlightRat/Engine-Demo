@@ -6,6 +6,7 @@
 #include<Rendering/Essentials/Shader.h>
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Logger/Logger.h>
+#include<../CORE/Core/ECS/MainRegistry.h>
 #include "../ECS/Entity.h"
 #include "../Resources/AssetManager.h"
 #include "../ECS/Components/TransformComponent.h"
@@ -27,30 +28,32 @@ namespace ENGINE_CORE::Systems {
 
 	void RenderSystem::Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
 	{
-		auto& assetManager = m_Registry.GetContext<std::shared_ptr<AssetManager>>();
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		//auto& assetManager = m_Registry.GetContext<std::shared_ptr<AssetManager>>();
 		auto& physicsWorld = m_Registry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 		// shader
-		auto colorShader = assetManager->GetShader("colorShader");
+		auto colorShader = assetManager.GetShader("colorShader");
 		if (colorShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto texShader = assetManager->GetShader("texShader");
+		auto texShader = assetManager.GetShader("texShader");
 		if (texShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto hudShader = assetManager->GetShader("hudShader");
+		auto hudShader = assetManager.GetShader("hudShader");
 		if (hudShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto debugShader = assetManager->GetShader("debugShader");
+		auto debugShader = assetManager.GetShader("debugShader");
 		if (debugShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
@@ -58,15 +61,15 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// wood
-		const auto& wood = assetManager->GetTexture("wood");
+		const auto& wood = assetManager.GetTexture("wood");
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, wood->GetID());
 		// container
-		const auto& container = assetManager->GetTexture("container");
+		const auto& container = assetManager.GetTexture("container");
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, container->GetID());
 		// rust
-		const auto& rust = assetManager->GetTexture("rust");
+		const auto& rust = assetManager.GetTexture("rust");
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, rust->GetID());
 

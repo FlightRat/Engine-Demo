@@ -1,4 +1,5 @@
 #include "AssetManager.h"
+#include<../CORE/Core/ECS/MainRegistry.h>
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
@@ -168,25 +169,22 @@ namespace ENGINE_RESOURCES {
     // lua register
     void AssetManager::CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
     {
-        auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
-        if (!assetManager)
-        {
-            ENGINE_ERROR("Failed to bind the asset manager to lua - Does not exist in the registry!");
-            return;
-        }
+        //auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
+        auto& mainRegistry = MAIN_REGISTRY();
+        auto& assetManager = mainRegistry.GetAssetManager();
 
         //TODO: add_shader
         lua.new_usertype<AssetManager>(
             "AssetManager",
             sol::no_constructor,
             "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){
-                return assetManager->AddTexture(texName, texPath, pixelArt);
+                return assetManager.AddTexture(texName, texPath, pixelArt);
             },
             "add_music", [&](const std::string& musicName, const std::string& musicPath) {
-                return assetManager->AddMusic(musicName, musicPath);
+                return assetManager.AddMusic(musicName, musicPath);
             },
             "add_soundFx", [&](const std::string& soundFxName, const std::string& soundFxPath) {
-                return assetManager->AddSoundFx(soundFxName, soundFxPath);
+                return assetManager.AddSoundFx(soundFxName, soundFxPath);
             }
         );
     }

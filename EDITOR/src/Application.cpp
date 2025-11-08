@@ -1,10 +1,11 @@
 #include "Application.h"
 #include<SDL.h>
+#include<SDL_opengl.h>
 #include<glad/glad.h>
 #include<iostream>
 #include<SOIL/SOIL.h>
 #include<glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/matrix_transform.hpp>
 #include<Logger/Logger.h>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Rendering/Essentials/TextureLoader.h>
@@ -12,6 +13,7 @@
 #include<Rendering/Buffers/Framebuffer.h>
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
+#include<Core/ECS/MainRegistry.h>
 #include<Core/ECS/Components/TransformComponent.h>
 #include<Core/ECS/Components/PhysicsComponent.h>
 #include<Core/ECS/Components/Identification.h>
@@ -20,17 +22,16 @@
 #include<Core/Systems/RenderSystem.h>
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Scripting/InputManager.h>
+#include<Core/CoreUtilities/CoreEngineData.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
-#include<Core/CoreUtilities/CoreEngineData.h>
 #include<Physics/ContactListener.h>
 #include<Physics/ContactListener.h>
 #include<imgui.h>
-#include <imgui_internal.h>
+#include<imgui_internal.h>
 #include<backends/imgui_impl_sdl2.h>
 #include<backends/imgui_impl_opengl3.h>
-#include<SDL_opengl.h>
 #include"editor/displays/IDisplay.h"
 #include"editor/displays/SceneDisplay.h"
 #include"editor/displays/LogDisplay.h"
@@ -126,41 +127,48 @@ namespace ENGINE_EDITOR {
 		m_pRegistry = std::make_unique<ENGINE_CORE::ECS::Registry>();
 
 		// Asset Manager
-		auto assetManager = std::make_shared<ENGINE_RESOURCES::AssetManager>();
-		if (!assetManager)
-		{
-			ENGINE_ERROR("Failed to create the asset manager!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>(assetManager))
-		{
-			ENGINE_ERROR("Failed to add the asset manager to the registry context!");
-			return false;
-		}
+		//auto assetManager = std::make_shared<ENGINE_RESOURCES::AssetManager>();
+		//if (!assetManager)
+		//{
+		//	ENGINE_ERROR("Failed to create the asset manager!");
+		//	return false;
+		//}
+		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>(assetManager))
+		//{
+		//	ENGINE_ERROR("Failed to add the asset manager to the registry context!");
+		//	return false;
+		//}
 
 		// Music Player
-		auto musicPlayer = std::make_shared<ENGINE_SOUNDS::MusicPlayer>();
-		if (!musicPlayer)
-		{
-			ENGINE_ERROR("Failed to create the music player!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::MusicPlayer>>(musicPlayer))
-		{
-			ENGINE_ERROR("Failed to add the music player to the registry context!");
-			return false;
-		}
+		//auto musicPlayer = std::make_shared<ENGINE_SOUNDS::MusicPlayer>();
+		//if (!musicPlayer)
+		//{
+		//	ENGINE_ERROR("Failed to create the music player!");
+		//	return false;
+		//}
+		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::MusicPlayer>>(musicPlayer))
+		//{
+		//	ENGINE_ERROR("Failed to add the music player to the registry context!");
+		//	return false;
+		//}
 
 		// SoundFx Player
-		auto soundFxPlayer = std::make_shared<ENGINE_SOUNDS::SoundFxPlayer>();
-		if (!soundFxPlayer)
+		//auto soundFxPlayer = std::make_shared<ENGINE_SOUNDS::SoundFxPlayer>();
+		//if (!soundFxPlayer)
+		//{
+		//	ENGINE_ERROR("Failed to create the soundFx player!");
+		//	return false;
+		//}
+		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::SoundFxPlayer>>(soundFxPlayer))
+		//{
+		//	ENGINE_ERROR("Failed to add the soundFx player to the registry context!");
+		//	return false;
+		//}
+
+		auto& mainRegistry = MAIN_REGISTRY();
+		if (!mainRegistry.Initialize())
 		{
-			ENGINE_ERROR("Failed to create the soundFx player!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::SoundFxPlayer>>(soundFxPlayer))
-		{
-			ENGINE_ERROR("Failed to add the soundFx player to the registry context!");
+			ENGINE_ERROR("Failed to initialize the Main Registry!");
 			return false;
 		}
 
@@ -300,31 +308,32 @@ namespace ENGINE_EDITOR {
 
 	bool Application::LoadShaders()
 	{
-		auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
-
+		//auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
 		// color shader
-		if (!assetManager->AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
+		if (!assetManager.AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// tex shader
-		if (!assetManager->AddShader("texShader", "assets/shaders/texShader.vert", "assets/shaders/texShader.frag"))
+		if (!assetManager.AddShader("texShader", "assets/shaders/texShader.vert", "assets/shaders/texShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// hud shader
-		if (!assetManager->AddShader("hudShader", "assets/shaders/hudShader.vert", "assets/shaders/hudShader.frag"))
+		if (!assetManager.AddShader("hudShader", "assets/shaders/hudShader.vert", "assets/shaders/hudShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// physicsDebugShader
-		if (!assetManager->AddShader("debugShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
+		if (!assetManager.AddShader("debugShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
