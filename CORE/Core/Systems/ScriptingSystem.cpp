@@ -99,6 +99,12 @@ namespace ENGINE_CORE::Systems {
 				ENGINE_ERROR("Error running the Update script£º {0}", err.what());
 			}
 		}
+
+		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
+		if (lua)
+		{
+			lua->collect_garbage();
+		}
 	}
 
 	void ScriptingSystem::Render()
@@ -123,6 +129,12 @@ namespace ENGINE_CORE::Systems {
 				sol::error err = error;
 				ENGINE_ERROR("Error running the Render script£º {0}", err.what());
 			}
+		}
+
+		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
+		if (lua)
+		{
+			lua->collect_garbage();
 		}
 	}
 
