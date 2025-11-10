@@ -77,6 +77,34 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
+	bool TextureLoader::LoadTextureFromMemory(const unsigned char* imageData, size_t length, GLuint& id, int& width, int& height, bool blended)
+	{
+		id = SOIL_load_OGL_texture_from_memory(imageData, length, SOIL_LOAD_RGBA, SOIL_CREATE_NEW_ID, NULL);
+		if (id == 0)
+		{
+			ENGINE_ERROR("Failed to load texture from memory!");
+			return false;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, id);
+		glad_glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_HEIGHT, &height);
+		glad_glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_WIDTH, &width);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (!blended)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		}
+		else
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		}
+		return true;
+	}
+
     std::shared_ptr<Texture> TextureLoader::Create(Texture::TextureType type, const std::string& texturePath)
     {
 		GLuint id;
@@ -115,6 +143,16 @@ namespace ENGINE_RENDERING{
 		LoadFBTexture(id, width, height);
 
 		return std::make_shared<Texture>(id, width, height, type);
+	}
+	
+	std::shared_ptr<Texture> TextureLoader::CreateFromMemory(const unsigned char* imageData, size_t length, bool blended, bool bTileset)
+	{
+		GLuint id;
+		int width, height;
+		if (LoadTextureFromMemory(imageData, length, id, width, height, blended))
+		{
+			return std::make_shared<Texture>(id, width, height, blended ? Texture::TextureType::BLENDED : Texture::TextureType::PIXEL, "");
+		}
 	}
 }
 

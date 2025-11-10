@@ -5,6 +5,49 @@
 #include<Logger/Logger.h>
 
 namespace ENGINE_RESOURCES {
+
+    Mix_MusicType AssetManager::DetectAudioFormat(const unsigned char* audioData, size_t dataSize)
+    {
+        if (!audioData || dataSize < 12)
+        {
+            ENGINE_ERROR("Failed to detect the audio format. Data or size is invalid.");
+            return MUS_NONE;
+        }
+
+        // WAV Format
+        if (std::memcmp(audioData, "RIFF", 4) == 0 && std::memcmp(audioData + 8, "WAVE", 4) == 0)
+        {
+            return MUS_WAV;
+        }
+
+        // MP3 Format
+        if (std::memcmp(audioData, "ID3", 3) == 0 || audioData[0] == 0xFF && (audioData[1] & 0xE0) == 0xE0)
+        {
+            return MUS_MP3;
+        }
+
+        // OGG Format
+        if (std::memcmp(audioData, "OggS", 4) == 0)
+        {
+            return MUS_OGG;
+        }
+
+        // Flac Format
+        if (std::memcmp(audioData, "fLaC", 4) == 0)
+        {
+            return MUS_FLAC;
+        }
+
+        if (dataSize >= 36 && std::memcmp(audioData + 28, "OpusHead", 8) == 0)
+        {
+            return MUS_OPUS;
+        }
+
+        ENGINE_ERROR("Failed to detect audio type - Unknown or unsupported format.");
+
+        return MUS_NONE;
+    }
+
     // texture
     bool AssetManager::AddTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt)
     {
@@ -27,6 +70,24 @@ namespace ENGINE_RESOURCES {
 
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
+    }
+    bool AssetManager::AddTextureFromMemory(const std::string& texName, const unsigned char* imageData, size_t length, bool pixelArt)
+    {
+        if (m_mapTexture.contains(texName))
+        {
+            ENGINE_ERROR("AssetManager: Texture [{}] -- Already exists!", texName);
+            return false;
+        }
+
+        auto pTexture = ENGINE_RENDERING::TextureLoader::CreateFromMemory(imageData, length, !pixelArt);
+        if (!pTexture)
+        {
+            ENGINE_ERROR("Failed to load texture [{}] from memory!", texName);
+            return false;
+        }
+
+        auto [itr, bSuccess] = m_mapTexture.emplace(texName, std::move(pTexture));
+        return bSuccess;
     }
     std::shared_ptr<ENGINE_RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
@@ -56,6 +117,19 @@ namespace ENGINE_RESOURCES {
         }
         m_mapShader.emplace(shaderName, std::move(shader));
         return true;
+    }
+    bool AssetManager::AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader)
+    {
+        if (m_mapShader.contains(shaderName))
+        {
+            ENGINE_ERROR("Failed to add shader - [{0}] -- Already exists!", shaderName);
+            return false;
+        }
+
+        auto pShader = ENGINE_RENDERING::ShaderLoader::CreateFromMemory(vertexShader, fragmentShader);
+        auto [itr, bSuccess] = m_mapShader.insert(std::make_pair(shaderName, std::move(pShader)));
+
+        return bSuccess;
     }
     std::shared_ptr<ENGINE_RENDERING::Shader> AssetManager::GetShader(const std::string& shaderName)
     {
@@ -106,6 +180,46 @@ namespace ENGINE_RESOURCES {
         
         return true;
     }
+    bool AssetManager::AddMusicFromMemory(const std::string& musicName, const unsigned char* musicData, size_t dataSize)
+    {
+        if (m_mapMusic.contains(musicName))
+        {
+            ENGINE_ERROR("Failed to add music [{}] -- Already exists!", musicName);
+            return false;
+        }
+
+        SDL_RWops* rw = SDL_RWFromMem((void*)musicData, static_cast<int>(dataSize));
+        Mix_MusicType type = DetectAudioFormat(musicData, dataSize);
+        
+        if (type == MUS_NONE)
+        {
+            ENGINE_ERROR("Failed to add music [{}] from memory. Unable to determine music type.", musicName);
+            return false;
+        }
+
+        auto pMusic = Mix_LoadMUSType_RW(rw, type, 1);
+        if (!pMusic)
+        {
+            ENGINE_ERROR("Failed to add music [{}] from memory.", musicName);
+            return false;
+        }
+
+        // Create the sound parameters
+        ENGINE_SOUNDS::SoundParams params{
+            .name = musicName, .filename = "From Data", .duration = Mix_MusicDuration(pMusic) };
+
+        // Create the music Pointer
+        auto pMusicPtr = std::make_shared<ENGINE_SOUNDS::Music>(params, MusicPtr{ pMusic });
+        if (!pMusicPtr)
+        {
+            ENGINE_ERROR("Failed to create the music ptr for [{}]", musicName);
+            return false;
+        }
+
+        auto [itr, bSuccess] = m_mapMusic.emplace(musicName, std::move(pMusicPtr));
+
+        return bSuccess;
+    }
     std::shared_ptr<ENGINE_SOUNDS::Music> AssetManager::GetMusic(const std::string& musicName)
     {
         auto musicItr = m_mapMusic.find(musicName);
@@ -154,6 +268,29 @@ namespace ENGINE_RESOURCES {
         m_mapSoundFx.emplace(soundFxName, std::move(chunkPtr));
 
         return true;
+    }
+    bool AssetManager::AddSoundFxFromMemory(const std::string& soundFxName, const unsigned char* soundFxData, size_t dataSize)
+    {
+        if (m_mapSoundFx.contains(soundFxName))
+        {
+            ENGINE_ERROR("Failed to add soundfx [{}] -- Already exists!", soundFxName);
+            return false;
+        }
+
+        SDL_RWops* rw = SDL_RWFromMem((void*)soundFxData, static_cast<int>(dataSize));
+        auto pChunk = Mix_LoadWAV_RW(rw, 1);
+        if (!pChunk)
+        {
+            ENGINE_ERROR("Failed to add soundfx [{}] from memory.", soundFxName);
+            return false;
+        }
+
+        ENGINE_SOUNDS::SoundParams params{ .name = soundFxName, .filename = "From Data", .duration = pChunk->alen / 179.4 };
+
+        auto pSoundFx = std::make_shared<ENGINE_SOUNDS::SoundFx>(params, SoundFxPtr{ pChunk });
+        auto [itr, bSuccess] = m_mapSoundFx.emplace(soundFxName, std::move(pSoundFx));
+
+        return bSuccess;
     }
     std::shared_ptr<ENGINE_SOUNDS::SoundFx> AssetManager::GetSoundFx(const std::string& soundFxName)
     {

@@ -1,6 +1,7 @@
 #include "ShaderLoader.h"
 #include<iostream>
 #include<fstream>
+#include<Logger/Logger.h>
 
 namespace ENGINE_RENDERING {
     GLuint ShaderLoader::CreateProgram(const std::string& vertexShader, const std::string& fragmentShader)
@@ -13,7 +14,7 @@ namespace ENGINE_RENDERING {
             return 0;
         if (!LinkShader(program, vertex, fragment))
         {
-            std::cout << "Failed to link Shaders" << std::endl;
+            ENGINE_ERROR("Failed to link Shaders!");
             return 0;
         }
         return program;
@@ -25,7 +26,7 @@ namespace ENGINE_RENDERING {
         std::ifstream ifs(filepath);
         if(ifs.fail())
         {
-            std::cout << "Shader Failed to open[" << filepath << "]" << std::endl;
+            ENGINE_ERROR("Shader Failed to open [{}]!", filepath);
             return 0;
         }
         std::string contents{ "" };
@@ -42,10 +43,38 @@ namespace ENGINE_RENDERING {
         glCompileShader(shaderID);
         if (!CompileSuccess(shaderID))
         {
-            std::cout << "Failed to compile shader[" << filepath << "]" << std::endl;
+            ENGINE_ERROR("Failed to compile shader [{}]!", filepath);
             return 0;
         }
         return shaderID;
+    }
+
+    GLuint ShaderLoader::CreateProgram(const char* vertexShader, const char* fragmentShader)
+    {
+        const GLuint program = glCreateProgram();
+        const GLuint vertex = CompileShader(GL_VERTEX_SHADER, vertexShader);
+        const GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
+        if (vertex == 0 || fragment == 0)
+            return 0;
+        if (!LinkShader(program, vertex, fragment))
+        {
+            ENGINE_ERROR("Failed to link Shaders!");
+            return 0;
+        }
+        return program;
+    }
+
+    GLuint ShaderLoader::CompileShader(GLuint type, const char* shader)
+    {
+        const GLuint id = glCreateShader(type);
+        glShaderSource(id, 1, &shader, nullptr);
+        glCompileShader(id);
+        if (!CompileSuccess(id))
+        {
+            ENGINE_ERROR("Failed to compile shader from memory!");
+            return 0;
+        }
+        return id;
     }
 
     bool ShaderLoader::CompileSuccess(GLuint shader)
@@ -109,6 +138,23 @@ namespace ENGINE_RENDERING {
         if (program)
             return std::make_shared<Shader>(program, vertexShaderPath, fragmentShaderPath);
         return nullptr;
+    }
+
+    std::shared_ptr<Shader> ShaderLoader::CreateFromMemory(const char* vertexShader, const char* fragmentShader)
+    {
+        GLuint program = CreateProgram(vertexShader, fragmentShader);
+        if (program)
+            return std::make_shared<Shader>(program, vertexShader, fragmentShader);
+        return nullptr;
+    }
+
+    bool ShaderLoader::Destroy(Shader* pShader)
+    {
+        if (pShader->ShaderProgramID() <= 0)
+            return false;
+
+        glDeleteShader(pShader->ShaderProgramID());
+        return true;
     }
 
 }
