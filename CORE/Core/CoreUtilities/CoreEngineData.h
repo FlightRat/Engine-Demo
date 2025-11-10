@@ -12,6 +12,7 @@ namespace ENGINE_CORE {
 		int m_WindowHeight;
 
 		double m_DeltaTime;
+		double m_Accumulator = { 0 };
 		std::chrono::steady_clock::time_point m_LastUpdate;
 
 		float m_Gravity;
@@ -33,6 +34,7 @@ namespace ENGINE_CORE {
 		
 		void UpdateDeltaTime();
 		inline double GetDeltaTime() const { return m_DeltaTime; }
+		inline double& GetAccumulator() { return m_Accumulator; }
 
 		void SetWindowWidth(int windowWidth);
 		void SetWindowHeight(int windowHeight);

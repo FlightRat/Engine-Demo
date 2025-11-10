@@ -8,10 +8,15 @@ namespace ENGINE_EDIOTR
 	{
 	private:
 		ENGINE_CORE::ECS::Registry& m_Registry;
+		bool m_bPlayScene, m_bSceneLoaded;
+	private:
+		void LoadScene();
+		void UnloadScene();
 	public:
 		SceneDisplay(ENGINE_CORE::ECS::Registry& registry);
 		~SceneDisplay() = default;
 
 		virtual void Draw() override;
+		virtual void Update() override;
 	};
 }
