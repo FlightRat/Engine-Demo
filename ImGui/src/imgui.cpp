@@ -8701,6 +8701,12 @@ void ImGui::PopItemFlag()
     g.CurrentItemFlags = g.ItemFlagsStack.back();
 }
 
+IMGUI_API const int ImGui::GetColorStackSize()
+{
+    ImGuiContext& g = *GImGui;
+    return g.ColorStack.Size;
+}
+
 // BeginDisabled()/EndDisabled()
 // - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
 // - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
