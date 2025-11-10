@@ -31,6 +31,13 @@ namespace ENGINE_CORE::ECS {
 	ENGINE_RESOURCES::AssetManager& MainRegistry::GetAssetManager()
 	{
 		assert(m_bInitialized && "Main Registry must be initialized before use.");
+
+		// type watch
+		// return std::shared_ptr<ENGINE_RESOURCES::AssetManager>&
+		//auto x = m_pMainRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>(); 
+		// return ENGINE_RESOURCES::AssetManager&
+		//return *x;
+
 		return *m_pMainRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
 	}
 

@@ -301,7 +301,11 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 		
-		CreateDisplays();
+		if (!CreateDisplays())
+		{
+			ENGINE_ERROR("Failed to create displays!");
+			return false;
+		}
 
 		return true;
 	}
@@ -499,13 +503,15 @@ namespace ENGINE_EDITOR {
 
 	bool Application::CreateDisplays()
 	{
+		auto& mainRegistry = MAIN_REGISTRY();
+
 		auto pDisplayHolder = std::make_shared<ENGINE_EDIOTR::DisplayHolder>();
 		if (!pDisplayHolder)
 		{
 			ENGINE_ERROR("Failed to create the DisplayHolder");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>(pDisplayHolder))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>(pDisplayHolder))
 		{
 			ENGINE_ERROR("Failed to add the DisplayHolder to the registry context!");
 			return false;
@@ -609,7 +615,9 @@ namespace ENGINE_EDITOR {
 			ImGui::DockBuilderDockWindow("Logs", logNodeId);
 			ImGui::DockBuilderFinish(dockSpaceId);
 		}
-		auto& pDisplayHolder = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
+
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& pDisplayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
 		for (const auto& pDisplay : pDisplayHolder->displays)
 		{
 			pDisplay->Draw();
