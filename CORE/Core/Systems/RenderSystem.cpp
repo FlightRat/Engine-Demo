@@ -60,18 +60,19 @@ namespace ENGINE_CORE::Systems {
 			return;
 		}
 
-		// wood
-		const auto& wood = assetManager.GetTexture("wood");
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, wood->GetID());
-		// container
-		const auto& container = assetManager.GetTexture("container");
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, container->GetID());
-		// rust
-		const auto& rust = assetManager.GetTexture("rust");
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, rust->GetID());
+		// TODO: change the way use and bind texture
+		//// wood
+		//const auto& wood = assetManager.GetTexture("wood");
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, wood->GetID());
+		//// container
+		//const auto& container = assetManager.GetTexture("container");
+		//glActiveTexture(GL_TEXTURE1);
+		//glBindTexture(GL_TEXTURE_2D, container->GetID());
+		//// rust
+		//const auto& rust = assetManager.GetTexture("rust");
+		//glActiveTexture(GL_TEXTURE2);
+		//glBindTexture(GL_TEXTURE_2D, rust->GetID());
 
 		// camera
 		auto viewMatrix = camera->GetViewMatrix();
