@@ -35,8 +35,7 @@
 #include"editor/displays/IDisplay.h"
 #include"editor/displays/SceneDisplay.h"
 #include"editor/displays/LogDisplay.h"
-
-double accumulator = 0; //TODO:where should it be???
+#include"editor/utilities/editor_textures.h"
 
 namespace ENGINE_EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
@@ -126,45 +125,7 @@ namespace ENGINE_EDITOR {
 		// ECS Registry
 		m_pRegistry = std::make_unique<ENGINE_CORE::ECS::Registry>();
 
-		// Asset Manager
-		//auto assetManager = std::make_shared<ENGINE_RESOURCES::AssetManager>();
-		//if (!assetManager)
-		//{
-		//	ENGINE_ERROR("Failed to create the asset manager!");
-		//	return false;
-		//}
-		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>(assetManager))
-		//{
-		//	ENGINE_ERROR("Failed to add the asset manager to the registry context!");
-		//	return false;
-		//}
-
-		// Music Player
-		//auto musicPlayer = std::make_shared<ENGINE_SOUNDS::MusicPlayer>();
-		//if (!musicPlayer)
-		//{
-		//	ENGINE_ERROR("Failed to create the music player!");
-		//	return false;
-		//}
-		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::MusicPlayer>>(musicPlayer))
-		//{
-		//	ENGINE_ERROR("Failed to add the music player to the registry context!");
-		//	return false;
-		//}
-
-		// SoundFx Player
-		//auto soundFxPlayer = std::make_shared<ENGINE_SOUNDS::SoundFxPlayer>();
-		//if (!soundFxPlayer)
-		//{
-		//	ENGINE_ERROR("Failed to create the soundFx player!");
-		//	return false;
-		//}
-		//if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::SoundFxPlayer>>(soundFxPlayer))
-		//{
-		//	ENGINE_ERROR("Failed to add the soundFx player to the registry context!");
-		//	return false;
-		//}
-
+		// main registry
 		auto& mainRegistry = MAIN_REGISTRY();
 		if (!mainRegistry.Initialize())
 		{
@@ -195,7 +156,6 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the physics world to the registry context!");
 			return false;
 		}
-
 		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
 
 		// Physics System
@@ -241,6 +201,12 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		if (!LoadEditorTextures())
+		{
+			ENGINE_ERROR("Failed to load the editor textures!");
+			return false;
+		}
+
 		// Lua script
 		auto lua = std::make_shared<sol::state>();
 		if (!lua)
@@ -248,7 +214,6 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create the lua state!");
 			return false;
 		}
-		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
 		if (!m_pRegistry->AddToContext<std::shared_ptr<sol::state>>(lua))
 		{
 			ENGINE_ERROR("Failed to add the sol::state to the registry context!");
@@ -260,13 +225,6 @@ namespace ENGINE_EDITOR {
 		if (!scriptSystem)
 		{
 			ENGINE_ERROR("Failed to create the script system!");
-			return false;
-		}
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, *m_pRegistry);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
-		if (!scriptSystem->LoadMainScript(*lua))
-		{
-			ENGINE_ERROR("Failed to load the main lua script!");
 			return false;
 		}
 		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::ScriptingSystem>>(scriptSystem))
@@ -343,6 +301,23 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		return true;
+	}
+
+	bool Application::LoadEditorTextures()
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		if (!assetManager.AddTextureFromMemory("play_button", play_button, sizeof(play_button) / sizeof(play_button[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [play_button] from memory!");
+			return false;
+		}
+		if (!assetManager.AddTextureFromMemory("stop_button", stop_button, sizeof(stop_button) / sizeof(stop_button[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [stop_button] from memory!");
+			return false;
+		}
 		return true;
 	}
 
@@ -434,35 +409,17 @@ namespace ENGINE_EDITOR {
 	void Application::Update()
 	{
 		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
-		double deltaTime = ENGINE_CORE::CoreEngineData::GetInstance().GetDeltaTime();
-		// maybe should move deltatime into lua instead, by the way, the physics velocity need delta too
-		const double MAX_DELTA_TIME = 0.25;
-		if (deltaTime > MAX_DELTA_TIME)
-		{
-			deltaTime = MAX_DELTA_TIME;
-		}
-		
-		const decimal timeStep = ENGINE_CORE::CoreEngineData::GetInstance().GetPhysicsTimeStep();
-		accumulator += deltaTime;
 
-		// TODO: move the camera update here
-		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		scriptSystem->Update();
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& displayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
+		for (const auto& pDisplay : displayHolder->displays)
+			pDisplay->Update();
 
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
 		keyboard.Update();
 		mouse.Update();
-
-		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		auto& physicsSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		while (accumulator >= timeStep) {
-			physicsWorld->update(timeStep);
-			accumulator -= timeStep;
-		}
-		decimal factor = accumulator / timeStep;
-		physicsSystem->Update(m_pRegistry->GetRegistry(), factor);
 	}
 
 	void Application::Render()
@@ -480,8 +437,8 @@ namespace ENGINE_EDITOR {
 		camera->SetWidth(framebuffer->Width());
 		camera->SetHeight(framebuffer->Height());
 
-		auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		scriptSystem->Render();
+		//auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+		//scriptSystem->Render();
 		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
 		renderSystem->Render(camera);
 
