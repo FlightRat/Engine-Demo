@@ -25,8 +25,8 @@ PlayerDefs =
 			},
 			MeshRender = {
 				shader = "colorShader",
-				color = {R=0.678, G=0.847, B=1.0, A=1.0},
-				texture = 0
+				texture = "",
+				color = {R=0.678, G=0.847, B=1.0, A=1.0}
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -56,8 +56,8 @@ PlayerDefs =
 			},
 			MeshRender = {
 				shader = "colorShader",
-				color = {R=1.0, G=0.647, B=0.0, A=1.0},
-				texture = 0
+				texture = "",
+				color = {R=1.0, G=0.647, B=0.0, A=1.0}
 			}
 		}
 	}

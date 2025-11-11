@@ -71,13 +71,13 @@ function LoadEntity( def )
 		local meshR = newEntity:add_component(
 			MeshRender(
 				def.components.MeshRender.shader,
+				def.components.MeshRender.texture,
 				vec4(
 					def.components.MeshRender.color.R,
 					def.components.MeshRender.color.G,
 					def.components.MeshRender.color.B,
 					def.components.MeshRender.color.A
-				),
-				def.components.MeshRender.texture or 0
+				)
 			)
 		)
 	end

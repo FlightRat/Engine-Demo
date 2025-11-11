@@ -21,9 +21,9 @@ EnvirDefs =
 				type = "sphere"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				color = {R=0.0, G=1.0, B=0.0, A=1.0},
-				texture = 2
+				shader = "texShader",
+				texture = "rust",
+				color = {R=0.0, G=1.0, B=0.0, A=1.0}
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -47,9 +47,9 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				color = {R=0.0, G=0.0, B=1.0, A=1.0},
-				texture = 1
+				shader = "texShader",
+				texture = "container",
+				color = {R=0.0, G=0.0, B=1.0, A=1.0}
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -78,8 +78,8 @@ EnvirDefs =
 			},
 			MeshRender = {
 				shader = "colorShader",
-				color = {R=0.0, G=1.0, B=0.0, A=1.0},
-				texture = 0
+				texture = "",
+				color = {R=0.0, G=1.0, B=0.0, A=1.0}
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -106,8 +106,8 @@ EnvirDefs =
 			},
 			MeshRender = {
 				shader = "colorShader",
-				color = {R=1.0, G=0.0, B=0.0, A=1.0},
-				texture = 0
+				texture = "",
+				color = {R=1.0, G=0.0, B=0.0, A=1.0}
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -133,8 +133,8 @@ EnvirDefs =
 			},
 			MeshRender = {
 				shader = "colorShader",
-				color = {R=1.0, G=1.0, B=1.0, A=1.0},
-				texture = 1
+				texture = "",
+				color = {R=1.0, G=1.0, B=1.0, A=1.0}
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -169,8 +169,8 @@ HudDefs =
 			},
 			MeshRender = {
 				shader = "hudShader",
-				color = {R=1.0, G=1.0, B=1.0, A=1.0},
-				texture = 0
+				texture = "",
+				color = {R=1.0, G=1.0, B=1.0, A=1.0}
 			},
 		}
 	}

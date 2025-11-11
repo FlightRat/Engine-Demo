@@ -82,7 +82,7 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
-		{
+		{			
 			if (!meshR.shouldRender)
 			{
 				continue;
@@ -99,6 +99,7 @@ namespace ENGINE_CORE::Systems {
 			model = model * rotation;
 			//scale
 			model = glm::scale(model, transform.scale);
+			// parent MVP
 			if (id.parent_id != -1)
 			{
 				auto parent_entity = static_cast<entt::entity>(id.parent_id);
@@ -113,7 +114,7 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			if (meshR.shader == "colorShader")
+			if (meshR.shaderName == "colorShader")
 			{
 				colorShader->Enable();
 				colorShader->SetUniformMat4("model", model);
@@ -121,16 +122,19 @@ namespace ENGINE_CORE::Systems {
 				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
 				colorShader->SetUniformVec4("color", meshR.color);
 			}
-			else if (meshR.shader == "texShader")
+			else if (meshR.shaderName == "texShader")
 			{
 				texShader->Enable();
 				texShader->Enable();
 				texShader->SetUniformMat4("model", model);
 				texShader->SetUniformMat4("view", viewMatrix);
 				texShader->SetUniformMat4("projection", PerspectiveMatrix);
-				texShader->SetUniformInt("tex", meshR.texture);
+				texShader->SetUniformInt("tex", 0);
+				const auto& tex = assetManager.GetTexture(meshR.textureName);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, tex->GetID());
 			}
-			else if (meshR.shader == "hudShader")
+			else if (meshR.shaderName == "hudShader")
 			{
 				hudShader->Enable();
 				hudShader->SetUniformMat4("model", model);

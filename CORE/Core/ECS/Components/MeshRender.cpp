@@ -30,11 +30,11 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
         "type_id", &entt::type_hash<MeshRender>::value,
         sol::call_constructor,
         sol::factories(
-            [&](const std::string& shader, glm::vec4 color, int texture) {
+            [&](const std::string& shader, const std::string& texture, glm::vec4 color) {
                 MeshRender MR{
-                    .shader = shader,
-                    .color = color,
-                    .texture = texture
+                    .shaderName = shader,
+                    .textureName = texture,
+                    .color = color
                 };
                 return MR;
             }
