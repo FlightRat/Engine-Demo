@@ -16,9 +16,9 @@ PlayerDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=1.0, z=0.0},
-				scale = {x=0.5, y=0.5, z=0.5},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(0.0, 1.0, 0.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "capsule"
@@ -26,7 +26,7 @@ PlayerDefs =
 			MeshRender = {
 				shader = "colorShader",
 				texture = "",
-				color = {R=0.678, G=0.847, B=1.0, A=1.0}
+				color = vec4(0.678, 0.847, 1.0, 1.0)
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -47,9 +47,9 @@ PlayerDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0.0, y=1.0, z=0.5},
-				scale = {x=1.0, y=0.2, z=0.5},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(0.0, 1.0, 0.5),
+				scale = vec3(1.0, 0.2, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "cube"
@@ -57,7 +57,7 @@ PlayerDefs =
 			MeshRender = {
 				shader = "colorShader",
 				texture = "",
-				color = {R=1.0, G=0.647, B=0.0, A=1.0}
+				color = vec4(1.0, 0.647, 0.0, 1.0)
 			}
 		}
 	}

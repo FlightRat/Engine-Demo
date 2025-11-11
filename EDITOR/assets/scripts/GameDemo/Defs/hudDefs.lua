@@ -7,9 +7,9 @@ HudDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0, y=0, z=0},
-				scale = {x=0.75, y=0.4, z=1.0},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(0.0, 0.0, 0.0),
+				scale = vec3(0.75, 0.4, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "hud_quad"
@@ -17,7 +17,7 @@ HudDefs =
 			MeshRender = {
 				shader = "hudShader",
 				texture = "",
-				color = {R=1.0, G=1.0, B=1.0, A=1.0}
+				color = vec4(1.0, 1.0, 1.0, 1.0)
 			},
 		}
 	}

@@ -46,6 +46,7 @@ function MoveState:OnUpdate(dt)
 	end
 
 	-- keyboard control
+	--NOTE: if want to move with "linear_velocity", need to keep a "forward", rotate it with QE, and multiply it with speed
 	if Keyboard.pressed(KEY_W) then
 		physics:linear_impulse(vec3(0.0, 0.0, 100.0))
 	end

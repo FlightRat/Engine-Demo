@@ -13,9 +13,9 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=5.0, y=1.0, z=5.0},
-				scale = {x=1.0, y=1.0, z=1.0},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(5.0, 1.0, 5.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "sphere"
@@ -23,7 +23,7 @@ EnvirDefs =
 			MeshRender = {
 				shader = "texShader",
 				texture = "rust",
-				color = {R=0.0, G=1.0, B=0.0, A=1.0}
+				color = vec4(0.0, 1.0, 0.0, 1.0)
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -39,9 +39,9 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=-5.0, y=1.0, z=5.0},
-				scale = {x=1.0, y=1.0, z=1.0},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(-5.0, 1.0, 5.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "cube"
@@ -49,7 +49,7 @@ EnvirDefs =
 			MeshRender = {
 				shader = "texShader",
 				texture = "container",
-				color = {R=0.0, G=0.0, B=1.0, A=1.0}
+				color = vec4(0.0, 0.0, 1.0, 1.0)
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -58,7 +58,7 @@ EnvirDefs =
 				mass = 5.0,
 				linear_damping = 2.0,
 				angular_damping = 2.0
-				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
+				--box_halfExtents = vec3(1.0, 1.0, 1.0}
 			}
 		}
 	},
@@ -69,9 +69,9 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=-10.0, y=1.0, z=5.0},
-				scale = {x=0.5, y=0.5, z=0.5},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(-10.0, 1.0, 5.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "cube"
@@ -79,14 +79,13 @@ EnvirDefs =
 			MeshRender = {
 				shader = "colorShader",
 				texture = "",
-				color = {R=0.0, G=1.0, B=0.0, A=1.0}
+				color = vec4(0.0, 1.0, 0.0, 1.0)
 			},
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
 				b_Trigger = true,
 				box_halfExtents = vec3(0.5, 0.5, 0.5)
-				--box_halfExtents = {x=1.0, y=1.0, z=1.0}
 			}
 		}
 	},
@@ -97,9 +96,9 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0, y=2, z=5},
-				scale = {x=2.0, y=0.5, z=2.0},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(0, 2, 5),
+				scale = vec3(2.0, 0.5, 2.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "cube"
@@ -107,13 +106,12 @@ EnvirDefs =
 			MeshRender = {
 				shader = "colorShader",
 				texture = "",
-				color = {R=1.0, G=0.0, B=0.0, A=1.0}
+				color = vec4(1.0, 0.0, 0.0, 1.0)
 			},
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
 				box_halfExtents = vec3(2.0, 0.5, 2.0)
-				--box_halfExtents = {x=2.0, y=0.5, z=2.0}
 			}
 		}
 	},
@@ -124,9 +122,9 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = {x=0, y=0, z=0},
-				scale = {x=2.0, y=1.0, z=2.0},
-				rotation = {x=0.0, y=0.0, z=0.0}
+				position = vec3(0, 0, 0),
+				scale = vec3(2.0, 1.0, 2.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "plane"
@@ -134,13 +132,12 @@ EnvirDefs =
 			MeshRender = {
 				shader = "colorShader",
 				texture = "",
-				color = {R=1.0, G=1.0, B=1.0, A=1.0}
+				color = vec4(1.0, 1.0, 1.0, 1.0)
 			},
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
 				box_halfExtents = vec3(20.0, 0.0005, 20.0)
-				--box_halfExtents = {x=20.0, y=0.0005, z=20.0}
 			}
 		}
 	}

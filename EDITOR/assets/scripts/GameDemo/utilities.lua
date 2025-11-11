@@ -40,21 +40,9 @@ function LoadEntity( def )
 	if def.components.Transform then
 		newEntity:add_component(
 			Transform(
-				vec3(
-					def.components.Transform.position.x,
-					def.components.Transform.position.y,
-					def.components.Transform.position.z
-				),
-				vec3(
-					def.components.Transform.scale.x,
-					def.components.Transform.scale.y,
-					def.components.Transform.scale.z
-				),
-				vec3(
-					def.components.Transform.rotation.x,
-					def.components.Transform.rotation.y,
-					def.components.Transform.rotation.z
-				)
+				def.components.Transform.position,
+				def.components.Transform.scale,
+				def.components.Transform.rotation
 			)
 		)
 	end
@@ -72,12 +60,7 @@ function LoadEntity( def )
 			MeshRender(
 				def.components.MeshRender.shader,
 				def.components.MeshRender.texture,
-				vec4(
-					def.components.MeshRender.color.R,
-					def.components.MeshRender.color.G,
-					def.components.MeshRender.color.B,
-					def.components.MeshRender.color.A
-				)
+				def.components.MeshRender.color
 			)
 		)
 	end
@@ -93,14 +76,8 @@ function LoadEntity( def )
 		local physicsAttr = PhysicsAttributes(attr_table)
 	]]--
 		local physicsAttr = PhysicsAttributes()
-		physicsAttr.position = vec3(
-			def.components.Transform.position.x,
-			def.components.Transform.position.y,
-			def.components.Transform.position.z)
-		physicsAttr.rotation = vec3(
-			def.components.Transform.rotation.x,
-			def.components.Transform.rotation.y,
-			def.components.Transform.rotation.z)
+		physicsAttr.position = def.components.Transform.position
+		physicsAttr.rotation = def.components.Transform.rotation
 		-- rigidbody
 		physicsAttr.type = def.components.Physics.type
 		-- collider
