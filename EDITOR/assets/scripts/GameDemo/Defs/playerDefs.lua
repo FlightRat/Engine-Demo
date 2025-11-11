@@ -1,6 +1,6 @@
 assert(MoveState, "MoveState does not exist!")
 
-CharacterStates = 
+PlayerStates = 
 {
 	move = MoveState
 }

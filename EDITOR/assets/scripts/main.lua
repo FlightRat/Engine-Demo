@@ -5,6 +5,7 @@ ENGINE_LoadScriptTable(ScriptList)
 math.randomseed(os.time())
 LoadAssets()
 
+-- state stack is used for storaging and changing scene/state
 gStateStack = StateStack()
 local title = TitleState:Create(gStateStack)
 gStateStack:change_state(title)

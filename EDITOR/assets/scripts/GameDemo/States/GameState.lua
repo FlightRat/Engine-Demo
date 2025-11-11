@@ -30,8 +30,8 @@ function GameState:OnEnter()
 	Music.set_volume(20)
 	Music.play("2:23am")
 	
-	-- create a character, and activate
-	local character = Character:Create({name = "body"})
+	--TODO: use or remove the character state machine
+	local character = Character:Create({name = "body"})	-- create a character, and activate
 	local player_id = character.m_EntityID
 	AddActiveCharacter(player_id, character)
 	

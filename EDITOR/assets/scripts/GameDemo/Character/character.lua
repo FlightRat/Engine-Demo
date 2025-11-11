@@ -1,13 +1,22 @@
 Character = {}
 Character.__index = Character
 
--- a character contains entityID & stateMachine
+--[[
+player character is created when enter "GameState" -- "Character:Create({name = "body"})"
+Character:Create:
+	1.load the capsule entity and storage ID
+	2.find the table like "PlayerStates" which is customized for the character
+	3.load all the states according to "controller" in defs, and push them into stateMachine
+	4.change to the default state
+the update in GameState in actually updating the currentState of all characters 
+]]--
+
 function Character:Create(def)
 	local this = 
 	{
 		m_Def = def,
 		m_Group = def.group,
-		m_Type = "PLAYER",
+		m_Type = def.type or "PLAYER",
 		m_EntityID = -1,
 		m_bInitialized = false,
 		m_bDead = false,
@@ -46,8 +55,8 @@ function Character:InitStateMachine(entityDef, character)
 	-- take all pre-defined states
 	local states = nil
 	if character.m_Type == "PLAYER" then
-		assert(CharacterStates, "CharacterStates does not exist")
-		states = CharacterStates
+		assert(PlayerStates, "PlayerStates does not exist")
+		states = PlayerStates
 	elseif character.m_Type == "ENEMY" then
 		assert(EnemyStates, "EnemyStates dose not exist")
 		states = EnemyStates
