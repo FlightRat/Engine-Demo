@@ -39,7 +39,7 @@ namespace ENGINE_CORE::Scripting
 		lua.new_usertype<glm::vec2>(
 			"vec2",
 			sol::call_constructor,
-			sol::constructors<glm::vec2(float), glm::vec2(float, float)>(),
+			sol::constructors<glm::vec2(float), glm::vec2(float, float), glm::vec2(glm::vec2&)>(),
 			"x", &glm::vec2::x,
 			"y", &glm::vec2::y,
 			sol::meta_function::multiplication, vec2_multiply_overloads,
@@ -86,7 +86,7 @@ namespace ENGINE_CORE::Scripting
 		lua.new_usertype<glm::vec3>(
 			"vec3",
 			sol::call_constructor,
-			sol::constructors<glm::vec3(float), glm::vec3(float, float, float)>(),
+			sol::constructors<glm::vec3(float), glm::vec3(float, float, float), glm::vec3(glm::vec3&)>(),
 			"x", &glm::vec3::x,
 			"y", &glm::vec3::y,
 			"z", &glm::vec3::z,
@@ -134,7 +134,7 @@ namespace ENGINE_CORE::Scripting
 		lua.new_usertype<glm::vec4>(
 			"vec4",
 			sol::call_constructor,
-			sol::constructors<glm::vec4(float), glm::vec4(float, float, float, float)>(),
+			sol::constructors<glm::vec4(float), glm::vec4(float, float, float, float), glm::vec4(glm::vec4&)>(),
 			"x", &glm::vec4::x,
 			"y", &glm::vec4::y,
 			"z", &glm::vec4::z,

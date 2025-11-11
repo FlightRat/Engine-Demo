@@ -1,6 +1,8 @@
 ScriptList=
 {
 	"assets/scripts/GameDemo/utilities.lua",
+	"assets/scripts/GameDemo/Defs/bulletDefs.lua",
+	"assets/scripts/GameDemo/Bullets/bullet.lua",
 	"assets/scripts/GameDemo/Character/player_states/move_state.lua",
 	"assets/scripts/GameDemo/Character/character.lua",
 	"assets/scripts/GameDemo/Defs/assetDefs.lua",

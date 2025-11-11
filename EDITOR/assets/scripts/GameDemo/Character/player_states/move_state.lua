@@ -68,4 +68,25 @@ function MoveState:OnUpdate(dt)
 	if Keyboard.just_pressed(KEY_SPACE) then
 		physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
 	end
+	if Keyboard.just_pressed(KEY_F) then
+		self:shot()
+	end
+end
+
+function MoveState:shot()
+	local player = Entity(self.m_EntityID)
+	local transform = player:get_component(Transform)
+	local player_p = transform.position
+	local player_r = transform.rotation_eular
+
+	local forward = vec3(0.0, 0.0, 1.0)
+	Bullet:Create(
+		{
+			def = "normal_shot",
+			dir = forward,
+			position = player_p,
+			rotation = player_r,
+			life_time = 1000
+		}
+	)
 end
