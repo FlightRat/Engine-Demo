@@ -45,7 +45,7 @@ namespace ENGINE_EDITOR {
 
 	bool Application::Initialize()
 	{
-		ENGINE_INIT_LOGS(true, true);
+		ENGINE_INIT_LOGS(false, true);
 
 		// Init SDL
 		if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
