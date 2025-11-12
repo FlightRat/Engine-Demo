@@ -31,6 +31,9 @@ void ENGINE_CORE::ECS::TransformComponent::CreateLuaTransformBind(sol::state& lu
 		),
 		"position", &TransformComponent::position,
 		"scale", &TransformComponent::scale,
+		"forward", sol::property([](const TransformComponent& self) {
+			return self.rotation_quat * glm::vec3(0.0f, 0.0f, 1.0f);
+			}),
 		"rotation_eular",&TransformComponent::rotation_eular,
 		"rotation_quat", &TransformComponent::rotation_quat
 	);
