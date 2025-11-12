@@ -8,6 +8,11 @@ namespace ENGINE_PHYSICS {
 
 	bool ObjectData::AddContact(const ObjectData& objectData)
 	{
+		if (tag.empty() && group.empty())
+			return false;
+		if (objectData.tag.empty() && objectData.group.empty())
+			return false;
+
 		// return the "index" of the found target which follow the function
 		auto contactItr = std::find_if(
 			contactEntities.begin(), contactEntities.end(),
