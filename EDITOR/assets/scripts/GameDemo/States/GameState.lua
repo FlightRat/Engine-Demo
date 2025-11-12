@@ -62,7 +62,7 @@ end
 function GameState:OnUpdate(dt)
 	self.m_FollowCam:update()
 	UpdateActiveCharacters(dt)
-	Control_Physics(self.m_Player)
+	UpdateBullets(dt)
 end
 
 function GameState:OnRender()
@@ -74,8 +74,4 @@ function GameState:HandleInputs()
 		self.m_Stack:pop()
 		return
 	end
-end
-
-function Control_Physics(player)
-
 end
