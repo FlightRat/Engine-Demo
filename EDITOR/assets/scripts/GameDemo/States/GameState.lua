@@ -45,6 +45,11 @@ function GameState:OnEnter()
 	self.m_Floor = Entity(LoadEntity(EnvirDefs["ground"]))
 	self.m_Playtform = Entity(LoadEntity(EnvirDefs["platform1"]))
 
+	self.speed = 5
+	self.m_MovingPlatform = Entity(LoadEntity(EnvirDefs["platform2"]))
+	local physics = self.m_MovingPlatform:get_component(Physics)
+	physics:set_linear_velocity(vec3(0.0, 0.0, self.speed)) --TODO:add dt
+
 	local offset = vec3(0.0, 5.0, -10.0)
 	self.m_FollowCam = FollowCamera(self.m_Player, offset)
 end
@@ -63,6 +68,7 @@ function GameState:OnUpdate(dt)
 	self.m_FollowCam:update()
 	UpdateActiveCharacters(dt)
 	UpdateBullets(dt)
+	self:UpdateMovingPlatform(dt)
 end
 
 function GameState:OnRender()
@@ -73,5 +79,15 @@ function GameState:HandleInputs()
 	if Keyboard.just_pressed(KEY_BACKSPACE) then
 		self.m_Stack:pop()
 		return
+	end
+end
+
+function GameState:UpdateMovingPlatform(dt)
+	local transform = self.m_MovingPlatform:get_component(Transform)
+	local physics = self.m_MovingPlatform:get_component(Physics)
+	local position = vec3(transform.position)
+	if((position.z > 10.0 and self.speed > 0) or (position.z < -10.0 and self.speed < 0))then
+		self.speed = -1 * self.speed
+		physics:set_linear_velocity(vec3(0.0, 0.0, self.speed))	--TODO:add dt
 	end
 end

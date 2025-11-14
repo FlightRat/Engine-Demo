@@ -115,6 +115,32 @@ EnvirDefs =
 			}
 		}
 	},
+	platform2 = 
+	{
+		tag = "platform_2",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(10.0, 1, 0),
+				scale = vec3(2.0, 0.25, 2.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				texture = "",
+				color = vec4(0.0, 0.0, 1.0, 1.0)
+			},
+			Physics = {
+				type = BodyType.Kinematic,
+				shape = "box",
+				box_halfExtents = vec3(2.0, 0.25, 2.0)
+			}
+		}
+	},
 	ground = 
 	{
 		tag = "ground",
