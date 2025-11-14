@@ -25,7 +25,7 @@ BulletDefs =
 				sphere_radius = 0.1,
 				b_Trigger = true,
 				enable_gravity = false,
-				linear_axis_factor = vec3 (1.0, 0.0, 0.0),
+				linear_axis_factor = vec3 (1.0, 0.0, 1.0),
 				angular_axis_factor = vec3(0.0, 0.0, 0.0)
 			}
 		}

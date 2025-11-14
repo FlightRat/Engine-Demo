@@ -2,6 +2,7 @@ Character = {}
 Character.__index = Character
 
 --[[
+一个角色有一个实体ID和一个状态机，一个状态机有很多自己定义的状态，每次更新都是在调用每个角色的当前状态的update函数
 player character is created when enter "GameState" -- "Character:Create({name = "body"})"
 Character:Create:
 	1.load the capsule entity and storage ID

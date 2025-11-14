@@ -76,17 +76,16 @@ end
 function MoveState:shot()
 	local player = Entity(self.m_EntityID)
 	local transform = player:get_component(Transform)
-	local player_p = transform.position
-	local player_r = transform.rotation_eular
 
-	local forward = vec3(0.0, 0.0, 1.0)
-	Bullet:Create(
+	local bullet = Bullet:Create(
 		{
 			def = "normal_shot",
-			dir = forward,
-			position = player_p,
-			rotation = player_r,
+			dir = vec3(transform.forward),	-- pass as independent copy
+			position = vec3(transform.position),
+			rotation = vec3(transform.rotation_eular),
+			speed = 1000,
 			life_time = 1000
 		}
 	)
+	AddBullet(bullet)
 end

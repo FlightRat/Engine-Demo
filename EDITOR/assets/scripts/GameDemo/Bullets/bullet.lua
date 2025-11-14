@@ -11,12 +11,12 @@ function Bullet:Create(params)
 		m_EntityID = -1,
 		m_Lifetime = params.life_time or 500,
 		m_LifeTimer = Timer(),
-		m_Speed = params.speed or 1000,
+		m_Speed = params.speed or 250,
 	}
 	local bulletDef = BulletDefs[this.m_Def]
 	assert(bulletDef, string.format("Failed to get bullet def for [%s]!",this.m_Def))
-	bulletDef.components.Transform.position = vec3(this.m_Position)
-	bulletDef.components.Transform.rotation = vec3(this.m_Rotaion)
+	bulletDef.components.Transform.position = this.m_Position
+	bulletDef.components.Transform.rotation = this.m_Rotaion
 	this.m_EntityID = LoadEntity(bulletDef)
 	this.m_LifeTimer:start()
 	setmetatable(this,self)
@@ -26,7 +26,9 @@ end
 function Bullet:Update(dt)
 	local bullet = Entity(self.m_EntityID)
 	local physics = bullet:get_component(Physics)
-	physics:set_linear_velocity(vec3(self.m_Dir * self.m_Speed * dt, 0))
+	--TODO: check the contactEntities of the bullet, and do the result
+	local velocity = vec3(self.m_Dir.x * self.m_Speed * dt, self.m_Dir.y * self.m_Speed * dt, self.m_Dir.z * self.m_Speed * dt)
+	physics:set_linear_velocity(velocity)
 end
 
 function Bullet:TimesUp()
@@ -35,5 +37,5 @@ end
 
 function Bullet:Destroy()
 	Entity(self.m_EntityID):kill()
-	ENGINE_WARN("Killed bullet with id: %s",self.m_EntityID)
+	ENGINE_Warn("Killed bullet with id: %s",self.m_EntityID)
 end
