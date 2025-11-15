@@ -1,4 +1,4 @@
-#include "SceneDisplay.h"
+#include "GameDisplay.h"
 #include "imgui.h"
 #include "Logger/Logger.h"
 #include "Rendering/Buffers/Framebuffer.h"
@@ -18,12 +18,12 @@
 
 namespace ENGINE_EDIOTR
 {
-	SceneDisplay::SceneDisplay(ENGINE_CORE::ECS::Registry& registry) 
+	GameDisplay::GameDisplay(ENGINE_CORE::ECS::Registry& registry) 
 		:m_Registry{ registry }, m_bPlayScene{ false }, m_bSceneLoaded{ false }
 	{
 	}
 
-	void SceneDisplay::LoadScene()
+	void GameDisplay::LoadScene()
 	{
 		auto& scriptSystem = m_Registry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
@@ -43,7 +43,7 @@ namespace ENGINE_EDIOTR
 		m_bSceneLoaded = true;
 	}
 
-	void SceneDisplay::UnloadScene()
+	void GameDisplay::UnloadScene()
 	{
 		m_bPlayScene = false;
 		m_bSceneLoaded = false;
@@ -56,7 +56,7 @@ namespace ENGINE_EDIOTR
 		mainRegistry.GetSoundFxPlayer().Stop(-1);
 	}
 
-	void SceneDisplay::RenderScene()
+	void GameDisplay::RenderScene()
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
@@ -77,7 +77,7 @@ namespace ENGINE_EDIOTR
 		fb->CheckResize();
 	}
 
-	void SceneDisplay::Draw()
+	void GameDisplay::Draw()
 	{
 		static bool pOpen{ true };
 		if (!ImGui::Begin("Scene", &pOpen))
@@ -160,7 +160,7 @@ namespace ENGINE_EDIOTR
 		ImGui::End();
 	}
 	
-	void SceneDisplay::Update()
+	void GameDisplay::Update()
 	{
 		if (!m_bPlayScene)
 			return;

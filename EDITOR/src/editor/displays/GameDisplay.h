@@ -4,7 +4,7 @@
 
 namespace ENGINE_EDIOTR 
 {
-	class SceneDisplay:public IDisplay
+	class GameDisplay:public IDisplay
 	{
 	private:
 		ENGINE_CORE::ECS::Registry& m_Registry;
@@ -14,8 +14,8 @@ namespace ENGINE_EDIOTR
 		void UnloadScene();
 		void RenderScene();
 	public:
-		SceneDisplay(ENGINE_CORE::ECS::Registry& registry);
-		~SceneDisplay() = default;
+		GameDisplay(ENGINE_CORE::ECS::Registry& registry);
+		~GameDisplay() = default;
 
 		virtual void Draw() override;
 		virtual void Update() override;

@@ -21,7 +21,7 @@
     <ClCompile Include="src\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editor\displays\SceneDisplay.cpp">
+    <ClCompile Include="src\editor\displays\GameDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\editor\displays\LogDisplay.cpp">
@@ -81,7 +81,7 @@
     <ClInclude Include="src\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\editor\displays\SceneDisplay.h">
+    <ClInclude Include="src\editor\displays\GameDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\editor\displays\IDisplay.h">

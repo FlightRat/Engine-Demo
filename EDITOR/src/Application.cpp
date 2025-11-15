@@ -33,7 +33,7 @@
 #include<backends/imgui_impl_sdl2.h>
 #include<backends/imgui_impl_opengl3.h>
 #include"editor/displays/IDisplay.h"
-#include"editor/displays/SceneDisplay.h"
+#include"editor/displays/GameDisplay.h"
 #include"editor/displays/LogDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
@@ -456,10 +456,10 @@ namespace ENGINE_EDITOR {
 		}
 	
 		// scene display
-		auto pSceneDisplay = std::make_unique<ENGINE_EDIOTR::SceneDisplay>(*m_pRegistry);
-		if (!pSceneDisplay)
+		auto pGameDisplay = std::make_unique<ENGINE_EDIOTR::GameDisplay>(*m_pRegistry);
+		if (!pGameDisplay)
 		{
-			ENGINE_ERROR("Failed to create the SceneDisplay");
+			ENGINE_ERROR("Failed to create the GameDisplay");
 			return false;
 		}
 
@@ -471,7 +471,7 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 		
-		pDisplayHolder->displays.push_back(std::move(pSceneDisplay));
+		pDisplayHolder->displays.push_back(std::move(pGameDisplay));
 		pDisplayHolder->displays.push_back(std::move(pLogDisplay));
 
 		return true;
@@ -533,8 +533,8 @@ namespace ENGINE_EDITOR {
 	void Application::RenderImGui()
 	{
 		//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
-		//auto& sceneDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::SceneDisplay>>();
-		//sceneDisplay->Draw();
+		//auto& GameDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::GameDisplay>>();
+		//GameDisplay->Draw();
 		//auto& logDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::LogDisplay>>();
 		//logDisplay->Draw();
 		//ImGui::ShowDemoWindow();
