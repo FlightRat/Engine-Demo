@@ -11,6 +11,10 @@
 #include "Sounds/MusicPlayer/MusicPlayer.h"
 #include "Sounds/SoundFxPlayer/SoundFxPlayer.h"
 #include "Physics/RP3D_Wrappers.h"
+#include "../utilities/editor_framebuffers.h"
+#include <Core/Systems/ScriptingSystem.h>
+#include <Core/Systems/RenderSystem.h>
+#include <Rendering/Core/Camera3D.h>
 
 namespace ENGINE_EDIOTR
 {
@@ -50,6 +54,27 @@ namespace ENGINE_EDIOTR
 		auto& mainRegistry = MAIN_REGISTRY();
 		mainRegistry.GetMusicPlayer().Stop();
 		mainRegistry.GetSoundFxPlayer().Stop(-1);
+	}
+
+	void SceneDisplay::RenderScene()
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
+		//auto& scriptSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+		auto& camera = m_Registry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+
+		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
+		fb->Bind();
+		glViewport(0, 0, fb->Width(), fb->Height());
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		camera->SetWidth(fb->Width());
+		camera->SetHeight(fb->Height());
+		//scriptSystem->Render();
+		renderSystem->Render(camera);
+		fb->Unbind();
+		fb->CheckResize();
 	}
 
 	void SceneDisplay::Draw()
@@ -94,6 +119,9 @@ namespace ENGINE_EDIOTR
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
 		}
+
+		RenderScene();
+
 		if (ImGui::ImageButton(
 			"stop",
 			ImTextureID{ pStopTexture->GetID() },
@@ -110,7 +138,10 @@ namespace ENGINE_EDIOTR
 
 		if (ImGui::BeginChild("##SceneChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
 		{
-			const auto& fb = m_Registry.GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
+			auto& mainRegistry = MAIN_REGISTRY();
+			auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+			const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
+			//const auto& fb = m_Registry.GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
 			ImGui::SetCursorPos(ImVec2{ 0.f,0.f });
 			ImGui::Image(
 				(ImTextureID)fb->GetTextureID(),
@@ -129,7 +160,6 @@ namespace ENGINE_EDIOTR
 		ImGui::End();
 	}
 	
-	// TODO: adapt for accumulator
 	void SceneDisplay::Update()
 	{
 		if (!m_bPlayScene)

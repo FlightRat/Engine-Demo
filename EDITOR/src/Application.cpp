@@ -36,6 +36,7 @@
 #include"editor/displays/SceneDisplay.h"
 #include"editor/displays/LogDisplay.h"
 #include"editor/utilities/editor_textures.h"
+#include"editor/utilities/editor_framebuffers.h"
 
 namespace ENGINE_EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
@@ -240,24 +241,27 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create the render system!");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::RenderSystem>>(renderSystem))
+		if (!mainRegistry.AddToContext<std::shared_ptr< ENGINE_CORE::Systems::RenderSystem>>(renderSystem))
 		{
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
 		}
 
-		// test framebuffer
-		auto framebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
-		if (!framebuffer)
+		// editor framebuffer
+		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
+		if (!pEditorFramebuffer)
 		{
-			ENGINE_ERROR("Failed to create the framebuffer");
+			ENGINE_ERROR("Failed to create the EditorFramebuffer");
 			return false;
 		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>(framebuffer))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>(pEditorFramebuffer))
 		{
-			ENGINE_ERROR("Failed to add the framebuffer to the registry context!");
+			ENGINE_ERROR("Failed to add the EditorFramebuffer to the main registry context!");
 			return false;
 		}
+		// game framebuffer
+		auto gameFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
+		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::GAME, gameFramebuffer);
 		
 		if (!CreateDisplays())
 		{
@@ -424,32 +428,9 @@ namespace ENGINE_EDITOR {
 
 	void Application::Render()
 	{
-		//TODO: add w&h param for camera, and set them here, then pass the camera into render func
-		auto& framebuffer = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
-		framebuffer->Bind();
-
-		glViewport(0, 0, framebuffer->Width(), framebuffer->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// camera
-		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-		camera->SetWidth(framebuffer->Width());
-		camera->SetHeight(framebuffer->Height());
-
-		//auto& scriptSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		//scriptSystem->Render();
-		auto& renderSystem = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		renderSystem->Render(camera);
-
-		framebuffer->Unbind();
-
 		Begin();
 		RenderImGui();
 		End();
-
-		framebuffer->CheckResize();
-
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
 	}
 

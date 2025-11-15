@@ -213,6 +213,7 @@
     <ClInclude Include="src\editor\displays\IDisplay.h" />
     <ClInclude Include="src\editor\displays\LogDisplay.h" />
     <ClInclude Include="src\editor\displays\SceneDisplay.h" />
+    <ClInclude Include="src\editor\utilities\editor_framebuffers.h" />
     <ClInclude Include="src\editor\utilities\editor_textures.h" />
   </ItemGroup>
   <ItemGroup>

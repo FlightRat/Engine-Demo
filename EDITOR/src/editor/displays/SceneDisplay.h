@@ -12,6 +12,7 @@ namespace ENGINE_EDIOTR
 	private:
 		void LoadScene();
 		void UnloadScene();
+		void RenderScene();
 	public:
 		SceneDisplay(ENGINE_CORE::ECS::Registry& registry);
 		~SceneDisplay() = default;
