@@ -140,6 +140,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Utilities\EngineUtilities.h" />
     <ClInclude Include="Utilities\SDL_Wrappers.h" />
     <ClInclude Include="Utilities\Timer.h" />
   </ItemGroup>

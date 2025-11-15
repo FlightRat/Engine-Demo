@@ -11,10 +11,13 @@ namespace ENGINE_RENDERING {
 		GLuint m_TextureID;
 		std::string m_sPath;
 		TextureType m_eType;
-
+		bool m_bEditorTexture;
 	public:
 		Texture();
 		Texture(GLuint id, int width, int height, TextureType type = TextureType::PIXEL, const std::string& texturePath = "");
+
+		inline const bool IsEditorTexture() const { return m_bEditorTexture; }
+		inline void SetIsEditorTexture(bool bIsEditorTexture) { m_bEditorTexture = bIsEditorTexture; }
 
 		inline const int GetWidth() const { return m_Width; }
 		inline const int GetHeight() const { return m_Height; }

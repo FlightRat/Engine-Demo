@@ -39,6 +39,8 @@ namespace ENGINE_RESOURCES {
 		bool AddSoundFxFromMemory(const std::string& soundFxName, const unsigned char* soundFxData, size_t dataSize);
 		std::shared_ptr<ENGINE_SOUNDS::SoundFx> GetSoundFx(const std::string& soundFxName);
 
+		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Texture>>& GetAllTextures() const { return m_mapTexture; }
+
 		static void CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry);
 	};
 }
