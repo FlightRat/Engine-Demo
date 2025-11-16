@@ -6,7 +6,7 @@ namespace ENGINE_RENDERING {
 	}
 
 	Texture::Texture(GLuint id, int width, int height, TextureType type, const std::string& texturePath)
-		:m_TextureID{ id }, m_Width(width), m_Height{ height }, m_eType{ type }, m_sPath{ texturePath }
+		:m_TextureID{ id }, m_Width(width), m_Height{ height }, m_eType{ type }, m_sPath{ texturePath }, m_bEditorTexture{false}
 	{
 	}
 
