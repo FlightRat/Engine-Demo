@@ -36,6 +36,7 @@
 #include"editor/displays/GameDisplay.h"
 #include"editor/displays/SceneDisplay.h"
 #include"editor/displays/LogDisplay.h"
+#include"editor/displays/AssetDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
 
@@ -326,6 +327,20 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [stop_button] from memory!");
 			return false;
 		}
+		if (!assetManager.AddTextureFromMemory("music_icon", music_icon, sizeof(music_icon) / sizeof(music_icon[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [music_icon] from memory!");
+			return false;
+		}
+		if (!assetManager.AddTextureFromMemory("scene_icon", scene_icon, sizeof(scene_icon) / sizeof(scene_icon[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [scene_icon] from memory!");
+			return false;
+		}
+		assetManager.GetTexture("play_button")->SetIsEditorTexture(true);
+		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
+		assetManager.GetTexture("music_icon")->SetIsEditorTexture(true);
+		assetManager.GetTexture("scene_icon")->SetIsEditorTexture(true);
 		return true;
 	}
 
@@ -352,8 +367,8 @@ namespace ENGINE_EDITOR {
 			}
 			case SDL_KEYDOWN:
 			{
-				if (m_Event.key.keysym.sym == SDLK_ESCAPE)
-					m_bIsRunning = false;
+				//if (m_Event.key.keysym.sym == SDLK_ESCAPE)
+				//	m_bIsRunning = false;
 				if (m_Event.key.keysym.sym == SDLK_0)
 				{
 					engine.ToggleRenderCollisions();
@@ -482,10 +497,19 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create the LogDisplay");
 			return false;
 		}
+
+		// asset display
+		auto pAssetDisplay = std::make_unique<ENGINE_EDIOTR::AssetDisplay>();
+		if (!pAssetDisplay)
+		{
+			ENGINE_ERROR("Failed to create the AssetDisplay");
+			return false;
+		}
 		
 		pDisplayHolder->displays.push_back(std::move(pGameDisplay));
 		pDisplayHolder->displays.push_back(std::move(pSceneDisplay));
 		pDisplayHolder->displays.push_back(std::move(pLogDisplay));
+		pDisplayHolder->displays.push_back(std::move(pAssetDisplay));
 		
 		return true;
 	}
@@ -560,11 +584,12 @@ namespace ENGINE_EDITOR {
 			ImGui::DockBuilderAddNode(dockSpaceId);
 			auto centerNodeId = dockSpaceId;
 			const auto leftNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Left, 0.2f, nullptr, &centerNodeId);
-			const auto logNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Down, 0.2f, nullptr, &centerNodeId);
+			const auto downNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Down, 0.2f, nullptr, &centerNodeId);
 			ImGui::DockBuilderDockWindow("Dear ImGui Demo", leftNodeId);
 			ImGui::DockBuilderDockWindow("Game", centerNodeId);
 			ImGui::DockBuilderDockWindow("Scene", centerNodeId);
-			ImGui::DockBuilderDockWindow("Logs", logNodeId);
+			ImGui::DockBuilderDockWindow("Asset", downNodeId);
+			ImGui::DockBuilderDockWindow("Logs", downNodeId);
 			ImGui::DockBuilderFinish(dockSpaceId);
 		}
 
