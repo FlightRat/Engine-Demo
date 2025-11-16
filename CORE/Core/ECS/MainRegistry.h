@@ -1,7 +1,7 @@
 #pragma once
 #include "Registry.h"
 
-#define MAIN_REGISTRY() ENGINE_CORE::ECS::MainRegistry::GetInstance();
+#define MAIN_REGISTRY() ENGINE_CORE::ECS::MainRegistry::GetInstance()
 
 namespace ENGINE_RESOURCES { class AssetManager; }
 namespace ENGINE_SOUNDS { class MusicPlayer; class SoundFxPlayer; }
