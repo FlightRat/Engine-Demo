@@ -34,6 +34,7 @@
 #include<backends/imgui_impl_opengl3.h>
 #include"editor/displays/IDisplay.h"
 #include"editor/displays/GameDisplay.h"
+#include"editor/displays/SceneDisplay.h"
 #include"editor/displays/LogDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
@@ -262,6 +263,9 @@ namespace ENGINE_EDITOR {
 		// game framebuffer
 		auto gameFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
 		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::GAME, gameFramebuffer);
+		// scene framebuffer
+		auto sceneFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
+		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
 		
 		if (!CreateDisplays())
 		{
@@ -428,9 +432,9 @@ namespace ENGINE_EDITOR {
 
 	void Application::Render()
 	{
-		Begin();
+		BeginImGui();
 		RenderImGui();
-		End();
+		EndImGui();
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
 	}
 
@@ -455,11 +459,19 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 	
-		// scene display
+		// game display
 		auto pGameDisplay = std::make_unique<ENGINE_EDIOTR::GameDisplay>(*m_pRegistry);
 		if (!pGameDisplay)
 		{
 			ENGINE_ERROR("Failed to create the GameDisplay");
+			return false;
+		}
+
+		// scene display
+		auto pSceneDisplay = std::make_unique< ENGINE_EDIOTR::SceneDisplay>();
+		if (!pSceneDisplay)
+		{
+			ENGINE_ERROR("Failed to create the SceneDisplay");
 			return false;
 		}
 
@@ -472,8 +484,9 @@ namespace ENGINE_EDITOR {
 		}
 		
 		pDisplayHolder->displays.push_back(std::move(pGameDisplay));
+		pDisplayHolder->displays.push_back(std::move(pSceneDisplay));
 		pDisplayHolder->displays.push_back(std::move(pLogDisplay));
-
+		
 		return true;
 	}
 
@@ -507,7 +520,7 @@ namespace ENGINE_EDITOR {
 		return true;
 	}
 
-	void Application::Begin()
+	void Application::BeginImGui()
 	{
 		// start a new frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -515,7 +528,7 @@ namespace ENGINE_EDITOR {
 		ImGui::NewFrame();
 	}
 
-	void Application::End()
+	void Application::EndImGui()
 	{
 		ImGui::Render(); // generate data for imgui to render
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -549,6 +562,7 @@ namespace ENGINE_EDITOR {
 			const auto leftNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Left, 0.2f, nullptr, &centerNodeId);
 			const auto logNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Down, 0.2f, nullptr, &centerNodeId);
 			ImGui::DockBuilderDockWindow("Dear ImGui Demo", leftNodeId);
+			ImGui::DockBuilderDockWindow("Game", centerNodeId);
 			ImGui::DockBuilderDockWindow("Scene", centerNodeId);
 			ImGui::DockBuilderDockWindow("Logs", logNodeId);
 			ImGui::DockBuilderFinish(dockSpaceId);

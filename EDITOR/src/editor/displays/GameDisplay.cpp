@@ -56,7 +56,7 @@ namespace ENGINE_EDIOTR
 		mainRegistry.GetSoundFxPlayer().Stop(-1);
 	}
 
-	void GameDisplay::RenderScene()
+	void GameDisplay::RenderGame()
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
@@ -80,7 +80,7 @@ namespace ENGINE_EDIOTR
 	void GameDisplay::Draw()
 	{
 		static bool pOpen{ true };
-		if (!ImGui::Begin("Scene", &pOpen))
+		if (!ImGui::Begin("Game", &pOpen))
 		{
 			ImGui::End();
 			return;
@@ -109,7 +109,7 @@ namespace ENGINE_EDIOTR
 		if (ImGui::GetColorStackSize() > 0)
 			ImGui::PopStyleColor(ImGui::GetColorStackSize());
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-			ImGui::SetTooltip("Play Scene");
+			ImGui::SetTooltip("Play Game");
 
 		ImGui::SameLine();
 
@@ -120,7 +120,7 @@ namespace ENGINE_EDIOTR
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
 		}
 
-		RenderScene();
+		RenderGame();
 
 		if (ImGui::ImageButton(
 			"stop",
@@ -133,10 +133,10 @@ namespace ENGINE_EDIOTR
 		if (ImGui::GetColorStackSize() > 0)
 			ImGui::PopStyleColor(ImGui::GetColorStackSize());
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-			ImGui::SetTooltip("Stop Scene");
+			ImGui::SetTooltip("Stop Game");
 
 
-		if (ImGui::BeginChild("##SceneChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
+		if (ImGui::BeginChild("##GameChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
 		{
 			auto& mainRegistry = MAIN_REGISTRY();
 			auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();

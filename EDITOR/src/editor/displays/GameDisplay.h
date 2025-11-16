@@ -12,7 +12,7 @@ namespace ENGINE_EDIOTR
 	private:
 		void LoadScene();
 		void UnloadScene();
-		void RenderScene();
+		void RenderGame();
 	public:
 		GameDisplay(ENGINE_CORE::ECS::Registry& registry);
 		~GameDisplay() = default;
