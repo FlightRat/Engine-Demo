@@ -44,7 +44,7 @@ function GameState:OnEnter()
 	self.m_Cube = Entity(LoadEntity(EnvirDefs["cube_1"]))
 	self.m_Trigger = Entity(LoadEntity(EnvirDefs["cube_2"]))
 	self.m_Floor = Entity(LoadEntity(EnvirDefs["ground"]))
-	self.m_Playtform = Entity(LoadEntity(EnvirDefs["platform1"]))
+	self.m_Platform = Entity(LoadEntity(EnvirDefs["platform1"]))
 
 	self.speed = 5
 	self.m_MovingPlatform = Entity(LoadEntity(EnvirDefs["platform2"]))
@@ -62,7 +62,8 @@ function GameState:OnExit()
 	self.m_Cube:kill()
 	self.m_Trigger:kill()
 	self.m_Floor:kill()
-	self.m_Playtform:kill()
+	self.m_Platform:kill()
+	self.m_MovingPlatform:kill()
 end
 
 function GameState:OnUpdate(dt)
