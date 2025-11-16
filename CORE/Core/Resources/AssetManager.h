@@ -9,6 +9,11 @@
 #include<Sounds/Essentials/Music.h>
 #include<Sounds/Essentials/SoundFx.h>
 
+namespace ENGINE_UTIL
+{
+	enum class AssetType;
+}
+
 namespace ENGINE_RESOURCES {
 	class AssetManager
 	{
@@ -40,6 +45,10 @@ namespace ENGINE_RESOURCES {
 		std::shared_ptr<ENGINE_SOUNDS::SoundFx> GetSoundFx(const std::string& soundFxName);
 
 		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Texture>>& GetAllTextures() const { return m_mapTexture; }
+
+		std::vector<std::string> GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType) const;
+		bool ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType);
+		bool CheckHasAsset(const std::string& checkName, ENGINE_UTIL::AssetType eAssetType);
 
 		static void CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry);
 	};

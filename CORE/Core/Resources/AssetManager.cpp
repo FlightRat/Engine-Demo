@@ -1,4 +1,5 @@
 #include "AssetManager.h"
+#include "Utilities/EngineUtilities.h"
 #include<../CORE/Core/ECS/MainRegistry.h>
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/ShaderLoader.h>
@@ -301,6 +302,57 @@ namespace ENGINE_RESOURCES {
             return nullptr;
         }
         return soundFxItr->second;
+    }
+
+    std::vector<std::string> AssetManager::GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType) const
+    {
+        switch (eAssetType)
+        {
+            case ENGINE_UTIL::AssetType::TEXTURE:
+            {
+                return ENGINE_UTIL::GetKeys(m_mapTexture, [](const auto& pair) {return !pair.second->IsEditorTexture(); });
+                break;
+            }
+            case ENGINE_UTIL::AssetType::MUSIC:
+            {
+                return ENGINE_UTIL::GetKeys(m_mapMusic);
+                break;
+            }
+            case ENGINE_UTIL::AssetType::SOUNDFX:
+            {
+                return ENGINE_UTIL::GetKeys(m_mapSoundFx);
+                break;
+            }
+            default:
+            {
+                assert(false && "Cannot get this type!");
+                break;
+            }
+        }
+    }
+
+    bool AssetManager::ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType)
+    {
+        switch (eAssetType)
+        {
+        case ENGINE_UTIL::AssetType::TEXTURE:return ENGINE_UTIL::ChangeKey(m_mapTexture, sOldName, sNewName);
+        case ENGINE_UTIL::AssetType::MUSIC:return ENGINE_UTIL::ChangeKey(m_mapMusic, sOldName, sNewName);
+        case ENGINE_UTIL::AssetType::SOUNDFX:return ENGINE_UTIL::ChangeKey(m_mapSoundFx, sOldName, sNewName);
+        default:assert(false && "Cannot get this type!");
+        }
+        return false;
+    }
+
+    bool AssetManager::CheckHasAsset(const std::string& checkName, ENGINE_UTIL::AssetType eAssetType)
+    {
+        switch (eAssetType)
+        {
+        case ENGINE_UTIL::AssetType::TEXTURE:return m_mapTexture.contains(checkName);
+        case ENGINE_UTIL::AssetType::MUSIC:return m_mapMusic.contains(checkName);
+        case ENGINE_UTIL::AssetType::SOUNDFX:return m_mapSoundFx.contains(checkName);
+        default:assert(false && "Cannot get this type!");
+        }
+        return false;
     }
 
     // lua register
