@@ -66,9 +66,11 @@ function MoveState:OnUpdate(dt)
 		physics:angular_impulse(vec3(0.0,-100.0, 0.0))
 	end
 	if Keyboard.just_pressed(KEY_SPACE) then
+		SoundFx.play("jump")
 		physics:linear_impulse(vec3(0.0, 1000.0, 0.0))
 	end
 	if Keyboard.just_pressed(KEY_F) then
+		SoundFx.play("shot")
 		self:shot()
 	end
 end

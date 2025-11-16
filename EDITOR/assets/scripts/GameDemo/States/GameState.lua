@@ -28,6 +28,7 @@ end
 
 function GameState:OnEnter()
 	Music.set_volume(20)
+	SoundFx.set_volume(10,-1)
 	Music.play("2:23am")
 	
 	--TODO: use or remove the character state machine
