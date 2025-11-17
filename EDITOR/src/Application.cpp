@@ -39,6 +39,7 @@
 #include"editor/displays/AssetDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
+#include"editor/scene/SceneManager.h"
 
 namespace ENGINE_EDITOR {
     Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
@@ -273,6 +274,10 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create displays!");
 			return false;
 		}
+
+		SCENE_MANAGER().AddScene("scene1");
+		SCENE_MANAGER().AddScene("scene2");
+		SCENE_MANAGER().SetCurrentScene("scene1");
 
 		return true;
 	}

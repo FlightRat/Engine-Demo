@@ -4,6 +4,7 @@
 #include "Core/Scripting/InputManager.h"
 #include "Core/Resources/AssetManager.h"
 #include "../utilities/editor_utilities.h"
+#include "../scene/SceneManager.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
 
@@ -51,7 +52,7 @@ namespace ENGINE_EDIOTR {
 		std::vector<std::string> assetNames;
 		if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
 		{
-			//TODO
+			assetNames = SCENE_MANAGER().GetAllSceneNames();
 		}
 		else
 		{

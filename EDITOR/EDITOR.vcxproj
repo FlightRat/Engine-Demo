@@ -141,6 +141,8 @@
     <ClCompile Include="src\editor\displays\LogDisplay.cpp" />
     <ClCompile Include="src\editor\displays\GameDisplay.cpp" />
     <ClCompile Include="src\editor\displays\SceneDisplay.cpp" />
+    <ClCompile Include="src\editor\scene\SceneManager.cpp" />
+    <ClCompile Include="src\editor\scene\SceneObject.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +219,8 @@
     <ClInclude Include="src\editor\displays\LogDisplay.h" />
     <ClInclude Include="src\editor\displays\GameDisplay.h" />
     <ClInclude Include="src\editor\displays\SceneDisplay.h" />
+    <ClInclude Include="src\editor\scene\SceneManager.h" />
+    <ClInclude Include="src\editor\scene\SceneObject.h" />
     <ClInclude Include="src\editor\utilities\editor_framebuffers.h" />
     <ClInclude Include="src\editor\utilities\editor_textures.h" />
     <ClInclude Include="src\editor\utilities\editor_utilities.h" />
