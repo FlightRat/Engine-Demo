@@ -4,6 +4,8 @@
 #include "Core/Resources/AssetManager.h"
 #include "Rendering/Core/Camera3D.h"
 #include "../utilities/editor_framebuffers.h"
+#include "../utilities/editor_utilities.h"
+#include "../scene/SceneManager.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
 
@@ -53,9 +55,24 @@ namespace ENGINE_EDIOTR {
 			ImGui::SetCursorPos(ImVec2{ x,y });
 
 			ImGui::Image((ImTextureID)fb->GetTextureID(), imageSize, ImVec2{ 0.f,1.f }, ImVec2{ 1.f,0.f });
-			ImGui::EndChild();
+
+			// check size
 			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y))
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DROP_SCENE_SRC);
+				if (payload)
+				{
+					ENGINE_LOG("BEFORE: {}", SCENE_MANAGER().GetCurrentSceneName());
+					SCENE_MANAGER().SetCurrentScene(std::string{ (const char*)payload->Data });
+					ENGINE_LOG("AFTER: {}", SCENE_MANAGER().GetCurrentSceneName());
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			ImGui::EndChild();
 		}
 		ImGui::End();
 	}
