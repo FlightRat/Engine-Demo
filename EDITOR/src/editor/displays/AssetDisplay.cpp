@@ -99,10 +99,11 @@ namespace ENGINE_EDIOTR {
 					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !m_bRename)
 						m_SelectedID = id;
 
+					// right click context
 					auto sAssetName = (*assetItr).c_str();
 					if (bSelectedAsset && ImGui::BeginPopupContextItem())
 					{
-						//TODO: OpenAssetContext
+						OpenAssetContext(*assetItr);
 						ImGui::EndPopup();
 					}
 
@@ -233,6 +234,30 @@ namespace ENGINE_EDIOTR {
 		}
 		if (bHasAsset)
 			ImGui::TextColored(ImVec4{ 1.f,0.f,0.f,1.f }, std::format("Asset name [{}] already exists!", sCheckName).c_str());
+	}
+
+	void AssetDisplay::OpenAssetContext(const std::string& sAssetName)
+	{
+		if (ImGui::Selectable("rename"))
+		{
+			m_bRename = true;
+		}
+
+		if(ImGui::Selectable("delete"))
+		{
+			if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
+			{
+
+			}
+			else
+			{
+				auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+				if (!assetManager.DeleteAsset(sAssetName, m_eSelectedType))
+				{
+					ENGINE_ERROR("Failed to delete asset [{}].", sAssetName);
+				}
+			}
+		}
 	}
 
 	AssetDisplay::AssetDisplay() :
