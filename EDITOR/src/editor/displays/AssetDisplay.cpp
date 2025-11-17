@@ -8,7 +8,7 @@
 #include <imgui.h>
 
 constexpr float DEFAULT_ASSET_SIZE = 128.f;
-constexpr ImVec2 DRAG_ASSET_SIZE = ImVec2{ 32.f,32.f }; // maybe useless for me
+constexpr ImVec2 DRAG_ASSET_SIZE = ImVec2{ 32.f,32.f };
 
 namespace ENGINE_EDIOTR {
 	void AssetDisplay::SetAssetType()
@@ -83,17 +83,22 @@ namespace ENGINE_EDIOTR {
 
 					ImGui::PushID(k++);
 					ImGui::TableSetColumnIndex(col);
+
+					// set bg color if is selected
 					bool bSelectedAsset{ m_SelectedID == id };
 					if (bSelectedAsset)
 						ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4{ 0.0f,0.9f,0.f,0.3f }));
+
+					// image button
 					GLuint textureID{ GetTextureID(*assetItr) };
-					std::string sCheckName{ m_sRenameBuf.data() };
 					if (textureID == 0)
 						break;
-					ImGui::ImageButton("asset!!!",(ImTextureID)textureID, ImVec2{m_AssetSize,m_AssetSize});
+					ImGui::ImageButton("asset image button",(ImTextureID)textureID, ImVec2{m_AssetSize,m_AssetSize});
 
+					// select if mouse click the button
 					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !m_bRename)
 						m_SelectedID = id;
+
 					auto sAssetName = (*assetItr).c_str();
 					if (bSelectedAsset && ImGui::BeginPopupContextItem())
 					{
@@ -101,6 +106,7 @@ namespace ENGINE_EDIOTR {
 						ImGui::EndPopup();
 					}
 
+					// drag & drop with a image
 					if (ImGui::BeginDragDropSource())
 					{
 						ImGui::SetDragDropPayload(m_sDragSource.c_str(), sAssetName, (strlen(sAssetName) + 1) * sizeof(char), ImGuiCond_Once);
@@ -108,9 +114,12 @@ namespace ENGINE_EDIOTR {
 						ImGui::EndDragDropSource();
 					}
 
+					// show asset name
 					if (!m_bRename || !bSelectedAsset)
 						ImGui::Text(sAssetName);
 
+					// do the rename
+					std::string sCheckName{ m_sRenameBuf.data() };
 					if (m_bRename && bSelectedAsset)
 					{
 						ImGui::SetKeyboardFocusHere();
@@ -123,13 +132,14 @@ namespace ENGINE_EDIOTR {
 							m_sRenameBuf.clear();
 							m_bRename = false;
 						}
-						else if (m_bRename && ImGui::IsKeyPressed(ImGuiKey_Escape)) //TODO: check here
+						else if (m_bRename && ImGui::IsKeyPressed(ImGuiKey_Escape)) //TODO: add check here
 						{
 							m_sRenameBuf.clear();
 							m_bRename = false;
 						}
 					}
 
+					// enter rename if double click the text
 					if (!m_bRename && bSelectedAsset && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
 					{
 						m_sRenameBuf.clear();
@@ -137,6 +147,7 @@ namespace ENGINE_EDIOTR {
 						m_bRename = true;
 					}
 
+					// check new name
 					if (m_bRename && bSelectedAsset)
 					{
 						if (sAssetName != sCheckName)
@@ -255,11 +266,17 @@ namespace ENGINE_EDIOTR {
 		ImGui::SameLine(0.f, 10.f);
 		if (ImGui::BeginCombo("##AssetType", m_sSelectedType.c_str()))
 		{
+			/*
+			* for -- go through all asset types
+			* ImGui::Selectable -- set each asset type as selectable item
+			* if -- if a item is selected, do the work
+			*/
 			for (const auto& sAssetType : m_SelectableTypes)
 			{
 				bool bIsSelected = m_sSelectedType == sAssetType;
 				if (ImGui::Selectable(sAssetType.c_str(), bIsSelected))
 				{
+					// if a type is selected
 					m_bAssetTypeChanged = true;
 					m_sSelectedType = sAssetType;
 					m_SelectedID = -1;

@@ -304,6 +304,7 @@ namespace ENGINE_RESOURCES {
         return soundFxItr->second;
     }
 
+    /* get all asset key names of specific asset type*/
     std::vector<std::string> AssetManager::GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType) const
     {
         switch (eAssetType)
@@ -331,6 +332,7 @@ namespace ENGINE_RESOURCES {
         }
     }
 
+    /* change the asset name of specific asset type from "sOldName" to "sNewName */
     bool AssetManager::ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType)
     {
         switch (eAssetType)
