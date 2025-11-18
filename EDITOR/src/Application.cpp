@@ -40,9 +40,10 @@
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
 #include"editor/scene/SceneManager.h"
+#include"editor/scene/SceneObject.h"
 
 namespace ENGINE_EDITOR {
-    Application::Application():m_pWindow{nullptr},m_pRegistry{nullptr},m_Event{},m_bIsRunning{true}
+	Application::Application() :m_pWindow{ nullptr }, m_Event{}, m_bIsRunning{ true }
 	{
 
 	}
@@ -126,9 +127,6 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// ECS Registry
-		m_pRegistry = std::make_unique<ENGINE_CORE::ECS::Registry>();
-
 		// main registry
 		auto& mainRegistry = MAIN_REGISTRY();
 		if (!mainRegistry.Initialize())
@@ -136,109 +134,8 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to initialize the Main Registry!");
 			return false;
 		}
-
-		// Physics Common
-		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
-		if (!physicsCommon)
-		{
-			ENGINE_ERROR("Failed to create the physics common!");
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon))
-		{
-			ENGINE_ERROR("Failed to add the physics common to the registry context!");
-			return false;
-		}
-
-		// Physics World
-		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
-		if(!physicsWorld)
-		{
-			ENGINE_ERROR("Failed to create the physics world!");
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld))
-		{
-			ENGINE_ERROR("Failed to add the physics world to the registry context!");
-			return false;
-		}
-		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
-
-		// Physics System
-		auto physicsSystem = std::make_shared<ENGINE_CORE::Systems::PhysicsSystem>(*m_pRegistry);
-		if (!physicsSystem)
-		{
-			ENGINE_ERROR("Failed to create the physics system!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::PhysicsSystem>>(physicsSystem))
-		{
-			ENGINE_ERROR("Failed to add the physics system to the registry context!");
-			return false;
-		}
-
-		// Contact Listener
-		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
-		if (!contactListener)
-		{
-			ENGINE_ERROR("Failed to create the contact listener!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener))
-		{
-			ENGINE_ERROR("Failed to add the contact listener to the registry context!");
-			return false;
-		}
-		physicsWorld->setEventListener(contactListener.get());
-
-		// Camera
-		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
-		if (!m_pRegistry->AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera))
-		{
-			ENGINE_ERROR("Failed to add the camera to the registry context!");
-			return false;
-		}
-
-		// TODO: Add shader to lua, like texture
-		// shaders
-		if (!LoadShaders())
-		{
-			ENGINE_ERROR("Failed to load the shaders!");
-			return false;
-		}
-
-		if (!LoadEditorTextures())
-		{
-			ENGINE_ERROR("Failed to load the editor textures!");
-			return false;
-		}
-
-		// Lua script
-		auto lua = std::make_shared<sol::state>();
-		if (!lua)
-		{
-			ENGINE_ERROR("Failed to create the lua state!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr<sol::state>>(lua))
-		{
-			ENGINE_ERROR("Failed to add the sol::state to the registry context!");
-			return false;
-		}
-
-		// Script System
-		auto scriptSystem = std::make_shared<ENGINE_CORE::Systems::ScriptingSystem>(*m_pRegistry);
-		if (!scriptSystem)
-		{
-			ENGINE_ERROR("Failed to create the script system!");
-			return false;
-		}
-		if (!m_pRegistry->AddToContext<std::shared_ptr< ENGINE_CORE::Systems::ScriptingSystem>>(scriptSystem))
-		{
-			ENGINE_ERROR("Failed to add the script system to the registry context!");
-			return false;
-		}
-
 		// Render System
-		auto renderSystem = std::make_shared<ENGINE_CORE::Systems::RenderSystem>(*m_pRegistry);
+		auto renderSystem = std::make_shared<ENGINE_CORE::Systems::RenderSystem>();
 		if (!renderSystem)
 		{
 			ENGINE_ERROR("Failed to create the render system!");
@@ -249,7 +146,6 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
 		}
-
 		// editor framebuffer
 		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
 		if (!pEditorFramebuffer)
@@ -274,10 +170,21 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create displays!");
 			return false;
 		}
+		if (!LoadShaders())
+		{
+			ENGINE_ERROR("Failed to load the shaders!");
+			return false;
+		}
+		if (!LoadEditorTextures())
+		{
+			ENGINE_ERROR("Failed to load the editor textures!");
+			return false;
+		}
+
 
 		SCENE_MANAGER().AddScene("scene1");
 		SCENE_MANAGER().AddScene("scene2");
-		SCENE_MANAGER().SetCurrentScene("scene1");
+		//SCENE_MANAGER().SetCurrentScene("scene1");
 
 		return true;
 	}
@@ -351,13 +258,17 @@ namespace ENGINE_EDITOR {
 
 	void Application::ProcessEvents()
 	{
-		auto& camera = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		//auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		//if (!pCurrentScene)
+		//	return;
+		//auto& runtimeRegistry = pCurrentScene->GetRuntimeRegistry();
+		//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		//auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
-
 		auto& engine = ENGINE_CORE::CoreEngineData::GetInstance();
-		auto& physicsWorld = m_pRegistry->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 
 		//process Events
 		while (SDL_PollEvent(&m_Event))
@@ -376,13 +287,13 @@ namespace ENGINE_EDITOR {
 				//	m_bIsRunning = false;
 				if (m_Event.key.keysym.sym == SDLK_0)
 				{
-					engine.ToggleRenderCollisions();
-					physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
-					auto view = m_pRegistry->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
-					for (auto [entity, physics] : view.each())
-					{
-						physics.SetDebug(engine.RenderCollidersEnabled());
-					}
+					//engine.ToggleRenderCollisions();
+					//physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
+					//auto view = m_pRegistry->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
+					//for (auto [entity, physics] : view.each())
+					//{
+					//	physics.SetDebug(engine.RenderCollidersEnabled());
+					//}
 				}
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;
@@ -480,7 +391,7 @@ namespace ENGINE_EDITOR {
 		}
 	
 		// game display
-		auto pGameDisplay = std::make_unique<ENGINE_EDIOTR::GameDisplay>(*m_pRegistry);
+		auto pGameDisplay = std::make_unique<ENGINE_EDIOTR::GameDisplay>();
 		if (!pGameDisplay)
 		{
 			ENGINE_ERROR("Failed to create the GameDisplay");
@@ -574,13 +485,6 @@ namespace ENGINE_EDITOR {
 
 	void Application::RenderImGui()
 	{
-		//ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
-		//auto& GameDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::GameDisplay>>();
-		//GameDisplay->Draw();
-		//auto& logDisplay = m_pRegistry->GetContext<std::shared_ptr<ENGINE_EDIOTR::LogDisplay>>();
-		//logDisplay->Draw();
-		//ImGui::ShowDemoWindow();
-
 		const auto dockSpaceId = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID);
 		if (static auto firstTime = true; firstTime) [[unlikely]]
 		{

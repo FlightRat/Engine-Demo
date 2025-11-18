@@ -8,7 +8,6 @@ namespace ENGINE_EDITOR{
 	{
 	private:
 		std::unique_ptr<ENGINE_WINDOWING::Window> m_pWindow;
-		std::unique_ptr<ENGINE_CORE::ECS::Registry> m_pRegistry;
 		SDL_Event m_Event;
 		bool m_bIsRunning;
 

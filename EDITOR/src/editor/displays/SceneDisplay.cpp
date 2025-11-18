@@ -1,33 +1,41 @@
 #include "SceneDisplay.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Systems/RenderSystem.h"
+#include "Core/Systems/ScriptingSystem.h"
 #include "Core/Resources/AssetManager.h"
 #include "Rendering/Core/Camera3D.h"
 #include "../utilities/editor_framebuffers.h"
 #include "../utilities/editor_utilities.h"
 #include "../scene/SceneManager.h"
+#include "../scene/SceneObject.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
 
 namespace ENGINE_EDIOTR {
 	void SceneDisplay::RenderScene()
 	{
-		auto& mainRegistry = MAIN_REGISTRY();
-		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		//auto& scriptSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+		// TODO: conflict with game display -- everything is loaded when play button is pressed
+		//auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		//if (!pCurrentScene )
+		//	return;
+		//auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		//auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 
-		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
-		fb->Bind();
-		glViewport(0, 0, fb->Width(), fb->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		m_pSceneCam->SetWidth(fb->Width());
-		m_pSceneCam->SetHeight(fb->Height());
+		//auto& mainRegistry = MAIN_REGISTRY();
+		//auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
+		//auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+
+		//const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
+		//fb->Bind();
+		//glViewport(0, 0, fb->Width(), fb->Height());
+		//glClearColor(0.f, 0.f, 0.f, 1.f);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//m_pSceneCam->SetWidth(fb->Width());
+		//m_pSceneCam->SetHeight(fb->Height());
 		//scriptSystem->Render();
-		renderSystem->Render(m_pSceneCam);
-		fb->Unbind();
-		fb->CheckResize();
+		//renderSystem->Render(m_pSceneCam, runtimeRegistry);
+		//fb->Unbind();
+		//fb->CheckResize();
 	}
 
 	SceneDisplay::SceneDisplay():m_pSceneCam{std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f)}

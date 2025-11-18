@@ -11,28 +11,64 @@
 #include "Sounds/MusicPlayer/MusicPlayer.h"
 #include "Sounds/SoundFxPlayer/SoundFxPlayer.h"
 #include "Physics/RP3D_Wrappers.h"
+#include "Physics/ContactListener.h"
 #include "../utilities/editor_framebuffers.h"
 #include <Core/Systems/ScriptingSystem.h>
 #include <Core/Systems/RenderSystem.h>
 #include <Rendering/Core/Camera3D.h>
+#include "../scene/SceneManager.h"
+#include "../scene/SceneObject.h"
+
+using namespace ENGINE_CORE::Systems;
+using namespace ENGINE_RENDERING;
 
 namespace ENGINE_EDIOTR
 {
-	GameDisplay::GameDisplay(ENGINE_CORE::ECS::Registry& registry) 
-		:m_Registry{ registry }, m_bPlayScene{ false }, m_bSceneLoaded{ false }
+	GameDisplay::GameDisplay() :m_bPlayScene{ false }, m_bSceneLoaded{ false }
 	{
 	}
 
 	void GameDisplay::LoadScene()
 	{
-		auto& scriptSystem = m_Registry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene)
+			return;
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+
+		// Camera
+		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
+		runtimeRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera);
+
+		// Physics Common
+		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
+		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon);
+
+		// Physics World
+		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
+		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld);
+		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
+
+		// Contact Listener
+		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
+		runtimeRegistry.AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener);
+		physicsWorld->setEventListener(contactListener.get());
+
+		// Physics System
+		auto physicsSystem = std::make_shared<PhysicsSystem>(runtimeRegistry);
+		runtimeRegistry.AddToContext<std::shared_ptr< PhysicsSystem>>(physicsSystem);
+
+		// Script system
+		auto scriptSystem = std::make_shared<ScriptingSystem>(runtimeRegistry);
+		runtimeRegistry.AddToContext<std::shared_ptr<ScriptingSystem>>(scriptSystem);
+
+		// lua
+		auto lua = runtimeRegistry.AddToContext<std::shared_ptr<sol::state>>(std::make_shared<sol::state>());
 		if (!lua)
 		{
 			lua = std::make_shared<sol::state>();
 		}
 		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, m_Registry);
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, runtimeRegistry);
 		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
 		if (!scriptSystem->LoadMainScript(*lua))
 		{
@@ -47,9 +83,17 @@ namespace ENGINE_EDIOTR
 	{
 		m_bPlayScene = false;
 		m_bSceneLoaded = false;
-		m_Registry.GetRegistry().clear();
-		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
-		lua.reset();
+
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		runtimeRegistry.ClearRegistry();
+		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		runtimeRegistry.RemoveContext<std::shared_ptr<sol::state>>();
+		runtimeRegistry.RemoveContext<std::shared_ptr<rp3d::PhysicsCommon>>();
+		runtimeRegistry.RemoveContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_PHYSICS::ContactListener>>();
+		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
+		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 
 		auto& mainRegistry = MAIN_REGISTRY();
 		mainRegistry.GetMusicPlayer().Stop();
@@ -58,10 +102,16 @@ namespace ENGINE_EDIOTR
 
 	void GameDisplay::RenderGame()
 	{
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene || !m_bPlayScene)
+			return;
+
 		auto& mainRegistry = MAIN_REGISTRY();
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		
+		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		//auto& scriptSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		auto& camera = m_Registry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
 
 		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
@@ -71,8 +121,8 @@ namespace ENGINE_EDIOTR
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		camera->SetWidth(fb->Width());
 		camera->SetHeight(fb->Height());
-		//scriptSystem->Render();
-		renderSystem->Render(camera);
+		scriptSystem->Render();
+		renderSystem->Render(camera, runtimeRegistry);
 		fb->Unbind();
 		fb->CheckResize();
 	}
@@ -104,6 +154,10 @@ namespace ENGINE_EDIOTR
 			ImVec2{ (float)pPlayTexture->GetWidth() * 0.25f, (float)pPlayTexture->GetHeight() * 0.25f, })
 			&& !m_bSceneLoaded)
 		{
+			/* now, the scene is loaded when:
+			* 1.a scene is drag and drop in scene display
+			* 2.play button is pressed
+			*/
 			LoadScene();
 		}
 		if (ImGui::GetColorStackSize() > 0)
@@ -162,11 +216,13 @@ namespace ENGINE_EDIOTR
 	
 	void GameDisplay::Update()
 	{
-		if (!m_bPlayScene)
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene || !m_bPlayScene)
 			return;
 
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& coreGlobals = CORE_GLOBALS();
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
 
 		const decimal timeStep = coreGlobals.GetPhysicsTimeStep();
 		double deltaTime = coreGlobals.GetDeltaTime();
@@ -176,9 +232,9 @@ namespace ENGINE_EDIOTR
 		double dt = deltaTime > MAX_DELTA_TIME ? 0.25 : deltaTime;
 		accumulator += dt;
 		
-		auto& scriptSystem = m_Registry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-		auto& physicsWorld = m_Registry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		auto& physicsSystem = m_Registry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
+		auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& physicsSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
 		
 		scriptSystem->Update();
 		while (accumulator >= timeStep) {	// TODO: add check "if (coreGlobals.IsPhysicsEnabled())"
@@ -186,7 +242,7 @@ namespace ENGINE_EDIOTR
 			accumulator -= timeStep;
 		}
 		decimal factor = accumulator / timeStep;
-		physicsSystem->Update(m_Registry.GetRegistry(), factor);
+		physicsSystem->Update(runtimeRegistry.GetRegistry(), factor);
 		//TODO:update camera here
 	}
 }
