@@ -13,12 +13,16 @@ namespace ENGINE_CORE::ECS {
 
 		inline entt::registry& GetRegistry() { return *m_pRegistry; }
 		inline entt::entity CreateEntity() { return m_pRegistry->create(); }
+		inline void ClearRegistry() { m_pRegistry->clear(); }
 
 		template <typename TContext>
 		TContext AddToContext(TContext context);
 
 		template <typename TContext>
 		TContext& GetContext();
+
+		template <typename TContext>
+		bool RemoveContext();
 
 		static void CreateLuaRegistryBind(sol::state& lua, Registry& state);
 
