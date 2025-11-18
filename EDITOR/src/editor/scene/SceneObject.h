@@ -16,6 +16,7 @@ namespace ENGINE_EDITOR {
 
 		inline const std::string& GetName() { return m_sSceneName; }
 		inline ENGINE_CORE::ECS::Registry& GetRegistry() { return m_Registry; }
+		inline ENGINE_CORE::ECS::Registry* GetRegistryPtr() { return &m_Registry; }
 		inline ENGINE_CORE::ECS::Registry& GetRuntimeRegistry() { return m_RuntimeRegistry; }
 	};
 }

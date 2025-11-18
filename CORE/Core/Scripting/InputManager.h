@@ -5,6 +5,7 @@
 #include <sol/sol.hpp>
 
 using namespace ENGINE_WINDOWING::INPUTS;
+#define INPUT_MANAGER() ENGINE_CORE::InputManager::GetInstance()
 
 /*
 整体思路：
