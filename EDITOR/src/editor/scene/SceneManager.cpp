@@ -21,6 +21,24 @@ namespace ENGINE_EDITOR {
 		return bSuccess;
 	}
 
+	bool SceneManager::DeleteScene(const std::string& sceneName)
+	{
+		if (sceneName == SCENE_MANAGER().GetCurrentSceneName())
+			return false;
+		else
+			return std::erase_if(m_mapScene, [&](const auto& pair) {return pair.first == sceneName; }) > 0;
+	}
+
+	bool SceneManager::ChangeSceneName(const std::string& sOldName, const std::string& sNewName)
+	{
+		return ENGINE_UTIL::ChangeKey(m_mapScene, sOldName, sNewName);
+	}
+
+	bool SceneManager::CheckHasScene(const std::string& sceneName)
+	{
+		return m_mapScene.contains(sceneName);
+	}
+
 	std::shared_ptr<ENGINE_EDITOR::SceneObject> SceneManager::GetScene(const std::string& sSceneName)
 	{
 		auto sceneItr = m_mapScene.find(sSceneName);

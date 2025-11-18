@@ -205,7 +205,7 @@ namespace ENGINE_EDIOTR {
 			return false;
 		if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
 		{
-			//TODO: change scene name
+			return SCENE_MANAGER().ChangeSceneName(sOldName, sNewName);
 		}
 		else
 		{
@@ -225,7 +225,8 @@ namespace ENGINE_EDIOTR {
 		bool bHasAsset{ false };
 		if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
 		{
-			//TODO: check if the scene already exists!
+			if (SCENE_MANAGER().CheckHasScene(sCheckName))
+				bHasAsset = true;
 		}
 		else
 		{
@@ -248,7 +249,8 @@ namespace ENGINE_EDIOTR {
 		{
 			if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
 			{
-
+				if(!SCENE_MANAGER().DeleteScene(sAssetName))
+					ENGINE_ERROR("Failed to delete scene [{}].", sAssetName);
 			}
 			else
 			{
