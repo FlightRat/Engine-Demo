@@ -8,12 +8,10 @@
 namespace ENGINE_CORE::Systems {
 	class RenderSystem
 	{
-	private:
-		ENGINE_CORE::ECS::Registry& m_Registry;
 	public:
-		RenderSystem(ENGINE_CORE::ECS::Registry& registry);
+		RenderSystem();
 		~RenderSystem() = default;
-		void Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera);
+		void Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 
 		GLuint m_DebugVAO, m_DebugVBO;
 	};

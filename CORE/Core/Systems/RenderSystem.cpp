@@ -20,18 +20,17 @@ using namespace ENGINE_RENDERING;
 using namespace ENGINE_RESOURCES;
 
 namespace ENGINE_CORE::Systems {
-	RenderSystem::RenderSystem(ENGINE_CORE::ECS::Registry& registry):m_Registry{registry}
+	RenderSystem::RenderSystem()
 	{
 		glGenVertexArrays(1, &m_DebugVAO);
 		glGenBuffers(1, &m_DebugVBO);
 	}
 
-	void RenderSystem::Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
+	void RenderSystem::Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
-		//auto& assetManager = m_Registry.GetContext<std::shared_ptr<AssetManager>>();
-		auto& physicsWorld = m_Registry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 		// shader
@@ -80,7 +79,7 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 
 		glm::mat4 model = glm::mat4(1.0f);
-		auto view = m_Registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{			
 			if (!meshR.shouldRender)
@@ -103,9 +102,9 @@ namespace ENGINE_CORE::Systems {
 			if (id.parent_id != -1)
 			{
 				auto parent_entity = static_cast<entt::entity>(id.parent_id);
-				if (m_Registry.GetRegistry().valid(parent_entity))
+				if (runtimeRegistry.GetRegistry().valid(parent_entity))
 				{
-					auto parent_transform = m_Registry.GetRegistry().get<TransformComponent>(parent_entity);
+					auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
 					glm::mat4 parentModel = glm::mat4(1.0f);
 					parentModel = glm::translate(parentModel, parent_transform.position);
 					parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
