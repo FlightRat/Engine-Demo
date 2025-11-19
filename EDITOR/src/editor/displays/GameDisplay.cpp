@@ -75,16 +75,19 @@ namespace ENGINE_EDIOTR
 			ENGINE_ERROR("Failed to load the main lua script!");
 			return;
 		}
+		
 		m_bPlayScene = true;
 		m_bSceneLoaded = true;
+		pCurrentScene->SetLoad(true);
 	}
 
 	void GameDisplay::UnloadScene()
 	{
 		m_bPlayScene = false;
 		m_bSceneLoaded = false;
-
+		
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		pCurrentScene->SetLoad(false);
 		auto& runtimeRegistry = pCurrentScene->GetRegistry();
 		runtimeRegistry.ClearRegistry();
 		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();

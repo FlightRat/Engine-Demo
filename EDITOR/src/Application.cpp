@@ -258,12 +258,15 @@ namespace ENGINE_EDITOR {
 
 	void Application::ProcessEvents()
 	{
-		//auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		//if (!pCurrentScene)
-		//	return;
-		//auto& runtimeRegistry = pCurrentScene->GetRuntimeRegistry();
-		//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-		//auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		bool load = false;
+		if (pCurrentScene && pCurrentScene->CheckLoad())
+		{
+			load = true;
+			//auto& runtimeRegistry = pCurrentScene->GetRuntimeRegistry();
+			//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+			//auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		}
 
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
@@ -285,15 +288,18 @@ namespace ENGINE_EDITOR {
 			{
 				//if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 				//	m_bIsRunning = false;
-				if (m_Event.key.keysym.sym == SDLK_0)
+				if (m_Event.key.keysym.sym == SDLK_0 && load)
 				{
-					//engine.ToggleRenderCollisions();
-					//physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
-					//auto view = m_pRegistry->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
-					//for (auto [entity, physics] : view.each())
-					//{
-					//	physics.SetDebug(engine.RenderCollidersEnabled());
-					//}
+					engine.ToggleRenderCollisions();
+					auto& runtimeRegistry = pCurrentScene->GetRegistry();
+					//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+					auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+					physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
+					auto view = runtimeRegistry.GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
+					for (auto [entity, physics] : view.each())
+					{
+						physics.SetDebug(engine.RenderCollidersEnabled());
+					}
 				}
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;

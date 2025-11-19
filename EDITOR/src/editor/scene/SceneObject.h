@@ -7,12 +7,16 @@ namespace ENGINE_EDITOR {
 	private:
 		ENGINE_CORE::ECS::Registry m_Registry, m_RuntimeRegistry;
 		std::string m_sSceneName;
+		bool m_bLoaded;
 	public:
 		SceneObject(const std::string& sceneName);
 		~SceneObject() = default;
 
 		void CopySceneToRuntime();
 		void ClearRuntimeScene();
+		
+		inline const bool CheckLoad() { return m_bLoaded; }
+		inline void SetLoad(const bool load) { m_bLoaded = load; }
 
 		inline const std::string& GetName() { return m_sSceneName; }
 		inline ENGINE_CORE::ECS::Registry& GetRegistry() { return m_Registry; }
