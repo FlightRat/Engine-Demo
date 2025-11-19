@@ -14,13 +14,6 @@
 namespace ENGINE_EDIOTR {
 	void SceneDisplay::RenderScene()
 	{
-		 //TODO: conflict with game display -- everything is loaded when play button is pressed
-		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene || !pCurrentScene->CheckLoad())
-			return;
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-		auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
 		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
@@ -30,10 +23,16 @@ namespace ENGINE_EDIOTR {
 		glViewport(0, 0, fb->Width(), fb->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		m_pSceneCam->SetWidth(fb->Width());
-		m_pSceneCam->SetHeight(fb->Height());
-		scriptSystem->Render();
-		renderSystem->Render(m_pSceneCam, runtimeRegistry);
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (pCurrentScene && pCurrentScene->CheckLoad())
+		{
+			auto& runtimeRegistry = pCurrentScene->GetRegistry();
+			m_pSceneCam->SetWidth(fb->Width());
+			m_pSceneCam->SetHeight(fb->Height());
+			auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+			scriptSystem->Render();
+			renderSystem->Render(m_pSceneCam, runtimeRegistry);
+		}
 		fb->Unbind();
 		fb->CheckResize();
 	}

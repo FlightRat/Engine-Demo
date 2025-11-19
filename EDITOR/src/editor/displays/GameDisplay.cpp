@@ -105,27 +105,26 @@ namespace ENGINE_EDIOTR
 
 	void GameDisplay::RenderGame()
 	{
-		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene || !m_bPlayScene)
-			return;
-
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-		
-		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-		auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
 		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-
 		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
+
 		fb->Bind();
 		glViewport(0, 0, fb->Width(), fb->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		camera->SetWidth(fb->Width());
-		camera->SetHeight(fb->Height());
-		scriptSystem->Render();
-		renderSystem->Render(camera, runtimeRegistry);
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (pCurrentScene && m_bPlayScene)
+		{
+			auto& runtimeRegistry = pCurrentScene->GetRegistry();
+			auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+			camera->SetWidth(fb->Width());
+			camera->SetHeight(fb->Height());
+			auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+			scriptSystem->Render();
+			renderSystem->Render(camera, runtimeRegistry);
+		}
 		fb->Unbind();
 		fb->CheckResize();
 	}
