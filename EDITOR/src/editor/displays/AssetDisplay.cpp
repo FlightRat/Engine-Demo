@@ -292,30 +292,25 @@ namespace ENGINE_EDIOTR {
 
 		ImGui::Text("Asset Type");
 		ImGui::SameLine(0.f, 10.f);
-		if (ImGui::BeginCombo("##AssetType", m_sSelectedType.c_str()))
+		if (ImGui::BeginCombo("##AssetType", m_sSelectedType.c_str()))		// draw the asset selecting dropdown
 		{
-			/*
-			* for -- go through all asset types
-			* ImGui::Selectable -- set each asset type as selectable item
-			* if -- if a item is selected, do the work
-			*/
-			for (const auto& sAssetType : m_SelectableTypes)
+			for (const auto& sAssetType : m_SelectableTypes)				//go through all asset types
 			{
 				bool bIsSelected = m_sSelectedType == sAssetType;
-				if (ImGui::Selectable(sAssetType.c_str(), bIsSelected))
+				if (ImGui::Selectable(sAssetType.c_str(), bIsSelected))		// set each asset type as selectable item
 				{
-					// if a type is selected
-					m_bAssetTypeChanged = true;
+					m_bAssetTypeChanged = true;								// if a type is selected, do some update
 					m_sSelectedType = sAssetType;
 					m_SelectedID = -1;
 					SetAssetType();
 				}
 				if (bIsSelected)
-					ImGui::SetItemDefaultFocus();
+					ImGui::SetItemDefaultFocus();							// highlight the selected asset type
 			}
 			ImGui::EndCombo();
 		}
 
+		// draw the asset item display
 		if (ImGui::BeginChild("##AssetTable", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_ChildWindow))
 		{
 			m_bWindowHovered = ImGui::IsWindowHovered();
