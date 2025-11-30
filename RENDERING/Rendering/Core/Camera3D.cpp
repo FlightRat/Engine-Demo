@@ -19,6 +19,11 @@ namespace ENGINE_RENDERING {
 		updateCameraVectors();
 	}
 
+	void Camera3D::Reset()
+	{
+		//TODO: reset the camera attribute
+	}
+
 	glm::mat4 Camera3D::GetViewMatrix()
 	{
 		return glm::lookAt(Position, Position + Front, Up);

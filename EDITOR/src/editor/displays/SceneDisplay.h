@@ -14,6 +14,7 @@ namespace ENGINE_EDIOTR
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> m_pSceneCam;	//TODO: unique ptr
 	private:
 		void RenderScene();
+		void LoadNewScene();
 	public:
 		SceneDisplay();
 		~SceneDisplay() = default;

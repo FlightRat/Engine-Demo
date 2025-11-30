@@ -8,6 +8,7 @@
 #include "../utilities/editor_utilities.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
+#include "../tools/ToolManager.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
 
@@ -35,6 +36,11 @@ namespace ENGINE_EDIOTR {
 		}
 		fb->Unbind();
 		fb->CheckResize();
+	}
+
+	void SceneDisplay::LoadNewScene()
+	{
+		// TODO
 	}
 
 	SceneDisplay::SceneDisplay():m_pSceneCam{std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f)}
@@ -86,6 +92,9 @@ namespace ENGINE_EDIOTR {
 
 	void SceneDisplay::Update()
 	{
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene)
+			return;
 		//TODO:move the camera in scene display
 	}
 }

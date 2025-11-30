@@ -8,13 +8,14 @@
 
 namespace ENGINE_EDITOR {
 	class SceneObject;
+	class ToolManager;
 
 	class SceneManager
 	{
 	private:
 		std::map<std::string, std::shared_ptr<ENGINE_EDITOR::SceneObject>> m_mapScene;
 		std::string m_sCurrentScene{ "" };
-
+		std::unique_ptr<ToolManager> m_pToolManager{nullptr};
 	private:
 		SceneManager() = default;
 		~SceneManager() = default;
@@ -31,6 +32,7 @@ namespace ENGINE_EDITOR {
 		std::shared_ptr<ENGINE_EDITOR::SceneObject> GetScene(const std::string& sSceneName);
 		std::shared_ptr<ENGINE_EDITOR::SceneObject>	GetCurrentScene();
 		std::vector<std::string> GetAllSceneNames() const;
+		ToolManager& GetToolManager();
 		inline void SetCurrentScene(const std::string& sSceneName) { m_sCurrentScene = sSceneName; }
 		inline const std::string& GetCurrentSceneName() const { return m_sCurrentScene; }
 	};
