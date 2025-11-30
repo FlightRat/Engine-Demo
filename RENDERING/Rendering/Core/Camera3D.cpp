@@ -37,10 +37,22 @@ namespace ENGINE_RENDERING {
 		updateCameraVectors();
 	}
 
-	//TODO:add delta time
 	void Camera3D::ProcessKeyboard(Camera_Movement direction)
 	{
 		float velocity = MovementSpeed;
+		if (direction == FORWARD)
+			Position += Front * velocity;
+		if (direction == BACKWARD)
+			Position -= Front * velocity;
+		if (direction == LEFT)
+			Position -= Right * velocity;
+		if (direction == RIGHT)
+			Position += Right * velocity;
+	}
+
+	void Camera3D::ProcessKeyboard(Camera_Movement direction, double dt)
+	{
+		float velocity = MovementSpeed * dt;
 		if (direction == FORWARD)
 			Position += Front * velocity;
 		if (direction == BACKWARD)

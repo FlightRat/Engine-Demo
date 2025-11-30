@@ -21,5 +21,7 @@ namespace ENGINE_EDIOTR
 
 		virtual void Draw() override;
 		virtual void Update() override;
+
+		void ControlCam();
 	};
 }

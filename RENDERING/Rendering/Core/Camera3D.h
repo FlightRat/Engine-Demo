@@ -7,7 +7,7 @@ namespace ENGINE_RENDERING {
 	// Default camera values
 	const float YAW = -90.0f;
 	const float PITCH = 0.0f;
-	const float SPEED = 2.5f;
+	const float SPEED = 10.0f;
 	const float SENSITIVITY = 0.1f;
 	const float ZOOM = 43.0f;
 
@@ -57,6 +57,7 @@ namespace ENGINE_RENDERING {
 		glm::mat4 GetViewMatrix();
 
 		void ProcessKeyboard(Camera_Movement direction);
+		void ProcessKeyboard(Camera_Movement direction,double dt);
 		void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
 		void ProcessMouseScroll(float yoffset);
 
