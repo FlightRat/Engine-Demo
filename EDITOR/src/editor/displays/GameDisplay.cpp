@@ -22,7 +22,7 @@
 using namespace ENGINE_CORE::Systems;
 using namespace ENGINE_RENDERING;
 
-namespace ENGINE_EDIOTR
+namespace ENGINE_EDITOR
 {
 	GameDisplay::GameDisplay() :m_bPlayScene{ false }, m_bSceneLoaded{ false }
 	{

@@ -37,6 +37,7 @@
 #include"editor/displays/SceneDisplay.h"
 #include"editor/displays/LogDisplay.h"
 #include"editor/displays/AssetDisplay.h"
+#include"editor/displays/MenuDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
 #include"editor/scene/SceneManager.h"
@@ -356,7 +357,7 @@ namespace ENGINE_EDITOR {
 		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
 
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& displayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
+		auto& displayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::DisplayHolder>>();
 		for (const auto& pDisplay : displayHolder->displays)
 			pDisplay->Update();
 
@@ -384,20 +385,20 @@ namespace ENGINE_EDITOR {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
-		auto pDisplayHolder = std::make_shared<ENGINE_EDIOTR::DisplayHolder>();
+		auto pDisplayHolder = std::make_shared<ENGINE_EDITOR::DisplayHolder>();
 		if (!pDisplayHolder)
 		{
 			ENGINE_ERROR("Failed to create the DisplayHolder");
 			return false;
 		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>(pDisplayHolder))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDITOR::DisplayHolder>>(pDisplayHolder))
 		{
 			ENGINE_ERROR("Failed to add the DisplayHolder to the registry context!");
 			return false;
 		}
 	
 		// game display
-		auto pGameDisplay = std::make_unique<ENGINE_EDIOTR::GameDisplay>();
+		auto pGameDisplay = std::make_unique<ENGINE_EDITOR::GameDisplay>();
 		if (!pGameDisplay)
 		{
 			ENGINE_ERROR("Failed to create the GameDisplay");
@@ -405,7 +406,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// scene display
-		auto pSceneDisplay = std::make_unique< ENGINE_EDIOTR::SceneDisplay>();
+		auto pSceneDisplay = std::make_unique< ENGINE_EDITOR::SceneDisplay>();
 		if (!pSceneDisplay)
 		{
 			ENGINE_ERROR("Failed to create the SceneDisplay");
@@ -413,7 +414,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// log display
-		auto pLogDisplay = std::make_unique<ENGINE_EDIOTR::LogDisplay>();
+		auto pLogDisplay = std::make_unique<ENGINE_EDITOR::LogDisplay>();
 		if (!pLogDisplay)
 		{
 			ENGINE_ERROR("Failed to create the LogDisplay");
@@ -421,10 +422,18 @@ namespace ENGINE_EDITOR {
 		}
 
 		// asset display
-		auto pAssetDisplay = std::make_unique<ENGINE_EDIOTR::AssetDisplay>();
+		auto pAssetDisplay = std::make_unique<ENGINE_EDITOR::AssetDisplay>();
 		if (!pAssetDisplay)
 		{
 			ENGINE_ERROR("Failed to create the AssetDisplay");
+			return false;
+		}
+
+		// MenuDisplay
+		auto pMenuDisplay = std::make_unique<ENGINE_EDITOR::MenuDisplay>();
+		if (!pMenuDisplay)
+		{
+			ENGINE_ERROR("Failed to create the MenuDisplay");
 			return false;
 		}
 		
@@ -432,6 +441,7 @@ namespace ENGINE_EDITOR {
 		pDisplayHolder->displays.push_back(std::move(pSceneDisplay));
 		pDisplayHolder->displays.push_back(std::move(pLogDisplay));
 		pDisplayHolder->displays.push_back(std::move(pAssetDisplay));
+		pDisplayHolder->displays.push_back(std::move(pMenuDisplay));
 		
 		return true;
 	}
@@ -509,7 +519,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& pDisplayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDIOTR::DisplayHolder>>();
+		auto& pDisplayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::DisplayHolder>>();
 		for (const auto& pDisplay : pDisplayHolder->displays)
 		{
 			pDisplay->Draw();

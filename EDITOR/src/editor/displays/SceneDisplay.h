@@ -6,7 +6,7 @@ namespace ENGINE_RENDERING {
 	class Camera3D;
 }
 
-namespace ENGINE_EDIOTR
+namespace ENGINE_EDITOR
 {
 	class SceneDisplay :public IDisplay
 	{

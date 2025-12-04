@@ -7,7 +7,7 @@ namespace ENGINE_UTIL
 	enum class AssetType;
 }
 
-namespace ENGINE_EDIOTR
+namespace ENGINE_EDITOR
 {
 	class AssetDisplay :public IDisplay
 	{

@@ -2,7 +2,7 @@
 #include "Logger/Logger.h"
 #include <ranges>
 
-namespace ENGINE_EDIOTR
+namespace ENGINE_EDITOR
 {
 	/*
 	* 1.check if new log added

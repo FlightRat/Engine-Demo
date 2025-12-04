@@ -2,7 +2,7 @@
 #include<Core/ECS/Registry.h>
 #include"IDisplay.h"
 
-namespace ENGINE_EDIOTR 
+namespace ENGINE_EDITOR 
 {
 	class GameDisplay:public IDisplay
 	{

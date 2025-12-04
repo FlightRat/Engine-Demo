@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 
-namespace ENGINE_EDIOTR {
+namespace ENGINE_EDITOR {
 	struct IDisplay
 	{
 		virtual ~IDisplay() = default;

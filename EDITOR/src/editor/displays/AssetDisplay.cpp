@@ -11,7 +11,7 @@
 constexpr float DEFAULT_ASSET_SIZE = 128.f;
 constexpr ImVec2 DRAG_ASSET_SIZE = ImVec2{ 32.f,32.f };
 
-namespace ENGINE_EDIOTR {
+namespace ENGINE_EDITOR {
 	void AssetDisplay::SetAssetType()
 	{
 		if (!m_bAssetTypeChanged)

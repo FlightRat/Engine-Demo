@@ -16,7 +16,7 @@
 #include "Windowing/Inputs/Keyboard.h"
 #include "Windowing/Inputs/Mouse.h"
 
-namespace ENGINE_EDIOTR {
+namespace ENGINE_EDITOR {
 	void SceneDisplay::RenderScene()
 	{
 		auto& mainRegistry = MAIN_REGISTRY();

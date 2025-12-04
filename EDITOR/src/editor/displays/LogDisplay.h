@@ -2,7 +2,7 @@
 #include<imgui.h>
 #include"IDisplay.h"
 
-namespace ENGINE_EDIOTR
+namespace ENGINE_EDITOR
 {
 	class LogDisplay :public IDisplay
 	{

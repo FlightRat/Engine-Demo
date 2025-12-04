@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ENGINE_EDIOTR {
+namespace ENGINE_EDITOR {
 	constexpr const char* DROP_TEXTURE_SRC = "DropTextureSource";
 	constexpr const char* DROP_MUSIC_SRC = "DropMusicSource";
 	constexpr const char* DROP_SOUNDFX_SRC = "DropSoundFxSource";
