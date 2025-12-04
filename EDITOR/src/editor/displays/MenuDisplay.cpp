@@ -1,6 +1,8 @@
 #include "MenuDisplay.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
+#include "SDL.h"
+#include "FileSystem/Dialogs/FileDialog.h"
 
 namespace ENGINE_EDITOR {
 	void MenuDisplay::Draw()
@@ -15,7 +17,12 @@ namespace ENGINE_EDITOR {
 				}
 				if (ImGui::MenuItem("Open", "Ctrl + O"))
 				{
-					ENGINE_LOG("Open is pressed!")
+					ENGINE_FileSystem::FileDialog fd{};
+					auto file = fd.OpenFileDialog("Open test", SDL_GetBasePath(), { "*.png","*.jpg" });
+					if (!file.empty())
+					{
+						ENGINE_LOG("File Opened: {}", file);
+					}
 				}
 				if (ImGui::MenuItem("Save", "Ctrl + S"))
 				{
