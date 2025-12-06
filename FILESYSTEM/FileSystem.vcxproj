@@ -71,6 +71,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir).\Dependencies\RapidJSON\include;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -131,10 +134,20 @@
   <ItemGroup>
     <ClInclude Include="FileSystem\Dialogs\FileDialog.h" />
     <ClInclude Include="FileSystem\Dialogs\tinyfiledialogs.h" />
+    <ClInclude Include="FileSystem\Serializers\JSONSerializer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FileSystem\Dialogs\FileDialog.cpp" />
     <ClCompile Include="FileSystem\Dialogs\tinyfiledialogs.cpp" />
+    <ClCompile Include="FileSystem\Serializers\JSONSerializer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FileSystem\Serializers\JSONSerializer.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
+      <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

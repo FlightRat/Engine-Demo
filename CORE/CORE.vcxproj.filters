@@ -96,6 +96,12 @@
     <ClInclude Include="Core\ECS\MainRegistry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\ECS\Components\ComponentSerializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Loaders\SceneLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Registry.cpp">
@@ -173,6 +179,12 @@
     <ClCompile Include="Core\ECS\MainRegistry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Core\ECS\Components\ComponentSerializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Loaders\SceneLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\ECS\Entity.inl">
@@ -182,6 +194,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Core\Scripting\UserDataLuaBindings.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Core\ECS\Components\ComponentSerializer.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

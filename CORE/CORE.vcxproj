@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir)\WINDOW;$(SolutionDir)\Dependencies\SDL\include;$(SolutionDir)\UTILITIES;$(SolutionDir)\SOUNDS;$(SolutionDir)\PHYSICS;$(SolutionDir)\Dependencies\ReactPhysics3D\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir)\WINDOW;$(SolutionDir)\Dependencies\SDL\include;$(SolutionDir)\UTILITIES;$(SolutionDir)\SOUNDS;$(SolutionDir)\FILESYSTEM;$(SolutionDir)\PHYSICS;$(SolutionDir)\Dependencies\ReactPhysics3D\include;D:\代码-CG\The-2D-Engine\Dependencies\RapidJSON\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,6 +135,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FileSystem\FileSystem.vcxproj">
+      <Project>{ffe0bf52-1e50-4414-b845-26d6caff51de}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\GLAD\GLAD.vcxproj">
       <Project>{90fc090c-3046-40d5-ae1e-d04e8aec83cc}</Project>
     </ProjectReference>
@@ -163,6 +166,7 @@
   <ItemGroup>
     <ClInclude Include="Core\CoreUtilities\CoreEngineData.h" />
     <ClInclude Include="Core\CoreUtilities\FollowCamera.h" />
+    <ClInclude Include="Core\ECS\Components\ComponentSerializer.h" />
     <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\Identification.h" />
     <ClInclude Include="Core\ECS\Components\MeshFilter.h" />
@@ -175,6 +179,7 @@
     <ClInclude Include="Core\ECS\MainRegistry.h" />
     <ClInclude Include="Core\ECS\MetaUtilities.h" />
     <ClInclude Include="Core\ECS\Registry.h" />
+    <ClInclude Include="Core\Loaders\SceneLoader.h" />
     <ClInclude Include="Core\Scripting\CameraLuaBindings.h" />
     <ClInclude Include="Core\Scripting\ContactListenerLuaBindings.h" />
     <ClInclude Include="Core\Scripting\InputManager.h" />
@@ -192,6 +197,7 @@
   <ItemGroup>
     <ClCompile Include="Core\CoreUtilities\CoreEngineData.cpp" />
     <ClCompile Include="Core\CoreUtilities\FollowCamera.cpp" />
+    <ClCompile Include="Core\ECS\Components\ComponentSerializer.cpp" />
     <ClCompile Include="Core\ECS\Components\CubeColliderComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\MeshFilter.cpp" />
     <ClCompile Include="Core\ECS\Components\MeshRender.cpp" />
@@ -202,6 +208,7 @@
     <ClCompile Include="Core\ECS\MainRegistry.cpp" />
     <ClCompile Include="Core\ECS\MetaUtilities.cpp" />
     <ClCompile Include="Core\ECS\Registry.cpp" />
+    <ClCompile Include="Core\Loaders\SceneLoader.cpp" />
     <ClCompile Include="Core\Resources\AssetManager.cpp" />
     <ClCompile Include="Core\Scripting\CameraLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\ContactListenerLuaBindings.cpp" />
@@ -217,6 +224,7 @@
     <ClCompile Include="Core\Systems\ScriptingSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Core\ECS\Components\ComponentSerializer.inl" />
     <None Include="Core\ECS\Entity.inl" />
     <None Include="Core\ECS\Registry.inl" />
     <None Include="Core\Scripting\UserDataLuaBindings.inl" />

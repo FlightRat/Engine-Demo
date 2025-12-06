@@ -26,7 +26,12 @@ namespace ENGINE_EDITOR {
 				}
 				if (ImGui::MenuItem("Save", "Ctrl + S"))
 				{
-					ENGINE_LOG("Save is pressed!")
+					ENGINE_FileSystem::FileDialog fd{};
+					auto file = fd.SaveFileDialog("Save scene test", SDL_GetBasePath(), { "*.json"});
+					if (!file.empty())
+					{
+						// Save the scene
+					}
 				}
 				if (ImGui::MenuItem("Exit"))
 				{

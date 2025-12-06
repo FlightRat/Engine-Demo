@@ -21,6 +21,9 @@
     <ClInclude Include="FileSystem\Dialogs\tinyfiledialogs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileSystem\Serializers\JSONSerializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FileSystem\Dialogs\FileDialog.cpp">
@@ -29,5 +32,13 @@
     <ClCompile Include="FileSystem\Dialogs\tinyfiledialogs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FileSystem\Serializers\JSONSerializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FileSystem\Serializers\JSONSerializer.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
