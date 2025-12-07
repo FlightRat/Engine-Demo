@@ -324,6 +324,11 @@ namespace ENGINE_RESOURCES {
                 return ENGINE_UTIL::GetKeys(m_mapSoundFx);
                 break;
             }
+            case ENGINE_UTIL::AssetType::SHADER:
+            {
+                return ENGINE_UTIL::GetKeys(m_mapShader);
+                break;
+            }
             default:
             {
                 assert(false && "Cannot get this type!");

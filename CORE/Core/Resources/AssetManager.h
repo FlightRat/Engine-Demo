@@ -22,6 +22,8 @@ namespace ENGINE_RESOURCES {
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Shader>> m_mapShader{};
 		std::map<std::string, std::shared_ptr<ENGINE_SOUNDS::Music>> m_mapMusic{};
 		std::map<std::string, std::shared_ptr<ENGINE_SOUNDS::SoundFx>> m_mapSoundFx{};
+
+		const std::vector<std::string> m_SelectableMesh{ "cube", "sphere", "capsule"};
 	public:
 		AssetManager() = default;
 		~AssetManager() = default;
@@ -45,6 +47,7 @@ namespace ENGINE_RESOURCES {
 		std::shared_ptr<ENGINE_SOUNDS::SoundFx> GetSoundFx(const std::string& soundFxName);
 
 		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Texture>>& GetAllTextures() const { return m_mapTexture; }
+		inline const std::vector<std::string> GetSelectableMesh(){ return m_SelectableMesh; }
 
 		std::vector<std::string> GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType) const;
 		bool ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType);

@@ -11,6 +11,7 @@ namespace ENGINE_UTIL
 		MUSIC,
 		SOUNDFX,
 		SCENE,
+		SHADER,
 		NO_TYPE
 	};
 
