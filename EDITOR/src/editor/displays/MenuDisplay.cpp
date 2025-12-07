@@ -3,6 +3,9 @@
 #include <imgui.h>
 #include "SDL.h"
 #include "FileSystem/Dialogs/FileDialog.h"
+#include "Core/Loaders/SceneLoader.h"
+#include "../scene/SceneManager.h"
+#include "../scene/SceneObject.h"
 
 namespace ENGINE_EDITOR {
 	void MenuDisplay::Draw()
@@ -18,10 +21,22 @@ namespace ENGINE_EDITOR {
 				if (ImGui::MenuItem("Open", "Ctrl + O"))
 				{
 					ENGINE_FileSystem::FileDialog fd{};
-					auto file = fd.OpenFileDialog("Open test", SDL_GetBasePath(), { "*.png","*.jpg" });
+					auto file = fd.OpenFileDialog("Open test", SDL_GetBasePath(), { "*.json" });
 					if (!file.empty())
 					{
-						ENGINE_LOG("File Opened: {}", file);
+						auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+						if (pCurrentScene)
+						{
+							ENGINE_CORE::Loaders::SceneLoader sl{};
+							if (!sl.LoadScene(pCurrentScene->GetRegistry(), file, true))
+							{
+								ENGINE_ERROR("Failed to load scene.");
+							}
+						}
+						else
+						{
+							ENGINE_ERROR("Failed to save scene.No scene activated!");
+						}
 					}
 				}
 				if (ImGui::MenuItem("Save", "Ctrl + S"))
@@ -30,7 +45,19 @@ namespace ENGINE_EDITOR {
 					auto file = fd.SaveFileDialog("Save scene test", SDL_GetBasePath(), { "*.json"});
 					if (!file.empty())
 					{
-						// Save the scene
+						auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+						if (pCurrentScene)
+						{
+							ENGINE_CORE::Loaders::SceneLoader sl{};
+							if (!sl.SaveScene(pCurrentScene->GetRegistry(), file, true))
+							{
+								ENGINE_ERROR("Failed to save scene!");
+							}
+						}
+						else
+						{
+							ENGINE_ERROR("Failed to save scene.No scene activated!");
+						}
 					}
 				}
 				if (ImGui::MenuItem("Exit"))

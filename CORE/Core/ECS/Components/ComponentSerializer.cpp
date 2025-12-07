@@ -61,35 +61,29 @@ namespace ENGINE_CORE::ECS {
 
 	}
 
-	TransformComponent ComponentSerializer::DeserializeTransform(const rapidjson::Value& jsonValue)
+
+	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, TransformComponent& transform)
 	{
-		return TransformComponent{
-			.position = glm::vec3{jsonValue["position"]["x"].GetFloat(), jsonValue["position"]["y"].GetFloat(), jsonValue["position"]["z"].GetFloat()},
-			.scale = glm::vec3{jsonValue["scale"]["x"].GetFloat(), jsonValue["scale"]["y"].GetFloat(), jsonValue["scale"]["z"].GetFloat()},
-			.rotation_eular = glm::vec3{jsonValue["rotation_eular"]["x"].GetFloat(), jsonValue["rotation_eular"]["y"].GetFloat(), jsonValue["rotation_eular"]["z"].GetFloat()},
-			.rotation_quat = glm::quat{jsonValue["rotation_quat"]["x"].GetFloat(), jsonValue["rotation_quat"]["y"].GetFloat(), jsonValue["rotation_quat"]["z"].GetFloat(),jsonValue["rotation_quat"]["w"].GetFloat()}
-		};
+		transform.position = glm::vec3{ jsonValue["position"]["x"].GetFloat(), jsonValue["position"]["y"].GetFloat(), jsonValue["position"]["z"].GetFloat() };
+		transform.scale = glm::vec3{ jsonValue["scale"]["x"].GetFloat(), jsonValue["scale"]["y"].GetFloat(), jsonValue["scale"]["z"].GetFloat() };
+		transform.rotation_eular = glm::vec3{ jsonValue["rotation_eular"]["x"].GetFloat(), jsonValue["rotation_eular"]["y"].GetFloat(), jsonValue["rotation_eular"]["z"].GetFloat() };
+		transform.rotation_quat = glm::quat{ jsonValue["rotation_quat"]["x"].GetFloat(), jsonValue["rotation_quat"]["y"].GetFloat(), jsonValue["rotation_quat"]["z"].GetFloat(),jsonValue["rotation_quat"]["w"].GetFloat() };
 	}
 
-	PhysicsComponent ComponentSerializer::DeserializePhysics(const rapidjson::Value& jsonValue)
+	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, PhysicsComponent& physics)
 	{
-		return PhysicsComponent();
+		//TODO
 	}
 
-	MeshFilter ComponentSerializer::DeserializeMeshFilter(const rapidjson::Value& jsonValue)
+	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, MeshFilter& meshFilter)
 	{
-		return MeshFilter{
-			.mesh = jsonValue["mesh"].GetString()
-		};
+		meshFilter.mesh = jsonValue["mesh"].GetString();
 	}
 
-	MeshRender ComponentSerializer::DeserializeMeshRender(const rapidjson::Value& jsonValue)
+	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, MeshRender& meshRender)
 	{
-		return MeshRender{
-			.shouldRender = jsonValue["shouldRender"].GetBool(),
-			.shaderName = jsonValue["shaderName"].GetString(),
-			.textureName = jsonValue["textureName"].GetString(),
-			.color = glm::vec4{jsonValue["color"]["x"].GetFloat(),jsonValue["color"]["y"].GetFloat(),jsonValue["color"]["z"].GetFloat(),jsonValue["color"]["w"].GetFloat()}
-		};
+		meshRender.shaderName = jsonValue["shaderName"].GetString();
+		meshRender.textureName = jsonValue["textureName"].GetString();
+		meshRender.color = glm::vec4{ jsonValue["color"]["R"].GetFloat(),jsonValue["color"]["G"].GetFloat(),jsonValue["color"]["B"].GetFloat(),jsonValue["color"]["A"].GetFloat() };
 	}
 }

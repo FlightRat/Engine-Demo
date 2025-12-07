@@ -12,7 +12,7 @@ namespace ENGINE_FileSystem {
 }
 
 #define SERIALIZE_COMPONENT(serializer,comp) ENGINE_CORE::ECS::ComponentSerializer::Serialize(serializer, comp)
-#define DESERIALIZE_COMPONENT(serializer, comp) ENGINE_CORE::ECS::ComponentSerializer::Deserialize<comp>(serializer)
+#define DESERIALIZE_COMPONENT(table, comp) ENGINE_CORE::ECS::ComponentSerializer::Deserialize(table, comp)
 
 namespace ENGINE_CORE::ECS {
 	class ComponentSerializer
@@ -24,7 +24,8 @@ namespace ENGINE_CORE::ECS {
 		static void Serialize(TSerializer& serializer, const TComponent& component);
 
 		template <typename TComponent, typename TTable>
-		static auto Deserialize(const TTable& table);
+		static void Deserialize(const TTable& table, TComponent& component);
+
 
 	private:
 		// JSON serializer
@@ -33,10 +34,11 @@ namespace ENGINE_CORE::ECS {
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshFilter& meshFilter);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshRender& meshRender);
 
-		static TransformComponent DeserializeTransform(const rapidjson::Value& jsonValue);
-		static PhysicsComponent DeserializePhysics(const rapidjson::Value& jsonValue);
-		static MeshFilter DeserializeMeshFilter(const rapidjson::Value& jsonValue);
-		static MeshRender DeserializeMeshRender(const rapidjson::Value& jsonValue);
+		static void DeserializeComponent(const rapidjson::Value& jsonValue, TransformComponent& transform);
+		static void DeserializeComponent(const rapidjson::Value& jsonValue, PhysicsComponent& physics);
+		static void DeserializeComponent(const rapidjson::Value& jsonValue, MeshFilter& meshFilter);
+		static void DeserializeComponent(const rapidjson::Value& jsonValue, MeshRender& meshRender);
+
 	};
 }
 
