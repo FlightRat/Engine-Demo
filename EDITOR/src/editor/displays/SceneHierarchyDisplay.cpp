@@ -52,12 +52,13 @@ namespace ENGINE_EDITOR {
 		if (*bAddComponent)
 			ImGui::OpenPopup("Add Component");
 
+		ImGui::SetNextWindowSize(ImVec2(400, 0));
 		if (ImGui::BeginPopupModal("Add Component"))
 		{
 			auto& registry = entity.GetRegistry();
 			std::map<entt::id_type, std::string> componentMap;
 
-			// 获取所有可用组件
+			// 获取所有meta注册组件，存在map
 			for (auto&& [id, type] : entt::resolve())
 			{
 				const auto& info = type.info();
@@ -66,95 +67,94 @@ namespace ENGINE_EDITOR {
 				componentMap[id] = std::string{ name };
 			}
 
-			static std::string componentStr{ "" };
-			static std::string componentStrPrev{ "" };
-			static entt::id_type id_type{ 0 };
-			static bool bError{ false };
+			static std::string componentStr{ "" };	//选中组件名
+			static entt::id_type id_type{ 0 };		//选中组件id
 
+			// 组件下拉选择
 			if (ImGui::BeginCombo("Choose Component", componentStr.c_str()))
 			{
 				for (const auto& [id, name] : componentMap)
 				{
-					if (ImGui::Selectable(name.c_str(), name == componentStr))
+					const bool isSelected = (componentStr == name);
+					if (ImGui::Selectable(name.c_str(), isSelected))
 					{
 						componentStr = name;
 						id_type = id;
 					}
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
 				}
 				ImGui::EndCombo();
 			}
 
-			if (componentStr != componentStrPrev)
+			// 检查组件是否重复
+			static bool bError{ false };
+			if (id_type != 0 && !componentStr.empty())
 			{
-				componentStrPrev = componentStr;
-				bError = false;
+				if (auto* storage = registry.storage(id_type))
+				{
+					if (storage->contains(entity.GetEntity()))
+					{
+						bError = true;
+					}
+				}
 			}
 
+			// 组件若重复，提示
 			if (bError)
 			{
+				ImGui::Spacing();
 				ImGui::TextColored(
-					ImVec4{ 1.f,0.f,0.f,1.f },
-					std::format("Game Object already has [{}] - Please make another selection.", componentStr).c_str()
+					ImVec4{ 1.f, 0.f, 0.f, 1.f },
+					"Game Object already has [%s].\nPlease make another selection.",
+					componentStr.c_str()
 				);
+				ImGui::Spacing();
 			}
 
+			// ok按钮
+			bool canAdd = (id_type != 0) && !bError;
+			ImGui::BeginDisabled(!canAdd);
 			if (ImGui::Button("Ok") && !bError)
 			{
-				if (!componentStr.empty())
+				auto&& storage = registry.storage(id_type);
+				if (!storage)
 				{
-					for (auto&& [id, storage] : registry.storage())
+					const auto addComponent = ENGINE_CORE::Utils::InvokeMetaFunction(id_type, "add_component_default"_hs, entity);
+					if (addComponent)
 					{
-						if (id != id_type)
-							continue;
-						if (storage.contains(entity.GetEntity()))
-						{
-							bError = true;
-							ENGINE_ERROR("Entity already has component [{}]", componentStr);
-							break;
-						}
-
-						break;
-					}
-				}
-
-				if (bError)
-				{
-					*bAddComponent = false;
-					ImGui::CloseCurrentPopup();
-				}
-				else
-				{
-					auto&& storage = registry.storage(id_type);
-					if (!storage)
-					{
-						const auto addComponent = ENGINE_CORE::Utils::InvokeMetaFunction(id_type, "add_component_default"_hs, entity);
-						if (addComponent)
-						{
-							*bAddComponent = false;
-							ImGui::CloseCurrentPopup();
-						}
-						else
-						{
-							assert(addComponent && "Failed to add component!");
-							*bAddComponent = false;
-							bError = true;
-							ImGui::CloseCurrentPopup();
-						}
-					}
-					else
-					{
-						storage->push(entity.GetEntity());
 						*bAddComponent = false;
 						ImGui::CloseCurrentPopup();
 					}
+					else
+					{
+						assert(addComponent && "Failed to add component!");
+						*bAddComponent = false;
+						bError = true;
+						ImGui::CloseCurrentPopup();
+					}
 				}
+				else
+				{
+					storage->push(entity.GetEntity());
+					*bAddComponent = false;
+					ImGui::CloseCurrentPopup();
+				}
+				// 重置
+				componentStr = "";
+				id_type = 0;
 			}
+			ImGui::EndDisabled();
 
 			ImGui::SameLine();
+
+			// cancel按钮
 			if (ImGui::Button("Cancel"))
 			{
 				bError = false;
 				*bAddComponent = false;
+				componentStr = "";
+				id_type = 0;
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::EndPopup();
