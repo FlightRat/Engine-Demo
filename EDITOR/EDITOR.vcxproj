@@ -138,11 +138,11 @@
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\editor\displays\AssetDisplay.cpp" />
-    <ClCompile Include="src\editor\displays\DetailDisplay.cpp" />
     <ClCompile Include="src\editor\displays\LogDisplay.cpp" />
     <ClCompile Include="src\editor\displays\GameDisplay.cpp" />
     <ClCompile Include="src\editor\displays\MenuDisplay.cpp" />
     <ClCompile Include="src\editor\displays\SceneDisplay.cpp" />
+    <ClCompile Include="src\editor\displays\SceneHierarchyDisplay.cpp" />
     <ClCompile Include="src\editor\scene\SceneManager.cpp" />
     <ClCompile Include="src\editor\scene\SceneObject.cpp" />
     <ClCompile Include="src\editor\tools\AbstractTool.cpp" />
@@ -229,8 +229,8 @@
     <ClInclude Include="src\editor\displays\LogDisplay.h" />
     <ClInclude Include="src\editor\displays\GameDisplay.h" />
     <ClInclude Include="src\editor\displays\MenuDisplay.h" />
-    <ClInclude Include="src\editor\displays\DetailDisplay.h" />
     <ClInclude Include="src\editor\displays\SceneDisplay.h" />
+    <ClInclude Include="src\editor\displays\SceneHierarchyDisplay.h" />
     <ClInclude Include="src\editor\scene\SceneManager.h" />
     <ClInclude Include="src\editor\scene\SceneObject.h" />
     <ClInclude Include="src\editor\tools\AbstractTool.h" />
