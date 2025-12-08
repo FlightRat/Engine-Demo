@@ -48,6 +48,12 @@
     <ClCompile Include="src\editor\displays\MenuDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor\utilities\ComponentDrawer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\editor\utilities\ImGuiUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SDL2.dll" />
@@ -74,6 +80,9 @@
     <None Include="assets\scripts\GameDemo\Bullets\bullet.lua" />
     <None Include="assets\scripts\GameDemo\Defs\hudDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\bulletDefs.lua" />
+    <None Include="src\editor\utilities\ComponentDrawer.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
@@ -142,6 +151,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\editor\displays\MenuDisplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\utilities\ComponentDrawer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\utilities\ImGuiUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
