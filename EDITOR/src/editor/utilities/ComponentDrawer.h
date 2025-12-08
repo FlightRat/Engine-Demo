@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/ECS/Components/Identification.h"
 #include "Core/ECS/Components/TransformComponent.h"
 #include "Core/ECS/Components/PhysicsComponent.h"
 #include "Core/ECS/Components/MeshFilter.h"
@@ -26,6 +27,7 @@ namespace ENGINE_EDITOR {
 		static void DrawImGuiComponent(ENGINE_CORE::ECS::MeshFilter& meshFilter);
 		static void DrawImGuiComponent(ENGINE_CORE::ECS::MeshRender& meshRender);
 		static void DrawImGuiComponent(ENGINE_CORE::ECS::PhysicsComponent& physics);
+		static void DrawImGuiComponent(ENGINE_CORE::ECS::Identification& identity);
 	};
 
 }

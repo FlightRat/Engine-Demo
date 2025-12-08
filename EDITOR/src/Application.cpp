@@ -38,8 +38,10 @@
 #include"editor/displays/LogDisplay.h"
 #include"editor/displays/AssetDisplay.h"
 #include"editor/displays/MenuDisplay.h"
+#include"editor/displays/SceneHierarchyDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
+#include"editor/utilities/ComponentDrawer.h"
 #include"editor/scene/SceneManager.h"
 #include"editor/scene/SceneObject.h"
 
@@ -182,6 +184,11 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::TransformComponent>();
+		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::PhysicsComponent>();
+		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshFilter>();
+		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshRender>();
+		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::Identification>();
 
 		SCENE_MANAGER().AddScene("scene1");
 		SCENE_MANAGER().AddScene("scene2");
@@ -436,12 +443,21 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create the MenuDisplay");
 			return false;
 		}
-		
+
+		// scene hierarchy display
+		auto pSceneHierarchyDisplay = std::make_unique<ENGINE_EDITOR::SceneHierarchyDisplay>();
+		if (!pSceneHierarchyDisplay)
+		{
+			ENGINE_ERROR("Failed to create the scene hierarchy display!");
+			return false;
+		}
+
 		pDisplayHolder->displays.push_back(std::move(pGameDisplay));
 		pDisplayHolder->displays.push_back(std::move(pSceneDisplay));
 		pDisplayHolder->displays.push_back(std::move(pLogDisplay));
 		pDisplayHolder->displays.push_back(std::move(pAssetDisplay));
 		pDisplayHolder->displays.push_back(std::move(pMenuDisplay));
+		pDisplayHolder->displays.push_back(std::move(pSceneHierarchyDisplay));
 		
 		return true;
 	}
@@ -511,7 +527,9 @@ namespace ENGINE_EDITOR {
 			const auto leftNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Left, 0.2f, nullptr, &centerNodeId);
 			const auto downNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Down, 0.2f, nullptr, &centerNodeId);
 			const auto rightNodeId = ImGui::DockBuilderSplitNode(centerNodeId, ImGuiDir_Right, 0.25f, nullptr, &centerNodeId);
-			ImGui::DockBuilderDockWindow("Dear ImGui Demo", leftNodeId);
+			//ImGui::DockBuilderDockWindow("Dear ImGui Demo", leftNodeId);
+			ImGui::DockBuilderDockWindow("Scene Hierarchy", leftNodeId);
+			ImGui::DockBuilderDockWindow("GO Details", rightNodeId);
 			ImGui::DockBuilderDockWindow("Game", centerNodeId);
 			ImGui::DockBuilderDockWindow("Scene", centerNodeId);
 			ImGui::DockBuilderDockWindow("Asset", downNodeId);
@@ -525,7 +543,7 @@ namespace ENGINE_EDITOR {
 		{
 			pDisplay->Draw();
 		}
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 	}
 
 	Application& Application::GetInstance()

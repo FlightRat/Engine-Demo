@@ -20,30 +20,30 @@ namespace ENGINE_EDITOR {
 			// position
 			ImGui::InlineLabel("position");
 			// position-x 
-			ImGui::ColoredLabel("x", LABEL_SINGLE_SIZE, LABEL_RED);
+			ImGui::ColoredLabel("x##pos_x", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
 			ImGui::InputFloat("##position_x", &transform.position.x, 1.f, 10.f, "%.1f");
 			// position-y 
-			ImGui::ColoredLabel("y", LABEL_SINGLE_SIZE, LABEL_GREEN);
+			ImGui::ColoredLabel("y##pos_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
 			ImGui::SameLine();
 			ImGui::InputFloat("##position_y", &transform.position.y, 1.f, 10.f, "%.1f");
 			// position-z
-			ImGui::ColoredLabel("z", LABEL_SINGLE_SIZE, LABEL_BLUE);
+			ImGui::ColoredLabel("z##pos_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
 			ImGui::SameLine();
 			ImGui::InputFloat("##position_z", &transform.position.z, 1.f, 10.f, "%.1f");
 
 			// scale
 			ImGui::InlineLabel("scale");
 			// scale-x 
-			ImGui::ColoredLabel("x", LABEL_SINGLE_SIZE, LABEL_RED);
+			ImGui::ColoredLabel("x##scale_x", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
 			ImGui::InputFloat("##scale_x", &transform.scale.x, 1.f, 1.f, "%.1f");
 			// scale-y 
-			ImGui::ColoredLabel("y", LABEL_SINGLE_SIZE, LABEL_GREEN);
+			ImGui::ColoredLabel("y##scale_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
 			ImGui::SameLine();
 			ImGui::InputFloat("##scale_y", &transform.scale.y, 1.f, 1.f, "%.1f");
 			// scale-z
-			ImGui::ColoredLabel("z", LABEL_SINGLE_SIZE, LABEL_BLUE);
+			ImGui::ColoredLabel("z##scale_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
 			ImGui::SameLine();
 			ImGui::InputFloat("##scale_z", &transform.scale.z, 1.f, 1.f, "%.1f");
 
@@ -63,6 +63,7 @@ namespace ENGINE_EDITOR {
 		ImGui::PushID(entt::type_hash<MeshFilter>::value());
 		if (ImGui::TreeNodeEx("##MeshFilterTree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			ImGui::PushItemWidth(120.f);
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 
 			std::string sSelectedMesh{ meshFilter.mesh };
@@ -97,6 +98,7 @@ namespace ENGINE_EDITOR {
 		ImGui::PushID(entt::type_hash<MeshRender>::value());
 		if (ImGui::TreeNodeEx("##MeshRenderTree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			ImGui::PushItemWidth(120.f);
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 
 			// color
@@ -152,6 +154,34 @@ namespace ENGINE_EDITOR {
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::PhysicsComponent& physics)
 	{
+		ImGui::SeparatorText("Physics");
+		ImGui::PushID(entt::type_hash<PhysicsComponent>::value());
+		if (ImGui::TreeNodeEx("##PhysicsTree", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushItemWidth(120.f);
+
+			// stuff
+			
+			ImGui::PopItemWidth();
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
+
+	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::Identification& identity)
+	{
+		ImGui::SeparatorText("Identity");
+		ImGui::PushID(entt::type_hash<Identification>::value());
+		if (ImGui::TreeNodeEx("##IdentityTree", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushItemWidth(120.f);
+
+			// stuff
+
+			ImGui::PopItemWidth();
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
 	}
 }
 
