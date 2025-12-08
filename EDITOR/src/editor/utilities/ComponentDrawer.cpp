@@ -176,7 +176,21 @@ namespace ENGINE_EDITOR {
 		{
 			ImGui::PushItemWidth(120.f);
 
-			// stuff
+			std::string sNameBuffer{ identity.name};
+			ImGui::InlineLabel("name");
+			if (ImGui::InputText(
+				"##_name", sNameBuffer.data(), sizeof(char) * 255, ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				identity.name = std::string{ sNameBuffer.data() };
+			}
+
+			std::string sGroupBuffer{ identity.group };
+			ImGui::InlineLabel("group");
+			if (ImGui::InputText(
+				"##_group", sGroupBuffer.data(), sizeof(char) * 255, ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				identity.group = std::string{ sGroupBuffer.data() };
+			}
 
 			ImGui::PopItemWidth();
 			ImGui::TreePop();
