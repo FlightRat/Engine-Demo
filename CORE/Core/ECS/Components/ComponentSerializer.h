@@ -3,6 +3,7 @@
 #include "PhysicsComponent.h"
 #include "MeshFilter.h"
 #include "MeshRender.h"
+#include "Identification.h"
 #include "ScriptComponent.h"
 #include "Identification.h"
 #include "rapidjson/document.h"
@@ -33,11 +34,13 @@ namespace ENGINE_CORE::ECS {
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const PhysicsComponent& physics);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshFilter& meshFilter);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshRender& meshRender);
+		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const Identification& id);
 
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, TransformComponent& transform);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, PhysicsComponent& physics);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, MeshFilter& meshFilter);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, MeshRender& meshRender);
+		static void DeserializeComponent(const rapidjson::Value& jsonValue, Identification& id);
 
 	};
 }

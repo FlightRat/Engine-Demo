@@ -61,6 +61,14 @@ namespace ENGINE_CORE::ECS {
 
 	}
 
+	void ComponentSerializer::SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const Identification& id)
+	{
+		serializer.StartNewObject("id")
+			.AddKeyValuePair("name", id.name)
+			.AddKeyValuePair("group", id.group)
+		.EndObject();
+	}
+
 
 	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, TransformComponent& transform)
 	{
@@ -85,5 +93,11 @@ namespace ENGINE_CORE::ECS {
 		meshRender.shaderName = jsonValue["shaderName"].GetString();
 		meshRender.textureName = jsonValue["textureName"].GetString();
 		meshRender.color = glm::vec4{ jsonValue["color"]["R"].GetFloat(),jsonValue["color"]["G"].GetFloat(),jsonValue["color"]["B"].GetFloat(),jsonValue["color"]["A"].GetFloat() };
+	}
+
+	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, Identification& id)
+	{
+		id.name = jsonValue["name"].GetString();
+		id.group = jsonValue["group"].GetString();
 	}
 }
