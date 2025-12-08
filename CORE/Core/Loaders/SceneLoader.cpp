@@ -6,6 +6,8 @@
 #include "../ECS/Components/ComponentSerializer.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshFilter.h"
+#include "../ECS/Components/MeshRender.h"
+#include "../ECS/Components/Identification.h"
 #include <rapidjson/error/en.h>
 #include <filesystem>
 
@@ -35,8 +37,9 @@ namespace ENGINE_CORE::Loaders {
 
 		pSerializer->StartDocument();
 		pSerializer->StartNewArray("Scene");
-		auto view = registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender>();
-		for (auto [entity, transform, meshF, meshR] : view.each())
+		// TODO：细化序列化条件判断
+		auto view = registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
 			auto e = ENGINE_CORE::ECS::Entity(registry, entity);
 			pSerializer->StartNewObject();
@@ -45,6 +48,7 @@ namespace ENGINE_CORE::Loaders {
 			SERIALIZE_COMPONENT(*pSerializer, transform);
 			SERIALIZE_COMPONENT(*pSerializer, meshF);
 			SERIALIZE_COMPONENT(*pSerializer, meshR);
+			SERIALIZE_COMPONENT(*pSerializer, id);
 			pSerializer->EndObject();
 
 			pSerializer->EndObject();
@@ -90,9 +94,13 @@ namespace ENGINE_CORE::Loaders {
 
 		for (const auto& obj : scene.GetArray())
 		{
-			ENGINE_CORE::ECS::Entity newObj{ registry, "", "" };
 			//bool check = obj.HasMember("Components");
 			const auto& components = obj["Components"];
+
+			//id
+			const auto& jsonID = components["id"];
+
+			ENGINE_CORE::ECS::Entity newObj{ registry, jsonID["name"].GetString(), jsonID["group"].GetString() };
 
 			//transform
 			const auto& jsonTransform = components["transform"];
