@@ -187,16 +187,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\scripts\GameDemo\Bullets\bullet.lua" />
-    <None Include="assets\scripts\GameDemo\Character\character.lua" />
-    <None Include="assets\scripts\GameDemo\Character\player_states\move_state.lua" />
+    <None Include="assets\scripts\GameDemo\bullet.lua" />
     <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\bulletDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\hudDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\playerDefs.lua" />
-    <None Include="assets\scripts\GameDemo\States\GameState.lua" />
+    <None Include="assets\scripts\GameDemo\plat.lua" />
+    <None Include="assets\scripts\GameDemo\platform.lua" />
+    <None Include="assets\scripts\GameDemo\player.lua" />
     <None Include="assets\scripts\GameDemo\script_list.lua" />
-    <None Include="assets\scripts\GameDemo\States\TitleState.lua" />
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\Defs\envirDefs.lua" />
     <None Include="assets\scripts\main.lua" />

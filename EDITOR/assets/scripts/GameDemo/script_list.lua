@@ -1,14 +1,13 @@
 ScriptList=
 {
 	"assets/scripts/GameDemo/utilities.lua",
+	"assets/scripts/GameDemo/plat.lua",
+	"assets/scripts/GameDemo/bullet.lua",
+	"assets/scripts/GameDemo/player.lua",
 	"assets/scripts/GameDemo/Defs/bulletDefs.lua",
-	"assets/scripts/GameDemo/Bullets/bullet.lua",
-	"assets/scripts/GameDemo/Character/player_states/move_state.lua",
-	"assets/scripts/GameDemo/Character/character.lua",
 	"assets/scripts/GameDemo/Defs/assetDefs.lua",
 	"assets/scripts/GameDemo/Defs/envirDefs.lua",
 	"assets/scripts/GameDemo/Defs/hudDefs.lua",
 	"assets/scripts/GameDemo/Defs/playerDefs.lua",
-	"assets/scripts/GameDemo/States/GameState.lua",
-	"assets/scripts/GameDemo/States/TitleState.lua",
+
 }

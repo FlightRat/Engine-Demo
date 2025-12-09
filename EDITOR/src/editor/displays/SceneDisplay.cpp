@@ -88,8 +88,8 @@ namespace ENGINE_EDITOR {
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
 			m_pSceneCam->SetWidth(fb->Width());
 			m_pSceneCam->SetHeight(fb->Height());
-			auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-			scriptSystem->Render();
+			//auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+			//scriptSystem->Render();
 			renderSystem->Render(m_pSceneCam, runtimeRegistry);
 		}
 		fb->Unbind();

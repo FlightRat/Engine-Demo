@@ -1,31 +1,17 @@
-MoveState = {}
-MoveState.__index = MoveState
+Player = {}
+Player.__index = Player
 
-function MoveState:Create(character)
-	assert(character)
+function Player:Create(def)
 	local this = 
 	{
-		m_Character = character,
-		m_EntityID = character.m_EntityID,
-		m_Controller = character.m_Controller,
-		m_JumpSteps = 10,
-		m_NumJumps = 0,
-		m_bAttacking = false
+		m_EntityID = -1,
 	}
-	local state = state("move")
-	state:set_variable_table(this)
-	state:set_on_enter(function(...) this:OnEnter(...) end)
-	state:set_on_exit(function() this:OnExit() end)
-	state:set_on_update(function(dt) this:OnUpdate(dt) end)
-	state:set_on_render(function() end)
-
-	setmetatable(this, self)
-	return state
+	this.m_EntityID = LoadEntity(def)
+	setmetatable(this,self)
+	return this
 end
 
-function MoveState:OnEnter(params) end
-function MoveState:OnExit() end
-function MoveState:OnUpdate(dt) 
+function Player:Update(dt)
 	local player = Entity(self.m_EntityID)
 	local mesh_render = player:get_component(MeshRender)
 	local physics = player:get_component(Physics)
@@ -75,7 +61,7 @@ function MoveState:OnUpdate(dt)
 	end
 end
 
-function MoveState:shot()
+function Player:shot()
 	local player = Entity(self.m_EntityID)
 	local transform = player:get_component(Transform)
 

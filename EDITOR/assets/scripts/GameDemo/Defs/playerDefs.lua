@@ -1,10 +1,3 @@
-assert(MoveState, "MoveState does not exist!")
-
-PlayerStates = 
-{
-	move = MoveState
-}
-
 PlayerDefs =
 {
 	body=

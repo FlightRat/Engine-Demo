@@ -1,19 +1,3 @@
-
-ActiveCharacters = {}
-function AddActiveCharacter(entity_id, character)
-	ActiveCharacters[entity_id] = character end
-function GetActiveCharacter(entity_id)
-	assert(ActiveCharacters[entity_id], string.format("Character with ID [&d] does not exist", entity_id))
-	return ActiveCharacters[entity_id] end
-function ClearCharacters()
-	for k,v in pairs(ActiveCharacters) do
-		ActiveCharacters[k] = nil
-	end end
-function UpdateActiveCharacters(dt)
-	for _,v in pairs(ActiveCharacters) do
-		v.m_Controller:update(dt)
-	end end
-
 Bullets = {}
 function AddBullet(bullet)
 	Bullets[bullet.m_EntityID] = bullet end
@@ -120,3 +104,4 @@ function LoadEntity( def )
 
 	return newEntity:id()
 end
+
