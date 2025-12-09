@@ -78,10 +78,12 @@ function GameState:OnRender()
 end
 
 function GameState:HandleInputs()
+	--[[
 	if Keyboard.just_pressed(KEY_BACKSPACE) then
 		self.m_Stack:pop()
 		return
 	end
+	]]--
 end
 
 function GameState:UpdateMovingPlatform(dt)

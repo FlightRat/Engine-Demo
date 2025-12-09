@@ -8,7 +8,8 @@ LoadAssets()
 -- state stack is used for storaging and changing scene/state
 gStateStack = StateStack()
 local title = TitleState:Create(gStateStack)
-gStateStack:change_state(title)
+local game = GameState:Create(gStateStack)
+gStateStack:change_state(game)
 
 main = {
 	[1] = {
