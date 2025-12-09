@@ -308,6 +308,7 @@ namespace ENGINE_EDITOR {
 					{
 						physics.SetDebug(engine.RenderCollidersEnabled());
 					}
+					physicsWorld->update(1.0f / 60.0f);
 				}
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;
