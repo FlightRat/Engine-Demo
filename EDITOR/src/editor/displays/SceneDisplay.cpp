@@ -1,11 +1,14 @@
 #include "SceneDisplay.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Systems/RenderSystem.h"
+#include "Core/Systems/PhysicsSystem.h"
 #include "Core/Systems/ScriptingSystem.h"
 #include "Core/Resources/AssetManager.h"
 #include "Core/Scripting/InputManager.h"
 #include "Core/CoreUtilities/CoreEngineData.h"
 #include "Rendering/Core/Camera3D.h"
+#include "Physics/RP3D_Wrappers.h"
+#include "Physics/ContactListener.h"
 #include "../utilities/editor_framebuffers.h"
 #include "../utilities/editor_utilities.h"
 #include "../scene/SceneManager.h"
@@ -16,7 +19,58 @@
 #include "Windowing/Inputs/Keyboard.h"
 #include "Windowing/Inputs/Mouse.h"
 
+using namespace ENGINE_CORE::Systems;
+
 namespace ENGINE_EDITOR {
+	void SceneDisplay::LoadScnne()
+	{
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene)
+			return;
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+
+		// Camera
+		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
+		runtimeRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera);
+
+		// Physics Common
+		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
+		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon);
+
+		// Physics World
+		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
+		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld);
+		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
+
+		// Contact Listener
+		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
+		runtimeRegistry.AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener);
+		physicsWorld->setEventListener(contactListener.get());
+
+		// Physics System
+		auto physicsSystem = std::make_shared<PhysicsSystem>(runtimeRegistry);
+		runtimeRegistry.AddToContext<std::shared_ptr< PhysicsSystem>>(physicsSystem);
+
+		// Script system
+		auto scriptSystem = std::make_shared<ScriptingSystem>(runtimeRegistry);
+		runtimeRegistry.AddToContext<std::shared_ptr<ScriptingSystem>>(scriptSystem);
+
+		// lua
+		auto lua = runtimeRegistry.AddToContext<std::shared_ptr<sol::state>>(std::make_shared<sol::state>());
+		if (!lua)
+		{
+			lua = std::make_shared<sol::state>();
+		}
+		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, runtimeRegistry);
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
+		if (!scriptSystem->LoadMainScript(*lua))
+		{
+			ENGINE_ERROR("Failed to load the main lua script!");
+			return;
+		}
+	}
+
 	void SceneDisplay::RenderScene()
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -29,7 +83,7 @@ namespace ENGINE_EDITOR {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (pCurrentScene && pCurrentScene->CheckLoad())
+		if (pCurrentScene)
 		{
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
 			m_pSceneCam->SetWidth(fb->Width());
@@ -92,6 +146,8 @@ namespace ENGINE_EDITOR {
 					ENGINE_LOG("BEFORE: {}", SCENE_MANAGER().GetCurrentSceneName());
 					SCENE_MANAGER().SetCurrentScene(std::string{ (const char*)payload->Data });
 					ENGINE_LOG("AFTER: {}", SCENE_MANAGER().GetCurrentSceneName());
+
+					LoadScnne();
 				}
 				ImGui::EndDragDropTarget();
 			}

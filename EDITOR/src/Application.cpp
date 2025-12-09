@@ -267,14 +267,14 @@ namespace ENGINE_EDITOR {
 	void Application::ProcessEvents()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		bool load = false;
-		if (pCurrentScene && pCurrentScene->CheckLoad())
-		{
-			load = true;
-			//auto& runtimeRegistry = pCurrentScene->GetRuntimeRegistry();
-			//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-			//auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		}
+		//bool load = false;
+		//if (pCurrentScene && pCurrentScene->CheckPlay())
+		//{
+		//	load = true;
+		//	//auto& runtimeRegistry = pCurrentScene->GetRuntimeRegistry();
+		//	//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		//	//auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		//}
 
 		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
@@ -296,7 +296,7 @@ namespace ENGINE_EDITOR {
 			{
 				//if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 				//	m_bIsRunning = false;
-				if (m_Event.key.keysym.sym == SDLK_0 && load)
+				if (m_Event.key.keysym.sym == SDLK_0 && pCurrentScene)
 				{
 					engine.ToggleRenderCollisions();
 					auto& runtimeRegistry = pCurrentScene->GetRegistry();

@@ -7,10 +7,10 @@ namespace ENGINE_EDITOR
 	class GameDisplay:public IDisplay
 	{
 	private:
-		bool m_bPlayScene, m_bSceneLoaded;
+		bool m_bPlayGame, m_bSceneLoaded;
 	private:
-		void LoadScene();
-		void UnloadScene();
+		void PlayGame();
+		void StopGame();
 		void RenderGame();
 	public:
 		GameDisplay();

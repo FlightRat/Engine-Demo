@@ -24,83 +24,36 @@ using namespace ENGINE_RENDERING;
 
 namespace ENGINE_EDITOR
 {
-	GameDisplay::GameDisplay() :m_bPlayScene{ false }, m_bSceneLoaded{ false }
+	GameDisplay::GameDisplay() :m_bPlayGame{ false }, m_bSceneLoaded{ false }
 	{
 	}
 
-	void GameDisplay::LoadScene()
+	void GameDisplay::PlayGame()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene)
-			return;
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-
-		// Camera
-		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
-		runtimeRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera);
-
-		// Physics Common
-		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
-		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon);
-
-		// Physics World
-		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
-		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld);
-		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
-
-		// Contact Listener
-		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
-		runtimeRegistry.AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener);
-		physicsWorld->setEventListener(contactListener.get());
-
-		// Physics System
-		auto physicsSystem = std::make_shared<PhysicsSystem>(runtimeRegistry);
-		runtimeRegistry.AddToContext<std::shared_ptr< PhysicsSystem>>(physicsSystem);
-
-		// Script system
-		auto scriptSystem = std::make_shared<ScriptingSystem>(runtimeRegistry);
-		runtimeRegistry.AddToContext<std::shared_ptr<ScriptingSystem>>(scriptSystem);
-
-		// lua
-		auto lua = runtimeRegistry.AddToContext<std::shared_ptr<sol::state>>(std::make_shared<sol::state>());
-		if (!lua)
-		{
-			lua = std::make_shared<sol::state>();
-		}
-		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, runtimeRegistry);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
-		if (!scriptSystem->LoadMainScript(*lua))
-		{
-			ENGINE_ERROR("Failed to load the main lua script!");
-			return;
-		}
-		
-		m_bPlayScene = true;
-		m_bSceneLoaded = true;
-		pCurrentScene->SetLoad(true);
+		pCurrentScene->SetPlay(true);
+		m_bPlayGame = true;
 	}
 
-	void GameDisplay::UnloadScene()
+	void GameDisplay::StopGame()
 	{
-		m_bPlayScene = false;
-		m_bSceneLoaded = false;
-		
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		pCurrentScene->SetLoad(false);
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-		runtimeRegistry.ClearRegistry();
-		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-		runtimeRegistry.RemoveContext<std::shared_ptr<sol::state>>();
-		runtimeRegistry.RemoveContext<std::shared_ptr<rp3d::PhysicsCommon>>();
-		runtimeRegistry.RemoveContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_PHYSICS::ContactListener>>();
-		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+		pCurrentScene->SetPlay(false);
+		m_bPlayGame = false;
 
-		auto& mainRegistry = MAIN_REGISTRY();
-		mainRegistry.GetMusicPlayer().Stop();
-		mainRegistry.GetSoundFxPlayer().Stop(-1);
+		//auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		//runtimeRegistry.ClearRegistry();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<sol::state>>();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<rp3d::PhysicsCommon>>();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_PHYSICS::ContactListener>>();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
+		//runtimeRegistry.RemoveContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
+
+		//auto& mainRegistry = MAIN_REGISTRY();
+		//mainRegistry.GetMusicPlayer().Stop();
+		//mainRegistry.GetSoundFxPlayer().Stop(-1);
 	}
 
 	void GameDisplay::RenderGame()
@@ -115,7 +68,7 @@ namespace ENGINE_EDITOR
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (pCurrentScene && m_bPlayScene)
+		if (pCurrentScene && pCurrentScene->CheckPlay())
 		{
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
 			auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
@@ -144,7 +97,7 @@ namespace ENGINE_EDITOR
 		auto pPlayTexture = assetManager.GetTexture("play_button");
 		auto pStopTexture = assetManager.GetTexture("stop_button");
 
-		if (m_bPlayScene)
+		if (m_bPlayGame)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
@@ -154,13 +107,9 @@ namespace ENGINE_EDITOR
 			"play",
 			ImTextureID{ pPlayTexture->GetID() },
 			ImVec2{ (float)pPlayTexture->GetWidth() * 0.25f, (float)pPlayTexture->GetHeight() * 0.25f, })
-			&& !m_bSceneLoaded)
+			&& SCENE_MANAGER().GetCurrentScene())
 		{
-			/* now, the scene is loaded when:
-			* 1.a scene is drag and drop in scene display
-			* 2.play button is pressed
-			*/
-			LoadScene();
+			PlayGame();
 		}
 		if (ImGui::GetColorStackSize() > 0)
 			ImGui::PopStyleColor(ImGui::GetColorStackSize());
@@ -169,7 +118,7 @@ namespace ENGINE_EDITOR
 
 		ImGui::SameLine();
 
-		if (!m_bPlayScene)
+		if (!m_bPlayGame)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
@@ -182,9 +131,9 @@ namespace ENGINE_EDITOR
 			"stop",
 			ImTextureID{ pStopTexture->GetID() },
 			ImVec2{ (float)pStopTexture->GetWidth() * 0.25f, (float)pStopTexture->GetHeight() * 0.25f, })
-			&& m_bSceneLoaded)
+			&& SCENE_MANAGER().GetCurrentScene())
 		{
-			UnloadScene();
+			StopGame();
 		}
 		if (ImGui::GetColorStackSize() > 0)
 			ImGui::PopStyleColor(ImGui::GetColorStackSize());
@@ -218,9 +167,12 @@ namespace ENGINE_EDITOR
 	
 	void GameDisplay::Update()
 	{
+		// TODO: if play, update lua
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene || !m_bPlayScene)
+		if (!pCurrentScene || !pCurrentScene->CheckPlay())
 			return;
+		//ControlCam();
+		//TODO:move the camera in scene display
 
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& coreGlobals = CORE_GLOBALS();
@@ -229,15 +181,15 @@ namespace ENGINE_EDITOR
 		const decimal timeStep = coreGlobals.GetPhysicsTimeStep();
 		double deltaTime = coreGlobals.GetDeltaTime();
 		double& accumulator = coreGlobals.GetAccumulator();
-		
+
 		const double MAX_DELTA_TIME = 0.25;
 		double dt = deltaTime > MAX_DELTA_TIME ? 0.25 : deltaTime;
 		accumulator += dt;
-		
+
 		auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
 		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
-		
+
 		scriptSystem->Update();
 		while (accumulator >= timeStep) {	// TODO: add check "if (coreGlobals.IsPhysicsEnabled())"
 			physicsWorld->update(timeStep);
@@ -245,6 +197,5 @@ namespace ENGINE_EDITOR
 		}
 		decimal factor = accumulator / timeStep;
 		physicsSystem->Update(runtimeRegistry.GetRegistry(), factor);
-		//TODO:update camera here
 	}
 }

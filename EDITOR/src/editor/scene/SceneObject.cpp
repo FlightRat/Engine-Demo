@@ -2,7 +2,7 @@
 
 namespace ENGINE_EDITOR {
 
-	SceneObject::SceneObject(const std::string& sceneName) :m_Registry{}, m_RuntimeRegistry{}, m_sSceneName{ sceneName }, m_bLoaded{ false }
+	SceneObject::SceneObject(const std::string& sceneName) :m_Registry{}, m_RuntimeRegistry{}, m_sSceneName{ sceneName }, m_bPlay{ false }
 	{
 	}
 

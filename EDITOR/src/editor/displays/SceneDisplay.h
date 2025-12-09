@@ -13,6 +13,7 @@ namespace ENGINE_EDITOR
 	private:
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> m_pSceneCam;	//TODO: unique ptr
 	private:
+		void LoadScnne();
 		void RenderScene();
 		void LoadNewScene();
 	public:
