@@ -29,13 +29,13 @@ namespace ENGINE_CORE::Systems {
 			// 3. 使用这两个状态进行插值
 			const Transform& prevTransform = physics.GetPreviousTransform();
 			const Transform& currTransform = physics.GetCurrentTransform();
-			Transform rb_transform = Transform::interpolateTransforms(prevTransform, currTransform, factor);
+			Transform rb_transform = Transform::interpolateTransforms(prevTransform, currTransform, factor);	// to be used
 
 			//position
-			const Vector3& rb_pos = rb_transform.getPosition();
+			const Vector3& rb_pos = currTransform.getPosition();
 			transform.position = glm::vec3(rb_pos.x, rb_pos.y, rb_pos.z);
 			//rotation
-			const Quaternion& rp3d_quat = rb_transform.getOrientation();
+			const Quaternion& rp3d_quat = currTransform.getOrientation();
 			glm::quat quat(
 				static_cast<float>(rp3d_quat.w),
 				static_cast<float>(rp3d_quat.x),
