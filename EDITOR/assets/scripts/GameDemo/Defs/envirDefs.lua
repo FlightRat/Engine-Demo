@@ -9,7 +9,7 @@ EnvirDefs =
 	ball_1 = 
 	{
 		tag = "ball_1",
-		group = "",
+		group = "Envir",
 		components = 
 		{
 			Transform = {
@@ -35,7 +35,7 @@ EnvirDefs =
 	cube_1 = 
 	{
 		tag = "cube_1",
-		group = "",
+		group = "Envir",
 		components = 
 		{
 			Transform = {
@@ -86,6 +86,27 @@ EnvirDefs =
 				shape = "box",
 				b_Trigger = true,
 				box_halfExtents = vec3(0.5, 0.5, 0.5)
+			}
+		}
+	},
+	cube_3 = 
+	{
+		tag = "cube_3",
+		group = "moveable",
+		components = 
+		{
+			Transform = {
+				position = vec3(-5.0, 6.0, 5.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				shader = "colorShader",
+				texture = "",
+				color = vec4(0.0, 1.0, 0.0, 1.0)
 			}
 		}
 	},

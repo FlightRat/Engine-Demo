@@ -42,6 +42,7 @@ function GameState:OnEnter()
 
 	self.m_Ball = Entity(LoadEntity(EnvirDefs["ball_1"]))
 	self.m_Cube = Entity(LoadEntity(EnvirDefs["cube_1"]))
+	self.m_Cube_Moveable = Entity(LoadEntity(EnvirDefs["cube_3"]))
 	self.m_Trigger = Entity(LoadEntity(EnvirDefs["cube_2"]))
 	self.m_Floor = Entity(LoadEntity(EnvirDefs["ground"]))
 	self.m_Platform = Entity(LoadEntity(EnvirDefs["platform1"]))
