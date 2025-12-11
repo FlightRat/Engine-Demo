@@ -18,7 +18,13 @@
 #include <Rendering/Core/Camera3D.h>
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
+#include "Core/ECS/Components/TransformComponent.h"
+#include "Core/ECS/Components/PhysicsComponent.h"
+#include "Core/ECS/Components/Identification.h"
+#include "Core/CoreUtilities/CoreEngineData.h"
 
+using namespace ENGINE_CORE::ECS;
+using namespace reactphysics3d;
 using namespace ENGINE_CORE::Systems;
 using namespace ENGINE_RENDERING;
 
@@ -31,8 +37,44 @@ namespace ENGINE_EDITOR
 	void GameDisplay::PlayGame()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene) 
+			return;
 		pCurrentScene->SetPlay(true);
 		m_bPlayGame = true;
+
+		auto& registry = pCurrentScene->GetRegistry();
+		auto view = registry.GetRegistry().view<TransformComponent, PhysicsComponent>();
+		for (auto [entity, transform, physics] : view.each())
+		{
+			// 获取底层的 RP3D 刚体指针
+			rp3d::RigidBody* body = physics.GetRigidBody();
+			if (!body) continue;
+
+			// --- A. 准备数据 ---
+			glm::vec3 pos = transform.position;
+			glm::quat rot = transform.rotation_quat;
+
+			rp3d::Transform rp3dTransform(
+				rp3d::Vector3(pos.x, pos.y, pos.z),
+				rp3d::Quaternion(rot.x, rot.y, rot.z, rot.w)
+			);
+
+			// --- B. 核心修复：直接设置刚体位置 ---
+			// 这一步告诉物理引擎物体瞬移到了新位置
+			body->setTransform(rp3dTransform);
+
+			// --- C. 防止插值抖动 ---
+			// 你的 PhysicsSystem 使用了插值 (Previous -> Current)
+			// 如果不重置 Previous，第一帧会从 旧位置 插值到 新位置，导致视觉上的“飞入”效果
+			physics.SetCurrentTransform(rp3dTransform);
+			physics.SetPreviousTransform(rp3dTransform);
+
+			// --- D. 重置动力学状态 (建议) ---
+			// 清楚残留的速度，防止物体带着之前的动量飞出去
+			body->setLinearVelocity(rp3d::Vector3(0, 0, 0));
+			body->setAngularVelocity(rp3d::Vector3(0, 0, 0));
+			body->setIsSleeping(false); // 强制唤醒
+		}
 	}
 
 	void GameDisplay::StopGame()
