@@ -21,17 +21,15 @@ namespace ENGINE_EDITOR {
 		newEntity.AddComponent<ENGINE_CORE::ECS::TransformComponent>();
 		};
 
+	/*为单个实体绘制左侧树节点*/
 	bool SceneHierarchyDisplay::OpenTreeNode(ENGINE_CORE::ECS::Entity& entity)
 	{
-
 		ImGui::PushID(static_cast<int32_t>(entity.GetEntity()));
-
 		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 		if (m_pSelectedEntity && m_pSelectedEntity->GetEntity() == entity.GetEntity())	// highlight if selected
 		{
 			nodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
-
 		bool bTreeNodeOpen{ false };
 		const auto& name = entity.GetName();
 		bTreeNodeOpen = ImGui::TreeNodeEx(name.c_str(), nodeFlags);
@@ -39,11 +37,41 @@ namespace ENGINE_EDITOR {
 		{
 			m_pSelectedEntity = std::make_shared<ENGINE_CORE::ECS::Entity>(SCENE_MANAGER().GetCurrentScene()->GetRegistry(), entity.GetEntity());
 		}
-
 		ImGui::PopID();
 		return bTreeNodeOpen;
 	}
 
+	/*绘制右侧面板 -- “添加组件” + “组件属性”*/
+	void SceneHierarchyDisplay::DrawGameObjectDetails()
+	{
+		if (!ImGui::Begin("GO Details"))
+		{
+			ImGui::End();
+			return;
+		}
+
+		if (ImGui::BeginPopupContextWindow())
+		{
+			if (ImGui::Selectable("Add Component"))
+				m_bAddComponent = true;
+			ImGui::EndPopup();
+		}
+
+		if (m_pSelectedEntity && m_bAddComponent)
+			AddComponent(*m_pSelectedEntity, &m_bAddComponent);
+
+		if (m_pSelectedEntity)
+			DrawEntityComponents();
+
+		ImGui::End();
+	}
+
+	/*
+	* 1.获取所有注册了的反射组件，保存在一个map
+	* 2.遍历map，绘制下拉选择菜单（若选择了记录且高亮）
+	* 3.检查选择组件是否重复，重复则提示
+	* 4.按下OK时，根据id，invoke对应的“add_component_default”函数
+	*/
 	void SceneHierarchyDisplay::AddComponent(ENGINE_CORE::ECS::Entity& entity, bool* bAddComponent)
 	{
 		if (!bAddComponent)
@@ -88,7 +116,7 @@ namespace ENGINE_EDITOR {
 			}
 
 			// 检查组件是否重复
-			static bool bError{ false };
+			bool bError{ false };
 			if (id_type != 0 && !componentStr.empty())
 			{
 				if (auto* storage = registry.storage(id_type))
@@ -161,30 +189,7 @@ namespace ENGINE_EDITOR {
 		}
 	}
 
-	void SceneHierarchyDisplay::DrawGameObjectDetails()
-	{
-		if (!ImGui::Begin("GO Details"))
-		{
-			ImGui::End();
-			return;
-		}
-
-		if (ImGui::BeginPopupContextWindow())
-		{
-			if (ImGui::Selectable("Add Component"))
-				m_bAddComponent = true;
-			ImGui::EndPopup();
-		}
-
-		if (m_pSelectedEntity && m_bAddComponent)
-			AddComponent(*m_pSelectedEntity, &m_bAddComponent);
-
-		if (m_pSelectedEntity)
-			DrawEntityComponents();
-
-		ImGui::End();
-	}
-
+	/*绘制选中Entity的所有组件信息*/
 	void SceneHierarchyDisplay::DrawEntityComponents()
 	{
 		if (!m_pSelectedEntity)
@@ -203,7 +208,6 @@ namespace ENGINE_EDITOR {
 			
 			// 调用id对应组件的绘制函数
 			const auto drawInfo = ENGINE_CORE::Utils::InvokeMetaFunction(id, "DrawEntityComponentInfo"_hs, *m_pSelectedEntity);
-
 			if (drawInfo)
 			{
 				ImGui::Spacing();
@@ -250,6 +254,8 @@ namespace ENGINE_EDITOR {
 		}
 
 		auto& registry = pCurrentScene->GetRegistry();
+
+		// 绘制左侧entity
 		auto sceneEntities = registry.GetRegistry().view<entt::entity>(entt::exclude<ENGINE_CORE::ECS::ScriptComponent>);
 		for (auto entity : sceneEntities)
 		{
