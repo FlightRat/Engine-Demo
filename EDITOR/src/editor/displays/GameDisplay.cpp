@@ -71,9 +71,9 @@ namespace ENGINE_EDITOR
 
 			// --- D. 重置动力学状态 (建议) ---
 			// 清楚残留的速度，防止物体带着之前的动量飞出去
-			body->setLinearVelocity(rp3d::Vector3(0, 0, 0));
-			body->setAngularVelocity(rp3d::Vector3(0, 0, 0));
-			body->setIsSleeping(false); // 强制唤醒
+			//body->setLinearVelocity(rp3d::Vector3(0, 0, 0));
+			//body->setAngularVelocity(rp3d::Vector3(0, 0, 0));
+			//body->setIsSleeping(false);
 		}
 	}
 
