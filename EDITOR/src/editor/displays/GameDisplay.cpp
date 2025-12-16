@@ -117,7 +117,7 @@ namespace ENGINE_EDITOR
 			camera->SetWidth(fb->Width());
 			camera->SetHeight(fb->Height());
 			auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-			scriptSystem->Render();
+			scriptSystem->Render(runtimeRegistry);
 			renderSystem->Render(camera, runtimeRegistry);
 		}
 		fb->Unbind();
@@ -232,7 +232,7 @@ namespace ENGINE_EDITOR
 		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
 
-		scriptSystem->Update();
+		scriptSystem->Update(runtimeRegistry);
 		while (accumulator >= timeStep) {	// TODO: add check "if (coreGlobals.IsPhysicsEnabled())"
 			physicsWorld->update(timeStep);
 			accumulator -= timeStep;

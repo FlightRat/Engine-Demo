@@ -52,7 +52,7 @@ namespace ENGINE_EDITOR {
 		runtimeRegistry.AddToContext<std::shared_ptr< PhysicsSystem>>(physicsSystem);
 
 		// Script system
-		auto scriptSystem = std::make_shared<ScriptingSystem>(runtimeRegistry);
+		auto scriptSystem = std::make_shared<ScriptingSystem>();
 		runtimeRegistry.AddToContext<std::shared_ptr<ScriptingSystem>>(scriptSystem);
 
 		// lua
@@ -64,7 +64,7 @@ namespace ENGINE_EDITOR {
 		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
 		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, runtimeRegistry);
 		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
-		if (!scriptSystem->LoadMainScript(*lua))
+		if (!scriptSystem->LoadMainScript(runtimeRegistry, *lua))
 		{
 			ENGINE_ERROR("Failed to load the main lua script!");
 			return;
