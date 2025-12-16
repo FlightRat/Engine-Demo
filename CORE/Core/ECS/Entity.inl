@@ -72,6 +72,14 @@ namespace ENGINE_CORE::ECS {
 		return entity.RemoveComponent<TComponent>();
 	}
 
+	template<typename TComponent>
+	auto copy_component(Entity& sourceEntity, Entity& targetEntity)
+	{
+		assert(sourceEntity.HasComponent<TComponent>() && "Failed to copy component!");
+		const auto& component = sourceEntity.GetComponent<TComponent>();
+		return targetEntity.AddComponent<TComponent>(component);
+	}
+
 	/*register a TComponent to meta for reflection*/
 	template<typename TComponent>
 	inline void Entity::RegisterMetaComponent()
@@ -83,6 +91,7 @@ namespace ENGINE_CORE::ECS {
 			.template func<&add_component_default<TComponent>>("add_component_default"_hs)
 			.template func<&has_component<TComponent>>("has_component"_hs)
 			.template func<&get_component<TComponent>>("get_component"_hs)
-			.template func<&remove_component<TComponent>>("remove_component"_hs);
+			.template func<&remove_component<TComponent>>("remove_component"_hs)
+			.template func<&copy_component<TComponent>>("copy_component"_hs);
 	}
 }

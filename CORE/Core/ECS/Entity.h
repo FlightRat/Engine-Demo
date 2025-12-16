@@ -64,6 +64,9 @@ namespace ENGINE_CORE::ECS {
 
 	template <typename TComponent>
 	auto remove_component(Entity& entity);
+
+	template <typename TComponent>
+	auto copy_component(Entity& sourceEntity, Entity& targetEntity);
 }
 
 #include "Entity.inl"
