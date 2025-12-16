@@ -1,4 +1,5 @@
 #include "ScriptingSystem.h"
+#include "../ECS/MainRegistry.h"
 #include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshFilter.h"
@@ -26,11 +27,11 @@
 using namespace ENGINE_CORE::ECS;
 
 namespace ENGINE_CORE::Systems {
-	ScriptingSystem::ScriptingSystem(ENGINE_CORE::ECS::Registry& registry):m_Registry{ registry },m_bMainLoaded{false}
+	ScriptingSystem::ScriptingSystem():m_bMainLoaded{false}
 	{
 	}
 
-	bool ScriptingSystem::LoadMainScript(sol::state& lua)
+	bool ScriptingSystem::LoadMainScript(ENGINE_CORE::ECS::Registry& registry, sol::state& lua)
 	{
 		// read the lua script
 		try
@@ -63,7 +64,7 @@ namespace ENGINE_CORE::Systems {
 		sol::table render_script = main_lua[2];
 		sol::function render = render_script["render"];
 
-		ENGINE_CORE::ECS::Entity mainLuaScript{ m_Registry, "main_script", "" };
+		ENGINE_CORE::ECS::Entity mainLuaScript{ registry, "main_script", "" };
 		mainLuaScript.AddComponent<ENGINE_CORE::ECS::ScriptComponent>(
 			ENGINE_CORE::ECS::ScriptComponent{
 				.update = update,
@@ -76,7 +77,7 @@ namespace ENGINE_CORE::Systems {
 		return true;
 	}
 
-	void ScriptingSystem::Update()
+	void ScriptingSystem::Update(ENGINE_CORE::ECS::Registry& registry)
 	{
 		if (!m_bMainLoaded)
 		{
@@ -84,11 +85,11 @@ namespace ENGINE_CORE::Systems {
 			return;
 		}
 
-		auto view = m_Registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
+		auto view = registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
 
 		for (const auto& entity : view) 
 		{
-			ENGINE_CORE::ECS::Entity ent{ m_Registry, entity };
+			ENGINE_CORE::ECS::Entity ent{ registry, entity };
 			if (ent.GetName() != "main_script")
 				continue;
 			auto& script = ent.GetComponent<ENGINE_CORE::ECS::ScriptComponent>();
@@ -100,14 +101,14 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 
-		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
+		auto& lua = registry.GetContext<std::shared_ptr<sol::state>>();
 		if (lua)
 		{
 			lua->collect_garbage();
 		}
 	}
 
-	void ScriptingSystem::Render()
+	void ScriptingSystem::Render(ENGINE_CORE::ECS::Registry& registry)
 	{
 		if (!m_bMainLoaded)
 		{
@@ -115,11 +116,11 @@ namespace ENGINE_CORE::Systems {
 			return;
 		}
 
-		auto view = m_Registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
+		auto view = registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
 
 		for (const auto& entity : view)
 		{
-			ENGINE_CORE::ECS::Entity ent{ m_Registry, entity };
+			ENGINE_CORE::ECS::Entity ent{ registry, entity };
 			if (ent.GetName() != "main_script")
 				continue;
 			auto& script = ent.GetComponent<ENGINE_CORE::ECS::ScriptComponent>();
@@ -131,7 +132,7 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 
-		auto& lua = m_Registry.GetContext<std::shared_ptr<sol::state>>();
+		auto& lua = registry.GetContext<std::shared_ptr<sol::state>>();
 		if (lua)
 		{
 			lua->collect_garbage();
