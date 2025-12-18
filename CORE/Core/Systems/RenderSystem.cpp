@@ -86,9 +86,10 @@ namespace ENGINE_CORE::Systems {
 			{
 				continue;
 			}
-			if (!meshR.m_loaded)
+			if (!meshR.m_loaded || meshF.m_bChanged)
 			{
 				meshR.UploadMesh(meshF);
+				meshF.m_bChanged = false;
 			}
 			model = glm::mat4(1.0f);
 			//translate

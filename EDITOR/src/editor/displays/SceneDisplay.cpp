@@ -101,7 +101,7 @@ namespace ENGINE_EDITOR {
 		// TODO
 	}
 
-	SceneDisplay::SceneDisplay() :m_pSceneCam{ std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f) }
+	SceneDisplay::SceneDisplay() :m_pSceneCam{ std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 20.0f, -20.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -45.0f) }
 	{
 	}
 

@@ -109,6 +109,7 @@ namespace ENGINE_EDITOR {
 		if (bChanged)
 		{
 			meshFilter.load_mesh();
+			meshFilter.m_bChanged = true;
 		}
 	}
 

@@ -14,6 +14,7 @@ namespace ENGINE_CORE::ECS {
 
 	struct MeshFilter
 	{
+        bool m_bChanged{ false };
         std::string mesh;
         std::vector<Vertex> vertex_data;
         std::vector<unsigned int> index_data;
