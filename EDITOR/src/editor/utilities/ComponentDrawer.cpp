@@ -19,6 +19,7 @@ namespace ENGINE_EDITOR {
 
 			// position
 			ImGui::InlineLabel("position");
+			ImGui::NewLine();
 			// position-x 
 			ImGui::ColoredLabel("x##pos_x", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
@@ -34,6 +35,7 @@ namespace ENGINE_EDITOR {
 
 			// scale
 			ImGui::InlineLabel("scale");
+			ImGui::NewLine();
 			// scale-x 
 			ImGui::ColoredLabel("x##scale_x", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
@@ -49,6 +51,24 @@ namespace ENGINE_EDITOR {
 
 			// rotation
 			ImGui::InlineLabel("rotation");
+			ImGui::NewLine();
+			glm::vec3 euler = glm::degrees(glm::eulerAngles(transform.rotation_quat));
+			// rotation-x
+			ImGui::ColoredLabel("x##rotation_x", LABEL_SINGLE_SIZE, LABEL_RED);
+			ImGui::SameLine();
+			bool changedX = ImGui::DragFloat("##rot_x", &euler.x, 0.5f); // 使用 DragFloat 体验更好
+			// rotation-y
+			ImGui::ColoredLabel("y##rotation_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
+			ImGui::SameLine();
+			bool changedY = ImGui::DragFloat("##rot_y", &euler.y, 0.5f);
+			// rotation-z
+			ImGui::ColoredLabel("z##rotation_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
+			ImGui::SameLine();
+			bool changedZ = ImGui::DragFloat("##rot_z", &euler.z, 0.5f);
+			if (changedX || changedY || changedZ) {
+				transform.rotation_quat = glm::quat(glm::radians(euler));
+				transform.rotation_eular = glm::radians(euler);
+			}
 
 			ImGui::PopItemWidth();
 			ImGui::TreePop();
