@@ -2,11 +2,16 @@
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Resources/AssetManager.h"
 //#include "Core/CoreUtilities/CoreUtilities.h"
+#include "../scene/SceneManager.h"
+#include "../scene/SceneObject.h"
+#include "Physics/PhysicsUtilities.h"
 #include "UTILITIES/EngineUtilities.h"
 #include "Logger/Logger.h"
 #include "ImGuiUtils.h"
 
 using namespace ENGINE_CORE::ECS;
+using namespace ENGINE_PHYSICS;
+using namespace ENGINE_EDITOR;
 
 namespace ENGINE_EDITOR {
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::TransformComponent& transform)
@@ -78,7 +83,6 @@ namespace ENGINE_EDITOR {
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::MeshFilter& meshFilter)
 	{
-		bool bChanged{ false };
 		ImGui::SeparatorText("MeshFilter");
 		ImGui::PushID(entt::type_hash<MeshFilter>::value());
 		if (ImGui::TreeNodeEx("##MeshFilterTree", ImGuiTreeNodeFlags_DefaultOpen))
@@ -96,7 +100,6 @@ namespace ENGINE_EDITOR {
 					{
 						sSelectedMesh = sMeshName;
 						meshFilter.mesh = sSelectedMesh;
-						bChanged = true;
 					}
 				}
 				ImGui::EndCombo();
@@ -106,8 +109,7 @@ namespace ENGINE_EDITOR {
 		}
 		ImGui::PopID();
 
-		if (bChanged)
-		{
+		if (ImGui::Button("Apply")) {
 			meshFilter.load_mesh();
 			meshFilter.m_bChanged = true;
 		}
@@ -182,7 +184,80 @@ namespace ENGINE_EDITOR {
 			ImGui::PushItemWidth(120.f);
 
 			// stuff
+			auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+			auto& runtimeRegistry = pCurrentScene->GetRegistry();
+			auto& common = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsCommon>>();
+			//auto& world = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsWorld>>();
+
+
+			PhysicsAttributes& physicsAttr = physics.GetAttr();
+
+			//mass
+			ImGui::InlineLabel("Mass");
+			ImGui::InputFloat("##Mass", &physicsAttr.rb_Mass, 1.f, 1.f, "%.1f");
+			ImGui::InlineLabel("MassDensity");
+			ImGui::InputFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.1f, 1.0f, "%.1f");
+			ImGui::InlineLabel("Bounciness");
+			ImGui::InputFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.1f, 1.0f, "%.1f");
+			ImGui::InlineLabel("FC");
+			ImGui::InputFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.1f, 1.0f, "%.1f");
+			ImGui::Checkbox("bTrigger", &physicsAttr.c_Trigger);
+
+			// rigidbody type
+			std::string sSelectedBodyType{ RigidBody_type2string(physicsAttr.rb_type) };
+			ImGui::InlineLabel("BodyType");
+			if (ImGui::BeginCombo("##BodyType", sSelectedBodyType.c_str()))
+			{
+				for (const auto& [bodyType, bodyStr] : GetRigidBodyStringMap())
+				{
+					if (ImGui::Selectable(bodyStr.c_str(), bodyStr == sSelectedBodyType))
+					{
+						sSelectedBodyType = bodyStr;
+						physicsAttr.rb_type = bodyType;
+					}
+				}
+				ImGui::EndCombo();
+			}
+
+			//ImGui::Separator();
+
+			// collider type & shape
+			std::string sSelectedColliderType{ physicsAttr.shape };
+			ImGui::InlineLabel("ColliderType");
+			if (ImGui::BeginCombo("##ColliderType", sSelectedColliderType.c_str()))
+			{
+				for (const auto& colliderType : GetUsableCollider())
+				{
+					if (ImGui::Selectable(colliderType.c_str(), colliderType == sSelectedColliderType))
+					{
+						sSelectedColliderType = colliderType;
+						physicsAttr.shape = colliderType;
+					}
+				}
+				ImGui::EndCombo();
+			}
+			if (physicsAttr.shape == "box")
+			{
+				ImGui::InlineLabel("Half extents");
+				ImGui::DragFloat3("##box_extents", &physicsAttr.box_halfExtents.x, 0.1, 0.01f, 100.f, "%.2f");
+			}
+			else if (physicsAttr.shape == "sphere")
+			{
+				ImGui::InlineLabel("Radius");
+				ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.1f, 0.01f, 100.f, "%.2f");
+			}
+			else if (physicsAttr.shape == "capsule")
+			{
+				ImGui::InlineLabel("Radius");
+				ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.1f, 0.01f, 100.f, "%.2f");
+				ImGui::InlineLabel("Half Height");
+				ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.1f, 0.01f, 100.f, "%.2f");
+			}
 			
+			if (ImGui::Button("Apply")) {
+				physics.Update(common);
+			}
+
 			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}

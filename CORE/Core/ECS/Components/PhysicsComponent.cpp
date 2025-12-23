@@ -79,6 +79,53 @@ namespace ENGINE_CORE::ECS {
 		m_pRigidBody->setUserData(m_pUserData.get());
 	}
 
+	void PhysicsComponent::Update(std::shared_ptr<PhysicsCommon> common)
+	{
+		m_pRigidBody->setType(m_pAttribute.rb_type);
+		m_pRigidBody->enableGravity(m_pAttribute.rb_EnableGravity);
+		m_pRigidBody->setMass(m_pAttribute.rb_Mass);
+		m_pRigidBody->setLinearDamping(m_pAttribute.rb_LinearDamping);
+		m_pRigidBody->setAngularDamping(m_pAttribute.rb_AngularDamping);
+		m_pRigidBody->setLinearLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_LinearAxisFactor.x, m_pAttribute.rb_LinearAxisFactor.y, m_pAttribute.rb_LinearAxisFactor.z));
+		m_pRigidBody->setAngularLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_AngularAxisFactor.x, m_pAttribute.rb_AngularAxisFactor.y, m_pAttribute.rb_AngularAxisFactor.z));
+
+		if (m_pCollider) {
+			long x = m_pCollider.use_count();
+			ENGINE_LOG("Status: VALID. Address");
+		}
+		else {
+			ENGINE_LOG("Status: NULL. (Deleter will NOT be called)");
+		}
+
+		m_pCollider = nullptr;
+		m_pCollisionShape = nullptr;
+		if (m_pAttribute.shape == "box")
+		{
+			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedBoxCollisionShape(common, rp3d::Vector3(m_pAttribute.box_halfExtents.x, m_pAttribute.box_halfExtents.y, m_pAttribute.box_halfExtents.z));
+		}
+		else if (m_pAttribute.shape == "sphere")
+		{
+			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedSphereCollisionShape(common, m_pAttribute.sphere_radius);
+		}
+		else if (m_pAttribute.shape == "capsule")
+		{
+			m_pCollisionShape = ENGINE_PHYSICS::MakeSharedCapsuleCollisionShape(common, m_pAttribute.capsule_radius, m_pAttribute.capsule_halfHeight);
+		}
+		if (m_pCollisionShape)
+		{
+			m_pCollider = ENGINE_PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
+			m_pCollider->setIsTrigger(m_pAttribute.c_Trigger);
+			Material& c_material = m_pCollider->getMaterial();
+			c_material.setBounciness(m_pAttribute.c_Bounciness);
+			c_material.setFrictionCoefficient(m_pAttribute.c_FrictionCoefficient);
+			c_material.setMassDensity(m_pAttribute.c_MassDensity);
+		}
+		else
+		{
+			ENGINE_ERROR("Failed to create collision shape in Update!");
+		}
+	}
+
 	void PhysicsComponent::CreateLuaPhysicsBind(sol::state& lua, entt::registry& registry)
 	{
 		lua.new_enum<BodyType>(
