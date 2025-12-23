@@ -89,15 +89,7 @@ namespace ENGINE_CORE::ECS {
 		m_pRigidBody->setLinearLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_LinearAxisFactor.x, m_pAttribute.rb_LinearAxisFactor.y, m_pAttribute.rb_LinearAxisFactor.z));
 		m_pRigidBody->setAngularLockAxisFactor(rp3d::Vector3(m_pAttribute.rb_AngularAxisFactor.x, m_pAttribute.rb_AngularAxisFactor.y, m_pAttribute.rb_AngularAxisFactor.z));
 
-		if (m_pCollider) {
-			long x = m_pCollider.use_count();
-			ENGINE_LOG("Status: VALID. Address");
-		}
-		else {
-			ENGINE_LOG("Status: NULL. (Deleter will NOT be called)");
-		}
-
-		m_pCollider = nullptr;
+		m_pCollider = nullptr; // NOTE -- 第一次apply不会触发智能指针的删除器 哪里有其他引用(但是能跑......)
 		m_pCollisionShape = nullptr;
 		if (m_pAttribute.shape == "box")
 		{
