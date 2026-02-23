@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir)\WINDOW;$(SolutionDir)\Dependencies\SDL\include;$(SolutionDir)\UTILITIES;$(SolutionDir)\SOUNDS;$(SolutionDir)\FILESYSTEM;$(SolutionDir)\PHYSICS;$(SolutionDir)\Dependencies\ReactPhysics3D\include;D:\代码-CG\The-2D-Engine\Dependencies\RapidJSON\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\LOGGER;$(SolutionDir).\RENDERING;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\SOIL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir)\WINDOW;$(SolutionDir)\Dependencies\SDL\include;$(SolutionDir)\UTILITIES;$(SolutionDir)\SOUNDS;$(SolutionDir)\FILESYSTEM;$(SolutionDir)\PHYSICS;$(SolutionDir)\Dependencies\ReactPhysics3D\include;$(SolutionDir)\Dependencies\RapidJSON\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
