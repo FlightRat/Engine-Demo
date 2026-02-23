@@ -233,11 +233,17 @@ namespace ENGINE_EDITOR
 		auto& physicsSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::PhysicsSystem>>();
 
 		scriptSystem->Update(runtimeRegistry);
-		while (accumulator >= timeStep) {	// TODO: add check "if (coreGlobals.IsPhysicsEnabled())"
-			physicsWorld->update(timeStep);
-			accumulator -= timeStep;
-		}
-		decimal factor = accumulator / timeStep;
-		physicsSystem->Update(runtimeRegistry.GetRegistry(), factor);
+
+		// ²åÖµversion
+		//while (accumulator >= timeStep) {	// TODO: add check "if (coreGlobals.IsPhysicsEnabled())"
+		//	physicsWorld->update(timeStep);
+		//	accumulator -= timeStep;
+		//}
+		//decimal factor = accumulator / timeStep;
+		//physicsSystem->Update(runtimeRegistry.GetRegistry(), factor);
+
+		// ²»²åÖµversion
+		physicsWorld->update(1.0f/60.0f);
+		physicsSystem->Update(runtimeRegistry.GetRegistry(), 0.0f);
 	}
 }

@@ -29,7 +29,7 @@ namespace ENGINE_CORE::Systems {
 			// 3. 使用这两个状态进行插值
 			const Transform& prevTransform = physics.GetPreviousTransform();
 			const Transform& currTransform = physics.GetCurrentTransform();
-			Transform rb_transform = Transform::interpolateTransforms(prevTransform, currTransform, factor);	// to be used
+			// Transform rb_transform = Transform::interpolateTransforms(prevTransform, currTransform, factor);	// to be used only in 插值version
 
 			//position
 			const Vector3& rb_pos = currTransform.getPosition();
