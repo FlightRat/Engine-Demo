@@ -293,6 +293,133 @@ namespace ENGINE_EDITOR {
 		}
 		ImGui::PopID();
 	}
+
+	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::LightComponent& light)
+	{
+		ImGui::SeparatorText("Light");
+		ImGui::PushID(entt::type_hash<Identification>::value());
+		if (ImGui::TreeNodeEx("##LightTree", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushItemWidth(120.f);
+
+			// diffuse
+			ImGui::InlineLabel("diffuse");
+			ImGui::NewLine();
+			// diffuse r
+			ImGui::ColoredLabel("r##diffuse_r", LABEL_SINGLE_SIZE, LABEL_RED);
+			ImGui::SameLine();
+			ImGui::InputFloat("##diffuse_r", &light.diffuse.r, 1.f, 10.f, "%.1f");
+			// diffuse g
+			ImGui::ColoredLabel("g##diffuse_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
+			ImGui::SameLine();
+			ImGui::InputFloat("##diffuse_g", &light.diffuse.g, 1.f, 10.f, "%.1f");
+			// diffuse b
+			ImGui::ColoredLabel("b##diffuse_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
+			ImGui::SameLine();
+			ImGui::InputFloat("##diffuse_b", &light.diffuse.b, 1.f, 10.f, "%.1f");
+
+			// specular
+			ImGui::InlineLabel("specular");
+			ImGui::NewLine();
+			// specular r
+			ImGui::ColoredLabel("r##specular_r", LABEL_SINGLE_SIZE, LABEL_RED);
+			ImGui::SameLine();
+			ImGui::InputFloat("##specular_r", &light.specular.r, 1.f, 10.f, "%.1f");
+			// specular g
+			ImGui::ColoredLabel("g##specular_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
+			ImGui::SameLine();
+			ImGui::InputFloat("##specular_g", &light.specular.g, 1.f, 10.f, "%.1f");
+			// specular b
+			ImGui::ColoredLabel("b##specular_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
+			ImGui::SameLine();
+			ImGui::InputFloat("##specular_b", &light.specular.b, 1.f, 10.f, "%.1f");
+
+			// ambient
+			ImGui::InlineLabel("specular");
+			ImGui::NewLine();
+			// ambient r
+			ImGui::ColoredLabel("r##ambient_r", LABEL_SINGLE_SIZE, LABEL_RED);
+			ImGui::SameLine();
+			ImGui::InputFloat("##ambient_r", &light.ambient.r, 1.f, 10.f, "%.1f");
+			// ambient g
+			ImGui::ColoredLabel("g##ambient_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
+			ImGui::SameLine();
+			ImGui::InputFloat("##ambient_g", &light.ambient.g, 1.f, 10.f, "%.1f");
+			// ambient b
+			ImGui::ColoredLabel("b##ambient_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
+			ImGui::SameLine();
+			ImGui::InputFloat("##ambient_b", &light.ambient.b, 1.f, 10.f, "%.1f");
+
+			std::vector<std::string> UseableLight = {"point_light", "direction_light"}; // TODO: Move this some where else
+
+			// collider type & shape
+			std::string sSelectedLightType{ light.type };
+			ImGui::InlineLabel("LightType");
+			if (ImGui::BeginCombo("##LightType", sSelectedLightType.c_str()))
+			{
+				for (const auto& lightType : UseableLight)
+				{
+					if (ImGui::Selectable(lightType.c_str(), lightType == sSelectedLightType))
+					{
+						sSelectedLightType = lightType;
+						light.type = lightType;
+					}
+				}
+				ImGui::EndCombo();
+			}
+
+			if (light.type == "point_light")
+			{
+				// position
+				ImGui::InlineLabel("light_position");
+				ImGui::NewLine();
+				// position x
+				ImGui::ColoredLabel("x##pos_x", LABEL_SINGLE_SIZE, LABEL_RED);
+				ImGui::SameLine();
+				ImGui::InputFloat("##pos_x", &light.pos.x, 1.f, 10.f, "%.1f");
+				// position y
+				ImGui::ColoredLabel("y##pos_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
+				ImGui::SameLine();
+				ImGui::InputFloat("##pos_y", &light.pos.y, 1.f, 10.f, "%.1f");
+				// position z
+				ImGui::ColoredLabel("z##pos_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
+				ImGui::SameLine();
+				ImGui::InputFloat("##pos_z", &light.pos.z, 1.f, 10.f, "%.1f");
+
+				ImGui::InlineLabel("constant");
+				ImGui::InputFloat("##light_constant", &light.constant, 1.f, 10.f, "%.1f");
+
+				ImGui::InlineLabel("linear");
+				ImGui::InputFloat("##light_linear", &light.linear, 1.f, 10.f, "%.1f");
+
+				ImGui::InlineLabel("quadratic");
+				ImGui::InputFloat("##light_quadratic", &light.quadratic, 1.f, 10.f, "%.1f");
+			}
+			else if (light.type == "direction_light")
+			{
+				// direction
+				ImGui::InlineLabel("light_direction");
+				ImGui::NewLine();
+				// direction x
+				ImGui::ColoredLabel("x##direction_x", LABEL_SINGLE_SIZE, LABEL_RED);
+				ImGui::SameLine();
+				ImGui::InputFloat("##direction_x", &light.direction.x, 1.f, 10.f, "%.1f");
+				// direction y
+				ImGui::ColoredLabel("y##direction_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
+				ImGui::SameLine();
+				ImGui::InputFloat("##direction_y", &light.direction.y, 1.f, 10.f, "%.1f");
+				// direction z
+				ImGui::ColoredLabel("z##direction_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
+				ImGui::SameLine();
+				ImGui::InputFloat("##direction_z", &light.direction.z, 1.f, 10.f, "%.1f");
+			}
+
+			ImGui::PopItemWidth();
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
+
 }
 
 

@@ -7,6 +7,7 @@
 #include "../ECS/Components/CubeColliderComponent.h"
 #include "../ECS/Components/SphereColliderComponent.h"
 #include "../ECS/Components/PhysicsComponent.h"
+#include "../ECS/Components/LightComponent.h"
 #include "../ECS/Entity.h"
 #include "../Scripting/GlmLuaBindings.h"
 #include "../Scripting/SoundLuaBindings.h"
@@ -287,6 +288,7 @@ namespace ENGINE_CORE::Systems {
 		MeshFilter::CreateLuaMeshFilterBind(lua);
 		MeshRender::CreateLuaMeshRendererBind(lua);
 		PhysicsComponent::CreateLuaPhysicsBind(lua, registry.GetRegistry());
+		LightComponent::CreateLuaLightBind(lua);
 
 		//NOTE::the same registered Component in LUA and META should have the same id
 
@@ -296,6 +298,7 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<CubeColliderComponent>();
 		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<SphereColliderComponent>();
 		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<PhysicsComponent>();
+		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<LightComponent>();
 
 		Registry::RegisterMetaComponent<TransformComponent>();
 		Registry::RegisterMetaComponent<MeshFilter>();
@@ -303,6 +306,7 @@ namespace ENGINE_CORE::Systems {
 		Registry::RegisterMetaComponent<CubeColliderComponent>();
 		Registry::RegisterMetaComponent<SphereColliderComponent>();
 		Registry::RegisterMetaComponent<PhysicsComponent>();
+		Registry::RegisterMetaComponent<LightComponent>();
 
 		ENGINE_CORE::Scripting::UserDataBindings::register_meta_user_data<ENGINE_PHYSICS::ObjectData>();
 	}

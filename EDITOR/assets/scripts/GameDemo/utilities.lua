@@ -60,6 +60,26 @@ function LoadEntity( def )
 		)
 	end
 
+	if def.components.Light then
+		local light = newEntity:add_component(
+			Light(
+				def.components.Light.diffuse,
+				def.components.Light.specular,
+				def.components.Light.ambient,
+
+				def.components.Light.type,
+
+				def.components.Light.pos or vec3(0.0, 0.0, 0.0),
+				def.components.Light.constant or 1.0,
+				def.components.Light.linear or 1.0,
+				def.components.Light.quadratic or 1.0,
+
+				def.components.Light.direction or vec3(0.0, 0.0, 0.0)
+
+			)
+		)
+	end
+
 	--TODO do the default in C++
 	if def.components.Physics then
 	--[[

@@ -102,6 +102,9 @@
     <ClInclude Include="Core\Loaders\SceneLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\ECS\Components\LightComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\ECS\Registry.cpp">
@@ -183,6 +186,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\Loaders\SceneLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ECS\Components\LightComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

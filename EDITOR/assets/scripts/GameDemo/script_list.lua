@@ -8,6 +8,7 @@ ScriptList=
 	"assets/scripts/GameDemo/Defs/assetDefs.lua",
 	"assets/scripts/GameDemo/Defs/envirDefs.lua",
 	"assets/scripts/GameDemo/Defs/hudDefs.lua",
+	"assets/scripts/GameDemo/Defs/lightDefs.lua",
 	"assets/scripts/GameDemo/Defs/playerDefs.lua",
 
 }

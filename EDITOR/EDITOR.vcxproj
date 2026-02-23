@@ -191,6 +191,7 @@
     <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\bulletDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\hudDefs.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\playerDefs.lua" />
     <None Include="assets\scripts\GameDemo\plat.lua" />
     <None Include="assets\scripts\GameDemo\platform.lua" />

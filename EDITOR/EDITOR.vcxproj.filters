@@ -85,6 +85,7 @@
     <None Include="assets\scripts\GameDemo\player.lua" />
     <None Include="assets\scripts\GameDemo\platform.lua" />
     <None Include="assets\scripts\GameDemo\plat.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

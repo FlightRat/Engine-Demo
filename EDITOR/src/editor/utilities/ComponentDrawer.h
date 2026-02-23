@@ -4,6 +4,7 @@
 #include "Core/ECS/Components/PhysicsComponent.h"
 #include "Core/ECS/Components/MeshFilter.h"
 #include "Core/ECS/Components/MeshRender.h"
+#include "Core/ECS/Components/LightComponent.h"
 
 namespace ENGINE_CORE::ECS {class Entity;}
 
@@ -28,6 +29,7 @@ namespace ENGINE_EDITOR {
 		static void DrawImGuiComponent(ENGINE_CORE::ECS::MeshRender& meshRender);
 		static void DrawImGuiComponent(ENGINE_CORE::ECS::PhysicsComponent& physics);
 		static void DrawImGuiComponent(ENGINE_CORE::ECS::Identification& identity);
+		static void DrawImGuiComponent(ENGINE_CORE::ECS::LightComponent& light);
 	};
 
 }

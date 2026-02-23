@@ -17,6 +17,7 @@
 #include<Core/ECS/Components/TransformComponent.h>
 #include<Core/ECS/Components/PhysicsComponent.h>
 #include<Core/ECS/Components/Identification.h>
+#include<Core/ECS/Components/LightComponent.h>
 #include<Core/Resources/AssetManager.h>
 #include<Core/Systems/ScriptingSystem.h>
 #include<Core/Systems/RenderSystem.h>
@@ -189,6 +190,7 @@ namespace ENGINE_EDITOR {
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshFilter>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshRender>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::Identification>();
+		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::LightComponent>();
 
 		SCENE_MANAGER().AddScene("scene1");
 		SCENE_MANAGER().AddScene("scene2");

@@ -169,6 +169,7 @@
     <ClInclude Include="Core\ECS\Components\ComponentSerializer.h" />
     <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h" />
     <ClInclude Include="Core\ECS\Components\Identification.h" />
+    <ClInclude Include="Core\ECS\Components\LightComponent.h" />
     <ClInclude Include="Core\ECS\Components\MeshFilter.h" />
     <ClInclude Include="Core\ECS\Components\MeshRender.h" />
     <ClInclude Include="Core\ECS\Components\PhysicsComponent.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="Core\CoreUtilities\FollowCamera.cpp" />
     <ClCompile Include="Core\ECS\Components\ComponentSerializer.cpp" />
     <ClCompile Include="Core\ECS\Components\CubeColliderComponent.cpp" />
+    <ClCompile Include="Core\ECS\Components\LightComponent.cpp" />
     <ClCompile Include="Core\ECS\Components\MeshFilter.cpp" />
     <ClCompile Include="Core\ECS\Components\MeshRender.cpp" />
     <ClCompile Include="Core\ECS\Components\PhysicsComponent.cpp" />
