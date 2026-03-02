@@ -9,7 +9,7 @@ namespace ENGINE_CORE::ECS {
 		glm::vec3 specular;
 		glm::vec3 ambient;
 
-		std::string type;
+		std::string type; //TODO: make this enum
 
 		// for point light
 		glm::vec3 pos;

@@ -31,6 +31,7 @@ namespace ENGINE_CORE::ECS {
 			"specular", &LightComponent::specular,
 			"ambient", &LightComponent::ambient,
 			"direction", &LightComponent::direction,
+			"position", &LightComponent::pos,
 			"constant", &LightComponent::constant,
 			"linear", &LightComponent::linear,
 			"quadratic", &LightComponent::quadratic

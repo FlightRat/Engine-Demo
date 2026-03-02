@@ -24,6 +24,7 @@ Cube_Moveable = LoadEntity(EnvirDefs["cube_3"])
 Cube_Trigger = LoadEntity(EnvirDefs["cube_2"])
 
 point_light = LoadEntity(LightDefs["point_light_1"])
+direction_light = LoadEntity(LightDefs["direction_light_1"])
 
 local offset = vec3(0.0, 5.0, -10.0)
 FollowCam = FollowCamera(Player_Body_Entity, offset)

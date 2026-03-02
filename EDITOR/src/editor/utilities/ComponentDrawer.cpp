@@ -352,7 +352,7 @@ namespace ENGINE_EDITOR {
 
 			std::vector<std::string> UseableLight = {"point_light", "direction_light"}; // TODO: Move this some where else
 
-			// collider type & shape
+			// light type
 			std::string sSelectedLightType{ light.type };
 			ImGui::InlineLabel("LightType");
 			if (ImGui::BeginCombo("##LightType", sSelectedLightType.c_str()))
@@ -387,13 +387,13 @@ namespace ENGINE_EDITOR {
 				ImGui::InputFloat("##pos_z", &light.pos.z, 1.f, 10.f, "%.1f");
 
 				ImGui::InlineLabel("constant");
-				ImGui::InputFloat("##light_constant", &light.constant, 1.f, 10.f, "%.1f");
+				ImGui::InputFloat("##light_constant", &light.constant, 1.f, 10.f, "%.3f");
 
 				ImGui::InlineLabel("linear");
-				ImGui::InputFloat("##light_linear", &light.linear, 1.f, 10.f, "%.1f");
+				ImGui::InputFloat("##light_linear", &light.linear, 1.f, 10.f, "%.3f");
 
 				ImGui::InlineLabel("quadratic");
-				ImGui::InputFloat("##light_quadratic", &light.quadratic, 1.f, 10.f, "%.1f");
+				ImGui::InputFloat("##light_quadratic", &light.quadratic, 1.f, 10.f, "%.3f");
 			}
 			else if (light.type == "direction_light")
 			{
@@ -411,7 +411,7 @@ namespace ENGINE_EDITOR {
 				// direction z
 				ImGui::ColoredLabel("z##direction_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
 				ImGui::SameLine();
-				ImGui::InputFloat("##direction_z", &light.direction.z, 1.f, 10.f, "%.1f");
+				ImGui::InputFloat("##direction_z", &light.direction.z, 1.f, 10.f, "%.2f");
 			}
 
 			ImGui::PopItemWidth();

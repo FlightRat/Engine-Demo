@@ -130,9 +130,9 @@ namespace ENGINE_CORE::Systems {
 				colorShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 				//
 				colorShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f, 20.0f, 0.0f));
-				colorShader->SetUniformVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
 				colorShader->SetUniformVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
 				colorShader->SetUniformVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+				colorShader->SetUniformVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
 				colorShader->SetUniformFloat("pointLights[0].constant", 1.0f);
 				colorShader->SetUniformFloat("pointLights[0].linear", 0.09f);
 				colorShader->SetUniformFloat("pointLights[0].quadratic", 0.032f);
@@ -154,9 +154,9 @@ namespace ENGINE_CORE::Systems {
 				texShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
 				//
 				texShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f, 20.0f, 0.0f));
-				texShader->SetUniformVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
 				texShader->SetUniformVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
 				texShader->SetUniformVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+				texShader->SetUniformVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
 				texShader->SetUniformFloat("pointLights[0].constant", 1.0f);
 				texShader->SetUniformFloat("pointLights[0].linear", 0.09f);
 				texShader->SetUniformFloat("pointLights[0].quadratic", 0.032f);
