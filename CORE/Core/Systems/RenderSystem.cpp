@@ -120,7 +120,22 @@ namespace ENGINE_CORE::Systems {
 				colorShader->SetUniformMat4("model", model);
 				colorShader->SetUniformMat4("view", viewMatrix);
 				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
+
 				colorShader->SetUniformVec4("color", meshR.color);
+				colorShader->SetUniformVec3("viewPos", camera->GetPosition());
+
+				colorShader->SetUniformVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+				colorShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+				colorShader->SetUniformVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+				colorShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+				//
+				colorShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f, 20.0f, 0.0f));
+				colorShader->SetUniformVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+				colorShader->SetUniformVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+				colorShader->SetUniformVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+				colorShader->SetUniformFloat("pointLights[0].constant", 1.0f);
+				colorShader->SetUniformFloat("pointLights[0].linear", 0.09f);
+				colorShader->SetUniformFloat("pointLights[0].quadratic", 0.032f);
 			}
 			else if (meshR.shaderName == "texShader")
 			{
@@ -129,7 +144,23 @@ namespace ENGINE_CORE::Systems {
 				texShader->SetUniformMat4("model", model);
 				texShader->SetUniformMat4("view", viewMatrix);
 				texShader->SetUniformMat4("projection", PerspectiveMatrix);
+
 				texShader->SetUniformInt("tex", 0);
+				texShader->SetUniformVec3("viewPos", camera->GetPosition());
+
+				texShader->SetUniformVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+				texShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+				texShader->SetUniformVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+				texShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+				//
+				texShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f, 20.0f, 0.0f));
+				texShader->SetUniformVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+				texShader->SetUniformVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+				texShader->SetUniformVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+				texShader->SetUniformFloat("pointLights[0].constant", 1.0f);
+				texShader->SetUniformFloat("pointLights[0].linear", 0.09f);
+				texShader->SetUniformFloat("pointLights[0].quadratic", 0.032f);
+
 				const auto& tex = assetManager.GetTexture(meshR.textureName);
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, tex->GetID());

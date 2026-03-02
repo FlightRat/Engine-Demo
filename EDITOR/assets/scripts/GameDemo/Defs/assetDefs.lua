@@ -7,6 +7,7 @@ AssetDefs =
 		--{name="brick", path="assets/textures/brick.png", pixel_art=false},
 		{name="wood", path="assets/textures/wood.png", pixel_art=false},
 		{name="container", path="assets/textures/container.png", pixel_art=false},
+		{name="container_specular", path="assets/textures/container_specular.png", pixel_art=false},
 		{name="rust", path="assets/textures/rust.png", pixel_art=false}
 	},
 	music=
