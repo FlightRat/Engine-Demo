@@ -124,40 +124,69 @@ namespace ENGINE_EDITOR {
 			ImGui::PushItemWidth(120.f);
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 
+			ENGINE_CORE::ECS::Material& m = meshRender.GetMaterial();
+
 			// color
-			ImVec4 col = { meshRender.color.x, meshRender.color.y,meshRender.color.z, meshRender.color.w };
+			ImVec4 col = { m.color.x, m.color.y,m.color.z, m.color.w };
 			ImGui::InlineLabel("color");
 			if (ImGui::ColorEdit4("##color", &col.x, IMGUI_COLOR_PICKER_FLAGS))
 			{
-				meshRender.color.x = static_cast<GLubyte>(col.x);
-				meshRender.color.y = static_cast<GLubyte>(col.y);
-				meshRender.color.z = static_cast<GLubyte>(col.z);
-				meshRender.color.w = static_cast<GLubyte>(col.w);
+				m.color.x = static_cast<GLubyte>(col.x);
+				m.color.y = static_cast<GLubyte>(col.y);
+				m.color.z = static_cast<GLubyte>(col.z);
+				m.color.w = static_cast<GLubyte>(col.w);
 			}
 
 			// useTex
 			ImGui::InlineLabel("useTex");
-			ImGui::Checkbox("#useTex", &meshRender.m_useTexture);
-
-			// texture
-			ImGui::InlineLabel("texture");
-			std::string sSelectedTexture{ meshRender.textureName };
-			if (ImGui::BeginCombo("##texture", sSelectedTexture.c_str()))
+			ImGui::Checkbox("#useTex", &m.m_useTexture);
+			const char* textureSlots[] = { "diffuse", "specular" };
+			for (const char* slot : textureSlots)
 			{
-				for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE))
+				// 1. 显示标签 (e.g., "diffuse")
+				ImGui::InlineLabel(slot);
+
+				// 2. 获取当前纹理名的引用
+				// 注意：这里使用 operator[] 而不是 find()。
+				// 如果 map 中没有这个 key，[] 会自动插入一个空字符串，这对 UI 编辑来说是安全的。
+				std::string& currentTextureName = m.m_textures[slot];
+
+				// 3. 生成唯一的 ImGui ID (e.g., "##texture_diffuse")
+				std::string comboID = std::string("##texture_") + slot;
+
+				// 4. 绘制下拉框
+				// currentTextureName.c_str() 用于显示当前选中的值，如果为空字符串则显示空白
+				if (ImGui::BeginCombo(comboID.c_str(), currentTextureName.c_str()))
 				{
-					if (ImGui::Selectable(sTextureName.c_str(), sTextureName == sSelectedTexture))
+					// 4.1. 添加一个 "None" 选项，允许用户清除纹理
+					if (ImGui::Selectable("None", currentTextureName.empty()))
 					{
-						sSelectedTexture = sTextureName;
-						meshRender.textureName = sSelectedTexture;
+						currentTextureName = "";
 					}
+
+					// 4.2. 遍历资源管理器中的所有纹理
+					for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE))
+					{
+						bool isSelected = (sTextureName == currentTextureName);
+
+						if (ImGui::Selectable(sTextureName.c_str(), isSelected))
+						{
+							currentTextureName = sTextureName; // 更新 Map 中的值
+						}
+
+						// 优化体验：如果当前项被选中，确保它在滚动视图中可见
+						if (isSelected)
+						{
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
 				}
-				ImGui::EndCombo();
 			}
 
 			// shader
 			ImGui::InlineLabel("shader");
-			std::string sSelectedShader{ meshRender.shaderName };
+			std::string sSelectedShader{ m.shaderName };
 			ImGui::Text(sSelectedShader.c_str());
 			//if (ImGui::BeginCombo("##shader", sSelectedShader.c_str()))
 			//{
