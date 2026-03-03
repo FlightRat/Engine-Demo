@@ -202,16 +202,10 @@
     <None Include="assets\scripts\main.lua" />
     <None Include="assets\shaders\bugShader.frag" />
     <None Include="assets\shaders\bugShader.vert" />
-    <None Include="assets\shaders\colorShader.frag" />
-    <None Include="assets\shaders\colorShader.vert" />
-    <None Include="assets\shaders\hudShader.frag" />
-    <None Include="assets\shaders\hudShader.vert" />
     <None Include="assets\shaders\mainShader.frag" />
     <None Include="assets\shaders\mainShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
     <None Include="assets\shaders\physicsDebugShader.vert" />
-    <None Include="assets\shaders\texShader.frag" />
-    <None Include="assets\shaders\texShader.vert" />
     <None Include="imgui.ini" />
     <None Include="SDL2.dll" />
     <None Include="SDL2_mixer.dll" />

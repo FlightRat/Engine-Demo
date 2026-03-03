@@ -60,16 +60,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SDL2.dll" />
-    <None Include="assets\shaders\colorShader.vert" />
-    <None Include="assets\shaders\colorShader.frag" />
-    <None Include="assets\shaders\texShader.vert" />
-    <None Include="assets\shaders\texShader.frag" />
     <None Include="assets\scripts\main.lua" />
     <None Include="assets\scripts\GameDemo\Defs\envirDefs.lua" />
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
-    <None Include="assets\shaders\hudShader.vert" />
-    <None Include="assets\shaders\hudShader.frag" />
     <None Include="SDL2_mixer.dll" />
     <None Include="assets\shaders\physicsDebugShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
