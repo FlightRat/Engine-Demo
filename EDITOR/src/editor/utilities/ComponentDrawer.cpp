@@ -135,6 +135,10 @@ namespace ENGINE_EDITOR {
 				meshRender.color.w = static_cast<GLubyte>(col.w);
 			}
 
+			// useTex
+			ImGui::InlineLabel("useTex");
+			ImGui::Checkbox("#useTex", &meshRender.m_useTexture);
+
 			// texture
 			ImGui::InlineLabel("texture");
 			std::string sSelectedTexture{ meshRender.textureName };
@@ -154,18 +158,19 @@ namespace ENGINE_EDITOR {
 			// shader
 			ImGui::InlineLabel("shader");
 			std::string sSelectedShader{ meshRender.shaderName };
-			if (ImGui::BeginCombo("##shader", sSelectedShader.c_str()))
-			{
-				for (const auto& sShaderName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::SHADER))
-				{
-					if (ImGui::Selectable(sShaderName.c_str(), sShaderName == sSelectedShader))
-					{
-						sSelectedShader = sShaderName;
-						meshRender.shaderName = sSelectedShader;
-					}
-				}
-				ImGui::EndCombo();
-			}
+			ImGui::Text(sSelectedShader.c_str());
+			//if (ImGui::BeginCombo("##shader", sSelectedShader.c_str()))
+			//{
+			//	for (const auto& sShaderName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::SHADER))
+			//	{
+			//		if (ImGui::Selectable(sShaderName.c_str(), sShaderName == sSelectedShader))
+			//		{
+			//			sSelectedShader = sShaderName;
+			//			meshRender.shaderName = sSelectedShader;
+			//		}
+			//	}
+			//	ImGui::EndCombo();
+			//}
 
 			// TODO: add should render
 

@@ -10,6 +10,7 @@ namespace ENGINE_CORE::ECS {
 	{
 		bool m_loaded{ false };
 		bool shouldRender{ true };
+		bool m_useTexture{ false };
 		// TODO:find better way for the shader/texture
 		std::string shaderName;
 		std::string textureName;

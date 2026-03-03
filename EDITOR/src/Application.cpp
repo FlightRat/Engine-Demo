@@ -204,15 +204,9 @@ namespace ENGINE_EDITOR {
 		//auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
-		// color shader
-		if (!assetManager.AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
-		{
-			ENGINE_ERROR("Failed to create and add the shader!");
-			return false;
-		}
 
-		// tex shader
-		if (!assetManager.AddShader("texShader", "assets/shaders/texShader.vert", "assets/shaders/texShader.frag"))
+		// main shader
+		if (!assetManager.AddShader("mainShader", "assets/shaders/mainShader.vert", "assets/shaders/mainShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
@@ -225,8 +219,15 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// physicsDebugShader
-		if (!assetManager.AddShader("debugShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
+		// bug shader
+		if (!assetManager.AddShader("bugShader", "assets/shaders/bugShader.vert", "assets/shaders/bugShader.frag"))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// colliderShader
+		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;

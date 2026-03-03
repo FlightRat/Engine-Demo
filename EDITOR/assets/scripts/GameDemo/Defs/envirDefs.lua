@@ -21,9 +21,10 @@ EnvirDefs =
 				type = "sphere"
 			},
 			MeshRender = {
-				shader = "texShader",
+				shader = "mainShader",
 				texture = "rust",
-				color = vec4(0.0, 1.0, 0.0, 1.0)
+				color = vec4(1.0, 1.0, 1.0, 1.0),
+				useTex = true
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -47,9 +48,10 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "texShader",
+				shader = "mainShader",
 				texture = "container",
-				color = vec4(0.0, 0.0, 1.0, 1.0)
+				color = vec4(1.0, 1.0, 1.0, 1.0),
+				useTex = true
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -77,9 +79,9 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(0.0, 1.0, 0.0, 1.0)
+				shader = "mainShader",
+				color = vec4(0.0, 1.0, 0.0, 1.0),
+				useTex = false
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -104,9 +106,9 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(0.0, 1.0, 0.0, 1.0)
+				shader = "mainShader",
+				color = vec4(0.0, 1.0, 0.0, 1.0),
+				useTex = false
 			}
 		}
 	},
@@ -125,9 +127,9 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(1.0, 0.0, 0.0, 1.0)
+				shader = "mainShader",
+				color = vec4(1.0, 0.0, 0.0, 1.0),
+				useTex = false
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -151,9 +153,9 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(0.0, 0.0, 1.0, 1.0)
+				shader = "mainShader",
+				color = vec4(0.0, 0.0, 1.0, 1.0),
+				useTex = false
 			},
 			Physics = {
 				type = BodyType.Kinematic,
@@ -177,9 +179,9 @@ EnvirDefs =
 				type = "plane"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(1.0, 1.0, 1.0, 1.0)
+				shader = "mainShader",
+				color = vec4(1.0, 1.0, 1.0, 1.0),
+				useTex = false
 			},
 			Physics = {
 				type = BodyType.Static,

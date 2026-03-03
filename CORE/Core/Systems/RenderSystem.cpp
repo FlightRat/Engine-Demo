@@ -35,26 +35,20 @@ namespace ENGINE_CORE::Systems {
 		auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 		// shader
-		auto colorShader = assetManager.GetShader("colorShader");
-		if (colorShader->ShaderProgramID() == 0)
+		auto mainShader = assetManager.GetShader("mainShader");
+		if (mainShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto texShader = assetManager.GetShader("texShader");
-		if (texShader->ShaderProgramID() == 0)
+		auto bugShader = assetManager.GetShader("bugShader");
+		if (bugShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto hudShader = assetManager.GetShader("hudShader");
-		if (hudShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		auto debugShader = assetManager.GetShader("debugShader");
-		if (debugShader->ShaderProgramID() == 0)
+		auto colliderShader = assetManager.GetShader("colliderShader");
+		if (colliderShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
@@ -115,82 +109,77 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			if (meshR.shaderName == "colorShader")
+			bool bug = ((meshR.m_useTexture == true) && (meshR.textureName == ""));
+			if (bug)
 			{
-				colorShader->Enable();
-				colorShader->SetUniformMat4("model", model);
-				colorShader->SetUniformMat4("view", viewMatrix);
-				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
+				bugShader->Enable();
+				bugShader->Enable();
+				bugShader->SetUniformMat4("model", model);
+				bugShader->SetUniformMat4("view", viewMatrix);
+				bugShader->SetUniformMat4("projection", PerspectiveMatrix);
 
-				colorShader->SetUniformVec4("color", meshR.color);
-				colorShader->SetUniformVec3("viewPos", camera->GetPosition());
+				bugShader->SetUniformVec3("viewPos", camera->GetPosition());
 
-				//TODO: automaitclly fit the light number
-				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
-				{
-					int point_light_num = 0;
-					if (light.type == "point_light")
-					{
-						colorShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
-						colorShader->SetUniformVec3("pointLights[0].specular", light.specular);
-						colorShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
-						colorShader->SetUniformVec3("pointLights[0].position", light.pos);
-						colorShader->SetUniformFloat("pointLights[0].constant", light.constant);
-						colorShader->SetUniformFloat("pointLights[0].linear", light.linear);
-						colorShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
-					}
-					else if (light.type == "direction_light")
-					{
-						colorShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
-						colorShader->SetUniformVec3("dirLight.specular", light.specular);
-						colorShader->SetUniformVec3("dirLight.ambient", light.ambient);
-						colorShader->SetUniformVec3("dirLight.direction", light.direction);
-					}
-				}
-			}
-			else if (meshR.shaderName == "texShader")
-			{
-				texShader->Enable();
-				texShader->Enable();
-				texShader->SetUniformMat4("model", model);
-				texShader->SetUniformMat4("view", viewMatrix);
-				texShader->SetUniformMat4("projection", PerspectiveMatrix);
-
-				texShader->SetUniformInt("tex", 0);
-				texShader->SetUniformVec3("viewPos", camera->GetPosition());
-
-				//TODO: automaitclly fit the light number
 				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
 				{
 					if (light.type == "point_light")
 					{
-						texShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
-						texShader->SetUniformVec3("pointLights[0].specular", light.specular);
-						texShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
-						texShader->SetUniformVec3("pointLights[0].position", light.pos);
-						texShader->SetUniformFloat("pointLights[0].constant", light.constant);
-						texShader->SetUniformFloat("pointLights[0].linear", light.linear);
-						texShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
+						bugShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
+						bugShader->SetUniformVec3("pointLights[0].specular", light.specular);
+						bugShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
+						bugShader->SetUniformVec3("pointLights[0].position", light.pos);
+						bugShader->SetUniformFloat("pointLights[0].constant", light.constant);
+						bugShader->SetUniformFloat("pointLights[0].linear", light.linear);
+						bugShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
 					}
 					else if (light.type == "direction_light")
 					{
-						texShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
-						texShader->SetUniformVec3("dirLight.specular", light.specular);
-						texShader->SetUniformVec3("dirLight.ambient", light.ambient);
-						texShader->SetUniformVec3("dirLight.direction", light.direction);
+						bugShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
+						bugShader->SetUniformVec3("dirLight.specular", light.specular);
+						bugShader->SetUniformVec3("dirLight.ambient", light.ambient);
+						bugShader->SetUniformVec3("dirLight.direction", light.direction);
 					}
 				}
-
-				const auto& tex = assetManager.GetTexture(meshR.textureName);
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, tex->GetID());
 			}
-			else if (meshR.shaderName == "hudShader")
+			else
 			{
-				hudShader->Enable();
-				hudShader->SetUniformMat4("model", model);
-				hudShader->SetUniformMat4("projection", orthoMatrix);
-				hudShader->SetUniformVec4("color", meshR.color);
+				mainShader->Enable();
+				mainShader->Enable();
+				mainShader->SetUniformMat4("model", model);
+				mainShader->SetUniformMat4("view", viewMatrix);
+				mainShader->SetUniformMat4("projection", PerspectiveMatrix);
+
+				mainShader->SetUniformVec3("viewPos", camera->GetPosition());
+				mainShader->SetUniformVec4("objectColor", meshR.color);
+				mainShader->SetUniformInt("objectTexture", 0);
+				mainShader->SetUniformBool("useTexture", meshR.m_useTexture);
+				if (meshR.m_useTexture)
+				{
+					const auto& tex = assetManager.GetTexture(meshR.textureName);
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, tex->GetID());
+				}
+
+				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
+				{
+					if (light.type == "point_light")
+					{
+						mainShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
+						mainShader->SetUniformVec3("pointLights[0].specular", light.specular);
+						mainShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
+						mainShader->SetUniformVec3("pointLights[0].position", light.pos);
+						mainShader->SetUniformFloat("pointLights[0].constant", light.constant);
+						mainShader->SetUniformFloat("pointLights[0].linear", light.linear);
+						mainShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
+					}
+					else if (light.type == "direction_light")
+					{
+						mainShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
+						mainShader->SetUniformVec3("dirLight.specular", light.specular);
+						mainShader->SetUniformVec3("dirLight.ambient", light.ambient);
+						mainShader->SetUniformVec3("dirLight.direction", light.direction);
+					}
+				}
 			}
 
 			glBindVertexArray(meshR.m_VAO);
@@ -199,11 +188,11 @@ namespace ENGINE_CORE::Systems {
 		}
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{
-			debugShader->Enable();
+			colliderShader->Enable();
 			model = glm::mat4(1.0f);
-			debugShader->SetUniformMat4("model", model);
-			debugShader->SetUniformMat4("view", viewMatrix);
-			debugShader->SetUniformMat4("projection", PerspectiveMatrix);
+			colliderShader->SetUniformMat4("model", model);
+			colliderShader->SetUniformMat4("view", viewMatrix);
+			colliderShader->SetUniformMat4("projection", PerspectiveMatrix);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 

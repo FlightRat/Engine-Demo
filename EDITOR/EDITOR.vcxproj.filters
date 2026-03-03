@@ -86,6 +86,10 @@
     <None Include="assets\scripts\GameDemo\platform.lua" />
     <None Include="assets\scripts\GameDemo\plat.lua" />
     <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
+    <None Include="assets\shaders\mainShader.vert" />
+    <None Include="assets\shaders\mainShader.frag" />
+    <None Include="assets\shaders\bugShader.vert" />
+    <None Include="assets\shaders\bugShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

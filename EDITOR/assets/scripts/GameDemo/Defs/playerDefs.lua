@@ -17,9 +17,9 @@ PlayerDefs =
 				type = "capsule"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(0.678, 0.847, 1.0, 1.0)
+				shader = "mainShader",
+				color = vec4(0.678, 0.847, 1.0, 1.0),
+				useTex = false
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -48,9 +48,9 @@ PlayerDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "colorShader",
-				texture = "",
-				color = vec4(1.0, 0.647, 0.0, 1.0)
+				shader = "mainShader",
+				color = vec4(1.0, 0.647, 0.0, 1.0),
+				useTex = false
 			}
 		}
 	}

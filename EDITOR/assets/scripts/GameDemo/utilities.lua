@@ -54,8 +54,9 @@ function LoadEntity( def )
 		local meshR = newEntity:add_component(
 			MeshRender(
 				def.components.MeshRender.shader,
-				def.components.MeshRender.texture,
-				def.components.MeshRender.color
+				def.components.MeshRender.texture or "",
+				def.components.MeshRender.color,
+				def.components.MeshRender.useTex or false
 			)
 		)
 	end
