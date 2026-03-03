@@ -369,7 +369,7 @@ namespace ENGINE_EDITOR {
 			ImGui::InputFloat("##specular_b", &light.specular.b, 1.f, 10.f, "%.1f");
 
 			// ambient
-			ImGui::InlineLabel("specular");
+			ImGui::InlineLabel("ambient");
 			ImGui::NewLine();
 			// ambient r
 			ImGui::ColoredLabel("r##ambient_r", LABEL_SINGLE_SIZE, LABEL_RED);
