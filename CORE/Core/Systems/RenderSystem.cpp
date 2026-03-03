@@ -16,6 +16,21 @@
 #include "../ECS/Components/LightComponent.h"
 #include "../CoreUtilities/CoreEngineData.h"
 
+namespace {
+	struct TextureSlot {
+		const char* key;            // 材质 Map 中的 key (如 "diffuse")
+		const char* useUniform;     // Shader bool 开关 (如 "material.useDiffuse")
+		const char* samplerUniform; // Shader sampler2D 名字 (如 "material.diffuse")
+		int unitIndex;              // 纹理单元 (0, 1)
+	};
+
+	// 使用 constexpr 让它在编译期就确定，性能最高
+	constexpr std::array<TextureSlot, 2> TEXTURE_SLOTS = { {
+		{ "diffuse",  "material.useDiffuse",  "material.diffuse",  0 },
+		{ "specular", "material.useSpecular", "material.specular", 1 }
+	} };
+}
+
 using namespace ENGINE_CORE::ECS;
 using namespace ENGINE_RENDERING;
 using namespace ENGINE_RESOURCES;
@@ -53,20 +68,6 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-
-		// TODO: change the way use and bind texture
-		//// wood
-		//const auto& wood = assetManager.GetTexture("wood");
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, wood->GetID());
-		//// container
-		//const auto& container = assetManager.GetTexture("container");
-		//glActiveTexture(GL_TEXTURE1);
-		//glBindTexture(GL_TEXTURE_2D, container->GetID());
-		//// rust
-		//const auto& rust = assetManager.GetTexture("rust");
-		//glActiveTexture(GL_TEXTURE2);
-		//glBindTexture(GL_TEXTURE_2D, rust->GetID());
 
 		// camera
 		auto viewMatrix = camera->GetViewMatrix();
@@ -109,8 +110,9 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			bool bug = ((meshR.m_useTexture == true) && (meshR.textureName == ""));
-			if (bug)
+			bool emptyDiffuse = meshR.material.m_textures.find("diffuse")->second.empty();
+			bool textureBug = (meshR.material.m_useTexture == true) && (emptyDiffuse);
+			if (textureBug)
 			{
 				bugShader->Enable();
 				bugShader->Enable();
@@ -143,21 +145,50 @@ namespace ENGINE_CORE::Systems {
 			}
 			else
 			{
-				mainShader->Enable();
-				mainShader->Enable();
+				mainShader->Enable();	// NOTE: now the shader is fixed
 				mainShader->SetUniformMat4("model", model);
 				mainShader->SetUniformMat4("view", viewMatrix);
 				mainShader->SetUniformMat4("projection", PerspectiveMatrix);
 
 				mainShader->SetUniformVec3("viewPos", camera->GetPosition());
-				mainShader->SetUniformVec4("objectColor", meshR.color);
-				mainShader->SetUniformInt("objectTexture", 0);
-				mainShader->SetUniformBool("useTexture", meshR.m_useTexture);
-				if (meshR.m_useTexture)
+
+				mainShader->SetUniformVec4("material.color", meshR.material.color);
+				mainShader->SetUniformFloat("material.shininess", meshR.material.shininess);
+				mainShader->SetUniformBool("useTexture", meshR.material.m_useTexture);
+				// set uniform textures
+				if (meshR.material.m_useTexture)
 				{
-					const auto& tex = assetManager.GetTexture(meshR.textureName);
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, tex->GetID());
+					for (const auto& slot : TEXTURE_SLOTS)
+					{
+						// 1. 查找材质中是否存在该类型的贴图
+						auto it = meshR.material.m_textures.find(slot.key);
+						bool hasTexture = (it != meshR.material.m_textures.end() && !it->second.empty());
+
+						// 2. 设置 Shader 的 bool 开关
+						mainShader->SetUniformBool(slot.useUniform, hasTexture);
+
+						if (hasTexture)
+						{
+							// 3. 激活对应的纹理单元 (GL_TEXTURE0 + 0, GL_TEXTURE0 + 1, ...)
+							glActiveTexture(GL_TEXTURE0 + slot.unitIndex);
+
+							// 4. 获取并绑定纹理
+							// 注意：使用迭代器 it->second 获取纹理名，比再次用 [] 查找更快
+							auto tex = assetManager.GetTexture(it->second);
+							if (tex)
+							{
+								glBindTexture(GL_TEXTURE_2D, tex->GetID());
+							}
+							else
+							{
+								// 防御性编程：名字存在但资源未加载，绑定0防止错误的纹理采样
+								glBindTexture(GL_TEXTURE_2D, 0);
+							}
+
+							// 5. 告诉 Shader 该采样器应该去读哪个纹理单元
+							mainShader->SetUniformInt(slot.samplerUniform, slot.unitIndex);
+						}
+					}
 				}
 
 				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
