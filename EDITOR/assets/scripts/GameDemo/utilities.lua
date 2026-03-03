@@ -58,8 +58,8 @@ function LoadEntity( def )
 		material.useTex = def.components.MeshRender.useTex
 
 		-- TODO: make this automatic
-		material:setTexture("diffuse", def.components.MeshRender.diffuse or "None")
-		material:setTexture("specular", def.components.MeshRender.specular or "None")
+		material:addTexture("diffuse", def.components.MeshRender.diffuse or "")
+		material:addTexture("specular", def.components.MeshRender.specular or "")
 
 		local meshR = newEntity:add_component(MeshRender(material))
 	end
