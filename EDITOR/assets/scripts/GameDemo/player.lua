@@ -26,9 +26,9 @@ function Player:Update(dt)
 		end
 	end
 	if touching_trigger then
-		mesh_render.color = vec4(1.0,0.0,0.0,1.0)
+		mesh_render.material.color = vec4(1.0,0.0,0.0,1.0)
 	else
-		mesh_render.color = vec4(0.678, 0.847, 1.0, 1.0)
+		mesh_render.material.color = vec4(0.678, 0.847, 1.0, 1.0)
 	end
 
 	-- keyboard control

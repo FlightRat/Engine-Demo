@@ -214,6 +214,8 @@
   <ItemGroup>
     <Image Include="assets\textures\brick.png" />
     <Image Include="assets\textures\container.png" />
+    <Image Include="assets\textures\container_specular.png" />
+    <Image Include="assets\textures\dragon_girl.jpg" />
     <Image Include="assets\textures\football.png" />
     <Image Include="assets\textures\lego.png" />
     <Image Include="assets\textures\mafuyu.png" />

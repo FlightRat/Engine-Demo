@@ -54,7 +54,7 @@ namespace ENGINE_EDITOR {
 
 	bool Application::Initialize()
 	{
-		ENGINE_INIT_LOGS(false, true);
+		ENGINE_INIT_LOGS(true, true);
 
 		// Init SDL
 		if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -207,13 +207,6 @@ namespace ENGINE_EDITOR {
 
 		// main shader
 		if (!assetManager.AddShader("mainShader", "assets/shaders/mainShader.vert", "assets/shaders/mainShader.frag"))
-		{
-			ENGINE_ERROR("Failed to create and add the shader!");
-			return false;
-		}
-
-		// hud shader
-		if (!assetManager.AddShader("hudShader", "assets/shaders/hudShader.vert", "assets/shaders/hudShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
