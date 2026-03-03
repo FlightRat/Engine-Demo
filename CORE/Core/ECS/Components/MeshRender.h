@@ -16,7 +16,7 @@ namespace ENGINE_CORE::ECS {
 
 		bool m_useTexture{ false };
 		std::map<std::string, std::string> m_textures;
-		void SetTexture(const std::string& key, const std::string& texName)
+		void AddTexture(const std::string& key, const std::string& texName)
 		{
 			m_textures[key] = texName;
 		}

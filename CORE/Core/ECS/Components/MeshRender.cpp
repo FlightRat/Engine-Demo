@@ -54,7 +54,7 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
         "shininess", &Material::shininess,
         "useTex", &Material::m_useTexture,
         "textures", &Material::m_textures,
-        "addTexture", &Material::SetTexture
+        "addTexture", &Material::AddTexture
     );
 
     lua.new_usertype<MeshRender>(
