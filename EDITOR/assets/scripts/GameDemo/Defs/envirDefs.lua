@@ -21,10 +21,12 @@ EnvirDefs =
 				type = "sphere"
 			},
 			MeshRender = {
-				shader = "mainShader",
-				texture = "rust",
+				shaderName = "mainShader",
 				color = vec4(1.0, 1.0, 1.0, 1.0),
-				useTex = true
+				shininess = 64.0,
+				useTex = true,
+				diffuse = "rust",
+				specular = ""
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -48,10 +50,12 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "mainShader",
-				texture = "container",
+				shaderName = "mainShader",
 				color = vec4(1.0, 1.0, 1.0, 1.0),
-				useTex = true
+				shininess = 64.0,
+				useTex = true,
+				diffuse = "container",
+				specular = "container_specular"
 			},
 			Physics = {
 				type = BodyType.Dynamic,
@@ -79,9 +83,12 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "mainShader",
+				shaderName = "mainShader",
 				color = vec4(0.0, 1.0, 0.0, 1.0),
-				useTex = false
+				shininess = 64.0,
+				useTex = false,
+				diffuse = "",
+				specular = ""
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -106,9 +113,12 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "mainShader",
+				shaderName = "mainShader",
 				color = vec4(0.0, 1.0, 0.0, 1.0),
-				useTex = false
+				shininess = 64.0,
+				useTex = false,
+				diffuse = "",
+				specular = ""
 			}
 		}
 	},
@@ -127,9 +137,12 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "mainShader",
+				shaderName = "mainShader",
 				color = vec4(1.0, 0.0, 0.0, 1.0),
-				useTex = false
+				shininess = 64.0,
+				useTex = false,
+				diffuse = "",
+				specular = ""
 			},
 			Physics = {
 				type = BodyType.Static,
@@ -153,9 +166,12 @@ EnvirDefs =
 				type = "cube"
 			},
 			MeshRender = {
-				shader = "mainShader",
+				shaderName = "mainShader",
 				color = vec4(0.0, 0.0, 1.0, 1.0),
-				useTex = false
+				shininess = 64.0,
+				useTex = false,
+				diffuse = "",
+				specular = ""
 			},
 			Physics = {
 				type = BodyType.Kinematic,
@@ -179,9 +195,12 @@ EnvirDefs =
 				type = "plane"
 			},
 			MeshRender = {
-				shader = "mainShader",
+				shaderName = "mainShader",
 				color = vec4(1.0, 1.0, 1.0, 1.0),
-				useTex = false
+				shininess = 64.0,
+				useTex = false,
+				diffuse = "",
+				specular = ""
 			},
 			Physics = {
 				type = BodyType.Static,

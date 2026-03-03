@@ -2,9 +2,9 @@ AssetDefs =
 {
 	textures=
 	{
+		{name="dragon_girl", path="assets/textures/dragon_girl.jpg", pixel_art=false},
 		{name="mafuyu", path="assets/textures/mafuyu.png", pixel_art=false},
-		--{name="football", path="assets/textures/football.png", pixel_art=false},
-		--{name="brick", path="assets/textures/brick.png", pixel_art=false},
+		{name="brick", path="assets/textures/brick.png", pixel_art=false},
 		{name="wood", path="assets/textures/wood.png", pixel_art=false},
 		{name="container", path="assets/textures/container.png", pixel_art=false},
 		{name="container_specular", path="assets/textures/container_specular.png", pixel_art=false},

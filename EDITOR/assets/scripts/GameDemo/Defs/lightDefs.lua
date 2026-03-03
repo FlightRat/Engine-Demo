@@ -15,9 +15,12 @@ LightDefs =
 				type = "sphere"
 			},
 			MeshRender = {
-				shader = "mainShader",
+				shaderName = "mainShader",
 				color = vec4(1.0, 1.0, 1.0, 1.0),
-				useTex = false
+				shininess = 64.0,
+				useTex = false,
+				diffuse = "",
+				specular = ""
 			},
 			Light = {
 				diffuse = vec3(0.8, 0.8, 0.8),
