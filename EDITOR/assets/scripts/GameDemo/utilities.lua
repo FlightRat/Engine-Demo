@@ -51,14 +51,17 @@ function LoadEntity( def )
 	end
 
 	if def.components.MeshRender then
-		local meshR = newEntity:add_component(
-			MeshRender(
-				def.components.MeshRender.shader,
-				def.components.MeshRender.texture or "",
-				def.components.MeshRender.color,
-				def.components.MeshRender.useTex or false
-			)
-		)
+		local material = Material()
+		material.shaderName = def.components.MeshRender.shaderName
+		material.color = def.components.MeshRender.color
+		material.shininess = def.components.MeshRender.shininess
+		material.useTex = def.components.MeshRender.useTex
+
+		-- TODO: make this automatic
+		material:setTexture("diffuse", def.components.MeshRender.diffuse or "None")
+		material:setTexture("specular", def.components.MeshRender.specular or "None")
+
+		local meshR = newEntity:add_component(MeshRender(material))
 	end
 
 	if def.components.Light then
