@@ -190,6 +190,21 @@ namespace ENGINE_CORE::Systems {
 						}
 					}
 				}
+				
+				// 重置点光源（设为0向量/0值，代表无贡献）
+				mainShader->SetUniformVec3("pointLights[0].diffuse", glm::vec3(0.0f));
+				mainShader->SetUniformVec3("pointLights[0].specular", glm::vec3(0.0f));
+				mainShader->SetUniformVec3("pointLights[0].ambient", glm::vec3(0.0f));
+				mainShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f));
+				mainShader->SetUniformFloat("pointLights[0].constant", 0.0f);
+				mainShader->SetUniformFloat("pointLights[0].linear", 0.0f);
+				mainShader->SetUniformFloat("pointLights[0].quadratic", 0.0f);
+
+				// 重置方向光（同理设为0）
+				mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
+				mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
+				mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
+				mainShader->SetUniformVec3("dirLight.direction", glm::vec3(0.0f));
 
 				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
 				{
