@@ -342,15 +342,15 @@ namespace ENGINE_EDITOR {
 			// diffuse r
 			ImGui::ColoredLabel("r##diffuse_r", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
-			ImGui::InputFloat("##diffuse_r", &light.diffuse.r, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##diffuse_r", &light.diffuse.r, 0.01f, 0.0f, 1.0f, "%.2f");
 			// diffuse g
 			ImGui::ColoredLabel("g##diffuse_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
 			ImGui::SameLine();
-			ImGui::InputFloat("##diffuse_g", &light.diffuse.g, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##diffuse_g", &light.diffuse.g, 0.01f, 0.0f, 1.0f, "%.2f");
 			// diffuse b
 			ImGui::ColoredLabel("b##diffuse_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
 			ImGui::SameLine();
-			ImGui::InputFloat("##diffuse_b", &light.diffuse.b, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##diffuse_b", &light.diffuse.b, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			// specular
 			ImGui::InlineLabel("specular");
@@ -358,15 +358,15 @@ namespace ENGINE_EDITOR {
 			// specular r
 			ImGui::ColoredLabel("r##specular_r", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
-			ImGui::InputFloat("##specular_r", &light.specular.r, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##specular_r", &light.specular.r, 0.01f, 0.0f, 1.0f, "%.2f");
 			// specular g
 			ImGui::ColoredLabel("g##specular_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
 			ImGui::SameLine();
-			ImGui::InputFloat("##specular_g", &light.specular.g, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##specular_g", &light.specular.g, 0.01f, 0.0f, 1.0f, "%.2f");
 			// specular b
 			ImGui::ColoredLabel("b##specular_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
 			ImGui::SameLine();
-			ImGui::InputFloat("##specular_b", &light.specular.b, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##specular_b", &light.specular.b, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			// ambient
 			ImGui::InlineLabel("ambient");
@@ -374,15 +374,15 @@ namespace ENGINE_EDITOR {
 			// ambient r
 			ImGui::ColoredLabel("r##ambient_r", LABEL_SINGLE_SIZE, LABEL_RED);
 			ImGui::SameLine();
-			ImGui::InputFloat("##ambient_r", &light.ambient.r, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##ambient_r", &light.ambient.r, 0.01f, 0.0f, 1.0f, "%.2f");
 			// ambient g
 			ImGui::ColoredLabel("g##ambient_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
 			ImGui::SameLine();
-			ImGui::InputFloat("##ambient_g", &light.ambient.g, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##ambient_g", &light.ambient.g, 0.01f, 0.0f, 1.0f, "%.2f");
 			// ambient b
 			ImGui::ColoredLabel("b##ambient_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
 			ImGui::SameLine();
-			ImGui::InputFloat("##ambient_b", &light.ambient.b, 1.f, 10.f, "%.1f");
+			ImGui::DragFloat("##ambient_b", &light.ambient.b, 0.01f, 0.0f, 1.0f, "%.2f");
 
 			std::vector<std::string> UseableLight = {"point_light", "direction_light"}; // TODO: Move this some where else
 
@@ -437,15 +437,15 @@ namespace ENGINE_EDITOR {
 				// direction x
 				ImGui::ColoredLabel("x##direction_x", LABEL_SINGLE_SIZE, LABEL_RED);
 				ImGui::SameLine();
-				ImGui::InputFloat("##direction_x", &light.direction.x, 1.f, 10.f, "%.1f");
+				ImGui::DragFloat("##direction_x", &light.direction.x, 0.01f, 0.0f, 1.0f, "%.2f");
 				// direction y
 				ImGui::ColoredLabel("y##direction_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
 				ImGui::SameLine();
-				ImGui::InputFloat("##direction_y", &light.direction.y, 1.f, 10.f, "%.1f");
+				ImGui::DragFloat("##direction_y", &light.direction.y, 0.01f, 0.0f, 1.0f, "%.2f");
 				// direction z
 				ImGui::ColoredLabel("z##direction_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
 				ImGui::SameLine();
-				ImGui::InputFloat("##direction_z", &light.direction.z, 1.f, 10.f, "%.2f");
+				ImGui::DragFloat("##direction_z", &light.direction.z, 0.01f, 0.0f, 1.0f, "%.2f");
 			}
 
 			ImGui::PopItemWidth();
