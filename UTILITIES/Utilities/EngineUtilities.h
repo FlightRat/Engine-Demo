@@ -8,6 +8,7 @@ namespace ENGINE_UTIL
 	enum class AssetType
 	{
 		TEXTURE=0,
+		MESH,
 		MUSIC,
 		SOUNDFX,
 		SCENE,

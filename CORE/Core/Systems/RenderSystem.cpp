@@ -82,11 +82,8 @@ namespace ENGINE_CORE::Systems {
 			{
 				continue;
 			}
-			if (!meshR.m_loaded || meshF.m_bChanged)
-			{
-				meshR.UploadMesh(meshF);
-				meshF.m_bChanged = false;
-			}
+			auto mesh = assetManager.GetMesh(meshF.mesh);
+
 			model = glm::mat4(1.0f);
 			//translate
 			model = glm::translate(model, transform.position);
@@ -228,8 +225,8 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			glBindVertexArray(meshR.m_VAO);
-			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(meshF.index_data.size()), GL_UNSIGNED_INT, 0);
+			glBindVertexArray(mesh->VAO);
+			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
 		}
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())

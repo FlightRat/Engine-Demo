@@ -111,7 +111,6 @@ namespace ENGINE_CORE::Loaders {
 			const auto& jsonMeshFilter = components["meshFilter"];
 			auto& meshFilter = newObj.AddComponent<MeshFilter>();
 			DESERIALIZE_COMPONENT(jsonMeshFilter, meshFilter);
-			meshFilter.load_mesh();
 
 			//mesh render
 			const auto& jsonMeshRender = components["meshRender"];

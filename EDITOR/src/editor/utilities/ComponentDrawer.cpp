@@ -94,7 +94,7 @@ namespace ENGINE_EDITOR {
 			ImGui::InlineLabel("mesh");
 			if (ImGui::BeginCombo("##mesh", sSelectedMesh.c_str()))
 			{
-				for (const auto& sMeshName : assetManager.GetSelectableMesh())
+				for (const auto& sMeshName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::MESH))
 				{
 					if (ImGui::Selectable(sMeshName.c_str(), sMeshName == sSelectedMesh))
 					{
@@ -108,11 +108,6 @@ namespace ENGINE_EDITOR {
 			ImGui::TreePop();
 		}
 		ImGui::PopID();
-
-		if (ImGui::Button("Apply")) {
-			meshFilter.load_mesh();
-			meshFilter.m_bChanged = true;
-		}
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::MeshRender& meshRender)

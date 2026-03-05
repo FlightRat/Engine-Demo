@@ -6,6 +6,7 @@
 #include"../ECS/Registry.h"
 #include<Rendering/Essentials/Shader.h>
 #include<Rendering/Essentials/Texture.h> 
+#include<Rendering/Essentials/Mesh.h> 
 #include<Sounds/Essentials/Music.h>
 #include<Sounds/Essentials/SoundFx.h>
 
@@ -18,6 +19,7 @@ namespace ENGINE_RESOURCES {
 	class AssetManager
 	{
 	private:
+		std::map<std::string, std::shared_ptr< ENGINE_RENDERING::Mesh>> m_mapMesh{};
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Texture>> m_mapTexture{};
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Shader>> m_mapShader{};
 		std::map<std::string, std::shared_ptr<ENGINE_SOUNDS::Music>> m_mapMusic{};
@@ -29,6 +31,10 @@ namespace ENGINE_RESOURCES {
 		~AssetManager() = default;
 
 		Mix_MusicType DetectAudioFormat(const unsigned char* audioData, size_t dataSize);
+
+		bool AddMesh(const std::string& meshName, const std::string& meshPath);
+		bool AddMeshFromMemory(const std::string& meshName, const std::string& shapeName);
+		std::shared_ptr<ENGINE_RENDERING::Mesh> GetMesh(const std::string& meshName);
 
 		bool AddTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt = true);
 		bool AddTextureFromMemory(const std::string& texName, const unsigned char* imageData, size_t length, bool pixelArt = true);

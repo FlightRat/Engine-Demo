@@ -184,6 +184,11 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load the editor textures!");
 			return false;
 		}
+		if (!LoadDefaultMeshes())
+		{
+			ENGINE_ERROR("Failed to load the default meshes!");
+			return false;
+		}
 
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::TransformComponent>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::PhysicsComponent>();
@@ -257,6 +262,38 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("music_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("scene_icon")->SetIsEditorTexture(true);
+		return true;
+	}
+
+	bool Application::LoadDefaultMeshes()
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		if (!assetManager.AddMeshFromMemory("cube", "cube"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [cube]!");
+			return false;
+		}
+		if (!assetManager.AddMeshFromMemory("sphere", "sphere"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [sphere]!");
+			return false;
+		}
+		if (!assetManager.AddMeshFromMemory("capsule", "capsule"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [capsule]!");
+			return false;
+		}
+		if (!assetManager.AddMeshFromMemory("plane", "plane"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [plane]!");
+			return false;
+		}
+		if (!assetManager.AddMeshFromMemory("hud_quad", "hud_quad"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [hud_quad]!");
+			return false;
+		}
 		return true;
 	}
 

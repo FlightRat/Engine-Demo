@@ -1,5 +1,4 @@
 #pragma once
-#include<glad/glad.h>
 #include<glm/glm.hpp>
 #include<sol/sol.hpp>
 #include<string>
@@ -24,19 +23,15 @@ namespace ENGINE_CORE::ECS {
 
 	struct MeshRender
 	{
-		bool m_loaded{ false };
 		bool shouldRender{ true };
 
 		Material material;
-		GLuint m_VAO = 0, m_VBO = 0, m_EBO = 0;
 
 		MeshRender();
 		MeshRender(const Material& pMaterial);
 		~MeshRender() = default;
 
 		Material& GetMaterial() { return material; }
-
-		void UploadMesh(MeshFilter MF);
 
 		static void CreateLuaMeshRendererBind(sol::state& lua);
 	};

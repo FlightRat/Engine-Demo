@@ -1,6 +1,7 @@
 #include "AssetManager.h"
 #include "Utilities/EngineUtilities.h"
 #include<../CORE/Core/ECS/MainRegistry.h>
+#include<Rendering/Essentials/MeshLoader.h>
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
@@ -47,6 +48,53 @@ namespace ENGINE_RESOURCES {
         ENGINE_ERROR("Failed to detect audio type - Unknown or unsupported format.");
 
         return MUS_NONE;
+    }
+
+    // mesh
+    bool AssetManager::AddMesh(const std::string& meshName, const std::string& meshPath)
+    {
+        if (m_mapMesh.find(meshName) != m_mapMesh.end())
+        {
+            ENGINE_ERROR("Failed to add mesh [{0}] -- Already exists!", meshName);
+            return false;
+        }
+
+        auto mesh = std::move(ENGINE_RENDERING::MeshLoader::Create(meshPath));
+        if (!mesh)
+        {
+            ENGINE_ERROR("Failed to load mesh [{0}] at path [{1}]", meshName, meshPath);
+            return false;
+        }
+
+        m_mapMesh.emplace(meshName, std::move(mesh));
+        return true;
+    }
+    bool AssetManager::AddMeshFromMemory(const std::string& meshName, const std::string& shapeName)
+    {
+        if (m_mapMesh.contains(meshName))
+        {
+            ENGINE_ERROR("AssetManager: Mesh [{}] -- Already exists!", meshName);
+            return false;
+        }
+        auto pMesh = ENGINE_RENDERING::MeshLoader::CreateFromMemory(shapeName);
+        if (!pMesh)
+        {
+            ENGINE_ERROR("Failed to load mesh [{}] from memory!", meshName);
+            return false;
+        }
+
+        auto [itr, bSuccess] = m_mapMesh.emplace(meshName, std::move(pMesh));
+        return bSuccess;
+    }
+    std::shared_ptr<ENGINE_RENDERING::Mesh> AssetManager::GetMesh(const std::string& meshName)
+    {
+        auto meshItr = m_mapMesh.find(meshName);
+        if (meshItr == m_mapMesh.end())
+        {
+            ENGINE_ERROR("Failed to get mesh [{0}] -- Does not exist!", meshName);
+            return nullptr;
+        }
+        return meshItr->second;
     }
 
     // texture
@@ -314,6 +362,11 @@ namespace ENGINE_RESOURCES {
                 return ENGINE_UTIL::GetKeys(m_mapTexture, [](const auto& pair) {return !pair.second->IsEditorTexture(); });
                 break;
             }
+            case ENGINE_UTIL::AssetType::MESH:
+            {
+                return ENGINE_UTIL::GetKeys(m_mapMesh);
+                break;
+            }
             case ENGINE_UTIL::AssetType::MUSIC:
             {
                 return ENGINE_UTIL::GetKeys(m_mapMusic);
@@ -385,6 +438,9 @@ namespace ENGINE_RESOURCES {
         lua.new_usertype<AssetManager>(
             "AssetManager",
             sol::no_constructor,
+            "add_mesh", [&](const std::string& meshName, const std::string& meshPath) {
+                return assetManager.AddMesh(meshName, meshPath);
+            },
             "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){
                 return assetManager.AddTexture(texName, texPath, pixelArt);
             },
