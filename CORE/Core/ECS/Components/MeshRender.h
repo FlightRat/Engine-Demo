@@ -29,7 +29,9 @@ namespace ENGINE_CORE::ECS {
         ~MeshRender() = default;
 
         Material& GetMaterial(size_t index);
+        inline const bool CheckMaterialEmpty() { return materials.empty(); }
         void AddMaterial(const Material& material);
+        void ResetMaterial(const int MeshCount);
 
         static void CreateLuaMeshRendererBind(sol::state& lua);
     };

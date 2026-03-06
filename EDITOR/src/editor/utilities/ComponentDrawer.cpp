@@ -100,6 +100,7 @@ namespace ENGINE_EDITOR {
 					{
 						sSelectedMesh = sMeshName;
 						meshFilter.mesh = sSelectedMesh;
+						meshFilter.changed = true;
 					}
 				}
 				ImGui::EndCombo();

@@ -28,6 +28,26 @@ void ENGINE_CORE::ECS::MeshRender::AddMaterial(const Material& material)
     materials.push_back(material);
 }
 
+void ENGINE_CORE::ECS::MeshRender::ResetMaterial(const int MeshCount)
+{
+    materials.clear();
+    for (int i = 0; i < MeshCount; i++)
+    {
+        std::map<std::string, std::string>tex_map;
+        tex_map["diffuse"] = "";
+        tex_map["specular"] = "";
+        materials.push_back(
+            Material{
+                .shaderName = "mainShader",
+                .color = glm::vec4 {1.0f},
+                .shininess = 64.0f,
+                .m_useTexture = true,
+                .m_textures = tex_map
+            }
+        );
+    }
+}
+
 void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
 {
     lua.new_usertype<Material>(

@@ -7,7 +7,8 @@ namespace ENGINE_CORE::ECS {
 
 	struct MeshFilter
 	{
-        std::string mesh;
+        std::string mesh="cube";
+		bool changed = { false };
 
         static void CreateLuaMeshFilterBind(sol::state& lua);
 	};
