@@ -1,5 +1,9 @@
 AssetDefs = 
 {
+	models = 
+	{
+		{name="nanosuit", path="assets/models/nanosuit/nanosuit.obj"}
+	},
 	textures=
 	{
 		{name="dragon_girl", path="assets/textures/dragon_girl.jpg", pixel_art=false},
@@ -24,6 +28,15 @@ AssetDefs =
 }
 
 function LoadAssets()
+	-- models
+	for k, v in pairs(AssetDefs.models) do
+		if not AssetManager.add_model(v.name, v.path) then
+			ENGINE_Error("Failed to load model [%s] at path [%s]", v.name, v.path)
+		else
+			ENGINE_Log("Loaded model [%s]", v.name)
+		end
+	end
+
 	-- Texture
 	for k, v in pairs(AssetDefs.textures) do
 		if not AssetManager.add_texture(v.name, v.path, v.pixel_art) then

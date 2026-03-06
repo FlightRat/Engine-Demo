@@ -5,6 +5,7 @@
 namespace ENGINE_RENDERING {
     class Model {
     public:
+        std::string directory = "";
         std::vector<Mesh> meshes;
 
         Model() = default;

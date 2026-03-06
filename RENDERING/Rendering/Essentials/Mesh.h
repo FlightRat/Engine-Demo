@@ -7,9 +7,11 @@
 namespace ENGINE_RENDERING {
     struct Vertex
     {
-        glm::vec3 pos_;
-        glm::vec3 normal_;
-        glm::vec2 uv_;
+        glm::vec3 Position;
+        glm::vec3 Normal;
+        glm::vec2 TexCoords;
+        glm::vec3 Tangent;
+        glm::vec3 Bitangent;
     };
 
     class Mesh {

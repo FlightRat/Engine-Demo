@@ -192,6 +192,7 @@
     <None Include="assets\scripts\GameDemo\Defs\bulletDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\hudDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
+    <None Include="assets\scripts\GameDemo\Defs\ModelDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\playerDefs.lua" />
     <None Include="assets\scripts\GameDemo\plat.lua" />
     <None Include="assets\scripts\GameDemo\platform.lua" />
@@ -206,6 +207,7 @@
     <None Include="assets\shaders\mainShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
     <None Include="assets\shaders\physicsDebugShader.vert" />
+    <None Include="assimp-vc143-mtd.dll" />
     <None Include="imgui.ini" />
     <None Include="SDL2.dll" />
     <None Include="SDL2_mixer.dll" />

@@ -60,6 +60,7 @@ namespace ENGINE_RESOURCES {
         }
 
         auto model = std::move(ENGINE_RENDERING::ModelLoader::CreateModel(modelPath));
+        model->directory = modelPath.substr(0, modelPath.find_last_of('/'));
         if (!model)
         {
             ENGINE_ERROR("Failed to load model [{0}] at path [{1}]", modelName, modelPath);
@@ -438,7 +439,7 @@ namespace ENGINE_RESOURCES {
         lua.new_usertype<AssetManager>(
             "AssetManager",
             sol::no_constructor,
-            "add_mesh", [&](const std::string& meshName, const std::string& meshPath) {
+            "add_model", [&](const std::string& meshName, const std::string& meshPath) {
                 return assetManager.AddModel(meshName, meshPath);
             },
             "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){

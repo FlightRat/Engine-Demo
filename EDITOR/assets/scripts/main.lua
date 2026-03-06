@@ -23,6 +23,8 @@ Ground = LoadEntity(EnvirDefs["ground"])
 Cube_Moveable = LoadEntity(EnvirDefs["cube_3"])
 Cube_Trigger = LoadEntity(EnvirDefs["cube_2"])
 
+nanosuit = LoadEntity(ModelDefs["nanosuit"])
+
 point_light = LoadEntity(LightDefs["point_light_1"])
 direction_light = LoadEntity(LightDefs["direction_light_1"])
 
