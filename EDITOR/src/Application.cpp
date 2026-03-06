@@ -269,27 +269,27 @@ namespace ENGINE_EDITOR {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
-		if (!assetManager.AddMeshFromMemory("cube", "cube"))
+		if (!assetManager.AddModelFromMemory("cube", "cube"))
 		{
 			ENGINE_ERROR("Failed to load default mesh [cube]!");
 			return false;
 		}
-		if (!assetManager.AddMeshFromMemory("sphere", "sphere"))
+		if (!assetManager.AddModelFromMemory("sphere", "sphere"))
 		{
 			ENGINE_ERROR("Failed to load default mesh [sphere]!");
 			return false;
 		}
-		if (!assetManager.AddMeshFromMemory("capsule", "capsule"))
+		if (!assetManager.AddModelFromMemory("capsule", "capsule"))
 		{
 			ENGINE_ERROR("Failed to load default mesh [capsule]!");
 			return false;
 		}
-		if (!assetManager.AddMeshFromMemory("plane", "plane"))
+		if (!assetManager.AddModelFromMemory("plane", "plane"))
 		{
 			ENGINE_ERROR("Failed to load default mesh [plane]!");
 			return false;
 		}
-		if (!assetManager.AddMeshFromMemory("hud_quad", "hud_quad"))
+		if (!assetManager.AddModelFromMemory("hud_quad", "hud_quad"))
 		{
 			ENGINE_ERROR("Failed to load default mesh [hud_quad]!");
 			return false;

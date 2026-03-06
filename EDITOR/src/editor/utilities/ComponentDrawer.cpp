@@ -94,7 +94,7 @@ namespace ENGINE_EDITOR {
 			ImGui::InlineLabel("mesh");
 			if (ImGui::BeginCombo("##mesh", sSelectedMesh.c_str()))
 			{
-				for (const auto& sMeshName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::MESH))
+				for (const auto& sMeshName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::MODEL))
 				{
 					if (ImGui::Selectable(sMeshName.c_str(), sMeshName == sSelectedMesh))
 					{

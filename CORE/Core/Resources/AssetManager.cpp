@@ -1,7 +1,7 @@
 #include "AssetManager.h"
 #include "Utilities/EngineUtilities.h"
 #include<../CORE/Core/ECS/MainRegistry.h>
-#include<Rendering/Essentials/MeshLoader.h>
+#include<Rendering/Essentials/ModelLoader.h>
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
@@ -50,51 +50,51 @@ namespace ENGINE_RESOURCES {
         return MUS_NONE;
     }
 
-    // mesh
-    bool AssetManager::AddMesh(const std::string& meshName, const std::string& meshPath)
+    // model
+    bool AssetManager::AddModel(const std::string& modelName, const std::string& modelPath)
     {
-        if (m_mapMesh.find(meshName) != m_mapMesh.end())
+        if (m_mapModel.find(modelName) != m_mapModel.end())
         {
-            ENGINE_ERROR("Failed to add mesh [{0}] -- Already exists!", meshName);
+            ENGINE_ERROR("Failed to add model [{0}] -- Already exists!", modelName);
             return false;
         }
 
-        auto mesh = std::move(ENGINE_RENDERING::MeshLoader::Create(meshPath));
-        if (!mesh)
+        auto model = std::move(ENGINE_RENDERING::ModelLoader::CreateModel(modelPath));
+        if (!model)
         {
-            ENGINE_ERROR("Failed to load mesh [{0}] at path [{1}]", meshName, meshPath);
+            ENGINE_ERROR("Failed to load model [{0}] at path [{1}]", modelName, modelPath);
             return false;
         }
 
-        m_mapMesh.emplace(meshName, std::move(mesh));
+        m_mapModel.emplace(modelName, std::move(model));
         return true;
     }
-    bool AssetManager::AddMeshFromMemory(const std::string& meshName, const std::string& shapeName)
+    bool AssetManager::AddModelFromMemory(const std::string& modelName, const std::string& shapeName)
     {
-        if (m_mapMesh.contains(meshName))
+        if (m_mapModel.contains(modelName))
         {
-            ENGINE_ERROR("AssetManager: Mesh [{}] -- Already exists!", meshName);
+            ENGINE_ERROR("AssetManager: Model [{}] -- Already exists!", modelName);
             return false;
         }
-        auto pMesh = ENGINE_RENDERING::MeshLoader::CreateFromMemory(shapeName);
-        if (!pMesh)
+        auto pModel = ENGINE_RENDERING::ModelLoader::CreateModelFromMemory(shapeName);
+        if (!pModel)
         {
-            ENGINE_ERROR("Failed to load mesh [{}] from memory!", meshName);
+            ENGINE_ERROR("Failed to load model [{}] from memory!", modelName);
             return false;
         }
 
-        auto [itr, bSuccess] = m_mapMesh.emplace(meshName, std::move(pMesh));
+        auto [itr, bSuccess] = m_mapModel.emplace(modelName, std::move(pModel));
         return bSuccess;
     }
-    std::shared_ptr<ENGINE_RENDERING::Mesh> AssetManager::GetMesh(const std::string& meshName)
+    std::shared_ptr<ENGINE_RENDERING::Model> AssetManager::GetModel(const std::string& modelName)
     {
-        auto meshItr = m_mapMesh.find(meshName);
-        if (meshItr == m_mapMesh.end())
+        auto modelItr = m_mapModel.find(modelName);
+        if (modelItr == m_mapModel.end())
         {
-            ENGINE_ERROR("Failed to get mesh [{0}] -- Does not exist!", meshName);
+            ENGINE_ERROR("Failed to get model [{0}] -- Does not exist!", modelName);
             return nullptr;
         }
-        return meshItr->second;
+        return modelItr->second;
     }
 
     // texture
@@ -362,9 +362,9 @@ namespace ENGINE_RESOURCES {
                 return ENGINE_UTIL::GetKeys(m_mapTexture, [](const auto& pair) {return !pair.second->IsEditorTexture(); });
                 break;
             }
-            case ENGINE_UTIL::AssetType::MESH:
+            case ENGINE_UTIL::AssetType::MODEL:
             {
-                return ENGINE_UTIL::GetKeys(m_mapMesh);
+                return ENGINE_UTIL::GetKeys(m_mapModel);
                 break;
             }
             case ENGINE_UTIL::AssetType::MUSIC:
@@ -439,7 +439,7 @@ namespace ENGINE_RESOURCES {
             "AssetManager",
             sol::no_constructor,
             "add_mesh", [&](const std::string& meshName, const std::string& meshPath) {
-                return assetManager.AddMesh(meshName, meshPath);
+                return assetManager.AddModel(meshName, meshPath);
             },
             "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){
                 return assetManager.AddTexture(texName, texPath, pixelArt);

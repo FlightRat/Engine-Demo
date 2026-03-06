@@ -1,4 +1,8 @@
-#include "MeshLoader.h"
+#include "ModelLoader.h"
+#include "Logger/Logger.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 namespace ENGINE_RENDERING {
 	namespace Primitives {
@@ -427,62 +431,66 @@ namespace ENGINE_RENDERING {
 		}
 	}
 
-
-	bool MeshLoader::LoadMesh(const std::string& meshPath, std::vector <Vertex>& vertices, std::vector <unsigned int>& indices)
+	bool ModelLoader::LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes)
 	{
-		// TODO: load mesh with Assimp here
 		return false;
 	}
 
-	bool MeshLoader::LoadMeshFromMemory(const std::string& shapeName, std::vector <Vertex>& vertices, std::vector <unsigned int>& indices)
+	bool ModelLoader::LoadModelFromMemory(const std::string& shapeName, std::vector<Mesh>& meshes) 
 	{
-		vertices.clear();
-		indices.clear();
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+		bool found = false;
 
+		// 使用 if-else 链条，或者 map 映射字符串到函数指针。
+		// 这里为了简单，重构你的 if-else 逻辑，避免重复创建 Mesh 对象
 		if (shapeName == "cube") {
 			Primitives::LoadCube(vertices, indices);
-			return true;
+			found = true;
 		}
 		else if (shapeName == "sphere") {
 			Primitives::LoadSphere(vertices, indices);
-			return true;
+			found = true;
 		}
 		else if (shapeName == "capsule") {
 			Primitives::LoadCapsule(vertices, indices);
-			return true;
+			found = true;
 		}
 		else if (shapeName == "plane") {
 			Primitives::LoadPlane(vertices, indices);
-			return true;
+			found = true;
 		}
 		else if (shapeName == "hud_quad") {
 			Primitives::LoadHudQuad(vertices, indices);
+			found = true;
+		}
+
+		if (found && !vertices.empty()) {
+			// 【优化】
+			// 1. 使用 emplace_back 直接在容器尾部构造
+			// 2. 使用 std::move 将 vertices/indices 移动进 Mesh 构造函数，避免拷贝
+			meshes.emplace_back(std::move(vertices), std::move(indices));
 			return true;
 		}
 
-		// 没找到对应的形状
 		return false;
 	}
 
-	std::shared_ptr<Mesh> MeshLoader::Create(const std::string& meshPath)
-	{
-		std::vector <Vertex> vertices;
-		std::vector <unsigned int> indices;
-		if (LoadMesh(meshPath, vertices, indices))
-		{
-			return std::make_shared<Mesh>(vertices, indices);
+	std::shared_ptr<Model> ModelLoader::CreateModel(const std::string& modelPath) {
+		std::vector<Mesh> meshes;
+		if (LoadModel(modelPath, meshes)) {
+			return std::make_shared<Model>(std::move(meshes));
 		}
 		return nullptr;
 	}
 
-	std::shared_ptr<Mesh> MeshLoader::CreateFromMemory(const std::string& shapeName)
-	{
-		std::vector <Vertex> vertices;
-		std::vector <unsigned int> indices;
-		if (LoadMeshFromMemory(shapeName, vertices, indices))
-		{
-			return std::make_shared<Mesh>(vertices, indices);
+	std::shared_ptr<Model> ModelLoader::CreateModelFromMemory(const std::string& shapeName) {
+		std::vector<Mesh> meshes;
+		if (LoadModelFromMemory(shapeName, meshes)) {
+			// 【关键】使用 std::move，因为 meshes vector 现在拥有 Mesh 对象，而 Mesh 对象不可拷贝
+			return std::make_shared<Model>(std::move(meshes));
 		}
+		// 可以加一个 Log 警告：Shape not found
 		return nullptr;
 	}
 }

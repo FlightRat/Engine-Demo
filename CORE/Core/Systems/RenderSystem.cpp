@@ -82,7 +82,7 @@ namespace ENGINE_CORE::Systems {
 			{
 				continue;
 			}
-			auto mesh = assetManager.GetMesh(meshF.mesh);
+			auto mesh = assetManager.GetModel(meshF.mesh);
 
 			model = glm::mat4(1.0f);
 			//translate
@@ -225,9 +225,14 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			glBindVertexArray(mesh->VAO);
-			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
+			mesh->Draw();
+
+			//for (unsigned int i = 0; i < mesh->meshes.size(); i++)
+			//{
+			//	glBindVertexArray(mesh->meshes[i].VAO);
+			//	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->meshes[i].indices.size()), GL_UNSIGNED_INT, 0);
+			//	glBindVertexArray(0);
+			//}
 		}
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{

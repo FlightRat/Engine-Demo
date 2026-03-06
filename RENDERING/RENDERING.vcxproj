@@ -71,7 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\Assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir).\Dependencies\Assimp\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
@@ -114,6 +115,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -145,7 +149,8 @@
     <ClInclude Include="Rendering\Buffers\Framebuffer.h" />
     <ClInclude Include="Rendering\Core\Camera3D.h" />
     <ClInclude Include="Rendering\Essentials\Mesh.h" />
-    <ClInclude Include="Rendering\Essentials\MeshLoader.h" />
+    <ClInclude Include="Rendering\Essentials\ModelLoader.h" />
+    <ClInclude Include="Rendering\Essentials\Model.h" />
     <ClInclude Include="Rendering\Essentials\Shader.h" />
     <ClInclude Include="Rendering\Essentials\ShaderLoader.h" />
     <ClInclude Include="Rendering\Essentials\Texture.h" />
@@ -155,7 +160,8 @@
     <ClCompile Include="Rendering\Buffers\Framebuffer.cpp" />
     <ClCompile Include="Rendering\Core\Camera3D.cpp" />
     <ClCompile Include="Rendering\Essentials\Mesh.cpp" />
-    <ClCompile Include="Rendering\Essentials\MeshLoader.cpp" />
+    <ClCompile Include="Rendering\Essentials\Model.cpp" />
+    <ClCompile Include="Rendering\Essentials\ModelLoader.cpp" />
     <ClCompile Include="Rendering\Essentials\Shader.cpp" />
     <ClCompile Include="Rendering\Essentials\ShaderLoader.cpp" />
     <ClCompile Include="Rendering\Essentials\Texture.cpp" />

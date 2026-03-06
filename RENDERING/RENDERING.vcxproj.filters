@@ -36,7 +36,10 @@
     <ClInclude Include="Rendering\Essentials\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\Essentials\MeshLoader.h">
+    <ClInclude Include="Rendering\Essentials\ModelLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Essentials\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,7 +65,10 @@
     <ClCompile Include="Rendering\Essentials\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\Essentials\MeshLoader.cpp">
+    <ClCompile Include="Rendering\Essentials\ModelLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Essentials\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

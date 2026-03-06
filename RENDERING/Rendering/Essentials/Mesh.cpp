@@ -9,13 +9,11 @@ namespace ENGINE_RENDERING {
     }
 
     Mesh::~Mesh() {
-        if (VAO) glDeleteVertexArrays(1, &VAO);
-        if (VBO) glDeleteBuffers(1, &VBO);
-        if (EBO) glDeleteBuffers(1, &EBO);
+        // OpenGL 规范允许删除 0，不需要 if 判断
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &EBO);
     }
-
-    // 移动构造函数实现 (略，用于保证 Vector 和 GL ID 的所有权转移)
-    // 如果 AssetManager 使用 shared_ptr 管理，移动构造不是必须的，但好习惯。
 
     Mesh::Mesh(Mesh&& other) noexcept
         : vertices(std::move(other.vertices)), // vector 自带移动逻辑，极其高效
@@ -51,6 +49,14 @@ namespace ENGINE_RENDERING {
             other.EBO = 0;
         }
         return *this;
+    }
+
+    void Mesh::Draw() const {
+        if (VAO == 0) return;
+        glBindVertexArray(VAO);
+        // 使用索引绘制
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
     }
 
     void Mesh::SetupMesh()

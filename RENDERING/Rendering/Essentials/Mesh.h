@@ -30,6 +30,9 @@ namespace ENGINE_RENDERING {
         Mesh(Mesh&& other) noexcept;
         Mesh& operator=(Mesh&& other) noexcept;
 
-        void SetupMesh(); // 建议改名为 SetupMesh，表示配置 OpenGL 状态
+        void Draw() const;
+
+    private:
+        void SetupMesh();
     };
 }
