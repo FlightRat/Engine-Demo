@@ -15,7 +15,7 @@ namespace ENGINE_RENDERING {
 	class ModelLoader
 	{
 	private:
-		static void loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
+		static std::string loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
 			std::map<std::string, std::string>& textures, const std::string& directory);
 
 		static void processNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes,

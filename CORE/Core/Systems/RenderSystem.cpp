@@ -83,12 +83,11 @@ namespace ENGINE_CORE::Systems {
 				continue;
 			}
 
-			std::shared_ptr<Model> MeshF_model = assetManager.GetModel(meshF.mesh);
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->meshes;
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
-				const int meshCounts = MeshF_model->GetMeshCount();
-				meshR.ResetMaterial(meshCounts);
+				meshR.ResetMaterial(meshes);
 			}
 
 			model = glm::mat4(1.0f);
@@ -114,7 +113,7 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			const std::vector<Mesh>& meshes = MeshF_model->meshes;
+			
 			for (int i = 0; i < meshes.size(); i++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);

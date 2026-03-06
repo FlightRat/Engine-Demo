@@ -432,10 +432,10 @@ namespace ENGINE_RENDERING {
 		}
 	}
 
-	void ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
-		std::map<std::string, std::string>& textures,
-		const std::string& directory)
+	std::string ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
+		std::map<std::string, std::string>& textures, const std::string& directory)
 	{
+		std::string texName="";	// Note: assume that there is only 1 texture for each type
 		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
 		{
 			aiString str;
@@ -454,19 +454,20 @@ namespace ENGINE_RENDERING {
 				std::string fileNameOnly = texFile.stem().string();
 
 				// 4. 生成你要求的 Key (例如: "nanosuit_glass_dif")
-				std::string customKey = folderPrefix + "_" + fileNameOnly;
+				texName = folderPrefix + "_" + fileNameOnly;
 
 				// 5. 生成物理完整路径用于加载文件
-				std::string fullPath = (dirPath / texFile).generic_string();
+				std::string texPath = (dirPath / texFile).generic_string();
 
 				// 6. 存入 Map
-				if (!textures.contains(customKey))
+				if (!textures.contains(texName))
 				{
-					textures.emplace(customKey, fullPath);
-					ENGINE_LOG("ModelLoader: Generated Key [{0}] for path [{1}]", customKey, fullPath);
+					textures.emplace(texName, texPath);
+					ENGINE_LOG("ModelLoader: Generated Key [{0}] for path [{1}]", texName, texPath);
 				}
 			}
 		}
+		return texName;
 	}
 
 	void ModelLoader::processNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes, std::map<std::string, std::string>& textures, const std::string& directory)
@@ -487,7 +488,7 @@ namespace ENGINE_RENDERING {
 		// data to fill
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
-		//std::vector<Texture> textures;
+		std::map<std::string, std::string> default_textures;
 
 		// 遍历mesh的顶点
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -546,15 +547,18 @@ namespace ENGINE_RENDERING {
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 			// 传递 directory 参数
-			loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", textures, directory);
-			loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", textures, directory);
-			loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", textures, directory);
-			loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", textures, directory);
+			std::string default_diffuse_name = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", textures, directory);
+			std::string default_specular_name = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", textures, directory);
+			std::string default_normal_name = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", textures, directory);
+			std::string default_height_name = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", textures, directory);
+
+			default_textures.emplace("diffuse", default_diffuse_name);
+			default_textures.emplace("specular", default_specular_name);
 		}
 
 		// return a mesh object created from the extracted mesh data
 		// return Mesh(vertices, indices, textures);
-		return Mesh(vertices, indices);
+		return Mesh(vertices, indices, default_textures);
 	}
 
 	bool ModelLoader::LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes, std::map<std::string, std::string>& textures)
@@ -606,10 +610,9 @@ namespace ENGINE_RENDERING {
 		}
 
 		if (found && !vertices.empty()) {
-			// 【优化】
-			// 1. 使用 emplace_back 直接在容器尾部构造
-			// 2. 使用 std::move 将 vertices/indices 移动进 Mesh 构造函数，避免拷贝
-			meshes.emplace_back(std::move(vertices), std::move(indices));
+			// 修复：补充第三个参数（空的 default_texture），匹配 Mesh 构造函数
+			std::map<std::string, std::string> empty_tex;
+			meshes.emplace_back(std::move(vertices), std::move(indices), std::move(empty_tex));
 			return true;
 		}
 

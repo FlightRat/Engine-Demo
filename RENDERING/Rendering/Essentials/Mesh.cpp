@@ -1,9 +1,10 @@
 #include "Mesh.h"
+#include"Logger/Logger.h"
 
 namespace ENGINE_RENDERING {
     // 使用 std::move 转移所有权，避免拷贝
-    Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
-        : vertices(std::move(vertices)), indices(std::move(indices))
+    Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::map<std::string, std::string> default_texture)
+        : vertices(std::move(vertices)), indices(std::move(indices)), default_texture(std::move(default_texture))
     {
         SetupMesh();
     }
@@ -18,6 +19,7 @@ namespace ENGINE_RENDERING {
     Mesh::Mesh(Mesh&& other) noexcept
         : vertices(std::move(other.vertices)), // vector 自带移动逻辑，极其高效
         indices(std::move(other.indices)),
+        default_texture(std::move(other.default_texture)),
         VAO(other.VAO), // 偷取 ID
         VBO(other.VBO),
         EBO(other.EBO)

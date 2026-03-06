@@ -4,7 +4,7 @@
 #include<string>
 #include<vector>
 #include<map>
-#include"MeshFilter.h"
+#include"Rendering/Essentials/Mesh.h"
 
 namespace ENGINE_CORE::ECS {
     struct Material
@@ -31,7 +31,7 @@ namespace ENGINE_CORE::ECS {
         Material& GetMaterial(size_t index);
         inline const bool CheckMaterialEmpty() { return materials.empty(); }
         void AddMaterial(const Material& material);
-        void ResetMaterial(const int MeshCount);
+        void ResetMaterial(const std::vector<ENGINE_RENDERING::Mesh>& meshes);
 
         static void CreateLuaMeshRendererBind(sol::state& lua);
     };
