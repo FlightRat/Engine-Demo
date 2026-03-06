@@ -1,12 +1,31 @@
 #include "MeshRender.h"
 #include <entt.hpp>
+#include <stdexcept>
 
-ENGINE_CORE::ECS::MeshRender::MeshRender():material{Material{}}
+void ENGINE_CORE::ECS::Material::AddTexture(const std::string& key, const std::string& texName)
+{
+    m_textures[key] = texName;
+}
+
+ENGINE_CORE::ECS::MeshRender::MeshRender(const std::vector<Material>& pMaterials): materials{ pMaterials }
 {
 }
 
-ENGINE_CORE::ECS::MeshRender::MeshRender(const Material& pMaterial):material{pMaterial}
+// MeshRender::GetMaterial 实现（增加异常提示，更易调试）
+ENGINE_CORE::ECS::Material& ENGINE_CORE::ECS::MeshRender::GetMaterial(size_t index)
 {
+    if (index >= materials.size()) {
+        // 可选：抛出异常（比直接 resize 更易发现逻辑错误）
+        // throw std::out_of_range("MeshRender::GetMaterial: index out of bounds");
+        materials.resize(index + 1); // 保留原逻辑：自动扩容
+    }
+    return materials[index];
+}
+
+// MeshRender::AddMaterial 实现
+void ENGINE_CORE::ECS::MeshRender::AddMaterial(const Material& material)
+{
+    materials.push_back(material);
 }
 
 void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
@@ -40,11 +59,10 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
         "type_id", &entt::type_hash<MeshRender>::value,
         sol::call_constructor,
         sol::factories(
-            [&](const Material& material) {
-                MeshRender MR{ material };
-                return MR;
+            []() {
+                return MeshRender();
             }
         ),
-        "material",&MeshRender::material
+        "add_material", &MeshRender::AddMaterial
     );
 }

@@ -47,17 +47,17 @@ namespace ENGINE_CORE::ECS {
 
 	void ComponentSerializer::SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshRender& meshRender)
 	{
-		serializer.StartNewObject("meshRender")
-			.AddKeyValuePair("shaderName", meshRender.material.shaderName)
-			//.AddKeyValuePair("textureName", meshRender.textureName)
-			.StartNewObject("color")
-			.AddKeyValuePair("R", meshRender.material.color.x)
-			.AddKeyValuePair("G", meshRender.material.color.y)
-			.AddKeyValuePair("B", meshRender.material.color.z)
-			.AddKeyValuePair("A", meshRender.material.color.w)
-			.EndObject()
-			.AddKeyValuePair("shouldRende", meshRender.shouldRender)
-		.EndObject();
+		//serializer.StartNewObject("meshRender")
+		//	.AddKeyValuePair("shaderName", meshRender.material.shaderName)
+		//	//.AddKeyValuePair("textureName", meshRender.textureName)
+		//	.StartNewObject("color")
+		//	.AddKeyValuePair("R", meshRender.material.color.x)
+		//	.AddKeyValuePair("G", meshRender.material.color.y)
+		//	.AddKeyValuePair("B", meshRender.material.color.z)
+		//	.AddKeyValuePair("A", meshRender.material.color.w)
+		//	.EndObject()
+		//	.AddKeyValuePair("shouldRende", meshRender.shouldRender)
+		//.EndObject();
 
 	}
 
@@ -90,9 +90,9 @@ namespace ENGINE_CORE::ECS {
 
 	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, MeshRender& meshRender)
 	{
-		meshRender.material.shaderName = jsonValue["shaderName"].GetString();
+		//meshRender.material.shaderName = jsonValue["shaderName"].GetString();
 		// meshRender.textureName = jsonValue["textureName"].GetString();
-		meshRender.material.color = glm::vec4{ jsonValue["color"]["R"].GetFloat(),jsonValue["color"]["G"].GetFloat(),jsonValue["color"]["B"].GetFloat(),jsonValue["color"]["A"].GetFloat() };
+		//meshRender.material.color = glm::vec4{ jsonValue["color"]["R"].GetFloat(),jsonValue["color"]["G"].GetFloat(),jsonValue["color"]["B"].GetFloat(),jsonValue["color"]["A"].GetFloat() };
 	}
 
 	void ComponentSerializer::DeserializeComponent(const rapidjson::Value& jsonValue, Identification& id)

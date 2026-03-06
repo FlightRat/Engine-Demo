@@ -15,12 +15,16 @@ BulletDefs =
 				type = "sphere"
 			},
 			MeshRender = {
-				shaderName = "mainShader",
-				color = vec4(1.0, 0.0, 0.0, 1.0),
-				shininess = 64.0,
-				useTex = false,
-				diffuse = "",
-				specular = ""
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 0.0, 0.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
 			},
 			Physics = {
 				type = BodyType.Dynamic, --???

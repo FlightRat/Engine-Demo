@@ -82,7 +82,7 @@ namespace ENGINE_CORE::Systems {
 			{
 				continue;
 			}
-			auto mesh = assetManager.GetModel(meshF.mesh);
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->meshes;
 
 			model = glm::mat4(1.0f);
 			//translate
@@ -106,133 +106,131 @@ namespace ENGINE_CORE::Systems {
 					model = parentModel * model;
 				}
 			}
-
-			bool emptyDiffuse = meshR.material.m_textures.find("diffuse")->second.empty();
-			bool textureBug = (meshR.material.m_useTexture == true) && (emptyDiffuse);
-			if (textureBug)
+			for (int i = 0; i < meshes.size(); i++)
 			{
-				bugShader->Enable();
-				bugShader->Enable();
-				bugShader->SetUniformMat4("model", model);
-				bugShader->SetUniformMat4("view", viewMatrix);
-				bugShader->SetUniformMat4("projection", PerspectiveMatrix);
+				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);
 
-				bugShader->SetUniformVec3("viewPos", camera->GetPosition());
-
-				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
+				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+				if (textureBug)
 				{
-					if (light.type == "point_light")
+					bugShader->Enable();
+					bugShader->Enable();
+					bugShader->SetUniformMat4("model", model);
+					bugShader->SetUniformMat4("view", viewMatrix);
+					bugShader->SetUniformMat4("projection", PerspectiveMatrix);
+
+					bugShader->SetUniformVec3("viewPos", camera->GetPosition());
+
+					for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
 					{
-						bugShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
-						bugShader->SetUniformVec3("pointLights[0].specular", light.specular);
-						bugShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
-						bugShader->SetUniformVec3("pointLights[0].position", light.pos);
-						bugShader->SetUniformFloat("pointLights[0].constant", light.constant);
-						bugShader->SetUniformFloat("pointLights[0].linear", light.linear);
-						bugShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
-					}
-					else if (light.type == "direction_light")
-					{
-						bugShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
-						bugShader->SetUniformVec3("dirLight.specular", light.specular);
-						bugShader->SetUniformVec3("dirLight.ambient", light.ambient);
-						bugShader->SetUniformVec3("dirLight.direction", light.direction);
+						if (light.type == "point_light")
+						{
+							bugShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
+							bugShader->SetUniformVec3("pointLights[0].specular", light.specular);
+							bugShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
+							bugShader->SetUniformVec3("pointLights[0].position", light.pos);
+							bugShader->SetUniformFloat("pointLights[0].constant", light.constant);
+							bugShader->SetUniformFloat("pointLights[0].linear", light.linear);
+							bugShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
+						}
+						else if (light.type == "direction_light")
+						{
+							bugShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
+							bugShader->SetUniformVec3("dirLight.specular", light.specular);
+							bugShader->SetUniformVec3("dirLight.ambient", light.ambient);
+							bugShader->SetUniformVec3("dirLight.direction", light.direction);
+						}
 					}
 				}
-			}
-			else
-			{
-				mainShader->Enable();	// NOTE: now the shader is fixed
-				mainShader->SetUniformMat4("model", model);
-				mainShader->SetUniformMat4("view", viewMatrix);
-				mainShader->SetUniformMat4("projection", PerspectiveMatrix);
-
-				mainShader->SetUniformVec3("viewPos", camera->GetPosition());
-
-				mainShader->SetUniformVec4("material.color", meshR.material.color);
-				mainShader->SetUniformFloat("material.shininess", meshR.material.shininess);
-				mainShader->SetUniformBool("useTexture", meshR.material.m_useTexture);
-				// set uniform textures
-				if (meshR.material.m_useTexture)
+				else
 				{
-					for (const auto& slot : TEXTURE_SLOTS)
+					mainShader->Enable();	// NOTE: now the shader is fixed
+					mainShader->SetUniformMat4("model", model);
+					mainShader->SetUniformMat4("view", viewMatrix);
+					mainShader->SetUniformMat4("projection", PerspectiveMatrix);
+
+					mainShader->SetUniformVec3("viewPos", camera->GetPosition());
+
+					mainShader->SetUniformVec4("material.color", cur_material.color);
+					mainShader->SetUniformFloat("material.shininess", cur_material.shininess);
+					mainShader->SetUniformBool("useTexture", cur_material.m_useTexture);
+					// set uniform textures
+					if (cur_material.m_useTexture)
 					{
-						// 1. 查找材质中是否存在该类型的贴图
-						auto it = meshR.material.m_textures.find(slot.key);
-						bool hasTexture = (it != meshR.material.m_textures.end() && !it->second.empty());
-
-						// 2. 设置 Shader 的 bool 开关
-						mainShader->SetUniformBool(slot.useUniform, hasTexture);
-
-						if (hasTexture)
+						for (const auto& slot : TEXTURE_SLOTS)
 						{
-							// 3. 激活对应的纹理单元 (GL_TEXTURE0 + 0, GL_TEXTURE0 + 1, ...)
-							glActiveTexture(GL_TEXTURE0 + slot.unitIndex);
+							// 1. 查找材质中是否存在该类型的贴图
+							auto it = cur_material.m_textures.find(slot.key);
+							bool hasTexture = (it != cur_material.m_textures.end() && !it->second.empty());
 
-							// 4. 获取并绑定纹理
-							// 注意：使用迭代器 it->second 获取纹理名，比再次用 [] 查找更快
-							auto tex = assetManager.GetTexture(it->second);
-							if (tex)
-							{
-								glBindTexture(GL_TEXTURE_2D, tex->GetID());
-							}
-							else
-							{
-								// 防御性编程：名字存在但资源未加载，绑定0防止错误的纹理采样
-								glBindTexture(GL_TEXTURE_2D, 0);
-							}
+							// 2. 设置 Shader 的 bool 开关
+							mainShader->SetUniformBool(slot.useUniform, hasTexture);
 
-							// 5. 告诉 Shader 该采样器应该去读哪个纹理单元
-							mainShader->SetUniformInt(slot.samplerUniform, slot.unitIndex);
+							if (hasTexture)
+							{
+								// 3. 激活对应的纹理单元 (GL_TEXTURE0 + 0, GL_TEXTURE0 + 1, ...)
+								glActiveTexture(GL_TEXTURE0 + slot.unitIndex);
+
+								// 4. 获取并绑定纹理
+								// 注意：使用迭代器 it->second 获取纹理名，比再次用 [] 查找更快
+								auto tex = assetManager.GetTexture(it->second);
+								if (tex)
+								{
+									glBindTexture(GL_TEXTURE_2D, tex->GetID());
+								}
+								else
+								{
+									// 防御性编程：名字存在但资源未加载，绑定0防止错误的纹理采样
+									glBindTexture(GL_TEXTURE_2D, 0);
+								}
+
+								// 5. 告诉 Shader 该采样器应该去读哪个纹理单元
+								mainShader->SetUniformInt(slot.samplerUniform, slot.unitIndex);
+							}
+						}
+					}
+
+					// 重置点光源（设为0向量/0值，代表无贡献）
+					mainShader->SetUniformVec3("pointLights[0].diffuse", glm::vec3(0.0f));
+					mainShader->SetUniformVec3("pointLights[0].specular", glm::vec3(0.0f));
+					mainShader->SetUniformVec3("pointLights[0].ambient", glm::vec3(0.0f));
+					mainShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f));
+					mainShader->SetUniformFloat("pointLights[0].constant", 0.0f);
+					mainShader->SetUniformFloat("pointLights[0].linear", 0.0f);
+					mainShader->SetUniformFloat("pointLights[0].quadratic", 0.0f);
+
+					// 重置方向光（同理设为0）
+					mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
+					mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
+					mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
+					mainShader->SetUniformVec3("dirLight.direction", glm::vec3(0.0f));
+
+					for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
+					{
+						if (light.type == "point_light")
+						{
+							mainShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
+							mainShader->SetUniformVec3("pointLights[0].specular", light.specular);
+							mainShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
+							mainShader->SetUniformVec3("pointLights[0].position", light.pos);
+							mainShader->SetUniformFloat("pointLights[0].constant", light.constant);
+							mainShader->SetUniformFloat("pointLights[0].linear", light.linear);
+							mainShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
+						}
+						else if (light.type == "direction_light")
+						{
+							mainShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
+							mainShader->SetUniformVec3("dirLight.specular", light.specular);
+							mainShader->SetUniformVec3("dirLight.ambient", light.ambient);
+							mainShader->SetUniformVec3("dirLight.direction", light.direction);
 						}
 					}
 				}
 				
-				// 重置点光源（设为0向量/0值，代表无贡献）
-				mainShader->SetUniformVec3("pointLights[0].diffuse", glm::vec3(0.0f));
-				mainShader->SetUniformVec3("pointLights[0].specular", glm::vec3(0.0f));
-				mainShader->SetUniformVec3("pointLights[0].ambient", glm::vec3(0.0f));
-				mainShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f));
-				mainShader->SetUniformFloat("pointLights[0].constant", 0.0f);
-				mainShader->SetUniformFloat("pointLights[0].linear", 0.0f);
-				mainShader->SetUniformFloat("pointLights[0].quadratic", 0.0f);
-
-				// 重置方向光（同理设为0）
-				mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
-				mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
-				mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
-				mainShader->SetUniformVec3("dirLight.direction", glm::vec3(0.0f));
-
-				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
-				{
-					if (light.type == "point_light")
-					{
-						mainShader->SetUniformVec3("pointLights[0].diffuse", light.diffuse);
-						mainShader->SetUniformVec3("pointLights[0].specular", light.specular);
-						mainShader->SetUniformVec3("pointLights[0].ambient", light.ambient);
-						mainShader->SetUniformVec3("pointLights[0].position", light.pos);
-						mainShader->SetUniformFloat("pointLights[0].constant", light.constant);
-						mainShader->SetUniformFloat("pointLights[0].linear", light.linear);
-						mainShader->SetUniformFloat("pointLights[0].quadratic", light.quadratic);
-					}
-					else if (light.type == "direction_light")
-					{
-						mainShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
-						mainShader->SetUniformVec3("dirLight.specular", light.specular);
-						mainShader->SetUniformVec3("dirLight.ambient", light.ambient);
-						mainShader->SetUniformVec3("dirLight.direction", light.direction);
-					}
-				}
+				meshes[i].Draw();
 			}
 
-			mesh->Draw();
-
-			//for (unsigned int i = 0; i < mesh->meshes.size(); i++)
-			//{
-			//	glBindVertexArray(mesh->meshes[i].VAO);
-			//	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->meshes[i].indices.size()), GL_UNSIGNED_INT, 0);
-			//	glBindVertexArray(0);
-			//}
 		}
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{

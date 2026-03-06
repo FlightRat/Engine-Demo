@@ -113,95 +113,82 @@ namespace ENGINE_EDITOR {
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::MeshRender& meshRender)
 	{
 		ImGui::SeparatorText("MeshRender");
-		ImGui::PushID(entt::type_hash<MeshRender>::value());
+		// 使用组件的 type_hash 作为一级 ID
+		ImGui::PushID(entt::type_hash<ENGINE_CORE::ECS::MeshRender>::value());
+
 		if (ImGui::TreeNodeEx("##MeshRenderTree", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::PushItemWidth(120.f);
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+			auto& materials = meshRender.materials;
 
-			ENGINE_CORE::ECS::Material& m = meshRender.GetMaterial();
-
-			// color
-			ImVec4 col = { m.color.x, m.color.y,m.color.z, m.color.w };
-			ImGui::InlineLabel("color");
-			if (ImGui::ColorEdit4("##color", &col.x, IMGUI_COLOR_PICKER_FLAGS))
+			for (size_t i = 0; i < materials.size(); ++i)
 			{
-				m.color.x = static_cast<GLubyte>(col.x);
-				m.color.y = static_cast<GLubyte>(col.y);
-				m.color.z = static_cast<GLubyte>(col.z);
-				m.color.w = static_cast<GLubyte>(col.w);
-			}
+				// --- 关键修复：为每个材质分配独立 ID 域 ---
+				ImGui::PushID(static_cast<int>(i));
 
-			// useTex
-			ImGui::InlineLabel("useTex");
-			ImGui::Checkbox("#useTex", &m.m_useTexture);
-			const char* textureSlots[] = { "diffuse", "specular" };
-			for (const char* slot : textureSlots)
-			{
-				// 1. 显示标签 (e.g., "diffuse")
-				ImGui::InlineLabel(slot);
+				ImGui::Text("Material [%zu]", i);
 
-				// 2. 获取当前纹理名的引用
-				// 注意：这里使用 operator[] 而不是 find()。
-				// 如果 map 中没有这个 key，[] 会自动插入一个空字符串，这对 UI 编辑来说是安全的。
-				std::string& currentTextureName = m.m_textures[slot];
+				ENGINE_CORE::ECS::Material& m = meshRender.GetMaterial(i);
 
-				// 3. 生成唯一的 ImGui ID (e.g., "##texture_diffuse")
-				std::string comboID = std::string("##texture_") + slot;
-
-				// 4. 绘制下拉框
-				// currentTextureName.c_str() 用于显示当前选中的值，如果为空字符串则显示空白
-				if (ImGui::BeginCombo(comboID.c_str(), currentTextureName.c_str()))
+				// 1. color
+				ImVec4 col = { m.color.x, m.color.y,m.color.z, m.color.w };
+				ImGui::InlineLabel("color");
+				if (ImGui::ColorEdit4("##color", &col.x, IMGUI_COLOR_PICKER_FLAGS))
 				{
-					// 4.1. 添加一个 "None" 选项，允许用户清除纹理
-					if (ImGui::Selectable("None", currentTextureName.empty()))
-					{
-						currentTextureName = "";
-					}
-
-					// 4.2. 遍历资源管理器中的所有纹理
-					for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE))
-					{
-						bool isSelected = (sTextureName == currentTextureName);
-
-						if (ImGui::Selectable(sTextureName.c_str(), isSelected))
-						{
-							currentTextureName = sTextureName; // 更新 Map 中的值
-						}
-
-						// 优化体验：如果当前项被选中，确保它在滚动视图中可见
-						if (isSelected)
-						{
-							ImGui::SetItemDefaultFocus();
-						}
-					}
-					ImGui::EndCombo();
+					m.color.x = static_cast<GLubyte>(col.x);
+					m.color.y = static_cast<GLubyte>(col.y);
+					m.color.z = static_cast<GLubyte>(col.z);
+					m.color.w = static_cast<GLubyte>(col.w);
 				}
+
+				// 2. useTex
+				ImGui::InlineLabel("useTex");
+				ImGui::Checkbox("##useTexCheck", &m.m_useTexture); // 修复了 label 的 # 号用法
+
+				// 3. Textures
+				const char* textureSlots[] = { "diffuse", "specular" };
+				for (const char* slot : textureSlots)
+				{
+					ImGui::InlineLabel(slot);
+
+					// 使用 PushID 避免字符串拼接导致的内存分配
+					ImGui::PushID(slot);
+					std::string& currentTextureName = m.m_textures[slot];
+
+					if (ImGui::BeginCombo("##texCombo", currentTextureName.c_str()))
+					{
+						if (ImGui::Selectable("None", currentTextureName.empty()))
+						{
+							currentTextureName = "";
+						}
+
+						for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE))
+						{
+							bool isSelected = (sTextureName == currentTextureName);
+							if (ImGui::Selectable(sTextureName.c_str(), isSelected))
+							{
+								currentTextureName = sTextureName;
+							}
+							if (isSelected) ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+					ImGui::PopID(); // Pop slot ID
+				}
+
+				// 4. Shader (只读展示)
+				ImGui::InlineLabel("shader");
+				ImGui::TextDisabled("%s", m.shaderName.c_str());
+
+				ImGui::Separator();
+				ImGui::PopID(); // Pop material index ID
 			}
-
-			// shader
-			ImGui::InlineLabel("shader");
-			std::string sSelectedShader{ m.shaderName };
-			ImGui::Text(sSelectedShader.c_str());
-			//if (ImGui::BeginCombo("##shader", sSelectedShader.c_str()))
-			//{
-			//	for (const auto& sShaderName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::SHADER))
-			//	{
-			//		if (ImGui::Selectable(sShaderName.c_str(), sShaderName == sSelectedShader))
-			//		{
-			//			sSelectedShader = sShaderName;
-			//			meshRender.shaderName = sSelectedShader;
-			//		}
-			//	}
-			//	ImGui::EndCombo();
-			//}
-
-			// TODO: add should render
 
 			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}
-		ImGui::PopID();
+		ImGui::PopID(); // Pop MeshRender type ID
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::PhysicsComponent& physics)
