@@ -439,23 +439,31 @@ namespace ENGINE_RENDERING {
 		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
 		{
 			aiString str;
-			// 获取模型文件中记录的贴图相对路径
 			if (mat->GetTexture(type, i, &str) == AI_SUCCESS)
 			{
-				std::string relPath = str.C_Str();
+				// 1. 获取 Assimp 原始路径并格式化
+				std::string assimpPath = str.C_Str();
+				std::replace(assimpPath.begin(), assimpPath.end(), '\\', '/');
 
-				// 处理 Windows/Unix 路径分隔符兼容性
-				std::replace(relPath.begin(), relPath.end(), '\\', '/');
+				// 2. 提取文件夹前缀 (例如: "nanosuit")
+				std::filesystem::path dirPath(directory);
+				std::string folderPrefix = dirPath.filename().string();
 
-				// 拼接完整路径：模型目录 + 贴图相对路径
-				std::string fullPath = directory + "/" + relPath;
+				// 3. 提取贴图文件名不含后缀 (例如: "glass_dif")
+				std::filesystem::path texFile(assimpPath);
+				std::string fileNameOnly = texFile.stem().string();
 
-				// 使用文件名作为 key，完整路径作为 value
-				// 如果你的 AssetManager 需要特定的命名规则，可以在这里修改
-				if (!textures.contains(relPath))
+				// 4. 生成你要求的 Key (例如: "nanosuit_glass_dif")
+				std::string customKey = folderPrefix + "_" + fileNameOnly;
+
+				// 5. 生成物理完整路径用于加载文件
+				std::string fullPath = (dirPath / texFile).generic_string();
+
+				// 6. 存入 Map
+				if (!textures.contains(customKey))
 				{
-					textures.emplace(relPath, fullPath);
-					ENGINE_LOG("ModelLoader: Found texture [{0}] at [{1}]", relPath, fullPath);
+					textures.emplace(customKey, fullPath);
+					ENGINE_LOG("ModelLoader: Generated Key [{0}] for path [{1}]", customKey, fullPath);
 				}
 			}
 		}
