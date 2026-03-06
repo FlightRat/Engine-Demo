@@ -3,24 +3,33 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 struct aiNode;
 struct aiMesh;
 struct aiScene;
+struct aiMaterial;
+enum aiTextureType;
 
 namespace ENGINE_RENDERING {
 	class ModelLoader
 	{
 	private:
-		static void processNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes);
-		static Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+		static void loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
+			std::map<std::string, std::string>& textures, const std::string& directory);
 
-		static bool LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes);
+		static void processNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes,
+			std::map<std::string, std::string>& textures, const std::string& directory);
+
+		static Mesh processMesh(aiMesh* mesh, const aiScene* scene,
+			std::map<std::string, std::string>& textures, const std::string& directory);
+
+		static bool LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes, std::map<std::string, std::string>& textures);
 		static bool LoadModelFromMemory(const std::string& shapeName, std::vector<Mesh>& meshes);
 
 	public:
 		ModelLoader() = delete;
-		static std::shared_ptr<Model> CreateModel(const std::string& modelPath);
+		static std::shared_ptr<Model> CreateModel(const std::string& modelPath, std::map<std::string, std::string>& textures);
 		static std::shared_ptr<Model> CreateModelFromMemory(const std::string& shapeName);
 	};
 }

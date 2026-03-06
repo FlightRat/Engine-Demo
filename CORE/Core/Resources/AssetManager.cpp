@@ -51,7 +51,7 @@ namespace ENGINE_RESOURCES {
     }
 
     // model
-    bool AssetManager::AddModel(const std::string& modelName, const std::string& modelPath)
+    bool AssetManager::AddModel(const std::string& modelName, const std::string& modelPath, std::map<std::string, std::string>& textures)
     {
         if (m_mapModel.find(modelName) != m_mapModel.end())
         {
@@ -59,13 +59,13 @@ namespace ENGINE_RESOURCES {
             return false;
         }
 
-        auto model = std::move(ENGINE_RENDERING::ModelLoader::CreateModel(modelPath));
-        model->directory = modelPath.substr(0, modelPath.find_last_of('/'));
+        auto model = std::move(ENGINE_RENDERING::ModelLoader::CreateModel(modelPath, textures));
         if (!model)
         {
             ENGINE_ERROR("Failed to load model [{0}] at path [{1}]", modelName, modelPath);
             return false;
         }
+        model->directory = modelPath.substr(0, modelPath.find_last_of('/'));
 
         m_mapModel.emplace(modelName, std::move(model));
         return true;
@@ -440,7 +440,14 @@ namespace ENGINE_RESOURCES {
             "AssetManager",
             sol::no_constructor,
             "add_model", [&](const std::string& meshName, const std::string& meshPath) {
-                return assetManager.AddModel(meshName, meshPath);
+                std::map<std::string, std::string> textures;
+                if (!assetManager.AddModel(meshName, meshPath, textures)) return false;
+                for (const auto& [texName, texPath] : textures) {
+                    if (!assetManager.CheckHasAsset(texName, ENGINE_UTIL::AssetType::TEXTURE)) {
+                        assetManager.AddTexture(texName, texPath, false);
+                    }
+                }
+                return true;
             },
             "add_texture",[&](const std::string& texName,const std::string& texPath, bool pixelArt){
                 return assetManager.AddTexture(texName, texPath, pixelArt);

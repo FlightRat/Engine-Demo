@@ -187,6 +187,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\models\backpack\backpack.mtl" />
+    <None Include="assets\models\nanosuit\nanosuit.blend" />
+    <None Include="assets\models\nanosuit\nanosuit.mtl" />
     <None Include="assets\scripts\GameDemo\bullet.lua" />
     <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
     <None Include="assets\scripts\GameDemo\Defs\bulletDefs.lua" />
@@ -214,6 +217,28 @@
     <None Include="src\editor\utilities\ComponentDrawer.inl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\models\backpack\ao.jpg" />
+    <Image Include="assets\models\backpack\diffuse.jpg" />
+    <Image Include="assets\models\backpack\normal.png" />
+    <Image Include="assets\models\backpack\roughness.jpg" />
+    <Image Include="assets\models\backpack\specular.jpg" />
+    <Image Include="assets\models\nanosuit\arm_dif.png" />
+    <Image Include="assets\models\nanosuit\arm_showroom_ddn.png" />
+    <Image Include="assets\models\nanosuit\arm_showroom_spec.png" />
+    <Image Include="assets\models\nanosuit\body_dif.png" />
+    <Image Include="assets\models\nanosuit\body_showroom_ddn.png" />
+    <Image Include="assets\models\nanosuit\body_showroom_spec.png" />
+    <Image Include="assets\models\nanosuit\glass_ddn.png" />
+    <Image Include="assets\models\nanosuit\glass_dif.png" />
+    <Image Include="assets\models\nanosuit\hand_dif.png" />
+    <Image Include="assets\models\nanosuit\hand_showroom_ddn.png" />
+    <Image Include="assets\models\nanosuit\hand_showroom_spec.png" />
+    <Image Include="assets\models\nanosuit\helmet_diff.png" />
+    <Image Include="assets\models\nanosuit\helmet_showroom_ddn.png" />
+    <Image Include="assets\models\nanosuit\helmet_showroom_spec.png" />
+    <Image Include="assets\models\nanosuit\leg_dif.png" />
+    <Image Include="assets\models\nanosuit\leg_showroom_ddn.png" />
+    <Image Include="assets\models\nanosuit\leg_showroom_spec.png" />
     <Image Include="assets\textures\brick.png" />
     <Image Include="assets\textures\container.png" />
     <Image Include="assets\textures\container_specular.png" />
@@ -250,6 +275,10 @@
     <Media Include="assets\soundFx\jumping.wav" />
     <Media Include="assets\soundFx\landing.wav" />
     <Media Include="assets\soundFx\shooting.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="assets\models\backpack\source_attribution.txt" />
+    <Text Include="assets\models\nanosuit\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

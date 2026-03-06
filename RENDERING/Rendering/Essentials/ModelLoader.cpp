@@ -1,5 +1,6 @@
 #include "ModelLoader.h"
 #include "Logger/Logger.h"
+#include <filesystem>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -431,24 +432,49 @@ namespace ENGINE_RENDERING {
 		}
 	}
 
-	void ModelLoader::processNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes)
+	void ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
+		std::map<std::string, std::string>& textures,
+		const std::string& directory)
 	{
-		// process each mesh located at the current node
-		for (unsigned int i = 0; i < node->mNumMeshes; i++)
+		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
 		{
-			// the node object only contains indices to index the actual objects in the scene. 
-			// the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			meshes.push_back(processMesh(mesh, scene));
-		}
-		// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-		for (unsigned int i = 0; i < node->mNumChildren; i++)
-		{
-			processNode(node->mChildren[i], scene, meshes);
+			aiString str;
+			// 获取模型文件中记录的贴图相对路径
+			if (mat->GetTexture(type, i, &str) == AI_SUCCESS)
+			{
+				std::string relPath = str.C_Str();
+
+				// 处理 Windows/Unix 路径分隔符兼容性
+				std::replace(relPath.begin(), relPath.end(), '\\', '/');
+
+				// 拼接完整路径：模型目录 + 贴图相对路径
+				std::string fullPath = directory + "/" + relPath;
+
+				// 使用文件名作为 key，完整路径作为 value
+				// 如果你的 AssetManager 需要特定的命名规则，可以在这里修改
+				if (!textures.contains(relPath))
+				{
+					textures.emplace(relPath, fullPath);
+					ENGINE_LOG("ModelLoader: Found texture [{0}] at [{1}]", relPath, fullPath);
+				}
+			}
 		}
 	}
 
-	Mesh ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene)
+	void ModelLoader::processNode(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes, std::map<std::string, std::string>& textures, const std::string& directory)
+	{
+		for (unsigned int i = 0; i < node->mNumMeshes; i++)
+		{
+			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+			meshes.push_back(processMesh(mesh, scene, textures, directory));
+		}
+		for (unsigned int i = 0; i < node->mNumChildren; i++)
+		{
+			processNode(node->mChildren[i], scene, meshes, textures, directory);
+		}
+	}
+
+	Mesh ModelLoader::processMesh(aiMesh* mesh, const aiScene* scene, std::map<std::string, std::string>& textures, const std::string& directory) 
 	{
 		// data to fill
 		std::vector<Vertex> vertices;
@@ -508,39 +534,36 @@ namespace ENGINE_RENDERING {
 				indices.push_back(face.mIndices[j]);
 		}
 
-		//// 材质/贴图
-		//aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-		//// 1. diffuse maps
-		//vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-		//textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-		//// 2. specular maps
-		//vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-		//textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		//// 3. normal maps
-		//std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-		//textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-		//// 4. height maps
-		//std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-		//textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+		if (mesh->mMaterialIndex >= 0)
+		{
+			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+			// 传递 directory 参数
+			loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", textures, directory);
+			loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", textures, directory);
+			loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", textures, directory);
+			loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", textures, directory);
+		}
 
 		// return a mesh object created from the extracted mesh data
 		// return Mesh(vertices, indices, textures);
 		return Mesh(vertices, indices);
 	}
 
-	bool ModelLoader::LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes)
+	bool ModelLoader::LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes, std::map<std::string, std::string>& textures)
 	{
-		// read file via ASSIMP
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-		// check for errors
-		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+
+		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
-			ENGINE_ERROR("ASSIMP: ", importer.GetErrorString());
+			ENGINE_ERROR("ASSIMP: {0}", importer.GetErrorString());
 			return false;
 		}
-		// process ASSIMP's root node recursively
-		processNode(scene->mRootNode, scene, meshes);
+
+		// 提取模型所在目录 (例如: "Assets/Models/Hero.obj" -> "Assets/Models")
+		std::string directory = modelPath.substr(0, modelPath.find_last_of("\\/"));
+
+		processNode(scene->mRootNode, scene, meshes, textures, directory);
 
 		return true;
 	}
@@ -585,9 +608,9 @@ namespace ENGINE_RENDERING {
 		return false;
 	}
 
-	std::shared_ptr<Model> ModelLoader::CreateModel(const std::string& modelPath) {
+	std::shared_ptr<Model> ModelLoader::CreateModel(const std::string& modelPath, std::map<std::string, std::string>& textures) {
 		std::vector<Mesh> meshes;
-		if (LoadModel(modelPath, meshes)) {
+		if (LoadModel(modelPath, meshes, textures)) {
 			return std::make_shared<Model>(std::move(meshes));
 		}
 		return nullptr;

@@ -32,7 +32,7 @@ namespace ENGINE_RESOURCES {
 
 		Mix_MusicType DetectAudioFormat(const unsigned char* audioData, size_t dataSize);
 
-		bool AddModel(const std::string& modelName, const std::string& modelPath);
+		bool AddModel(const std::string& modelName, const std::string& modelPath, std::map<std::string, std::string>& meshTextureMap);
 		bool AddModelFromMemory(const std::string& modelName, const std::string& shapeName);
 		std::shared_ptr<ENGINE_RENDERING::Model> GetModel(const std::string& modelName);
 
