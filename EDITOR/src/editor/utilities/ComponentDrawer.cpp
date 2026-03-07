@@ -123,6 +123,15 @@ namespace ENGINE_EDITOR {
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 			auto& materials = meshRender.materials;
 
+			// render
+			ImGui::InlineLabel("Render");
+			ImGui::Checkbox("##render", &meshRender.shouldRender); // 修复了 label 的 # 号用法
+
+			// flip uv checkbox
+			ImGui::InlineLabel("Flip UV");
+			ImGui::Checkbox("##flipUV", &meshRender.flipUV); // 修复了 label 的 # 号用法
+
+			ImGui::Separator();
 			for (size_t i = 0; i < materials.size(); ++i)
 			{
 				// --- 关键修复：为每个材质分配独立 ID 域 ---

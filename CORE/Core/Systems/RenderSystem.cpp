@@ -89,6 +89,7 @@ namespace ENGINE_CORE::Systems {
 				meshF.changed = false;
 				meshR.ResetMaterial(meshes);
 			}
+			mainShader->SetUniformBool("flipUV", meshR.flipUV);
 
 			model = glm::mat4(1.0f);
 			//translate

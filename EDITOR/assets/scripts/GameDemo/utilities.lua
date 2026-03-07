@@ -52,6 +52,7 @@ function LoadEntity( def )
 
 	if def.components.MeshRender then
 		local meshR = newEntity:add_component(MeshRender())
+		meshR.flip_uv = def.components.MeshRender.flip_uv or false
 		local materialsData = def.components.MeshRender.material
 		for i, mDef in ipairs(materialsData) do
 			local material = Material()

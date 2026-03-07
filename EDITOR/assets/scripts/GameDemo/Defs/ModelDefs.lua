@@ -35,6 +35,7 @@ ModelDefs =
 				type = "backpack"
 			},
 			MeshRender = {
+				flip_uv = true,
 				material = {
 				}
 			}

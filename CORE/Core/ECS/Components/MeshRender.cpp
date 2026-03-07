@@ -108,6 +108,7 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
                 return MeshRender();
             }
         ),
+        "flip_uv",&MeshRender::flipUV,
         "set_color",&MeshRender::SetColor,
         "add_material", &MeshRender::AddMaterial
     );

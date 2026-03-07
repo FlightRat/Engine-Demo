@@ -40,6 +40,7 @@ in vec2 TexCoord;
 out vec4 FragColor;
 
 // --- Uniforms ---
+uniform bool flipUV;
 uniform bool useTexture;
 uniform vec3 viewPos;
 uniform Material material;
@@ -99,7 +100,10 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     
     // 处理纹理坐标翻转
-    vec2 flip_coord = vec2(TexCoord.x, 1.0 - TexCoord.y);
+    vec2 flip_coord = vec2(TexCoord.x, TexCoord.y);
+    if (flipUV){
+        flip_coord.y = 1.0 - flip_coord.y;
+    }
 
     // 1. 获取漫反射颜色 (Albedo)
     // 默认为材质的颜色
@@ -117,7 +121,7 @@ void main()
     vec3 specMap = vec3(1.0); 
     if (material.useSpecular && useTexture) {
         // 采样高光贴图 (通常是黑白图，越白越亮)
-        specMap = vec3(texture(material.specular, flip_coord).r);
+        specMap = vec3(texture(material.specular, flip_coord));
     }
 
     // 3. 计算光照
