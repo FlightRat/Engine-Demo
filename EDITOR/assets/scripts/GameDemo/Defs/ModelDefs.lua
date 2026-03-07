@@ -39,5 +39,25 @@ ModelDefs =
 				}
 			}
 		}
+	},
+	cyborg = 
+	{
+		tag = "cyborg",
+		group = "Models",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 0.0, 0.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cyborg"
+			},
+			MeshRender = {
+				material = {
+				}
+			}
+		}
 	}
 }

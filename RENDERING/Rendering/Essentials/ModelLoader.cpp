@@ -463,7 +463,7 @@ namespace ENGINE_RENDERING {
 				if (!textures.contains(texName))
 				{
 					textures.emplace(texName, texPath);
-					ENGINE_LOG("ModelLoader: Generated Key [{0}] for path [{1}]", texName, texPath);
+					//ENGINE_LOG("ModelLoader: Generated Key [{0}] for path [{1}]", texName, texPath);
 				}
 			}
 		}
