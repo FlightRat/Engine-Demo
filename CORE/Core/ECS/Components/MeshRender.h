@@ -21,7 +21,7 @@ namespace ENGINE_CORE::ECS {
 
     struct MeshRender
     {
-        bool shouldRender{ true };          // to be added in UI
+        bool shouldRender{ true };
         bool flipUV{ false };
         std::vector<Material> materials;
 
