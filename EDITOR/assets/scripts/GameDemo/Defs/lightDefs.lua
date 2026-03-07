@@ -1,13 +1,13 @@
 LightDefs = 
 {
-	point_light_1 = 
+	point_light_0 = 
 	{
-		tag = "point_light_1",
+		tag = "point_light_0",
 		group = "light",
 		components =
 		{
 			Transform = {
-				position = vec3(0.0, 20.0, 0.0),
+				position = vec3(0.0, 5.0, 0.0),
 				scale = vec3(0.5, 0.5, 0.5),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},
@@ -33,7 +33,167 @@ LightDefs =
 
 				type = "point_light",
 
-				pos = vec3(0.0, 20.0, 0.0),
+				pos = vec3(0.0, 5.0, 0.0),
+				constant = 1.0,
+				linear = 0.09,
+				quadratic = 0.032
+			}
+		}
+	},
+	point_light_1 = 
+	{
+		tag = "point_light_1",
+		group = "light",
+		components =
+		{
+			Transform = {
+				position = vec3(10.0, 5.0, 10.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Light = {
+				diffuse = vec3(0.8, 0.8, 0.8),
+				specular = vec3(1.0, 1.0, 1.0),
+				ambient = vec3(0.05, 0.05, 0.05),
+
+				type = "point_light",
+
+				pos = vec3(10.0, 5.0, 10.0),
+				constant = 1.0,
+				linear = 0.09,
+				quadratic = 0.032
+			}
+		}
+	},
+	point_light_2 = 
+	{
+		tag = "point_light_2",
+		group = "light",
+		components =
+		{
+			Transform = {
+				position = vec3(-10.0, 5.0, 10.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Light = {
+				diffuse = vec3(0.8, 0.8, 0.8),
+				specular = vec3(1.0, 1.0, 1.0),
+				ambient = vec3(0.05, 0.05, 0.05),
+
+				type = "point_light",
+
+				pos = vec3(-10.0, 5.0, 10.0),
+				constant = 1.0,
+				linear = 0.09,
+				quadratic = 0.032
+			}
+		}
+	},
+	point_light_3 = 
+	{
+		tag = "point_light_3",
+		group = "light",
+		components =
+		{
+			Transform = {
+				position = vec3(10.0, 5.0, -10.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Light = {
+				diffuse = vec3(0.8, 0.8, 0.8),
+				specular = vec3(1.0, 1.0, 1.0),
+				ambient = vec3(0.05, 0.05, 0.05),
+
+				type = "point_light",
+
+				pos = vec3(10.0, 5.0, -10.0),
+				constant = 1.0,
+				linear = 0.09,
+				quadratic = 0.032
+			}
+		}
+	},
+	point_light_4 = 
+	{
+		tag = "point_light_4",
+		group = "light",
+		components =
+		{
+			Transform = {
+				position = vec3(-10.0, 5.0, -10.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Light = {
+				diffuse = vec3(0.8, 0.8, 0.8),
+				specular = vec3(1.0, 1.0, 1.0),
+				ambient = vec3(0.05, 0.05, 0.05),
+
+				type = "point_light",
+
+				pos = vec3(-10.0, 5.0, -10.0),
 				constant = 1.0,
 				linear = 0.09,
 				quadratic = 0.032
