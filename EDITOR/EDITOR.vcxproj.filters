@@ -89,6 +89,9 @@
     <None Include="assets\models\backpack\backpack.mtl" />
     <None Include="assets\models\nanosuit\nanosuit.blend" />
     <None Include="assets\models\nanosuit\nanosuit.mtl" />
+    <None Include="assets\models\cyborg\cyborg.blend" />
+    <None Include="assets\models\cyborg\cyborg.blend1" />
+    <None Include="assets\models\cyborg\cyborg.mtl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
@@ -184,6 +187,15 @@
     <Image Include="assets\models\nanosuit\leg_showroom_spec.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\models\cyborg\cyborg_diffuse.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\models\cyborg\cyborg_normal.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="assets\models\cyborg\cyborg_specular.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h">
@@ -261,5 +273,6 @@
   <ItemGroup>
     <Text Include="assets\models\backpack\source_attribution.txt" />
     <Text Include="assets\models\nanosuit\LICENSE.txt" />
+    <Text Include="assets\models\cyborg\LICENSE.txt" />
   </ItemGroup>
 </Project>
