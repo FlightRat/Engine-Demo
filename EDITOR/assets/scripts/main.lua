@@ -23,7 +23,8 @@ Ground = LoadEntity(EnvirDefs["ground"])
 Cube_Moveable = LoadEntity(EnvirDefs["cube_3"])
 Cube_Trigger = LoadEntity(EnvirDefs["cube_2"])
 
---backpack = LoadEntity(ModelDefs["backpack"])
+--nanosuit = LoadEntity(ModelDefs["nanosuit"])
+backpack = LoadEntity(ModelDefs["backpack"])
 cyborg = LoadEntity(ModelDefs["cyborg"])
 
 point_light = LoadEntity(LightDefs["point_light_1"])

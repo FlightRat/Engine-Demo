@@ -27,7 +27,7 @@ ModelDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(0.0, 0.0, 0.0),
+				position = vec3(2.0, 5.0, -9.0),
 				scale = vec3(1.0, 1.0, 1.0),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},
@@ -47,7 +47,7 @@ ModelDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(0.0, 0.0, 0.0),
+				position = vec3(-5.0, 5.0, -10.0),
 				scale = vec3(1.0, 1.0, 1.0),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},

@@ -2,8 +2,8 @@ AssetDefs =
 {
 	models = 
 	{
-		--{name="nanosuit", path="assets/models/nanosuit/nanosuit.obj"},
-		{name = "cyborg", path="assets/models/cyborg/cyborg.obj"},
+		{name="nanosuit", path="assets/models/nanosuit/nanosuit.obj"},
+		{name="cyborg", path="assets/models/cyborg/cyborg.obj"},
 		{name="backpack", path="assets/models/backpack/backpack.obj"}
 	},
 	textures=
