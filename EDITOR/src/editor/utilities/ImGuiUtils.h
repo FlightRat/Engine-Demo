@@ -1,5 +1,7 @@
 #pragma once
 #include <imgui.h>
+#include <imgui_internal.h>
+#include <glm/glm.hpp>
 #include <string>
 
 constexpr ImVec4 LABEL_RED = ImVec4{ 0.92f, 0.18f, 0.05f, 1.0f };
@@ -28,4 +30,6 @@ namespace ImGui {
 	void AddSpaces(int numSpaces);
 
 	void InlineLabel(const std::string& label, float spaceSize = 128.f);
+
+	void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
 }
