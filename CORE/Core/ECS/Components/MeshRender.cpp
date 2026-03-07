@@ -11,6 +11,15 @@ ENGINE_CORE::ECS::MeshRender::MeshRender(const std::vector<Material>& pMaterials
 {
 }
 
+void ENGINE_CORE::ECS::MeshRender::SetColor(glm::vec4 color)
+{
+    const int MaterialCount = materials.size();
+    for (int i = 0; i < MaterialCount; i++)
+    {
+        materials[i].color = color;
+    }
+}
+
 // MeshRender::GetMaterial 实现（增加异常提示，更易调试）
 ENGINE_CORE::ECS::Material& ENGINE_CORE::ECS::MeshRender::GetMaterial(size_t index)
 {
@@ -99,6 +108,7 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
                 return MeshRender();
             }
         ),
+        "set_color",&MeshRender::SetColor,
         "add_material", &MeshRender::AddMaterial
     );
 }

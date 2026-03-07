@@ -28,6 +28,7 @@ namespace ENGINE_CORE::ECS {
         MeshRender(const std::vector<Material>& pMaterials);
         ~MeshRender() = default;
 
+        void SetColor(glm::vec4 color);
         Material& GetMaterial(size_t index);
         inline const bool CheckMaterialEmpty() { return materials.empty(); }
         void AddMaterial(const Material& material);
