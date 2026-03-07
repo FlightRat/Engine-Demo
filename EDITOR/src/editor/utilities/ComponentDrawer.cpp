@@ -16,78 +16,43 @@ using namespace ENGINE_EDITOR;
 namespace ENGINE_EDITOR {
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::TransformComponent& transform)
 	{
-		ImGui::SeparatorText("Transform");
-		ImGui::PushID(entt::type_hash<TransformComponents>::value());
-		if (ImGui::TreeNodeEx("##TransformTree", ImGuiTreeNodeFlags_DefaultOpen))
+		ImGuiTreeNodeFlags flags =
+			ImGuiTreeNodeFlags_DefaultOpen |
+			ImGuiTreeNodeFlags_Framed |
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_AllowOverlap;
+
+		if (ImGui::TreeNodeEx((void*)typeid(TransformComponents).hash_code(), flags, "Transform"))
 		{
-			ImGui::PushItemWidth(120.f);
+			ImGui::DrawVec3Control("Position", transform.position);
 
-			// position
-			ImGui::InlineLabel("position");
-			ImGui::NewLine();
-			// position-x 
-			ImGui::ColoredLabel("x##pos_x", LABEL_SINGLE_SIZE, LABEL_RED);
-			ImGui::SameLine();
-			ImGui::InputFloat("##position_x", &transform.position.x, 1.f, 10.f, "%.1f");
-			// position-y 
-			ImGui::ColoredLabel("y##pos_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
-			ImGui::SameLine();
-			ImGui::InputFloat("##position_y", &transform.position.y, 1.f, 10.f, "%.1f");
-			// position-z
-			ImGui::ColoredLabel("z##pos_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
-			ImGui::SameLine();
-			ImGui::InputFloat("##position_z", &transform.position.z, 1.f, 10.f, "%.1f");
-
-			// scale
-			ImGui::InlineLabel("scale");
-			ImGui::NewLine();
-			// scale-x 
-			ImGui::ColoredLabel("x##scale_x", LABEL_SINGLE_SIZE, LABEL_RED);
-			ImGui::SameLine();
-			ImGui::InputFloat("##scale_x", &transform.scale.x, 1.f, 1.f, "%.1f");
-			// scale-y 
-			ImGui::ColoredLabel("y##scale_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
-			ImGui::SameLine();
-			ImGui::InputFloat("##scale_y", &transform.scale.y, 1.f, 1.f, "%.1f");
-			// scale-z
-			ImGui::ColoredLabel("z##scale_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
-			ImGui::SameLine();
-			ImGui::InputFloat("##scale_z", &transform.scale.z, 1.f, 1.f, "%.1f");
-
-			// rotation
-			ImGui::InlineLabel("rotation");
-			ImGui::NewLine();
+			// 欧拉角转换逻辑保持不变，但UI使用 Vec3Control
 			glm::vec3 euler = glm::degrees(glm::eulerAngles(transform.rotation_quat));
-			// rotation-x
-			ImGui::ColoredLabel("x##rotation_x", LABEL_SINGLE_SIZE, LABEL_RED);
-			ImGui::SameLine();
-			bool changedX = ImGui::DragFloat("##rot_x", &euler.x, 0.5f); // 使用 DragFloat 体验更好
-			// rotation-y
-			ImGui::ColoredLabel("y##rotation_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
-			ImGui::SameLine();
-			bool changedY = ImGui::DragFloat("##rot_y", &euler.y, 0.5f);
-			// rotation-z
-			ImGui::ColoredLabel("z##rotation_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
-			ImGui::SameLine();
-			bool changedZ = ImGui::DragFloat("##rot_z", &euler.z, 0.5f);
-			if (changedX || changedY || changedZ) {
+			glm::vec3 oldEuler = euler;
+
+			ImGui::DrawVec3Control("Rotation", euler);
+
+			if (euler != oldEuler) {
 				transform.rotation_quat = glm::quat(glm::radians(euler));
 				transform.rotation_eular = glm::radians(euler);
 			}
 
-			ImGui::PopItemWidth();
+			ImGui::DrawVec3Control("Scale", transform.scale, 1.0f);
+
 			ImGui::TreePop();
 		}
-		ImGui::PopID();
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::MeshFilter& meshFilter)
 	{
-		ImGui::SeparatorText("MeshFilter");
-		ImGui::PushID(entt::type_hash<MeshFilter>::value());
-		if (ImGui::TreeNodeEx("##MeshFilterTree", ImGuiTreeNodeFlags_DefaultOpen))
+		ImGuiTreeNodeFlags flags =
+			ImGuiTreeNodeFlags_DefaultOpen |
+			ImGuiTreeNodeFlags_Framed |
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_AllowOverlap;
+
+		if (ImGui::TreeNodeEx((void*)typeid(MeshFilter).hash_code(), flags, "MeshFilter"))
 		{
-			ImGui::PushItemWidth(120.f);
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 
 			std::string sSelectedMesh{ meshFilter.mesh };
@@ -105,110 +70,109 @@ namespace ENGINE_EDITOR {
 				}
 				ImGui::EndCombo();
 			}
-			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}
-		ImGui::PopID();
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::MeshRender& meshRender)
 	{
-		ImGui::SeparatorText("MeshRender");
-		// 使用组件的 type_hash 作为一级 ID
-		ImGui::PushID(entt::type_hash<ENGINE_CORE::ECS::MeshRender>::value());
+		ImGuiTreeNodeFlags flags =
+			ImGuiTreeNodeFlags_DefaultOpen |
+			ImGuiTreeNodeFlags_Framed |
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_AllowOverlap;
 
-		if (ImGui::TreeNodeEx("##MeshRenderTree", ImGuiTreeNodeFlags_DefaultOpen))
+		// 注意：这里的 hash_code 只是为了生成唯一 ID，没问题
+		if (ImGui::TreeNodeEx((void*)typeid(ENGINE_CORE::ECS::MeshRender).hash_code(), flags, "Mesh Renderer"))
 		{
-			ImGui::PushItemWidth(120.f);
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
-			auto& materials = meshRender.materials;
 
-			// render
-			ImGui::InlineLabel("Render");
-			ImGui::Checkbox("##render", &meshRender.shouldRender); // 修复了 label 的 # 号用法
+			// --- 顶部控制区 ---
+			ImGui::Columns(2, nullptr, false);
+			ImGui::SetColumnWidth(0, 100.0f);
 
-			// flip uv checkbox
-			ImGui::InlineLabel("Flip UV");
-			ImGui::Checkbox("##flipUV", &meshRender.flipUV); // 修复了 label 的 # 号用法
+			ImGui::Text("Render"); ImGui::NextColumn();
+			ImGui::Checkbox("##render", &meshRender.shouldRender); ImGui::NextColumn();
 
+			ImGui::Text("Flip UV"); ImGui::NextColumn();
+			ImGui::Checkbox("##flipUV", &meshRender.flipUV); ImGui::NextColumn();
+
+			ImGui::Columns(1); // 结束列布局
 			ImGui::Separator();
+
+			// --- 材质列表 ---
+			auto& materials = meshRender.materials;
 			for (size_t i = 0; i < materials.size(); ++i)
 			{
-				// --- 关键修复：为每个材质分配独立 ID 域 ---
-				ImGui::PushID(static_cast<int>(i));
-
-				ImGui::Text("Material [%zu]", i);
-
+				ImGui::PushID((int)i);
 				ENGINE_CORE::ECS::Material& m = meshRender.GetMaterial(i);
 
-				// 1. color
-				ImVec4 col = { m.color.x, m.color.y,m.color.z, m.color.w };
-				ImGui::InlineLabel("color");
-				if (ImGui::ColorEdit4("##color", &col.x, IMGUI_COLOR_PICKER_FLAGS))
+				// 材质折叠头
+				bool open = ImGui::TreeNodeEx("##mat",
+					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth,
+					"Material %d: %s", i, m.shaderName.c_str());
+
+				if (open)
 				{
-					m.color.x = static_cast<GLubyte>(col.x);
-					m.color.y = static_cast<GLubyte>(col.y);
-					m.color.z = static_cast<GLubyte>(col.z);
-					m.color.w = static_cast<GLubyte>(col.w);
-				}
+					// =========================================================
+					// 1. Color (修复点)
+					// =========================================================
+					// m.color 是 glm::vec4，内存布局等同于 float[4]，且范围是 0.0-1.0
+					// 直接取第一个分量的地址 (&m.color.x) 传给 ImGui 即可。
+					ImGui::ColorEdit4("Base Color", &m.color.x);
 
-				// 2. useTex
-				ImGui::InlineLabel("useTex");
-				ImGui::Checkbox("##useTexCheck", &m.m_useTexture); // 修复了 label 的 # 号用法
+					// 2. Use Texture
+					ImGui::Checkbox("Use Texture", &m.m_useTexture);
 
-				// 3. Textures
-				const char* textureSlots[] = { "diffuse", "specular" };
-				for (const char* slot : textureSlots)
-				{
-					ImGui::InlineLabel(slot);
-
-					// 使用 PushID 避免字符串拼接导致的内存分配
-					ImGui::PushID(slot);
-					std::string& currentTextureName = m.m_textures[slot];
-
-					if (ImGui::BeginCombo("##texCombo", currentTextureName.c_str()))
+					// 3. Texture Slots (使用 Table 对齐)
+					if (ImGui::BeginTable("TexTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
 					{
-						if (ImGui::Selectable("None", currentTextureName.empty()))
-						{
-							currentTextureName = "";
-						}
+						ImGui::TableSetupColumn("Slot", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+						ImGui::TableSetupColumn("Texture");
 
-						for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE))
+						const char* textureSlots[] = { "diffuse", "specular" };
+						for (const char* slot : textureSlots)
 						{
-							bool isSelected = (sTextureName == currentTextureName);
-							if (ImGui::Selectable(sTextureName.c_str(), isSelected))
+							ImGui::TableNextRow();
+							ImGui::TableSetColumnIndex(0);
+							ImGui::Text("%s", slot);
+
+							ImGui::TableSetColumnIndex(1);
+							ImGui::PushID(slot);
+
+							std::string& currentTextureName = m.m_textures[slot];
+							const char* previewValue = currentTextureName.empty() ? "None" : currentTextureName.c_str();
+
+							if (ImGui::BeginCombo("##tex", previewValue))
 							{
-								currentTextureName = sTextureName;
+								if (ImGui::Selectable("None", currentTextureName.empty())) currentTextureName = "";
+								for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE)) {
+									if (ImGui::Selectable(sTextureName.c_str(), sTextureName == currentTextureName)) currentTextureName = sTextureName;
+								}
+								ImGui::EndCombo();
 							}
-							if (isSelected) ImGui::SetItemDefaultFocus();
+							ImGui::PopID();
 						}
-						ImGui::EndCombo();
+						ImGui::EndTable();
 					}
-					ImGui::PopID(); // Pop slot ID
+					ImGui::TreePop();
 				}
-
-				// 4. Shader (只读展示)
-				ImGui::InlineLabel("shader");
-				ImGui::TextDisabled("%s", m.shaderName.c_str());
-
-				ImGui::Separator();
-				ImGui::PopID(); // Pop material index ID
+				ImGui::PopID();
 			}
-
-			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}
-		ImGui::PopID(); // Pop MeshRender type ID
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::PhysicsComponent& physics)
 	{
-		ImGui::SeparatorText("Physics");
-		ImGui::PushID(entt::type_hash<PhysicsComponent>::value());
-		if (ImGui::TreeNodeEx("##PhysicsTree", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			ImGui::PushItemWidth(120.f);
+		ImGuiTreeNodeFlags flags =
+			ImGuiTreeNodeFlags_DefaultOpen |
+			ImGuiTreeNodeFlags_Framed |
+			ImGuiTreeNodeFlags_SpanAvailWidth |
+			ImGuiTreeNodeFlags_AllowOverlap;
 
+		if (ImGui::TreeNodeEx((void*)typeid(PhysicsComponent).hash_code(), flags, "Physics"))
+		{
 			// stuff
 			auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
@@ -279,173 +243,86 @@ namespace ENGINE_EDITOR {
 				ImGui::InlineLabel("Half Height");
 				ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.1f, 0.01f, 100.f, "%.2f");
 			}
-			
+
 			if (ImGui::Button("Apply")) {
 				physics.Update(common);
 			}
 
-			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}
-		ImGui::PopID();
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::Identification& identity)
 	{
-		ImGui::SeparatorText("Identity");
-		ImGui::PushID(entt::type_hash<Identification>::value());
-		if (ImGui::TreeNodeEx("##IdentityTree", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::TreeNodeEx((void*)typeid(Identification).hash_code(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed, "Identification"))
 		{
-			ImGui::PushItemWidth(120.f);
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, 80.0f); // Label 宽度
 
-			std::string sNameBuffer{ identity.name};
-			ImGui::InlineLabel("name");
-			if (ImGui::InputText(
-				"##_name", sNameBuffer.data(), sizeof(char) * 255, ImGuiInputTextFlags_EnterReturnsTrue))
-			{
-				identity.name = std::string{ sNameBuffer.data() };
+			ImGui::Text("Name"); ImGui::NextColumn();
+			// 简单的 buffer 处理，实际项目中建议封装一个 InputTextString
+			char nameBuf[256];
+			memset(nameBuf, 0, sizeof(nameBuf));
+			strcpy_s(nameBuf, identity.name.c_str());
+			if (ImGui::InputText("##Name", nameBuf, sizeof(nameBuf))) {
+				identity.name = nameBuf;
+			}
+			ImGui::NextColumn();
+
+			ImGui::Text("Group"); ImGui::NextColumn();
+			char groupBuf[256];
+			memset(groupBuf, 0, sizeof(groupBuf));
+			strcpy_s(groupBuf, identity.group.c_str());
+			if (ImGui::InputText("##Group", groupBuf, sizeof(groupBuf))) {
+				identity.group = groupBuf;
 			}
 
-			std::string sGroupBuffer{ identity.group };
-			ImGui::InlineLabel("group");
-			if (ImGui::InputText(
-				"##_group", sGroupBuffer.data(), sizeof(char) * 255, ImGuiInputTextFlags_EnterReturnsTrue))
-			{
-				identity.group = std::string{ sGroupBuffer.data() };
-			}
-
-			ImGui::PopItemWidth();
+			ImGui::Columns(1);
 			ImGui::TreePop();
 		}
-		ImGui::PopID();
 	}
 
 	void ComponentDrawer::DrawImGuiComponent(ENGINE_CORE::ECS::LightComponent& light)
 	{
-		ImGui::SeparatorText("Light");
-		ImGui::PushID(entt::type_hash<Identification>::value());
-		if (ImGui::TreeNodeEx("##LightTree", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::TreeNodeEx((void*)typeid(LightComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed, "Light"))
 		{
-			ImGui::PushItemWidth(120.f);
-
-			// diffuse
-			ImGui::InlineLabel("diffuse");
-			ImGui::NewLine();
-			// diffuse r
-			ImGui::ColoredLabel("r##diffuse_r", LABEL_SINGLE_SIZE, LABEL_RED);
-			ImGui::SameLine();
-			ImGui::DragFloat("##diffuse_r", &light.diffuse.r, 0.01f, 0.0f, 1.0f, "%.2f");
-			// diffuse g
-			ImGui::ColoredLabel("g##diffuse_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
-			ImGui::SameLine();
-			ImGui::DragFloat("##diffuse_g", &light.diffuse.g, 0.01f, 0.0f, 1.0f, "%.2f");
-			// diffuse b
-			ImGui::ColoredLabel("b##diffuse_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
-			ImGui::SameLine();
-			ImGui::DragFloat("##diffuse_b", &light.diffuse.b, 0.01f, 0.0f, 1.0f, "%.2f");
-
-			// specular
-			ImGui::InlineLabel("specular");
-			ImGui::NewLine();
-			// specular r
-			ImGui::ColoredLabel("r##specular_r", LABEL_SINGLE_SIZE, LABEL_RED);
-			ImGui::SameLine();
-			ImGui::DragFloat("##specular_r", &light.specular.r, 0.01f, 0.0f, 1.0f, "%.2f");
-			// specular g
-			ImGui::ColoredLabel("g##specular_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
-			ImGui::SameLine();
-			ImGui::DragFloat("##specular_g", &light.specular.g, 0.01f, 0.0f, 1.0f, "%.2f");
-			// specular b
-			ImGui::ColoredLabel("b##specular_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
-			ImGui::SameLine();
-			ImGui::DragFloat("##specular_b", &light.specular.b, 0.01f, 0.0f, 1.0f, "%.2f");
-
-			// ambient
-			ImGui::InlineLabel("ambient");
-			ImGui::NewLine();
-			// ambient r
-			ImGui::ColoredLabel("r##ambient_r", LABEL_SINGLE_SIZE, LABEL_RED);
-			ImGui::SameLine();
-			ImGui::DragFloat("##ambient_r", &light.ambient.r, 0.01f, 0.0f, 1.0f, "%.2f");
-			// ambient g
-			ImGui::ColoredLabel("g##ambient_g", LABEL_SINGLE_SIZE, LABEL_GREEN);
-			ImGui::SameLine();
-			ImGui::DragFloat("##ambient_g", &light.ambient.g, 0.01f, 0.0f, 1.0f, "%.2f");
-			// ambient b
-			ImGui::ColoredLabel("b##ambient_b", LABEL_SINGLE_SIZE, LABEL_BLUE);
-			ImGui::SameLine();
-			ImGui::DragFloat("##ambient_b", &light.ambient.b, 0.01f, 0.0f, 1.0f, "%.2f");
-
-			std::vector<std::string> UseableLight = {"point_light", "direction_light"}; // TODO: Move this some where else
-
-			// light type
-			std::string sSelectedLightType{ light.type };
-			ImGui::InlineLabel("LightType");
-			if (ImGui::BeginCombo("##LightType", sSelectedLightType.c_str()))
+			// 1. Light Type (放在最上面)
+			const char* lightTypes[] = { "point_light", "direction_light" };
+			if (ImGui::BeginCombo("Type", light.type.c_str()))
 			{
-				for (const auto& lightType : UseableLight)
-				{
-					if (ImGui::Selectable(lightType.c_str(), lightType == sSelectedLightType))
-					{
-						sSelectedLightType = lightType;
-						light.type = lightType;
-					}
+				for (auto type : lightTypes) {
+					if (ImGui::Selectable(type, light.type == type)) light.type = type;
 				}
 				ImGui::EndCombo();
 			}
 
+			ImGui::Separator();
+
+			// 2. Colors - 使用 ColorEdit3 代替三个独立的 DragFloat，体验好太多了
+			ImGui::ColorEdit3("Diffuse", &light.diffuse.r);
+			ImGui::ColorEdit3("Specular", &light.specular.r);
+			ImGui::ColorEdit3("Ambient", &light.ambient.r);
+
+			ImGui::Separator();
+
+			// 3. Type specific properties
 			if (light.type == "point_light")
 			{
-				// position
-				ImGui::InlineLabel("light_position");
-				ImGui::NewLine();
-				// position x
-				ImGui::ColoredLabel("x##pos_x", LABEL_SINGLE_SIZE, LABEL_RED);
-				ImGui::SameLine();
-				ImGui::InputFloat("##pos_x", &light.pos.x, 1.f, 10.f, "%.1f");
-				// position y
-				ImGui::ColoredLabel("y##pos_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
-				ImGui::SameLine();
-				ImGui::InputFloat("##pos_y", &light.pos.y, 1.f, 10.f, "%.1f");
-				// position z
-				ImGui::ColoredLabel("z##pos_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
-				ImGui::SameLine();
-				ImGui::InputFloat("##pos_z", &light.pos.z, 1.f, 10.f, "%.1f");
+				ImGui::DrawVec3Control("Position", light.pos); // 复用之前的 Helper
 
-				ImGui::InlineLabel("constant");
-				ImGui::InputFloat("##light_constant", &light.constant, 1.f, 10.f, "%.3f");
-
-				ImGui::InlineLabel("linear");
-				ImGui::InputFloat("##light_linear", &light.linear, 1.f, 10.f, "%.3f");
-
-				ImGui::InlineLabel("quadratic");
-				ImGui::InputFloat("##light_quadratic", &light.quadratic, 1.f, 10.f, "%.3f");
+				// 衰减参数
+				ImGui::Text("Attenuation");
+				ImGui::DragFloat("Constant", &light.constant, 0.01f, 0.0f, 10.0f);
+				ImGui::DragFloat("Linear", &light.linear, 0.001f, 0.0f, 1.0f);
+				ImGui::DragFloat("Quadratic", &light.quadratic, 0.001f, 0.0f, 1.0f);
 			}
 			else if (light.type == "direction_light")
 			{
-				// direction
-				ImGui::InlineLabel("light_direction");
-				ImGui::NewLine();
-				// direction x
-				ImGui::ColoredLabel("x##direction_x", LABEL_SINGLE_SIZE, LABEL_RED);
-				ImGui::SameLine();
-				ImGui::DragFloat("##direction_x", &light.direction.x, 0.01f, 0.0f, 1.0f, "%.2f");
-				// direction y
-				ImGui::ColoredLabel("y##direction_y", LABEL_SINGLE_SIZE, LABEL_GREEN);
-				ImGui::SameLine();
-				ImGui::DragFloat("##direction_y", &light.direction.y, 0.01f, 0.0f, 1.0f, "%.2f");
-				// direction z
-				ImGui::ColoredLabel("z##direction_z", LABEL_SINGLE_SIZE, LABEL_BLUE);
-				ImGui::SameLine();
-				ImGui::DragFloat("##direction_z", &light.direction.z, 0.01f, 0.0f, 1.0f, "%.2f");
+				ImGui::DrawVec3Control("Direction", light.direction);
 			}
 
-			ImGui::PopItemWidth();
 			ImGui::TreePop();
 		}
-		ImGui::PopID();
 	}
 
 }
-
-
