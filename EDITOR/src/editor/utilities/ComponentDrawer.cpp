@@ -1,7 +1,6 @@
 #include "ComponentDrawer.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Resources/AssetManager.h"
-//#include "Core/CoreUtilities/CoreUtilities.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
 #include "Physics/PhysicsUtilities.h"
@@ -18,6 +17,7 @@ namespace ENGINE_EDITOR {
 	{
 		ImGuiTreeNodeFlags flags =
 			ImGuiTreeNodeFlags_DefaultOpen |
+
 			ImGuiTreeNodeFlags_Framed |
 			ImGuiTreeNodeFlags_SpanAvailWidth |
 			ImGuiTreeNodeFlags_AllowOverlap;
@@ -26,7 +26,6 @@ namespace ENGINE_EDITOR {
 		{
 			ImGui::DrawVec3Control("Position", transform.position);
 
-			// 欧拉角转换逻辑保持不变，但UI使用 Vec3Control
 			glm::vec3 euler = glm::degrees(glm::eulerAngles(transform.rotation_quat));
 			glm::vec3 oldEuler = euler;
 
@@ -55,8 +54,13 @@ namespace ENGINE_EDITOR {
 		{
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 
+			ImGui::Columns(2, nullptr, false);
+			ImGui::SetColumnWidth(0, 100.0f);
+
+			ImGui::Text("Mesh Asset");
+			ImGui::NextColumn();
+
 			std::string sSelectedMesh{ meshFilter.mesh };
-			ImGui::InlineLabel("mesh");
 			if (ImGui::BeginCombo("##mesh", sSelectedMesh.c_str()))
 			{
 				for (const auto& sMeshName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::MODEL))
@@ -70,6 +74,7 @@ namespace ENGINE_EDITOR {
 				}
 				ImGui::EndCombo();
 			}
+			ImGui::Columns(1);
 			ImGui::TreePop();
 		}
 	}
@@ -82,12 +87,11 @@ namespace ENGINE_EDITOR {
 			ImGuiTreeNodeFlags_SpanAvailWidth |
 			ImGuiTreeNodeFlags_AllowOverlap;
 
-		// 注意：这里的 hash_code 只是为了生成唯一 ID，没问题
 		if (ImGui::TreeNodeEx((void*)typeid(ENGINE_CORE::ECS::MeshRender).hash_code(), flags, "Mesh Renderer"))
 		{
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
 
-			// --- 顶部控制区 ---
+			// --- General Settings ---
 			ImGui::Columns(2, nullptr, false);
 			ImGui::SetColumnWidth(0, 100.0f);
 
@@ -97,34 +101,25 @@ namespace ENGINE_EDITOR {
 			ImGui::Text("Flip UV"); ImGui::NextColumn();
 			ImGui::Checkbox("##flipUV", &meshRender.flipUV); ImGui::NextColumn();
 
-			ImGui::Columns(1); // 结束列布局
+			ImGui::Columns(1);
 			ImGui::Separator();
 
-			// --- 材质列表 ---
+			// --- Materials List ---
 			auto& materials = meshRender.materials;
 			for (size_t i = 0; i < materials.size(); ++i)
 			{
 				ImGui::PushID((int)i);
 				ENGINE_CORE::ECS::Material& m = meshRender.GetMaterial(i);
 
-				// 材质折叠头
 				bool open = ImGui::TreeNodeEx("##mat",
 					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth,
 					"Material %d: %s", i, m.shaderName.c_str());
 
 				if (open)
 				{
-					// =========================================================
-					// 1. Color (修复点)
-					// =========================================================
-					// m.color 是 glm::vec4，内存布局等同于 float[4]，且范围是 0.0-1.0
-					// 直接取第一个分量的地址 (&m.color.x) 传给 ImGui 即可。
 					ImGui::ColorEdit4("Base Color", &m.color.x);
-
-					// 2. Use Texture
 					ImGui::Checkbox("Use Texture", &m.m_useTexture);
 
-					// 3. Texture Slots (使用 Table 对齐)
 					if (ImGui::BeginTable("TexTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
 					{
 						ImGui::TableSetupColumn("Slot", ImGuiTableColumnFlags_WidthFixed, 80.0f);
@@ -173,29 +168,46 @@ namespace ENGINE_EDITOR {
 
 		if (ImGui::TreeNodeEx((void*)typeid(PhysicsComponent).hash_code(), flags, "Physics"))
 		{
-			// stuff
+			// Context retrieval
 			auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
 			auto& common = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsCommon>>();
-			//auto& world = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsWorld>>();
-
 
 			PhysicsAttributes& physicsAttr = physics.GetAttr();
 
-			//mass
-			ImGui::InlineLabel("Mass");
-			ImGui::InputFloat("##Mass", &physicsAttr.rb_Mass, 1.f, 1.f, "%.1f");
-			ImGui::InlineLabel("MassDensity");
-			ImGui::InputFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.1f, 1.0f, "%.1f");
-			ImGui::InlineLabel("Bounciness");
-			ImGui::InputFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.1f, 1.0f, "%.1f");
-			ImGui::InlineLabel("FC");
-			ImGui::InputFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.1f, 1.0f, "%.1f");
-			ImGui::Checkbox("bTrigger", &physicsAttr.c_Trigger);
+			// --- 1. Physical Properties ---
+			ImGui::Columns(2, "PhysicsCols", false);
+			ImGui::SetColumnWidth(0, 100.0f); // 标签宽度固定
 
-			// rigidbody type
+			ImGui::Text("Mass");
+			ImGui::NextColumn();
+			ImGui::DragFloat("##Mass", &physicsAttr.rb_Mass, 0.1f, 0.0f, 0.0f, "%.1f");
+			ImGui::NextColumn();
+
+			ImGui::Text("Density");
+			ImGui::NextColumn();
+			ImGui::DragFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.01f, 0.0f, 1.0f, "%.2f");
+			ImGui::NextColumn();
+
+			ImGui::Text("Friction");
+			ImGui::NextColumn();
+			ImGui::DragFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.01f, 0.0f, 1.0f, "%.2f");
+			ImGui::NextColumn();
+
+			ImGui::Text("Bounciness");
+			ImGui::NextColumn();
+			ImGui::DragFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.01f, 0.0f, 1.0f, "%.2f");
+			ImGui::NextColumn();
+
+			// --- 2. RigidBody Settings ---
+			ImGui::Columns(1); // 暂时退出列布局以绘制分隔线
+			ImGui::Separator();
+			ImGui::Columns(2, "PhysicsCols2", false); // 重新进入列布局
+			ImGui::SetColumnWidth(0, 100.0f);
+
+			ImGui::Text("Body Type");
+			ImGui::NextColumn();
 			std::string sSelectedBodyType{ RigidBody_type2string(physicsAttr.rb_type) };
-			ImGui::InlineLabel("BodyType");
 			if (ImGui::BeginCombo("##BodyType", sSelectedBodyType.c_str()))
 			{
 				for (const auto& [bodyType, bodyStr] : GetRigidBodyStringMap())
@@ -208,12 +220,22 @@ namespace ENGINE_EDITOR {
 				}
 				ImGui::EndCombo();
 			}
+			ImGui::NextColumn();
 
-			//ImGui::Separator();
+			ImGui::Text("Is Trigger");
+			ImGui::NextColumn();
+			ImGui::Checkbox("##bTrigger", &physicsAttr.c_Trigger);
+			ImGui::NextColumn();
 
-			// collider type & shape
+			// --- 3. Collider Settings ---
+			ImGui::Columns(1);
+			ImGui::Separator();
+			ImGui::Columns(2, "PhysicsCols3", false);
+			ImGui::SetColumnWidth(0, 100.0f);
+
+			ImGui::Text("Collider Shape");
+			ImGui::NextColumn();
 			std::string sSelectedColliderType{ physicsAttr.shape };
-			ImGui::InlineLabel("ColliderType");
 			if (ImGui::BeginCombo("##ColliderType", sSelectedColliderType.c_str()))
 			{
 				for (const auto& colliderType : GetUsableCollider())
@@ -226,25 +248,46 @@ namespace ENGINE_EDITOR {
 				}
 				ImGui::EndCombo();
 			}
+			ImGui::NextColumn();
+
+			// 结束基础列布局，因为 Box 需要 Vec3Control (它自己有列)
+			ImGui::Columns(1);
+
+			// --- Shape Specific UI ---
 			if (physicsAttr.shape == "box")
 			{
-				ImGui::InlineLabel("Half extents");
-				ImGui::DragFloat3("##box_extents", &physicsAttr.box_halfExtents.x, 0.1, 0.01f, 100.f, "%.2f");
+				// 使用统一的 Vec3 控件
+				ImGui::DrawVec3Control("Half Extents", physicsAttr.box_halfExtents, 0.5f);
 			}
-			else if (physicsAttr.shape == "sphere")
+			else
 			{
-				ImGui::InlineLabel("Radius");
-				ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.1f, 0.01f, 100.f, "%.2f");
-			}
-			else if (physicsAttr.shape == "capsule")
-			{
-				ImGui::InlineLabel("Radius");
-				ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.1f, 0.01f, 100.f, "%.2f");
-				ImGui::InlineLabel("Half Height");
-				ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.1f, 0.01f, 100.f, "%.2f");
+				// 对于 Sphere 和 Capsule，重新使用两列布局
+				ImGui::Columns(2, "ShapeParams", false);
+				ImGui::SetColumnWidth(0, 100.0f);
+
+				if (physicsAttr.shape == "sphere")
+				{
+					ImGui::Text("Radius"); ImGui::NextColumn();
+					ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.05f, 0.01f, 1000.f, "%.2f");
+					ImGui::NextColumn();
+				}
+				else if (physicsAttr.shape == "capsule")
+				{
+					ImGui::Text("Radius"); ImGui::NextColumn();
+					ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.05f, 0.01f, 1000.f, "%.2f");
+					ImGui::NextColumn();
+
+					ImGui::Text("Half Height"); ImGui::NextColumn();
+					ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.05f, 0.01f, 1000.f, "%.2f");
+					ImGui::NextColumn();
+				}
+				ImGui::Columns(1);
 			}
 
-			if (ImGui::Button("Apply")) {
+			// --- Apply Button ---
+			ImGui::Spacing();
+			// 使用 ImVec2(-1, 0) 让按钮横跨整个可用宽度，更加明显
+			if (ImGui::Button("Apply Physics Changes", ImVec2(-1, 0))) {
 				physics.Update(common);
 			}
 
@@ -256,11 +299,10 @@ namespace ENGINE_EDITOR {
 	{
 		if (ImGui::TreeNodeEx((void*)typeid(Identification).hash_code(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed, "Identification"))
 		{
-			ImGui::Columns(2);
-			ImGui::SetColumnWidth(0, 80.0f); // Label 宽度
+			ImGui::Columns(2, nullptr, false);
+			ImGui::SetColumnWidth(0, 80.0f);
 
 			ImGui::Text("Name"); ImGui::NextColumn();
-			// 简单的 buffer 处理，实际项目中建议封装一个 InputTextString
 			char nameBuf[256];
 			memset(nameBuf, 0, sizeof(nameBuf));
 			strcpy_s(nameBuf, identity.name.c_str());
@@ -286,19 +328,24 @@ namespace ENGINE_EDITOR {
 	{
 		if (ImGui::TreeNodeEx((void*)typeid(LightComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed, "Light"))
 		{
-			// 1. Light Type (放在最上面)
+			// 1. Light Type (Full Width)
+			ImGui::Columns(2, nullptr, false);
+			ImGui::SetColumnWidth(0, 100.0f);
+
+			ImGui::Text("Type"); ImGui::NextColumn();
 			const char* lightTypes[] = { "point_light", "direction_light" };
-			if (ImGui::BeginCombo("Type", light.type.c_str()))
+			if (ImGui::BeginCombo("##Type", light.type.c_str()))
 			{
 				for (auto type : lightTypes) {
 					if (ImGui::Selectable(type, light.type == type)) light.type = type;
 				}
 				ImGui::EndCombo();
 			}
+			ImGui::Columns(1);
 
 			ImGui::Separator();
 
-			// 2. Colors - 使用 ColorEdit3 代替三个独立的 DragFloat，体验好太多了
+			// 2. Colors 
 			ImGui::ColorEdit3("Diffuse", &light.diffuse.r);
 			ImGui::ColorEdit3("Specular", &light.specular.r);
 			ImGui::ColorEdit3("Ambient", &light.ambient.r);
@@ -308,13 +355,23 @@ namespace ENGINE_EDITOR {
 			// 3. Type specific properties
 			if (light.type == "point_light")
 			{
-				ImGui::DrawVec3Control("Position", light.pos); // 复用之前的 Helper
+				ImGui::DrawVec3Control("Position", light.pos);
 
-				// 衰减参数
 				ImGui::Text("Attenuation");
-				ImGui::DragFloat("Constant", &light.constant, 0.01f, 0.0f, 10.0f);
-				ImGui::DragFloat("Linear", &light.linear, 0.001f, 0.0f, 1.0f);
-				ImGui::DragFloat("Quadratic", &light.quadratic, 0.001f, 0.0f, 1.0f);
+				// 使用 Columns 简单对齐参数
+				ImGui::Columns(2, nullptr, false);
+				ImGui::SetColumnWidth(0, 100.0f);
+
+				ImGui::Text("Constant"); ImGui::NextColumn();
+				ImGui::DragFloat("##Const", &light.constant, 0.01f, 0.0f, 10.0f); ImGui::NextColumn();
+
+				ImGui::Text("Linear"); ImGui::NextColumn();
+				ImGui::DragFloat("##Lin", &light.linear, 0.001f, 0.0f, 1.0f); ImGui::NextColumn();
+
+				ImGui::Text("Quadratic"); ImGui::NextColumn();
+				ImGui::DragFloat("##Quad", &light.quadratic, 0.001f, 0.0f, 1.0f); ImGui::NextColumn();
+
+				ImGui::Columns(1);
 			}
 			else if (light.type == "direction_light")
 			{
