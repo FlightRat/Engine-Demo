@@ -217,6 +217,13 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// lighting sphere shader
+		if (!assetManager.AddShader("lightSphereShader", "assets/shaders/lightSphereShader.vert", "assets/shaders/lightSphereShader.frag"))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		// colliderShader
 		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
 		{
