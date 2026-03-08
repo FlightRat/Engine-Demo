@@ -78,12 +78,36 @@ namespace ENGINE_CORE::Systems {
 		const int MAX_POINT_LIGHTS = 4;
 		int activePointLights = 0;
 
+		// render point light
+		lightSphereShader->Enable();
+		int rendered_point_light = 0;
+		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->meshes;
+		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
+		for (auto [_, light] : lightView.each())
+		{
+			if (light.type == "point_light" && rendered_point_light < MAX_POINT_LIGHTS)
+			{
+				rendered_point_light++;
+				if (light.render)
+				{
+					glm::mat4 light_sphere_model = glm::mat4(1.0f);
+					light_sphere_model = glm::translate(light_sphere_model, light.pos);
+					light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
+
+					lightSphereShader->SetUniformMat4("model", light_sphere_model);
+					lightSphereShader->SetUniformMat4("view", viewMatrix);
+					lightSphereShader->SetUniformMat4("projection", PerspectiveMatrix);
+					lightSphereShader->SetUniformVec3("color", light.diffuse);
+					sphere[0].Draw();
+				}
+			}
+		}
+
 		mainShader->Enable();
 		// 默认重置方向光（防止无方向光时残留上一帧数据）
 		mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
 		mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
 		mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
-		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
 			if (light.type == "direction_light")
@@ -131,31 +155,8 @@ namespace ENGINE_CORE::Systems {
 			mainShader->SetUniformFloat(prefix + "quadratic", 0.0f);
 		}
 
-		// render point light
-		lightSphereShader->Enable();
-		int rendered_point_light = 0;
-		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->meshes;
-		for (auto [_, light] : lightView.each())
-		{
-			if (light.type == "point_light" && rendered_point_light < MAX_POINT_LIGHTS)
-			{
-				rendered_point_light++;
-				if (light.render)
-				{
-					glm::mat4 light_sphere_model = glm::mat4(1.0f);
-					light_sphere_model = glm::translate(light_sphere_model, light.pos);
-					light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
-
-					lightSphereShader->SetUniformMat4("model", light_sphere_model);
-					lightSphereShader->SetUniformMat4("view", viewMatrix);
-					lightSphereShader->SetUniformMat4("projection", PerspectiveMatrix);
-					lightSphereShader->SetUniformVec3("color", light.diffuse);
-					sphere[0].Draw();
-				}
-			}
-		}
-
 		// render object
+		mainShader->Enable();
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
