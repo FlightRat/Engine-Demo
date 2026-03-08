@@ -371,6 +371,9 @@ namespace ENGINE_EDITOR {
 				ImGui::Text("Quadratic"); ImGui::NextColumn();
 				ImGui::DragFloat("##Quad", &light.quadratic, 0.001f, 0.0f, 1.0f); ImGui::NextColumn();
 
+				ImGui::Text("Render"); ImGui::NextColumn();
+				ImGui::Checkbox("##Render", &light.render);
+
 				ImGui::Columns(1);
 			}
 			else if (light.type == "direction_light")
