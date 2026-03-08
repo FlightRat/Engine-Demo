@@ -3,15 +3,10 @@
 
 struct Material
 {
-    // 材质属性
     vec4 color;         // 基础颜色 (Tint)
-    float shininess;    // 高光反光度 (2, 4, 8, 16, 32, 64, ...)
-
-    // 纹理采样器 (对应 C++ 绑定的纹理单元)
-    sampler2D diffuse;  // 漫反射贴图 (纹理单元 0)
-    sampler2D specular; // 高光贴图   (纹理单元 1)
-
-    // 状态标志 (由 C++ 传入，判断是否有对应的纹理)
+    float shininess;    // 高光反光度
+    sampler2D diffuse;  // 漫反射贴图 (Slot 0)
+    sampler2D specular; // 高光贴图   (Slot 1)
     bool useDiffuse;
     bool useSpecular;
 };
@@ -40,6 +35,7 @@ in vec2 TexCoord;
 out vec4 FragColor;
 
 // --- Uniforms ---
+uniform bool bug;
 uniform bool flipUV;
 uniform bool useTexture;
 uniform vec3 viewPos;
@@ -47,89 +43,100 @@ uniform Material material;
 uniform DirLight dirLight;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
-// 计算点光源
-// 参数说明: 
-// diffuseColor: 材质的漫反射颜色 (纹理 * 颜色)
-// specularStrength: 材质的高光强度 (来自高光贴图)
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 diffuseColor, vec3 specularStrength)
+// 优化：使用 Blinn-Phong 模型 (Halfway Vector)
+// 比 reflect() 计算更快，且高光过渡更自然
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, vec3 specMap)
 {
     vec3 lightDir = normalize(light.position - fragPos);
-    vec3 reflectDir = reflect(-lightDir, normal);
-    
+    vec3 halfwayDir = normalize(lightDir + viewDir); // Blinn-Phong 核心
+
+    // 漫反射
     float diff = max(dot(normal, lightDir), 0.0);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    
+    // 高光 (Blinn-Phong)
+    // 注意：Blinn-Phong 的 shininess 通常需要是 Phong 的 2-4 倍才能达到类似的视觉锐度
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
 
     // 衰减
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
-    // 合并结果
-    // 注意：diffuseColor 已经包含了 material.color * texture
-    vec3 ambient  = light.ambient  * diffuseColor;
-    vec3 diffuse  = light.diffuse  * diff * diffuseColor;
-    // 注意：高光通常不受漫反射颜色影响，而是受高光贴图(specularStrength)和光源颜色影响
-    vec3 specular = light.specular * spec * specularStrength; 
+    // 合并
+    vec3 ambient  = light.ambient  * albedo;
+    vec3 diffuse  = light.diffuse  * diff * albedo;
+    vec3 specular = light.specular * spec * specMap;
 
     return (ambient + diffuse + specular) * attenuation;
 }
 
-// 计算定向光
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 diffuseColor, vec3 specularStrength)
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 specMap)
 {
     vec3 lightDir = normalize(-light.direction);
-    
-    // 漫反射
-    float diff = max(dot(normal, lightDir), 0.0);
-    
-    // 高光
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
 
-    // 合并
-    vec3 ambient  = light.ambient * diffuseColor;
-    vec3 diffuse  = light.diffuse * diffuseColor * diff;
-    vec3 specular = light.specular * specularStrength * spec;
+    float diff = max(dot(normal, lightDir), 0.0);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+
+    vec3 ambient  = light.ambient  * albedo;
+    vec3 diffuse  = light.diffuse  * diff * albedo;
+    vec3 specular = light.specular * spec * specMap;
 
     return (ambient + diffuse + specular);
 }
 
 void main()
 {
-    // 0. 准备数据
+    // 1. 几何数据准备
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
     
-    // 处理纹理坐标翻转
-    vec2 flip_coord = vec2(TexCoord.x, TexCoord.y);
-    if (flipUV){
-        flip_coord.y = 1.0 - flip_coord.y;
+    // UV 处理
+    vec2 uv = TexCoord;
+    if (flipUV) uv.y = 1.0 - uv.y;
+
+    // 2. 材质属性获取 (Albedo 和 SpecularMap)
+    vec3 albedo;
+    vec3 specMap;
+
+    if(bug) {
+        // --- Bug 调试模式 ---
+        float scale = 10.0;
+        vec2 bugUV = uv * scale;
+        float checker = mod(floor(bugUV.x) + floor(bugUV.y), 2.0);
+        
+        // 黑白格子作为基础色和高光图
+        vec3 checkerColor = (checker > 0.5) ? vec3(1.0) : vec3(0.1);
+        albedo = checkerColor;
+        specMap = checkerColor; 
+    } 
+    else {
+        // --- 正常材质模式 ---
+        // 漫反射基础色
+        vec4 baseColor = material.color;
+        if (material.useDiffuse && useTexture) {
+            baseColor *= texture(material.diffuse, uv);
+        }
+        albedo = baseColor.rgb;
+
+        // 高光采样
+        specMap = vec3(1.0); // 默认全白高光
+        if (material.useSpecular && useTexture) {
+            specMap = vec3(texture(material.specular, uv).r); // 通常高光图是灰度的，取 r 即可
+        }
     }
 
-    // 1. 获取漫反射颜色 (Albedo)
-    // 默认为材质的颜色
-    vec4 baseColor = material.color; 
-    if (material.useDiffuse && useTexture) {
-        // 如果有漫反射贴图，颜色 = 材质颜色 * 纹理颜色
-        baseColor *= texture(material.diffuse, flip_coord);
-    }
-    
-    // 如果 alpha 通道太低，可以丢弃 (可选)
-    // if(baseColor.a < 0.1) discard;
+    // 3. 统一光照计算 (避免代码重复)
+    vec3 result = vec3(0.0);
 
-    // 2. 获取高光强度 (Specular Map)
-    // 默认为灰色 (0.5) 或者白色 (1.0)，表示全物体都有高光
-    vec3 specMap = vec3(1.0); 
-    if (material.useSpecular && useTexture) {
-        // 采样高光贴图 (通常是黑白图，越白越亮)
-        specMap = vec3(texture(material.specular, flip_coord));
+    // 定向光
+    result += CalcDirLight(dirLight, norm, viewDir, albedo, specMap);
+
+    // 点光源循环
+    // 编译器通常会自动展开这个固定次数的循环
+    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, albedo, specMap);
     }
 
-    // 3. 计算光照
-    vec3 result = CalcDirLight(dirLight, norm, viewDir, baseColor.rgb, specMap);
-    
-    for(int i = 0; i < NR_POINT_LIGHTS; i++)
-        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, baseColor.rgb, specMap);
-
-    // FragColor = vec4(result, baseColor.a);
+    // 4. 输出
     FragColor = vec4(result, 1.0);
 }
