@@ -217,8 +217,8 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// lighting sphere shader
-		if (!assetManager.AddShader("lightSphereShader", "assets/shaders/lightSphereShader.vert", "assets/shaders/lightSphereShader.frag"))
+		// color shader
+		if (!assetManager.AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;

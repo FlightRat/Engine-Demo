@@ -92,8 +92,8 @@
     <None Include="assets\models\cyborg\cyborg.blend" />
     <None Include="assets\models\cyborg\cyborg.blend1" />
     <None Include="assets\models\cyborg\cyborg.mtl" />
-    <None Include="assets\shaders\lightSphereShader.vert" />
-    <None Include="assets\shaders\lightSphereShader.frag" />
+    <None Include="assets\shaders\colorShader.vert" />
+    <None Include="assets\shaders\colorShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

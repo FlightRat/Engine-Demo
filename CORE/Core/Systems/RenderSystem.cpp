@@ -54,8 +54,8 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto lightSphereShader = assetManager.GetShader("lightSphereShader");
-		if (lightSphereShader->ShaderProgramID() == 0)
+		auto colorShader = assetManager.GetShader("colorShader");
+		if (colorShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
@@ -79,7 +79,7 @@ namespace ENGINE_CORE::Systems {
 		int activePointLights = 0;
 
 		// render point light
-		lightSphereShader->Enable();
+		colorShader->Enable();
 		int rendered_point_light = 0;
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->meshes;
 		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
@@ -94,10 +94,10 @@ namespace ENGINE_CORE::Systems {
 					light_sphere_model = glm::translate(light_sphere_model, light.pos);
 					light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
 
-					lightSphereShader->SetUniformMat4("model", light_sphere_model);
-					lightSphereShader->SetUniformMat4("view", viewMatrix);
-					lightSphereShader->SetUniformMat4("projection", PerspectiveMatrix);
-					lightSphereShader->SetUniformVec3("color", light.diffuse);
+					colorShader->SetUniformMat4("model", light_sphere_model);
+					colorShader->SetUniformMat4("view", viewMatrix);
+					colorShader->SetUniformMat4("projection", PerspectiveMatrix);
+					colorShader->SetUniformVec3("color", light.diffuse);
 					sphere[0].Draw();
 				}
 			}
