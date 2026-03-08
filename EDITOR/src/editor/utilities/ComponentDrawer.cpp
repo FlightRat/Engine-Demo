@@ -172,6 +172,12 @@ namespace ENGINE_EDITOR {
 			auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
 			auto& common = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsCommon>>();
+			auto& world = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsWorld>>();
+			if (!physics.initialized)
+			{
+				physics.Init(common, world);
+				physics.initialized = true;
+			}
 
 			PhysicsAttributes& physicsAttr = physics.GetAttr();
 
