@@ -16,6 +16,7 @@ namespace ENGINE_CORE::ECS {
 		float constant;
 		float linear;
 		float quadratic;
+		bool render;
 
 		// for direction light
 		glm::vec3 direction;

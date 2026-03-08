@@ -12,7 +12,8 @@ namespace ENGINE_CORE::ECS {
 				[](
 					glm::vec3 diffuse, glm::vec3 specular, glm::vec3 ambient, 
 					std::string type,
-					glm::vec3 pos, float constant, float linear, float quadratic, glm::vec3 direction)
+					glm::vec3 pos, float constant, float linear, float quadratic, bool render,
+					glm::vec3 direction)
 				{
 					return LightComponent{
 						.diffuse = diffuse,
@@ -23,6 +24,7 @@ namespace ENGINE_CORE::ECS {
 						.constant = constant,
 						.linear = linear,
 						.quadratic = quadratic,
+						.render = render,
 						.direction = direction
 					};
 				}
