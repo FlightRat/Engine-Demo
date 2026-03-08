@@ -72,19 +72,19 @@ function LoadEntity( def )
 	if def.components.Light then
 		local light = newEntity:add_component(
 			Light(
-				def.components.Light.diffuse,
-				def.components.Light.specular,
-				def.components.Light.ambient,
+				def.components.Light.diffuse or vec3(0.8, 0.8, 0.8),
+				def.components.Light.specular or vec3(1.0, 1.0, 1.0),
+				def.components.Light.ambient or vec3(0.05, 0.05, 0.05),
 
-				def.components.Light.type,
+				def.components.Light.type or "point_light",
 
-				def.components.Light.pos or vec3(0.0, 0.0, 0.0),
+				def.components.Light.pos or vec3(0.0, 5.0, 0.0),
 				def.components.Light.constant or 1.0,
-				def.components.Light.linear or 1.0,
-				def.components.Light.quadratic or 1.0,
+				def.components.Light.linear or 0.09,
+				def.components.Light.quadratic or 0.032,
 				def.components.Light.render or false,
 
-				def.components.Light.direction or vec3(0.0, 0.0, 0.0)
+				def.components.Light.direction or vec3(-0.2, -1.0, -0.3)
 
 			)
 		)
