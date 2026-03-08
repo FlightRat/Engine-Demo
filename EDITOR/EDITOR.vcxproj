@@ -209,6 +209,8 @@
     <None Include="assets\scripts\main.lua" />
     <None Include="assets\shaders\bugShader.frag" />
     <None Include="assets\shaders\bugShader.vert" />
+    <None Include="assets\shaders\lightSphereShader.frag" />
+    <None Include="assets\shaders\lightSphereShader.vert" />
     <None Include="assets\shaders\mainShader.frag" />
     <None Include="assets\shaders\mainShader.vert" />
     <None Include="assets\shaders\physicsDebugShader.frag" />
