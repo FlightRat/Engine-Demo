@@ -6,26 +6,6 @@ LightDefs =
 		group = "light",
 		components =
 		{
-			Transform = {
-				position = vec3(0.0, 5.0, 0.0),
-				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "sphere"
-			},
-			MeshRender = {
-				material = {
-					{
-						shaderName = "mainShader",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = false,
-						diffuse = "",
-						specular = ""
-					}
-				}
-			},
 			Light = {
 				diffuse = vec3(0.8, 0.8, 0.8),
 				specular = vec3(1.0, 1.0, 1.0),
@@ -36,7 +16,8 @@ LightDefs =
 				pos = vec3(0.0, 5.0, 0.0),
 				constant = 1.0,
 				linear = 0.09,
-				quadratic = 0.032
+				quadratic = 0.032,
+				render = true
 			}
 		}
 	},
@@ -46,26 +27,6 @@ LightDefs =
 		group = "light",
 		components =
 		{
-			Transform = {
-				position = vec3(10.0, 5.0, 10.0),
-				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "sphere"
-			},
-			MeshRender = {
-				material = {
-					{
-						shaderName = "mainShader",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = false,
-						diffuse = "",
-						specular = ""
-					}
-				}
-			},
 			Light = {
 				diffuse = vec3(0.8, 0.8, 0.8),
 				specular = vec3(1.0, 1.0, 1.0),
@@ -76,7 +37,8 @@ LightDefs =
 				pos = vec3(10.0, 5.0, 10.0),
 				constant = 1.0,
 				linear = 0.09,
-				quadratic = 0.032
+				quadratic = 0.032,
+				render = true
 			}
 		}
 	},
@@ -86,26 +48,6 @@ LightDefs =
 		group = "light",
 		components =
 		{
-			Transform = {
-				position = vec3(-10.0, 5.0, 10.0),
-				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "sphere"
-			},
-			MeshRender = {
-				material = {
-					{
-						shaderName = "mainShader",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = false,
-						diffuse = "",
-						specular = ""
-					}
-				}
-			},
 			Light = {
 				diffuse = vec3(0.8, 0.8, 0.8),
 				specular = vec3(1.0, 1.0, 1.0),
@@ -116,7 +58,8 @@ LightDefs =
 				pos = vec3(-10.0, 5.0, 10.0),
 				constant = 1.0,
 				linear = 0.09,
-				quadratic = 0.032
+				quadratic = 0.032,
+				render = true
 			}
 		}
 	},
@@ -126,26 +69,6 @@ LightDefs =
 		group = "light",
 		components =
 		{
-			Transform = {
-				position = vec3(10.0, 5.0, -10.0),
-				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "sphere"
-			},
-			MeshRender = {
-				material = {
-					{
-						shaderName = "mainShader",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = false,
-						diffuse = "",
-						specular = ""
-					}
-				}
-			},
 			Light = {
 				diffuse = vec3(0.8, 0.8, 0.8),
 				specular = vec3(1.0, 1.0, 1.0),
@@ -156,7 +79,8 @@ LightDefs =
 				pos = vec3(10.0, 5.0, -10.0),
 				constant = 1.0,
 				linear = 0.09,
-				quadratic = 0.032
+				quadratic = 0.032,
+				render = true
 			}
 		}
 	},
@@ -166,26 +90,6 @@ LightDefs =
 		group = "light",
 		components =
 		{
-			Transform = {
-				position = vec3(-10.0, 5.0, -10.0),
-				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "sphere"
-			},
-			MeshRender = {
-				material = {
-					{
-						shaderName = "mainShader",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = false,
-						diffuse = "",
-						specular = ""
-					}
-				}
-			},
 			Light = {
 				diffuse = vec3(0.8, 0.8, 0.8),
 				specular = vec3(1.0, 1.0, 1.0),
@@ -196,7 +100,8 @@ LightDefs =
 				pos = vec3(-10.0, 5.0, -10.0),
 				constant = 1.0,
 				linear = 0.09,
-				quadratic = 0.032
+				quadratic = 0.032,
+				render = true
 			}
 		}
 	},
@@ -206,11 +111,6 @@ LightDefs =
 		group = "light",
 		components =
 		{
-			Transform = {
-				position = vec3(0.0, 20.0, 0.0),
-				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
 			Light = {
 				diffuse = vec3(0.4, 0.4, 0.4),
 				specular = vec3(0.5, 0.5, 0.5),

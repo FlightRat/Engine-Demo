@@ -82,6 +82,7 @@ function LoadEntity( def )
 				def.components.Light.constant or 1.0,
 				def.components.Light.linear or 1.0,
 				def.components.Light.quadratic or 1.0,
+				def.components.Light.render or false,
 
 				def.components.Light.direction or vec3(0.0, 0.0, 0.0)
 
