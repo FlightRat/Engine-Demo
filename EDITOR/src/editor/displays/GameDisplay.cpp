@@ -108,7 +108,7 @@ namespace ENGINE_EDITOR
 		fb->Bind();
 		glViewport(0, 0, fb->Width(), fb->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		if (pCurrentScene && pCurrentScene->CheckPlay())
 		{
