@@ -9,6 +9,7 @@
 #include "Core/ECS/Components/PhysicsComponent.h"
 #include "Core/ECS/Components/MeshFilter.h"
 #include "Core/ECS/Components/MeshRender.h"
+#include "Core/ECS/Components/Identification.h"
 #include "Core/ECS/MetaUtilities.h"
 #include <imgui.h>
 
@@ -26,17 +27,38 @@ namespace ENGINE_EDITOR {
 	{
 		ImGui::PushID(static_cast<int32_t>(entity.GetEntity()));
 		ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-		if (m_pSelectedEntity && m_pSelectedEntity->GetEntity() == entity.GetEntity())	// highlight if selected
+
+		// highlight if selected
+		bool isSelected = (m_pSelectedEntity && m_pSelectedEntity->GetEntity() == entity.GetEntity());
+		if (isSelected)
 		{
 			nodeFlags |= ImGuiTreeNodeFlags_Selected;
 		}
-		bool bTreeNodeOpen{ false };
-		const auto& name = entity.GetName();
-		bTreeNodeOpen = ImGui::TreeNodeEx(name.c_str(), nodeFlags);
+
+		bool bTreeNodeOpen = ImGui::TreeNodeEx(entity.GetName().c_str(), nodeFlags);
+
+		// click event
 		if (ImGui::IsItemClicked())
 		{
+			// A. 如果之前有选中的物体，先把它的 selected 标志取消
+			if (m_pSelectedEntity)
+			{
+				// 需要检查之前的实体是否还存在 (防止野指针)
+				if (m_pSelectedEntity->GetRegistry().valid(m_pSelectedEntity->GetEntity()))
+				{
+					auto& oldId = m_pSelectedEntity->GetComponent<ENGINE_CORE::ECS::Identification>();
+					oldId.selected = false;
+				}
+			}
+
+			// B. 更新内部指针
 			m_pSelectedEntity = std::make_shared<ENGINE_CORE::ECS::Entity>(SCENE_MANAGER().GetCurrentScene()->GetRegistry(), entity.GetEntity());
+
+			// C. 将当前物体的 selected 标志设为 true
+			auto& newId = entity.GetComponent<ENGINE_CORE::ECS::Identification>();
+			newId.selected = true;
 		}
+
 		ImGui::PopID();
 		return bTreeNodeOpen;
 	}
