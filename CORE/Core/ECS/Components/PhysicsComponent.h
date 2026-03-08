@@ -44,6 +44,7 @@ namespace ENGINE_CORE::ECS {
 
 	class PhysicsComponent
 	{
+	private:
 		rp3d::Transform m_previousTransform;
 		rp3d::Transform m_currentTransform;
 
@@ -52,6 +53,9 @@ namespace ENGINE_CORE::ECS {
 		std::shared_ptr<CollisionShape> m_pCollisionShape;
 		std::shared_ptr<Collider> m_pCollider;
 		std::shared_ptr<ENGINE_PHYSICS::UserData> m_pUserData;
+
+	public:
+		bool initialized = false;
 
 	public:
 		PhysicsComponent();

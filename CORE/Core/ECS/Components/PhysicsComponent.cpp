@@ -2,7 +2,9 @@
 #include<Logger/Logger.h>
 
 namespace ENGINE_CORE::ECS {
-	PhysicsComponent::PhysicsComponent() :m_pAttribute{ PhysicsAttributes {} }
+	PhysicsComponent::PhysicsComponent():
+		m_pRigidBody{ nullptr }, m_pCollisionShape{ nullptr }, m_pCollider{ nullptr },
+		m_pAttribute{ PhysicsAttributes {} }, m_pUserData{ nullptr }
 	{
 	}
 
@@ -234,6 +236,7 @@ namespace ENGINE_CORE::ECS {
 				[&](const PhysicsAttributes& attr) {
 					PhysicsComponent pc{ attr };
 					pc.Init(common, world);
+					pc.initialized = true;
 					return pc;
 				}
 			),
