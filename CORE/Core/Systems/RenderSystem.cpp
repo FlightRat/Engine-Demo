@@ -46,10 +46,8 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
-		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
-		// shader
+		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
 		if (mainShader->ShaderProgramID() == 0)
 		{
@@ -62,12 +60,73 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-
-		// camera
+		
+		// physicsDebugger
+		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+		auto& physicsDebugger = physicsWorld->getDebugRenderer();
+		// camera param
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 
+		mainShader->Enable(); 
+
+		// lighting uniform
+		const int MAX_POINT_LIGHTS = 4;
+		int activePointLights = 0;
+		// 默认重置方向光（防止无方向光时残留上一帧数据）
+		mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
+		mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
+		mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
+		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
+		for (auto [_, light] : lightView.each())
+		{
+			if (light.type == "direction_light")
+			{
+				// 设置方向光
+				mainShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
+				mainShader->SetUniformVec3("dirLight.specular", light.specular);
+				mainShader->SetUniformVec3("dirLight.ambient", light.ambient);
+				mainShader->SetUniformVec3("dirLight.direction", light.direction);
+			}
+			else if (light.type == "point_light")
+			{
+				// 检查是否超过 Shader 允许的最大数量
+				if (activePointLights < MAX_POINT_LIGHTS)
+				{
+					std::string prefix = "pointLights[" + std::to_string(activePointLights) + "].";
+					mainShader->SetUniformVec3(prefix + "diffuse", light.diffuse);
+					mainShader->SetUniformVec3(prefix + "specular", light.specular);
+					mainShader->SetUniformVec3(prefix + "ambient", light.ambient);
+					mainShader->SetUniformVec3(prefix + "position", light.pos);
+
+					mainShader->SetUniformFloat(prefix + "constant", light.constant);
+					mainShader->SetUniformFloat(prefix + "linear", light.linear);
+					mainShader->SetUniformFloat(prefix + "quadratic", light.quadratic);
+
+					activePointLights++;
+				}
+				else
+				{
+					// 可选：打印警告，提示场景光源过多
+					ENGINE_WARN("Too many point lights! limit is 4");
+				}
+			}
+		}
+		for (int i = activePointLights; i < MAX_POINT_LIGHTS; i++)
+		{
+			std::string prefix = "pointLights[" + std::to_string(i) + "].";
+			// 将颜色和衰减参数置零，使其对画面无贡献
+			mainShader->SetUniformVec3(prefix + "diffuse", glm::vec3(0.0f));
+			mainShader->SetUniformVec3(prefix + "specular", glm::vec3(0.0f));
+			mainShader->SetUniformVec3(prefix + "ambient", glm::vec3(0.0f));
+			// 设为大值或默认值，虽颜色为0已足够，但为了保险设为 1,0,0
+			mainShader->SetUniformFloat(prefix + "constant", 1.0f);
+			mainShader->SetUniformFloat(prefix + "linear", 0.0f);
+			mainShader->SetUniformFloat(prefix + "quadratic", 0.0f);
+		}
+
+		// render object
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
@@ -164,50 +223,11 @@ namespace ENGINE_CORE::Systems {
 						}
 					}
 				}
-
-				//// 重置点光源（设为0向量/0值，代表无贡献）
-				//mainShader->SetUniformVec3("pointLights[0].diffuse", glm::vec3(0.0f));
-				//mainShader->SetUniformVec3("pointLights[0].specular", glm::vec3(0.0f));
-				//mainShader->SetUniformVec3("pointLights[0].ambient", glm::vec3(0.0f));
-				//mainShader->SetUniformVec3("pointLights[0].position", glm::vec3(0.0f));
-				//mainShader->SetUniformFloat("pointLights[0].constant", 0.0f);
-				//mainShader->SetUniformFloat("pointLights[0].linear", 0.0f);
-				//mainShader->SetUniformFloat("pointLights[0].quadratic", 0.0f);
-
-				//// 重置方向光（同理设为0）
-				//mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
-				//mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
-				//mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
-				//mainShader->SetUniformVec3("dirLight.direction", glm::vec3(0.0f));
-
-				int point_light_num = -1;
-				for (auto [_, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each())
-				{
-					if (light.type == "point_light")
-					{
-						point_light_num++;
-						std::string uniformPrefix = "pointLights[" + std::to_string(point_light_num) + "].";
-						mainShader->SetUniformVec3(uniformPrefix + "diffuse", light.diffuse);
-						mainShader->SetUniformVec3(uniformPrefix + "specular", light.specular);
-						mainShader->SetUniformVec3(uniformPrefix + "ambient", light.ambient);
-						mainShader->SetUniformVec3(uniformPrefix + "position", light.pos);
-						mainShader->SetUniformFloat(uniformPrefix + "constant", light.constant);
-						mainShader->SetUniformFloat(uniformPrefix + "linear", light.linear);
-						mainShader->SetUniformFloat(uniformPrefix + "quadratic", light.quadratic);
-					}
-					else if (light.type == "direction_light")
-					{
-						mainShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
-						mainShader->SetUniformVec3("dirLight.specular", light.specular);
-						mainShader->SetUniformVec3("dirLight.ambient", light.ambient);
-						mainShader->SetUniformVec3("dirLight.direction", light.direction);
-					}
-				}
-				
 				meshes[i].Draw();
 			}
-
 		}
+		
+		// physics debug render
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{
 			colliderShader->Enable();
