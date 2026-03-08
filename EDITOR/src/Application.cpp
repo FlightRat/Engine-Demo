@@ -217,13 +217,6 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// bug shader
-		if (!assetManager.AddShader("bugShader", "assets/shaders/bugShader.vert", "assets/shaders/bugShader.frag"))
-		{
-			ENGINE_ERROR("Failed to create and add the shader!");
-			return false;
-		}
-
 		// colliderShader
 		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
 		{
