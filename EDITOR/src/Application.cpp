@@ -124,6 +124,9 @@ namespace ENGINE_EDITOR {
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_STENCIL_TEST);					// 开启模板测试
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// 当目标像素的模板值不等于1时，通过测试
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);	// 但凡没通过模板或深度测试，保留原模板值；当同时通过模板和神单独测试时，用ref替代原有模板值
 
 		if (!InitImGui())
 		{

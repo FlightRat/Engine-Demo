@@ -66,7 +66,7 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		
+
 		// physicsDebugger
 		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsDebugger = physicsWorld->getDebugRenderer();
@@ -165,6 +165,15 @@ namespace ENGINE_CORE::Systems {
 			{
 				continue;
 			}
+			if (id.selected)
+			{
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);		// 总是通过模板测试，且ref为1
+				glStencilMask(0xFF);					// 允许写入模板值
+			}
+			else
+			{
+				glStencilMask(0x00);					// 禁止写入模板值
+			}
 
 			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->meshes;
 			if (meshF.changed || meshR.CheckMaterialEmpty())
@@ -172,7 +181,7 @@ namespace ENGINE_CORE::Systems {
 				meshF.changed = false;
 				meshR.ResetMaterial(meshes);
 			}
-			
+
 
 			model = glm::mat4(1.0f);
 			//translate
@@ -197,7 +206,7 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-			
+
 			for (int i = 0; i < meshes.size(); i++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);
@@ -256,7 +265,75 @@ namespace ENGINE_CORE::Systems {
 				meshes[i].Draw();
 			}
 		}
-		
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
+		glStencilMask(0x00);					// 禁止写入模板值
+		//glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);					//禁止深度写入
+		colorShader->Enable();
+		model = glm::mat4(1.0f);
+		view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		for (auto [entity, transform, meshF, meshR, id] : view.each())
+		{
+			if (!meshR.shouldRender || !id.selected)
+			{
+				continue;
+			}
+
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->meshes;
+			if (meshF.changed || meshR.CheckMaterialEmpty())
+			{
+				meshF.changed = false;
+				meshR.ResetMaterial(meshes);
+			}
+
+			model = glm::mat4(1.0f);
+			//translate
+			model = glm::translate(model, transform.position);
+			//rotation
+			glm::mat4 rotation = glm::toMat4(transform.rotation_quat);
+			model = model * rotation;
+			//scale
+			model = glm::scale(model, transform.scale * glm::vec3(1.025f));
+			// parent MVP
+			if (id.parent_id != -1)
+			{
+				auto parent_entity = static_cast<entt::entity>(id.parent_id);
+				if (runtimeRegistry.GetRegistry().valid(parent_entity))
+				{
+					auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
+					glm::mat4 parentModel = glm::mat4(1.0f);
+					parentModel = glm::translate(parentModel, parent_transform.position);
+					parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
+					parentModel = glm::scale(parentModel, parent_transform.scale);
+					model = parentModel * model;
+				}
+			}
+
+
+			for (int i = 0; i < meshes.size(); i++)
+			{
+				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);
+
+				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+
+				std::string shaderName = cur_material.shaderName;
+
+				colorShader->Enable();	// NOTE: now the shader is fixed
+				colorShader->SetUniformMat4("model", model);
+				colorShader->SetUniformMat4("view", viewMatrix);
+				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
+				colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
+
+				meshes[i].Draw();
+			}
+		}
+		glStencilMask(0xFF);						// 允许写入模板值
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// 总是通过模板测试，且ref为0
+		//glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);						// 恢复深度写入
+
 		// physics debug render
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{
