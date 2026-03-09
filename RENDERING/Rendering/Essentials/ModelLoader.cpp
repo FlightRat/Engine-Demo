@@ -389,6 +389,51 @@ namespace ENGINE_RENDERING {
 			// 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		}
 
+		void LoadSkybox(std::vector<Vertex>& vertex_data, std::vector<unsigned int>& index_data)
+		{
+			// 1. 定义立方体的 8 个唯一角顶点 (范围从 -1 到 1)
+			// 对于天空盒，法线和 UV 通常不需要，因为着色器会直接使用 Position 进行立方体贴图采样。
+			glm::vec3 p[] = {
+				glm::vec3(-1.0f,  1.0f, -1.0f), // 0: 左上后
+				glm::vec3(-1.0f, -1.0f, -1.0f), // 1: 左下后
+				glm::vec3(1.0f, -1.0f, -1.0f), // 2: 右下后
+				glm::vec3(1.0f,  1.0f, -1.0f), // 3: 右上后
+				glm::vec3(-1.0f,  1.0f,  1.0f), // 4: 左上前
+				glm::vec3(-1.0f, -1.0f,  1.0f), // 5: 左下前
+				glm::vec3(1.0f, -1.0f,  1.0f), // 6: 右下前
+				glm::vec3(1.0f,  1.0f,  1.0f)  // 7: 右上前
+			};
+
+			// 填充顶点数据
+			vertex_data.clear();
+			for (int i = 0; i < 8; ++i) {
+				Vertex v;
+				v.Position = p[i];
+				v.Normal = glm::vec3(0.0f); // 天空盒通常不计算光照
+				v.TexCoords = glm::vec2(0.0f); // 天空盒使用 vec3 采样，此处可留空
+				vertex_data.push_back(v);
+			}
+
+			// 2. 定义索引数据 (36个索引，构成12个三角形)
+			// 注意：这里的缠绕顺序是按照“从立方体内部向外看”为正面进行定义的（通常为逆时针 CCW）
+			unsigned int indices[] = {
+				// 右面 (Right)
+				2, 6, 7,  2, 7, 3,
+				// 左面 (Left)
+				5, 1, 0,  5, 0, 4,
+				// 顶面 (Top)
+				4, 0, 3,  4, 3, 7,
+				// 底面 (Bottom)
+				1, 5, 6,  1, 6, 2,
+				// 后面 (Back)
+				1, 2, 3,  1, 3, 0,
+				// 前面 (Front)
+				6, 5, 4,  6, 4, 7
+			};
+
+			index_data.assign(indices, indices + 36);
+		}
+
 		void LoadHudQuad(std::vector<Vertex>& vertex_data, std::vector<unsigned int>& index_data)
 		{
 
@@ -602,6 +647,11 @@ namespace ENGINE_RENDERING {
 		}
 		else if (shapeName == "plane") {
 			Primitives::LoadPlane(vertices, indices);
+			found = true;
+		}
+		else if (shapeName == "skybox")
+		{
+			Primitives::LoadSkybox(vertices, indices);
 			found = true;
 		}
 		else if (shapeName == "hud_quad") {
