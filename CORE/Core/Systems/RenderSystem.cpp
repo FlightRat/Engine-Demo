@@ -81,7 +81,7 @@ namespace ENGINE_CORE::Systems {
 		// render point light
 		colorShader->Enable();
 		int rendered_point_light = 0;
-		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->meshes;
+		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
 		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
@@ -175,7 +175,7 @@ namespace ENGINE_CORE::Systems {
 				glStencilMask(0x00);					// ½ûÖ¹Ð´ÈëÄ£°åÖµ
 			}
 
-			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->meshes;
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
@@ -280,7 +280,7 @@ namespace ENGINE_CORE::Systems {
 				continue;
 			}
 
-			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->meshes;
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
