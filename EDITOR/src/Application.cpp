@@ -292,11 +292,18 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load default mesh [plane]!");
 			return false;
 		}
+		if (!assetManager.AddModelFromMemory("skybox", "skybox"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [skybox]!");
+			return false;
+		}
 		if (!assetManager.AddModelFromMemory("hud_quad", "hud_quad"))
 		{
 			ENGINE_ERROR("Failed to load default mesh [hud_quad]!");
 			return false;
 		}
+
+		assetManager.GetModel("skybox")->SetIsEditorModel(true);
 		return true;
 	}
 
