@@ -139,6 +139,27 @@ namespace ENGINE_RESOURCES {
         auto [itr, bSuccess] = m_mapTexture.emplace(texName, std::move(pTexture));
         return bSuccess;
     }
+    bool AssetManager::AddSkyboxTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt)
+    {
+        // check if texture already loaded
+        if (m_mapTexture.find(textureName) != m_mapTexture.end())
+        {
+            ENGINE_ERROR("Failed to add texture [{0}] -- Already exists!", textureName);
+            return false;
+        }
+
+        auto texture = std::move(ENGINE_RENDERING::TextureLoader::CreateSkybox(
+            pixelArt ? ENGINE_RENDERING::Texture::TextureType::PIXEL : ENGINE_RENDERING::Texture::TextureType::BLENDED,
+            texturePath));
+        if (!texture)
+        {
+            ENGINE_ERROR("Failed to load texture [{0}] at path [{1}]", textureName, texturePath);
+            return false;
+        }
+
+        m_mapTexture.emplace(textureName, std::move(texture));
+        return true;
+    }
     std::shared_ptr<ENGINE_RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
         auto texItr = m_mapTexture.find(textureName);

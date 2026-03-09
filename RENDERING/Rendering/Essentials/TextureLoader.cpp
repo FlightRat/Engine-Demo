@@ -1,6 +1,7 @@
 #include "TextureLoader.h"
-#include<SOIL/SOIL.h>
-#include<Logger/Logger.h>
+#include <filesystem>
+#include <SOIL/SOIL.h>
+#include "Logger/Logger.h"
 
 namespace ENGINE_RENDERING{
 	bool TextureLoader::LoadTexture(const std::string& filepath, GLuint& id, int& width, int& height, bool blended)
@@ -79,6 +80,92 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
+	bool TextureLoader::LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended)
+	{
+		// 1. 定义 OpenGL 要求的 Cubemap 标准顺序
+			// 对应：右 (px), 左 (nx), 上 (py), 下 (ny), 前 (pz), 后 (nz)
+		std::vector<std::string> suffixes = {"right", "left", "top", "bottom", "front", "back"};
+
+		std::vector<std::string> faces(6, ""); // 预留6个位置供排序
+
+		try {
+			if (!std::filesystem::exists(filepath) || !std::filesystem::is_directory(filepath)) {
+				ENGINE_ERROR("Skybox path does not exist or is not a directory: {0}", filepath);
+				return false;
+			}
+
+			// 2. 遍历文件夹并根据关键字匹配顺序
+			for (const auto& entry : std::filesystem::directory_iterator(filepath)) {
+				std::string fileName = entry.path().filename().string();
+				std::string fullPath = entry.path().string();
+
+				// 将文件名转为小写进行模糊匹配
+				std::string lowerName = fileName;
+				std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+
+				for (int i = 0; i < 6; ++i) {
+					if (lowerName.find(suffixes[i]) != std::string::npos) {
+						faces[i] = fullPath;
+						break;
+					}
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			ENGINE_ERROR("Filesystem error: {0}", e.what());
+			return false;
+		}
+
+		// 检查是否找齐了6张图
+		for (int i = 0; i < 6; i++) {
+			if (faces[i].empty()) {
+				ENGINE_ERROR("Skybox face [{0}] missing in directory: {1}", suffixes[i], filepath);
+				return false;
+			}
+		}
+
+		int channels = 0;
+		for (unsigned int i = 0; i < faces.size(); i++)
+		{
+			// clang-format off
+			unsigned char* image = SOIL_load_image(faces[i].c_str(), // Filename			-- Image file to be loaded
+				&width,			  // Width				-- Width of the image
+				&height,		  // height				-- Height of the image
+				&channels,		  // channels			-- Number of channels
+				SOIL_LOAD_AUTO	  // force_channels		-- Force the channels count
+			);
+			// clang-format on
+
+			// Check to see if the image is successful
+			if (!image)
+			{
+				ENGINE_ERROR("SOIL failed to load image [{0}] -- {1}", faces[i], SOIL_last_result());
+				return false;
+			}
+
+			GLint format = GL_RGBA;
+
+			switch (channels)
+			{
+			case 3: format = GL_RGB; break;
+			case 4: format = GL_RGBA; break;
+			}
+
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
+
+			SOIL_free_image_data(image);
+		}
+
+		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		return true;
+	}
+
 	bool TextureLoader::LoadTextureFromMemory(const unsigned char* imageData, size_t length, GLuint& id, int& width, int& height, bool blended)
 	{
 		id = SOIL_load_OGL_texture_from_memory(imageData, length, SOIL_LOAD_RGBA, SOIL_CREATE_NEW_ID, NULL);
@@ -147,6 +234,29 @@ namespace ENGINE_RENDERING{
 		return std::make_shared<Texture>(id, width, height, type);
 	}
 	
+	std::shared_ptr<Texture> TextureLoader::CreateSkybox(Texture::TextureType type, const std::string& texturePath)
+	{
+		GLuint id;
+		int width, height;
+		
+		glGenTextures(1, &id);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+
+		switch (type)
+		{
+		case Texture::TextureType::PIXEL:
+			LoadSkyboxTexture(texturePath, id, width, height, false);
+			break;
+		case Texture::TextureType::BLENDED:
+			LoadSkyboxTexture(texturePath, id, width, height, true);
+			break;
+		default:
+			assert(false && "The current type is not defined, Please use a defined texture type!");
+			return nullptr;
+		}
+		return std::make_shared<Texture>(id, width, height, type, texturePath);
+	}
+
 	std::shared_ptr<Texture> TextureLoader::CreateFromMemory(const unsigned char* imageData, size_t length, bool blended, bool bTileset)
 	{
 		GLuint id;

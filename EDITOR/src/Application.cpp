@@ -261,10 +261,16 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [scene_icon] from memory!");
 			return false;
 		}
+		if (!assetManager.AddSkyboxTexture("skybox", "assets/textures/skybox", false))
+		{
+			ENGINE_ERROR("Failed to load texture [skybox] from memory!");
+			return false;
+		}
 		assetManager.GetTexture("play_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("music_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("scene_icon")->SetIsEditorTexture(true);
+		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
 		return true;
 	}
 
