@@ -65,7 +65,7 @@ namespace ENGINE_RESOURCES {
             ENGINE_ERROR("Failed to load model [{0}] at path [{1}]", modelName, modelPath);
             return false;
         }
-        model->directory = modelPath.substr(0, modelPath.find_last_of('/'));
+        model->SetDir(modelPath.substr(0, modelPath.find_last_of('/')));
 
         m_mapModel.emplace(modelName, std::move(model));
         return true;
@@ -365,7 +365,7 @@ namespace ENGINE_RESOURCES {
             }
             case ENGINE_UTIL::AssetType::MODEL:
             {
-                return ENGINE_UTIL::GetKeys(m_mapModel);
+                return ENGINE_UTIL::GetKeys(m_mapModel, [](const auto& pair) {return !pair.second->IsEditorModel(); });
                 break;
             }
             case ENGINE_UTIL::AssetType::MUSIC:
