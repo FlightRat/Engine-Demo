@@ -60,6 +60,12 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
+		auto skyboxShader = assetManager.GetShader("skyboxShader");
+		if (skyboxShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 		auto colliderShader = assetManager.GetShader("colliderShader");
 		if (colliderShader->ShaderProgramID() == 0)
 		{
@@ -333,6 +339,23 @@ namespace ENGINE_CORE::Systems {
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// 总是通过模板测试，且ref为0
 		//glEnable(GL_DEPTH_TEST);
 		glDepthMask(GL_TRUE);						// 恢复深度写入
+
+		// draw skybox
+		glDepthFunc(GL_LEQUAL);
+		auto skybox_texture = assetManager.GetTexture("skybox");
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+		model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(5.0f));
+		glm::mat4 skybox_view = glm::mat4(glm::mat3(viewMatrix));	//移除观察矩阵中的位移
+		skyboxShader->Enable();
+		skyboxShader->SetUniformMat4("model", model);
+		skyboxShader->SetUniformMat4("view", skybox_view);
+		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
+		skyboxShader->SetUniformInt("skybox", 0);
+		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
+		skybox[0].Draw();
+		glDepthFunc(GL_LESS);
 
 		// physics debug render
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
