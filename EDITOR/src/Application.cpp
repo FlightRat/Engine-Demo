@@ -227,6 +227,13 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// skybox shader TODO: hide shyboxShader from UI
+		if (!assetManager.AddShader("skyboxShader", "assets/shaders/skyboxShader.vert", "assets/shaders/skyboxShader.frag"))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		// colliderShader
 		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
 		{
