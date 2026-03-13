@@ -65,7 +65,7 @@ function LoadEntity( def )
 			material:addTexture("diffuse", mDef.diffuse or "")
 			material:addTexture("specular", mDef.specular or "")
 			material:addTexture("normal", mDef.normal or "")
-			material:addTexture("reflection", mDef.reflection or "")
+			material:addTexture("reflect", mDef.reflect or "")
 		
 			meshR:add_material(material)
 		end

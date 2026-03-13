@@ -52,20 +52,20 @@ void ENGINE_CORE::ECS::MeshRender::ResetMaterial(const std::vector<ENGINE_RENDER
             auto diffuse_it = tex_map_ref.find("diffuse");
             auto specular_it = tex_map_ref.find("specular");
             auto normal_it = tex_map_ref.find("normal");
-            auto reflection_it = tex_map_ref.find("reflection");
+            auto reflect_it = tex_map_ref.find("reflect");
 
             // 存在则取对应值，不存在则设为空字符串
             tex_map["diffuse"] = (diffuse_it != tex_map_ref.end()) ? diffuse_it->second : "";
             tex_map["specular"] = (specular_it != tex_map_ref.end()) ? specular_it->second : "";
             tex_map["normal"] = (normal_it != tex_map_ref.end()) ? normal_it->second : "";
-            tex_map["reflection"] = (reflection_it != tex_map_ref.end()) ? reflection_it->second : "";
+            tex_map["reflect"] = (reflect_it != tex_map_ref.end()) ? reflect_it->second : "";
         }
         else
         {
             tex_map["diffuse"] = "";
             tex_map["specular"] = "";
             tex_map["normal"] = "";
-            tex_map["reflection"] = "";
+            tex_map["reflect"] = "";
         }
         materials.push_back(
             Material{
