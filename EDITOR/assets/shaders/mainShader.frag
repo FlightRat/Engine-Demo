@@ -3,12 +3,18 @@
 
 struct Material
 {
-    vec4 color;         // 基础颜色 (Tint)
-    float shininess;    // 高光反光度
-    sampler2D diffuse;  // 漫反射贴图 (Slot 0)
-    sampler2D specular; // 高光贴图   (Slot 1)
+    vec4 color;
+    float shininess;
+    samplerCube skybox;
+    sampler2D diffuse;
+    sampler2D specular; 
+    sampler2D reflection;
+    sampler2D normal;
+
     bool useDiffuse;
     bool useSpecular;
+    bool useReflect;
+    bool useNormal;
 };
 
 struct DirLight {
@@ -89,6 +95,8 @@ void main()
     // 1. 几何数据准备
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 I = normalize(FragPos - viewPos);
+    vec3 R = reflect(I,normalize(Normal));
     
     // UV 处理
     vec2 uv = TexCoord;
@@ -137,6 +145,11 @@ void main()
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, albedo, specMap);
     }
 
+    // reflect map
+    if (material.useReflect && useTexture) {
+        result += vec3(texture(material.reflection, TexCoord)) * texture(material.skybox, R).rgb;
+    }
+    
     // 4. 输出
     FragColor = vec4(result, 1.0);
 }

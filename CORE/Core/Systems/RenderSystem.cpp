@@ -25,9 +25,11 @@ namespace {
 	};
 
 	// 使用 constexpr 让它在编译期就确定，性能最高
-	constexpr std::array<TextureSlot, 2> TEXTURE_SLOTS = { {
-		{ "diffuse",  "material.useDiffuse",  "material.diffuse",  0 },
-		{ "specular", "material.useSpecular", "material.specular", 1 }
+	constexpr std::array<TextureSlot, 3> TEXTURE_SLOTS = { {
+		{ "diffuse",  "material.useDiffuse",  "material.diffuse",    1 },
+		{ "specular", "material.useSpecular", "material.specular",   2 },
+		{ "reflect",  "material.useReflect",  "material.reflection", 3 },
+		//{ "normal",   "material.useNormal",   "material.normal",     4 },
 	} };
 }
 
@@ -46,6 +48,7 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
+		auto skybox_texture = assetManager.GetTexture("skybox");
 
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
@@ -236,6 +239,9 @@ namespace ENGINE_CORE::Systems {
 				// set uniform textures
 				if (cur_material.m_useTexture)
 				{
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+					mainShader->SetUniformInt("material.skybox", 0);
 					for (const auto& slot : TEXTURE_SLOTS)
 					{
 						// 1. 查找材质中是否存在该类型的贴图
@@ -342,7 +348,6 @@ namespace ENGINE_CORE::Systems {
 
 		// draw skybox
 		glDepthFunc(GL_LEQUAL);
-		auto skybox_texture = assetManager.GetTexture("skybox");
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
 		model = glm::mat4(1.0f);
