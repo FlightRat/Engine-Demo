@@ -595,10 +595,12 @@ namespace ENGINE_RENDERING {
 			std::string default_diffuse_name = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", textures, directory);
 			std::string default_specular_name = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", textures, directory);
 			std::string default_normal_name = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", textures, directory);
-			std::string default_height_name = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", textures, directory);
+			std::string default_reflection_name = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_reflection", textures, directory);
 
 			default_textures.emplace("diffuse", default_diffuse_name);
 			default_textures.emplace("specular", default_specular_name);
+			default_textures.emplace("normal", default_normal_name);
+			default_textures.emplace("reflection", default_reflection_name);
 		}
 
 		// return a mesh object created from the extracted mesh data

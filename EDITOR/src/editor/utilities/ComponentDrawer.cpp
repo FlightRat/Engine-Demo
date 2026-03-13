@@ -125,7 +125,7 @@ namespace ENGINE_EDITOR {
 						ImGui::TableSetupColumn("Slot", ImGuiTableColumnFlags_WidthFixed, 80.0f);
 						ImGui::TableSetupColumn("Texture");
 
-						const char* textureSlots[] = { "diffuse", "specular" };
+						const char* textureSlots[] = { "diffuse", "specular", "normal", "reflection"};
 						for (const char* slot : textureSlots)
 						{
 							ImGui::TableNextRow();

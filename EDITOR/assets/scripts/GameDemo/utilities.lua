@@ -64,6 +64,8 @@ function LoadEntity( def )
 			-- TODO: make this automatic
 			material:addTexture("diffuse", mDef.diffuse or "")
 			material:addTexture("specular", mDef.specular or "")
+			material:addTexture("normal", mDef.normal or "")
+			material:addTexture("reflection", mDef.reflection or "")
 		
 			meshR:add_material(material)
 		end

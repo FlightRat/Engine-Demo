@@ -45,21 +45,27 @@ void ENGINE_CORE::ECS::MeshRender::ResetMaterial(const std::vector<ENGINE_RENDER
     {
         std::map<std::string, std::string> tex_map;
         // 核心修复：先检查键是否存在，再安全访问
-        auto& tex_map_ref = meshes[i].default_texture;
+        const auto& tex_map_ref = meshes[i].GetDefaultTextures();
         if (!tex_map_ref.empty())
         {
             // 使用find避免自动插入不存在的键
             auto diffuse_it = tex_map_ref.find("diffuse");
             auto specular_it = tex_map_ref.find("specular");
+            auto normal_it = tex_map_ref.find("normal");
+            auto reflection_it = tex_map_ref.find("reflection");
 
             // 存在则取对应值，不存在则设为空字符串
             tex_map["diffuse"] = (diffuse_it != tex_map_ref.end()) ? diffuse_it->second : "";
             tex_map["specular"] = (specular_it != tex_map_ref.end()) ? specular_it->second : "";
+            tex_map["normal"] = (normal_it != tex_map_ref.end()) ? normal_it->second : "";
+            tex_map["reflection"] = (reflection_it != tex_map_ref.end()) ? reflection_it->second : "";
         }
         else
         {
             tex_map["diffuse"] = "";
             tex_map["specular"] = "";
+            tex_map["normal"] = "";
+            tex_map["reflection"] = "";
         }
         materials.push_back(
             Material{

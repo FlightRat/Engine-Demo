@@ -16,17 +16,23 @@ namespace ENGINE_RENDERING {
     };
 
     class Mesh {
-    public:
-        GLuint VAO = 0, VBO = 0, EBO = 0;
+    private:
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::map<std::string, std::string> default_texture;
+
+    public:
+        GLuint VAO = 0, VBO = 0, EBO = 0;
+
+    private:
+        void SetupMesh();
+    public:
 
         Mesh() = default;
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::map<std::string, std::string> default_texture);
         ~Mesh();
 
-        inline const std::map<std::string, std::string>& GetDefaultTextures() { return default_texture; }
+        inline const std::map<std::string, std::string>& GetDefaultTextures() const { return default_texture; }
 
         // 禁用拷贝，防止意外的 OpenGL 对象重复释放
         Mesh(const Mesh&) = delete;
@@ -37,8 +43,5 @@ namespace ENGINE_RENDERING {
         Mesh& operator=(Mesh&& other) noexcept;
 
         void Draw() const;
-
-    private:
-        void SetupMesh();
     };
 }
