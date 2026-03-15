@@ -34,6 +34,27 @@ namespace ENGINE_RENDERING {
 		return location;
 	}
 
+	GLuint Shader::GetUniformBlockIndex(const std::string& uniformBlockName)
+	{
+		auto uniformBlockItr = m_UniformBlockIndexMap.find(uniformBlockName);
+		if (uniformBlockItr != m_UniformBlockIndexMap.end())
+			return uniformBlockItr->second;
+		GLuint index = glGetUniformBlockIndex(m_ShaderProgramID, uniformBlockName.c_str());
+		if (index == GL_INVALID_INDEX)
+		{
+			ENGINE_ERROR("Uniform Block [{0}] not find in the shader!", uniformBlockName);
+			return -1;
+		}
+		m_UniformBlockIndexMap.emplace(uniformBlockName, index);
+
+		return index;
+	}
+
+	void Shader::BindUniformBlock(const std::string& name, int index)
+	{
+		glUniformBlockBinding(m_ShaderProgramID, GetUniformBlockIndex(name), index);
+	}
+
 	void Shader::SetUniformInt(const std::string& name, int value)
 	{
 		glUniform1i(GetUniformLocation(name), value);
