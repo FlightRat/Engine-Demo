@@ -18,6 +18,26 @@
 #include "../CoreUtilities/CoreEngineData.h"
 
 namespace {
+	struct DirLight {
+		glm::vec4 direction = glm::vec4(0.0f);
+		glm::vec4 diffuse = glm::vec4(0.0f);
+		glm::vec4 specular = glm::vec4(0.0f);
+		glm::vec4 ambient = glm::vec4(0.0f);
+	};
+
+	struct PointLight {
+		glm::vec4 position = glm::vec4(0.0f);
+		glm::vec4 diffuse = glm::vec4(0.0f);
+		glm::vec4 specular = glm::vec4(0.0f);
+		glm::vec4 ambient = glm::vec4(0.0f);
+		glm::vec4 attenuation = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+	};
+
+	struct LightBlock {
+		DirLight dirLight;
+		PointLight pointLights[4];
+	};
+
 	struct TextureSlot {
 		const char* key;            // 材质 Map 中的 key (如 "diffuse")
 		const char* useUniform;     // Shader bool 开关 (如 "material.useDiffuse")
@@ -55,6 +75,61 @@ namespace ENGINE_CORE::Systems {
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		// uniform block -- view/projction matrix
+		unsigned int uboMatrices;
+		glGenBuffers(1, &uboMatrices);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+		glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
+		glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(viewMatrix));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(PerspectiveMatrix));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		// lighting param
+		LightBlock lightData;
+		int activePointLights = 0;
+		const int MAX_POINT_LIGHTS = 4;
+		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
+		for (auto [_, light] : lightView.each())
+		{
+			if (light.type == "direction_light")
+			{
+				// 设置方向光
+				lightData.dirLight.direction = glm::vec4(light.direction, 1.0);
+				lightData.dirLight.diffuse = glm::vec4(light.diffuse, 1.0);
+				lightData.dirLight.specular = glm::vec4(light.specular, 1.0);
+				lightData.dirLight.ambient = glm::vec4(light.ambient, 1.0);
+			}
+			else if (light.type == "point_light")
+			{
+				// 检查是否超过 Shader 允许的最大数量
+				if (activePointLights < MAX_POINT_LIGHTS)
+				{
+					lightData.pointLights[activePointLights].position = glm::vec4(light.pos, 1.0);
+
+					lightData.pointLights[activePointLights].diffuse = glm::vec4(light.diffuse, 1.0);
+					lightData.pointLights[activePointLights].specular = glm::vec4(light.specular, 1.0);
+					lightData.pointLights[activePointLights].ambient = glm::vec4(light.ambient, 1.0);
+
+					lightData.pointLights[activePointLights].attenuation = glm::vec4(light.constant, light.linear, light.quadratic, 1.0);
+
+					activePointLights++;
+				}
+				else
+				{
+					// 可选：打印警告，提示场景光源过多
+					ENGINE_WARN("Too many point lights! limit is 4");
+				}
+			}
+		}
+		// uniform block -- lighting
+		unsigned int uboLights;
+		glGenBuffers(1, &uboLights);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboLights);
+		glBindBufferRange(GL_UNIFORM_BUFFER, 1, uboLights, 0, sizeof(LightBlock));
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(LightBlock), NULL, GL_STATIC_DRAW); // GL_DYNAMIC_DRAW for changeing data, otherwise GL_STATIC_DRAW
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightBlock), &lightData);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
@@ -84,36 +159,15 @@ namespace ENGINE_CORE::Systems {
 
 		// bind uniform block index
 		mainShader->BindUniformBlock("Matrices", 0);
+		mainShader->BindUniformBlock("Lighting", 1);
 		colorShader->BindUniformBlock("Matrices", 0);
-		skyboxShader->BindUniformBlock("Matrices", 0);
+		//skyboxShader->BindUniformBlock("Matrices", 0);
 		colliderShader->BindUniformBlock("Matrices", 0);
-
-		//uniform缓冲对象
-		unsigned int uboMatrices;
-		glGenBuffers(1, &uboMatrices);
-		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-		glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));//把缓冲链接到绑定点0
-		// uniform block data
-		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(viewMatrix));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(PerspectiveMatrix));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-		// physicsDebugger
-		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		auto& physicsDebugger = physicsWorld->getDebugRenderer();
-		
-		// light setting
-		const int MAX_POINT_LIGHTS = 4;
-		int activePointLights = 0;
 
 		// render point light sphere
 		colorShader->Enable();
 		int rendered_point_light = 0;
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
-		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
 			if (light.type == "point_light" && rendered_point_light < MAX_POINT_LIGHTS)
@@ -131,62 +185,6 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 		}
-
-
-		mainShader->Enable();
-		// reset direction light
-		mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
-		mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
-		mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
-		// reset point light
-		for (int i = activePointLights; i < MAX_POINT_LIGHTS; i++)
-		{
-			std::string prefix = "pointLights[" + std::to_string(i) + "].";
-			// 将颜色和衰减参数置零，使其对画面无贡献
-			mainShader->SetUniformVec3(prefix + "diffuse", glm::vec3(0.0f));
-			mainShader->SetUniformVec3(prefix + "specular", glm::vec3(0.0f));
-			mainShader->SetUniformVec3(prefix + "ambient", glm::vec3(0.0f));
-			// 设为大值或默认值，虽颜色为0已足够，但为了保险设为 1,0,0
-			mainShader->SetUniformFloat(prefix + "constant", 1.0f);
-			mainShader->SetUniformFloat(prefix + "linear", 0.0f);
-			mainShader->SetUniformFloat(prefix + "quadratic", 0.0f);
-		}
-		// set light uniform
-		for (auto [_, light] : lightView.each())
-		{
-			if (light.type == "direction_light")
-			{
-				// 设置方向光
-				mainShader->SetUniformVec3("dirLight.diffuse", light.diffuse);
-				mainShader->SetUniformVec3("dirLight.specular", light.specular);
-				mainShader->SetUniformVec3("dirLight.ambient", light.ambient);
-				mainShader->SetUniformVec3("dirLight.direction", light.direction);
-			}
-			else if (light.type == "point_light")
-			{
-				// 检查是否超过 Shader 允许的最大数量
-				if (activePointLights < MAX_POINT_LIGHTS)
-				{
-					std::string prefix = "pointLights[" + std::to_string(activePointLights) + "].";
-					mainShader->SetUniformVec3(prefix + "diffuse", light.diffuse);
-					mainShader->SetUniformVec3(prefix + "specular", light.specular);
-					mainShader->SetUniformVec3(prefix + "ambient", light.ambient);
-					mainShader->SetUniformVec3(prefix + "position", light.pos);
-
-					mainShader->SetUniformFloat(prefix + "constant", light.constant);
-					mainShader->SetUniformFloat(prefix + "linear", light.linear);
-					mainShader->SetUniformFloat(prefix + "quadratic", light.quadratic);
-
-					activePointLights++;
-				}
-				else
-				{
-					// 可选：打印警告，提示场景光源过多
-					ENGINE_WARN("Too many point lights! limit is 4");
-				}
-			}
-		}
-
 
 		// render object
 		mainShader->Enable();
@@ -298,7 +296,7 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 
-
+		//模板测试
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);					// 禁止写入模板值
 		//glDisable(GL_DEPTH_TEST);
@@ -374,6 +372,8 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 skybox_view = glm::mat4(glm::mat3(viewMatrix));	//移除观察矩阵中的位移
 		skyboxShader->Enable();
 		skyboxShader->SetUniformMat4("model", model);
+		skyboxShader->SetUniformMat4("view", skybox_view);
+		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
 		skyboxShader->SetUniformInt("skybox", 0);
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		skybox[0].Draw();
@@ -382,6 +382,9 @@ namespace ENGINE_CORE::Systems {
 		// physics debug render
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{
+			auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+			auto& physicsDebugger = physicsWorld->getDebugRenderer();
+
 			colliderShader->Enable();
 			model = glm::mat4(1.0f);
 			colliderShader->SetUniformMat4("model", model);

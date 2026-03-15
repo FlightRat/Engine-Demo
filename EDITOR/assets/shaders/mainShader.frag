@@ -1,8 +1,7 @@
 #version 450 core
 #define NR_POINT_LIGHTS 4
 
-struct Material
-{
+struct Material{
     vec4 color;
     float shininess;
     samplerCube skybox;
@@ -18,20 +17,18 @@ struct Material
 };
 
 struct DirLight {
-    vec3 direction;
-    vec3 diffuse;
-    vec3 specular;
-    vec3 ambient;
+    vec4 direction;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 ambient;
 };
 
 struct PointLight {
-    vec3 position;
-    vec3 diffuse;
-    vec3 specular;
-    vec3 ambient;
-    float constant;
-    float linear;
-    float quadratic;
+    vec4 position;
+    vec4 diffuse;
+    vec4 specular;
+    vec4 ambient;
+    vec4 attenuation;
 };
 
 in vec3 FragPos;
@@ -46,14 +43,17 @@ uniform bool flipUV;
 uniform bool useTexture;
 uniform vec3 viewPos;
 uniform Material material;
-uniform DirLight dirLight;
-uniform PointLight pointLights[NR_POINT_LIGHTS];
+layout (std140) uniform Lighting
+{
+    DirLight dirLight;
+    PointLight pointLights[NR_POINT_LIGHTS];
+};
 
 // 优化：使用 Blinn-Phong 模型 (Halfway Vector)
 // 比 reflect() 计算更快，且高光过渡更自然
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, vec3 specMap)
 {
-    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 lightDir = normalize(vec3(light.position) - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir); // Blinn-Phong 核心
 
     // 漫反射
@@ -64,28 +64,28 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
 
     // 衰减
-    float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    float distance = length(vec3(light.position) - fragPos);
+    float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * distance + light.attenuation.z * (distance * distance));
 
     // 合并
-    vec3 ambient  = light.ambient  * albedo;
-    vec3 diffuse  = light.diffuse  * diff * albedo;
-    vec3 specular = light.specular * spec * specMap;
+    vec3 ambient  = vec3(light.ambient)  * albedo;
+    vec3 diffuse  = vec3(light.diffuse)  * diff * albedo;
+    vec3 specular = vec3(light.specular) * spec * specMap;
 
     return (ambient + diffuse + specular) * attenuation;
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 specMap)
 {
-    vec3 lightDir = normalize(-light.direction);
+    vec3 lightDir = normalize(-vec3(light.direction));
     vec3 halfwayDir = normalize(lightDir + viewDir);
 
     float diff = max(dot(normal, lightDir), 0.0);
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
 
-    vec3 ambient  = light.ambient  * albedo;
-    vec3 diffuse  = light.diffuse  * diff * albedo;
-    vec3 specular = light.specular * spec * specMap;
+    vec3 ambient  = vec3(light.ambient)  * albedo;
+    vec3 diffuse  = vec3(light.diffuse)  * diff * albedo;
+    vec3 specular = vec3(light.specular) * spec * specMap;
 
     return (ambient + diffuse + specular);
 }
