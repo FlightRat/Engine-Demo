@@ -1,5 +1,6 @@
 #include "RenderSystem.h"
 #include<glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include<glm/gtx/quaternion.hpp>
 #include<glm/gtc/quaternion.hpp>
 #include<Rendering/Core/Camera3D.h>
@@ -50,6 +51,11 @@ namespace ENGINE_CORE::Systems {
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 
+		// camera param
+		auto viewMatrix = camera->GetViewMatrix();
+		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
 		if (mainShader->ShaderProgramID() == 0)
@@ -76,18 +82,34 @@ namespace ENGINE_CORE::Systems {
 			return;
 		}
 
+		// bind uniform block index
+		mainShader->BindUniformBlock("Matrices", 0);
+		colorShader->BindUniformBlock("Matrices", 0);
+		skyboxShader->BindUniformBlock("Matrices", 0);
+		colliderShader->BindUniformBlock("Matrices", 0);
+
+		//uniform缓冲对象
+		unsigned int uboMatrices;
+		glGenBuffers(1, &uboMatrices);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+		glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));//把缓冲链接到绑定点0
+		// uniform block data
+		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(viewMatrix));
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(PerspectiveMatrix));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 		// physicsDebugger
 		auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		auto& physicsDebugger = physicsWorld->getDebugRenderer();
-		// camera param
-		auto viewMatrix = camera->GetViewMatrix();
-		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		
 		// light setting
 		const int MAX_POINT_LIGHTS = 4;
 		int activePointLights = 0;
 
-		// render point light
+		// render point light sphere
 		colorShader->Enable();
 		int rendered_point_light = 0;
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
@@ -104,19 +126,32 @@ namespace ENGINE_CORE::Systems {
 					light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
 
 					colorShader->SetUniformMat4("model", light_sphere_model);
-					colorShader->SetUniformMat4("view", viewMatrix);
-					colorShader->SetUniformMat4("projection", PerspectiveMatrix);
 					colorShader->SetUniformVec3("color", light.diffuse);
 					sphere[0].Draw();
 				}
 			}
 		}
 
+
 		mainShader->Enable();
-		// 默认重置方向光（防止无方向光时残留上一帧数据）
+		// reset direction light
 		mainShader->SetUniformVec3("dirLight.diffuse", glm::vec3(0.0f));
 		mainShader->SetUniformVec3("dirLight.specular", glm::vec3(0.0f));
 		mainShader->SetUniformVec3("dirLight.ambient", glm::vec3(0.0f));
+		// reset point light
+		for (int i = activePointLights; i < MAX_POINT_LIGHTS; i++)
+		{
+			std::string prefix = "pointLights[" + std::to_string(i) + "].";
+			// 将颜色和衰减参数置零，使其对画面无贡献
+			mainShader->SetUniformVec3(prefix + "diffuse", glm::vec3(0.0f));
+			mainShader->SetUniformVec3(prefix + "specular", glm::vec3(0.0f));
+			mainShader->SetUniformVec3(prefix + "ambient", glm::vec3(0.0f));
+			// 设为大值或默认值，虽颜色为0已足够，但为了保险设为 1,0,0
+			mainShader->SetUniformFloat(prefix + "constant", 1.0f);
+			mainShader->SetUniformFloat(prefix + "linear", 0.0f);
+			mainShader->SetUniformFloat(prefix + "quadratic", 0.0f);
+		}
+		// set light uniform
 		for (auto [_, light] : lightView.each())
 		{
 			if (light.type == "direction_light")
@@ -151,18 +186,7 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 		}
-		for (int i = activePointLights; i < MAX_POINT_LIGHTS; i++)
-		{
-			std::string prefix = "pointLights[" + std::to_string(i) + "].";
-			// 将颜色和衰减参数置零，使其对画面无贡献
-			mainShader->SetUniformVec3(prefix + "diffuse", glm::vec3(0.0f));
-			mainShader->SetUniformVec3(prefix + "specular", glm::vec3(0.0f));
-			mainShader->SetUniformVec3(prefix + "ambient", glm::vec3(0.0f));
-			// 设为大值或默认值，虽颜色为0已足够，但为了保险设为 1,0,0
-			mainShader->SetUniformFloat(prefix + "constant", 1.0f);
-			mainShader->SetUniformFloat(prefix + "linear", 0.0f);
-			mainShader->SetUniformFloat(prefix + "quadratic", 0.0f);
-		}
+
 
 		// render object
 		mainShader->Enable();
@@ -215,7 +239,6 @@ namespace ENGINE_CORE::Systems {
 				}
 			}
 
-
 			for (int i = 0; i < meshes.size(); i++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);
@@ -227,9 +250,6 @@ namespace ENGINE_CORE::Systems {
 
 				mainShader->Enable();	// NOTE: now the shader is fixed
 				mainShader->SetUniformMat4("model", model);
-				mainShader->SetUniformMat4("view", viewMatrix);
-				mainShader->SetUniformMat4("projection", PerspectiveMatrix);
-
 				mainShader->SetUniformVec3("viewPos", camera->GetPosition());
 				mainShader->SetUniformBool("bug", textureBug);
 				mainShader->SetUniformBool("flipUV", meshR.flipUV);
@@ -277,6 +297,7 @@ namespace ENGINE_CORE::Systems {
 				meshes[i].Draw();
 			}
 		}
+
 
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);					// 禁止写入模板值
@@ -334,8 +355,6 @@ namespace ENGINE_CORE::Systems {
 
 				colorShader->Enable();	// NOTE: now the shader is fixed
 				colorShader->SetUniformMat4("model", model);
-				colorShader->SetUniformMat4("view", viewMatrix);
-				colorShader->SetUniformMat4("projection", PerspectiveMatrix);
 				colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
 
 				meshes[i].Draw();
@@ -355,8 +374,6 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 skybox_view = glm::mat4(glm::mat3(viewMatrix));	//移除观察矩阵中的位移
 		skyboxShader->Enable();
 		skyboxShader->SetUniformMat4("model", model);
-		skyboxShader->SetUniformMat4("view", skybox_view);
-		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
 		skyboxShader->SetUniformInt("skybox", 0);
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		skybox[0].Draw();
@@ -368,8 +385,6 @@ namespace ENGINE_CORE::Systems {
 			colliderShader->Enable();
 			model = glm::mat4(1.0f);
 			colliderShader->SetUniformMat4("model", model);
-			colliderShader->SetUniformMat4("view", viewMatrix);
-			colliderShader->SetUniformMat4("projection", PerspectiveMatrix);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
