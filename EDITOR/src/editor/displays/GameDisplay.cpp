@@ -120,6 +120,7 @@ namespace ENGINE_EDITOR
 			scriptSystem->Render(runtimeRegistry);
 			renderSystem->Render(camera, runtimeRegistry);
 		}
+		fb->Resolve();
 		fb->Unbind();
 		fb->CheckResize();
 	}

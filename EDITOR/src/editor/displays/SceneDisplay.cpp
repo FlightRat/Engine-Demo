@@ -92,6 +92,7 @@ namespace ENGINE_EDITOR {
 			//scriptSystem->Render();
 			renderSystem->Render(m_pSceneCam, runtimeRegistry);
 		}
+		fb->Resolve();
 		fb->Unbind();
 		fb->CheckResize();
 	}
