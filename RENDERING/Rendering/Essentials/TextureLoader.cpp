@@ -67,16 +67,23 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
-	bool TextureLoader::LoadFBTexture(GLuint& id, int& width, int& height)
+	bool TextureLoader::LoadFBTexture_normal(GLuint& id, int& width, int& height)
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D, 0);
+		return true;
+	}
+
+	bool TextureLoader::LoadFBTexture_multisample(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, id);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA, width, height, GL_TRUE);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		return true;
 	}
 
@@ -217,7 +224,7 @@ namespace ENGINE_RENDERING{
 		return std::make_shared<Texture>(id, width, height, type, texturePath);
     }
 
-	std::shared_ptr<Texture> TextureLoader::Create(Texture::TextureType type, int width, int height)
+	std::shared_ptr<Texture> TextureLoader::Create(Texture::TextureType type, int width, int height, const bool multiSample)
 	{
 		assert(type == Texture::TextureType::FRAMEBUFFER && "Must be framebuffer type!");
 
@@ -229,7 +236,13 @@ namespace ENGINE_RENDERING{
 
 		GLuint id;
 		glGenTextures(1, &id);
-		LoadFBTexture(id, width, height);
+		if (multiSample)
+		{
+			LoadFBTexture_multisample(id, width, height);
+		}
+		else {
+			LoadFBTexture_normal(id, width, height);
+		}
 
 		return std::make_shared<Texture>(id, width, height, type);
 	}
