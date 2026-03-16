@@ -176,7 +176,7 @@ namespace ENGINE_EDITOR {
 		auto sceneFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
 		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
 		
-		// editor uniformbuffer
+		// core uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
 		auto pCoreUniformbuffer = std::make_shared<ENGINE_CORE::CoreUniformbuffers>();
 		if (!pCoreUniformbuffer)
 		{
