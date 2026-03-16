@@ -151,5 +151,6 @@ void main()
     }
     
     // 4. Êä³ö
+    result = pow(result, vec3(1.0/2.2));    // gamma correction
     FragColor = vec4(result, 1.0);
 }

@@ -93,5 +93,6 @@ void main()
     for(int i = 0; i < NR_POINT_LIGHTS; i++)
         result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, objectColor);
 
+    result = pow(result, vec3(1.0/2.2));    // gamma correction
     FragColor = vec4(result, 1.0);
 }
