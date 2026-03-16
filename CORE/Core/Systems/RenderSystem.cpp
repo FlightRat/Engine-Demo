@@ -5,9 +5,11 @@
 #include<glm/gtc/quaternion.hpp>
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Essentials/Shader.h>
+#include<Rendering/Essentials/Lights.h>
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Logger/Logger.h>
 #include<../CORE/Core/ECS/MainRegistry.h>
+#include<../CORE/Core/CoreUtilities/CoreUniformbuffers.h>
 #include "../ECS/Entity.h"
 #include "../Resources/AssetManager.h"
 #include "../ECS/Components/TransformComponent.h"
@@ -18,26 +20,6 @@
 #include "../CoreUtilities/CoreEngineData.h"
 
 namespace {
-	struct DirLight {
-		glm::vec4 direction = glm::vec4(0.0f);
-		glm::vec4 diffuse = glm::vec4(0.0f);
-		glm::vec4 specular = glm::vec4(0.0f);
-		glm::vec4 ambient = glm::vec4(0.0f);
-	};
-
-	struct PointLight {
-		glm::vec4 position = glm::vec4(0.0f);
-		glm::vec4 diffuse = glm::vec4(0.0f);
-		glm::vec4 specular = glm::vec4(0.0f);
-		glm::vec4 ambient = glm::vec4(0.0f);
-		glm::vec4 attenuation = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-	};
-
-	struct LightBlock {
-		DirLight dirLight;
-		PointLight pointLights[4];
-	};
-
 	struct TextureSlot {
 		const char* key;            // 材质 Map 中的 key (如 "diffuse")
 		const char* useUniform;     // Shader bool 开关 (如 "material.useDiffuse")
@@ -69,6 +51,10 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
+		auto& coreUniformbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::CoreUniformbuffers>>();
+		auto& matrixUbo = coreUniformbuffers->mapUniformbuffers["matrix"];
+		auto& lightsUbo = coreUniformbuffers->mapUniformbuffers["lights"];
+
 		auto skybox_texture = assetManager.GetTexture("skybox");
 
 		// camera param
@@ -76,14 +62,8 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 		// uniform block -- view/projction matrix
-		unsigned int uboMatrices;
-		glGenBuffers(1, &uboMatrices);
-		glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-		glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
-		glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(viewMatrix));
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(PerspectiveMatrix));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		matrixUbo->UpdateUniformBuffer(glm::value_ptr(viewMatrix), sizeof(viewMatrix), 0);
+		matrixUbo->UpdateUniformBuffer(glm::value_ptr(PerspectiveMatrix), sizeof(PerspectiveMatrix), sizeof(glm::mat4));
 
 		// lighting param
 		LightBlock lightData;
@@ -123,13 +103,7 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 		// uniform block -- lighting
-		unsigned int uboLights;
-		glGenBuffers(1, &uboLights);
-		glBindBuffer(GL_UNIFORM_BUFFER, uboLights);
-		glBindBufferRange(GL_UNIFORM_BUFFER, 1, uboLights, 0, sizeof(LightBlock));
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(LightBlock), NULL, GL_STATIC_DRAW); // GL_DYNAMIC_DRAW for changeing data, otherwise GL_STATIC_DRAW
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightBlock), &lightData);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		lightsUbo->UpdateUniformBuffer(&lightData, sizeof(LightBlock), 0);
 
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");

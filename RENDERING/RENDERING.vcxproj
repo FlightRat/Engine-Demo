@@ -147,7 +147,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Rendering\Buffers\Framebuffer.h" />
+    <ClInclude Include="Rendering\Buffers\UniformBuffer.h" />
     <ClInclude Include="Rendering\Core\Camera3D.h" />
+    <ClInclude Include="Rendering\Essentials\Lights.h" />
     <ClInclude Include="Rendering\Essentials\Mesh.h" />
     <ClInclude Include="Rendering\Essentials\ModelLoader.h" />
     <ClInclude Include="Rendering\Essentials\Model.h" />
@@ -158,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Rendering\Buffers\Framebuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\UniformBuffer.cpp" />
     <ClCompile Include="Rendering\Core\Camera3D.cpp" />
     <ClCompile Include="Rendering\Essentials\Mesh.cpp" />
     <ClCompile Include="Rendering\Essentials\Model.cpp" />

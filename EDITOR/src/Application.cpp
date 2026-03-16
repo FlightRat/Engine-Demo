@@ -9,6 +9,7 @@
 #include<Logger/Logger.h>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Rendering/Essentials/TextureLoader.h>
+#include<Rendering/Essentials/Lights.h>
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Buffers/Framebuffer.h>
 #include<entt.hpp>
@@ -24,6 +25,7 @@
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Scripting/InputManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
+#include<Core/CoreUtilities/CoreUniformbuffers.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
@@ -141,6 +143,7 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to initialize the Main Registry!");
 			return false;
 		}
+		
 		// Render System
 		auto renderSystem = std::make_shared<ENGINE_CORE::Systems::RenderSystem>();
 		if (!renderSystem)
@@ -153,6 +156,7 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
 		}
+		
 		// editor framebuffer
 		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
 		if (!pEditorFramebuffer)
@@ -172,6 +176,26 @@ namespace ENGINE_EDITOR {
 		auto sceneFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
 		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
 		
+		// editor uniformbuffer
+		auto pCoreUniformbuffer = std::make_shared<ENGINE_CORE::CoreUniformbuffers>();
+		if (!pCoreUniformbuffer)
+		{
+			ENGINE_ERROR("Failed to create the EditorUniformbuffer");
+			return false;
+		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::CoreUniformbuffers>>(pCoreUniformbuffer))
+		{
+			ENGINE_ERROR("Failed to add the Editoruniformbuffer to the main registry context!");
+			return false;
+		}
+		// view&projection matrix ubo
+		auto matrixUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(2 * sizeof(glm::mat4), 0);
+		pCoreUniformbuffer->mapUniformbuffers.emplace("matrix", matrixUniformbuffer);
+		// lights ubo
+		auto lightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(sizeof(ENGINE_RENDERING::LightBlock), 1);
+		pCoreUniformbuffer->mapUniformbuffers.emplace("lights", lightsUniformbuffer);
+
+
 		if (!CreateDisplays())
 		{
 			ENGINE_ERROR("Failed to create displays!");
