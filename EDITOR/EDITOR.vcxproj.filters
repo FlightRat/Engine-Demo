@@ -96,6 +96,8 @@
     <None Include="assets\shaders\colorShader.frag" />
     <None Include="assets\shaders\skyboxShader.vert" />
     <None Include="assets\shaders\skyboxShader.frag" />
+    <None Include="assets\shaders\depthShader.vert" />
+    <None Include="assets\shaders\depthShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

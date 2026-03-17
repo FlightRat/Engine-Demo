@@ -12,6 +12,7 @@
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Buffers/Framebuffer.h>
+#include<Rendering/Buffers/ShadowMap.h>
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/MainRegistry.h>
@@ -156,7 +157,7 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
 			return false;
 		}
-		
+
 		// editor framebuffer
 		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
 		if (!pEditorFramebuffer)
@@ -176,6 +177,18 @@ namespace ENGINE_EDITOR {
 		auto sceneFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
 		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
 		
+		// shadowmap
+		auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(600, 600);
+		if (!shadowMap) {
+			ENGINE_ERROR("Failed to create the shadowmap");
+			return false;
+		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>(shadowMap))
+		{
+			ENGINE_ERROR("Failed to add the shadowmap to the main registry context!");
+			return false;
+		}
+
 		// core uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
 		auto pCoreUniformbuffer = std::make_shared<ENGINE_CORE::CoreUniformbuffers>();
 		if (!pCoreUniformbuffer)
@@ -260,6 +273,13 @@ namespace ENGINE_EDITOR {
 
 		// colliderShader
 		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// depthShader
+		if(!assetManager.AddShader("depthShader", "assets/shaders/depthShader.vert", "assets/shaders/depthShader.frag"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;

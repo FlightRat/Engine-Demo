@@ -18,6 +18,7 @@
 #include <imgui.h>
 #include "Windowing/Inputs/Keyboard.h"
 #include "Windowing/Inputs/Mouse.h"
+#include "Rendering/Buffers/ShadowMap.h"
 
 using namespace ENGINE_CORE::Systems;
 
@@ -73,16 +74,31 @@ namespace ENGINE_EDITOR {
 
 	void SceneDisplay::RenderScene()
 	{
+		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
 
+		// shadow pass
+		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
+		shadowMap->Bind();
+		glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		if (pCurrentScene)
+		{
+			auto& runtimeRegistry = pCurrentScene->GetRegistry();
+			renderSystem->RenderShadowMap(runtimeRegistry);
+		}
+		shadowMap->Unbind();
+		shadowMap->CheckResize();
+
+		// main pass
+		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
 		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
 		fb->Bind();
 		glViewport(0, 0, fb->Width(), fb->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		if (pCurrentScene)
 		{
 			auto& runtimeRegistry = pCurrentScene->GetRegistry();
@@ -117,6 +133,7 @@ namespace ENGINE_EDITOR {
 		auto& mainRegistry = MAIN_REGISTRY();
 		if (ImGui::BeginChild("##SceneChild", ImVec2{ 0,0 }, false, ImGuiWindowFlags_NoScrollWithMouse))
 		{
+			const auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
 			auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
 			const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
 			ImVec2 imageSize{ static_cast<float>(fb->Width()),static_cast<float>(fb->Height()) };
@@ -137,7 +154,10 @@ namespace ENGINE_EDITOR {
 
 			// check size
 			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y))
+			{
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				shadowMap->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+			}
 
 			if (ImGui::BeginDragDropTarget())
 			{

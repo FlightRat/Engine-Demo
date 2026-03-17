@@ -7,6 +7,7 @@
 #include<Rendering/Essentials/Shader.h>
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Buffers/Framebuffer.h>
+#include<Rendering/Buffers/ShadowMap.h>
 #include<Logger/Logger.h>
 #include<../CORE/Core/ECS/MainRegistry.h>
 #include<../CORE/Core/CoreUtilities/CoreUniformbuffers.h>
@@ -50,6 +51,7 @@ namespace ENGINE_CORE::Systems {
 	void RenderSystem::Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
+		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto& coreUniformbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::CoreUniformbuffers>>();
 		auto& matrixUbo = coreUniformbuffers->mapUniformbuffers["matrix"];
@@ -69,6 +71,9 @@ namespace ENGINE_CORE::Systems {
 		LightBlock lightData;
 		int activePointLights = 0;
 		const int MAX_POINT_LIGHTS = 4;
+		glm::vec3 dirLightPos = glm::vec3(0.0f); // 假设根据方向光的方向反向推导出一个位置
+		glm::vec3 dirLightDir = glm::vec3(-1.0f);
+		glm::mat4 lightSpaceMatrix;
 		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
@@ -79,6 +84,17 @@ namespace ENGINE_CORE::Systems {
 				lightData.dirLight.diffuse = glm::vec4(light.diffuse, 1.0);
 				lightData.dirLight.specular = glm::vec4(light.specular, 1.0);
 				lightData.dirLight.ambient = glm::vec4(light.ambient, 1.0);
+
+				dirLightDir = light.direction;
+				dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
+
+				// calculate lightSpaceMatrix
+				glm::mat4 lightViewMatrix, lightProjectionMatrix;
+				float near_plane = 0.1f, far_plane = 25.0f; // 确保 10.0f 在这个区间内
+				glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+				lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
+				lightProjectionMatrix = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
+				lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
 			}
 			else if (light.type == "point_light")
 			{
@@ -228,6 +244,10 @@ namespace ENGINE_CORE::Systems {
 				mainShader->SetUniformVec4("material.color", cur_material.color);
 				mainShader->SetUniformFloat("material.shininess", cur_material.shininess);
 				mainShader->SetUniformBool("useTexture", cur_material.m_useTexture);
+				glActiveTexture(GL_TEXTURE10);
+				glBindTexture(GL_TEXTURE_2D, shadowMap->GetTextureID());
+				mainShader->SetUniformInt("shadowMap", 10);
+				mainShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
 				// set uniform textures
 				if (cur_material.m_useTexture)
 				{
@@ -381,6 +401,76 @@ namespace ENGINE_CORE::Systems {
 
 			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+	}
+
+	void RenderSystem::RenderShadowMap(ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto depthShader = assetManager.GetShader("depthShader");
+		depthShader->Enable();
+
+		// calculate dirLightPos
+		glm::vec3 dirLightPos = glm::vec3(0.0f); // 假设根据方向光的方向反向推导出一个位置
+		glm::vec3 dirLightDir = glm::vec3(-1.0f);
+		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
+		for (auto [_, light] : lightView.each()) {
+			if (light.type == "direction_light") {
+				dirLightDir = light.direction;
+				// 为了生成正交投影阴影，我们假定一个光源位置 (沿着反方向推远一点)
+				dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
+				break;
+			}
+		}
+
+		// calculate lightSpaceMatrix
+		glm::mat4 lightViewMatrix, lightProjectionMatrix, lightSpaceMatrix;
+		float near_plane = 0.1f, far_plane = 25.0f; // 确保 10.0f 在这个区间内
+		lightProjectionMatrix = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
+		glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+		lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
+		lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+		depthShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		for (auto [entity, transform, meshF, meshR, id] : view.each())
+		{
+			if (!meshR.shouldRender)
+			{
+				continue;
+			}
+
+			model = glm::mat4(1.0f);
+			//translate
+			model = glm::translate(model, transform.position);
+			//rotation
+			glm::mat4 rotation = glm::toMat4(transform.rotation_quat);
+			model = model * rotation;
+			//scale
+			model = glm::scale(model, transform.scale);
+			// parent MVP
+			if (id.parent_id != -1)
+			{
+				auto parent_entity = static_cast<entt::entity>(id.parent_id);
+				if (runtimeRegistry.GetRegistry().valid(parent_entity))
+				{
+					auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
+					glm::mat4 parentModel = glm::mat4(1.0f);
+					parentModel = glm::translate(parentModel, parent_transform.position);
+					parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
+					parentModel = glm::scale(parentModel, parent_transform.scale);
+					model = parentModel * model;
+				}
+			}
+
+			depthShader->SetUniformMat4("model", model);
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			for (int i = 0; i < meshes.size(); i++)
+			{
+				meshes[i].Draw();
+			}
 		}
 	}
 }
