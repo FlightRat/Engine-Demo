@@ -236,5 +236,137 @@ EnvirDefs =
 				box_halfExtents = vec3(20.0, 0.0005, 20.0)
 			}
 		}
+	},
+	wall1 = 
+	{
+		tag = "wall1",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(20.0, 2.5, 0),
+				scale = vec3(0.25, 1.0, 2.0),
+				rotation = vec3(0.0, 0.0, 90.0)
+			},
+			MeshFilter = {
+				type = "plane"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(2.5, 0.0005, 20.0)
+			}
+		}
+	},
+	wall2 = 
+	{
+		tag = "wall2",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-20.0, 2.5, 0),
+				scale = vec3(0.25, 1.0, 2.0),
+				rotation = vec3(0.0, 0.0, 90.0)
+			},
+			MeshFilter = {
+				type = "plane"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(2.5, 0.0005, 20.0)
+			}
+		}
+	},
+	wall3 = 
+	{
+		tag = "wall3",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 2.5, -20.0),
+				scale = vec3(2.0, 1.0, 0.25),
+				rotation = vec3(90.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "plane"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(20.0, 0.0005, 2.5)
+			}
+		}
+	},
+	wall4 = 
+	{
+		tag = "wall4",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 2.5, 20.0),
+				scale = vec3(2.0, 1.0, 0.25),
+				rotation = vec3(90.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "plane"
+			},
+			MeshRender = {
+				material = {
+					{
+						shaderName = "mainShader",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						shininess = 64.0,
+						useTex = false,
+						diffuse = "",
+						specular = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(20.0, 0.0005, 2.5)
+			}
+		}
 	}
 }
