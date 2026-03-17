@@ -22,7 +22,6 @@
 #include "Core/ECS/Components/PhysicsComponent.h"
 #include "Core/ECS/Components/Identification.h"
 #include "Core/CoreUtilities/CoreEngineData.h"
-#include "Rendering/Buffers/ShadowMap.h"
 
 using namespace ENGINE_CORE::ECS;
 using namespace reactphysics3d;
@@ -102,42 +101,17 @@ namespace ENGINE_EDITOR
 	void GameDisplay::RenderGame()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+		if (!pCurrentScene)
+			return;
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-
-		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
-		shadowMap->Bind();
-		glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		if (pCurrentScene && pCurrentScene->CheckPlay())
-		{
-			auto& runtimeRegistry = pCurrentScene->GetRegistry();
-			renderSystem->RenderShadowMap(runtimeRegistry);
-		}
-		shadowMap->Unbind();
-		shadowMap->CheckResize();
-
-
 		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
 		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
-		fb->Bind();
-		glViewport(0, 0, fb->Width(), fb->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		if (pCurrentScene && pCurrentScene->CheckPlay())
-		{
-			auto& runtimeRegistry = pCurrentScene->GetRegistry();
-			auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-			camera->SetWidth(fb->Width());
-			camera->SetHeight(fb->Height());
-			auto& scriptSystem = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ScriptingSystem>>();
-			scriptSystem->Render(runtimeRegistry);
-			renderSystem->Render(camera, runtimeRegistry);
-		}
-		fb->Resolve();
-		fb->Unbind();
-		fb->CheckResize();
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+		camera->SetWidth(fb->Width());
+		camera->SetHeight(fb->Height());
+		renderSystem->ExecuteRenderPipeline(camera, runtimeRegistry, fb);
 	}
 
 	void GameDisplay::Draw()
@@ -202,7 +176,6 @@ namespace ENGINE_EDITOR
 		if (ImGui::BeginChild("##GameChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
 		{
 			auto& mainRegistry = MAIN_REGISTRY();
-			const auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
 			auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
 			const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
 			//const auto& fb = m_Registry.GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
@@ -219,10 +192,7 @@ namespace ENGINE_EDITOR
 
 			ImVec2 windowSize{ ImGui::GetWindowSize() };
 			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y))
-			{
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				shadowMap->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-			}
 		}
 		ImGui::End();
 	}

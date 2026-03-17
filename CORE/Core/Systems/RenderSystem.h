@@ -4,6 +4,7 @@
 #include<glm/glm.hpp>
 #include <Physics/RP3D_Wrappers.h>
 #include <Rendering/Core/Camera3D.h>
+#include <Rendering/Buffers/Framebuffer.h>
 
 namespace ENGINE_CORE::Systems {
 	class RenderSystem
@@ -13,7 +14,14 @@ namespace ENGINE_CORE::Systems {
 	public:
 		RenderSystem();
 		~RenderSystem() = default;
-		void Render(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-		void RenderShadowMap(ENGINE_CORE::ECS::Registry& runtimeRegistry);
+
+		void ExecuteRenderPipeline(
+			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
+			ENGINE_CORE::ECS::Registry& runtimeRegistry,
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB
+		);
+	private:
+		void Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 	};
 }
