@@ -13,7 +13,7 @@ LightDefs =
 
 				type = "point_light",
 
-				pos = vec3(0.0, 5.0, 0.0),
+				pos = vec3(0.0, 2.5, 0.0),
 				constant = 5.0,
 				linear = 0.5,
 				quadratic = 0.05,
@@ -34,7 +34,7 @@ LightDefs =
 
 				type = "point_light",
 
-				pos = vec3(10.0, 5.0, 10.0),
+				pos = vec3(10.0, 2.5, 10.0),
 				constant = 5.0,
 				linear = 0.5,
 				quadratic = 0.05,
@@ -55,7 +55,7 @@ LightDefs =
 
 				type = "point_light",
 
-				pos = vec3(-10.0, 5.0, 10.0),
+				pos = vec3(-10.0, 2.5, 10.0),
 				constant = 5.0,
 				linear = 0.5,
 				quadratic = 0.05,
@@ -76,7 +76,7 @@ LightDefs =
 
 				type = "point_light",
 
-				pos = vec3(10.0, 5.0, -10.0),
+				pos = vec3(10.0, 2.5, -10.0),
 				constant = 5.0,
 				linear = 0.5,
 				quadratic = 0.05,
@@ -97,7 +97,7 @@ LightDefs =
 
 				type = "point_light",
 
-				pos = vec3(-10.0, 5.0, -10.0),
+				pos = vec3(-10.0, 2.5, -10.0),
 				constant = 5.0,
 				linear = 0.5,
 				quadratic = 0.05,
