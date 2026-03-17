@@ -20,6 +20,9 @@
 #include "../ECS/Components/LightComponent.h"
 #include "../CoreUtilities/CoreEngineData.h"
 
+const static int MAX_POINT_LIGHTS = 4;
+const static int MAX_DIR_LIGHTS = 1;
+
 namespace {
 	struct TextureSlot {
 		const char* key;            // 材质 Map 中的 key (如 "diffuse")
@@ -54,6 +57,29 @@ namespace ENGINE_CORE::Systems {
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
+		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
+		if (shadowMap->Width() != finalOutputFB->Width() || shadowMap->Height() != finalOutputFB->Height())
+		{
+			shadowMap->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		}
+
+		Param_Pass(camera, runtimeRegistry);
+
+		Shadow_Pass(runtimeRegistry);
+
+		finalOutputFB->Bind();
+		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		Forward_Pass(camera, runtimeRegistry);
+		finalOutputFB->Resolve();
+		finalOutputFB->Unbind();
+		finalOutputFB->CheckResize();
+	}
+
+	void RenderSystem::Param_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 
@@ -70,30 +96,17 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto skyboxShader = assetManager.GetShader("skyboxShader");
-		if (skyboxShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
 		auto colliderShader = assetManager.GetShader("colliderShader");
 		if (colliderShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto depthShader = assetManager.GetShader("depthShader");
-		if (depthShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		
+
 		// bind uniform block index
 		mainShader->BindUniformBlock("Matrices", 0);
 		mainShader->BindUniformBlock("Lighting", 1);
 		colorShader->BindUniformBlock("Matrices", 0);
-		//skyboxShader->BindUniformBlock("Matrices", 0);
 		colliderShader->BindUniformBlock("Matrices", 0);
 
 		// uniform block buffers
@@ -101,7 +114,7 @@ namespace ENGINE_CORE::Systems {
 		auto& matrixUbo = coreUniformbuffers->mapUniformbuffers["matrix"];
 		auto& lightsUbo = coreUniformbuffers->mapUniformbuffers["lights"];
 
-		// camera param
+		// uniform block -- camera param 
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
@@ -109,34 +122,27 @@ namespace ENGINE_CORE::Systems {
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(viewMatrix), sizeof(viewMatrix), 0);
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(PerspectiveMatrix), sizeof(PerspectiveMatrix), sizeof(glm::mat4));
 
-		// lighting param
+		// uniform block -- lighting param
 		LightBlock lightData;
 		int activePointLights = 0;
-		const int MAX_POINT_LIGHTS = 4;
-		glm::vec3 dirLightPos = glm::vec3(0.0f); // 假设根据方向光的方向反向推导出一个位置
-		glm::vec3 dirLightDir = glm::vec3(-1.0f);
-		glm::mat4 lightSpaceMatrix;
+		int activeDirLights = 0;
 		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
 			if (light.type == "direction_light")
 			{
-				// 设置方向光
-				lightData.dirLight.direction = glm::vec4(light.direction, 1.0);
-				lightData.dirLight.diffuse = glm::vec4(light.diffuse, 1.0);
-				lightData.dirLight.specular = glm::vec4(light.specular, 1.0);
-				lightData.dirLight.ambient = glm::vec4(light.ambient, 1.0);
-
-				dirLightDir = light.direction;
-				dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
-
-				// calculate lightSpaceMatrix
-				glm::mat4 lightViewMatrix, lightProjectionMatrix;
-				float near_plane = 0.1f, far_plane = 25.0f; // 确保 10.0f 在这个区间内
-				glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-				lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
-				lightProjectionMatrix = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
-				lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+				if (activeDirLights < MAX_DIR_LIGHTS)
+				{
+					// 设置方向光
+					lightData.dirLight.direction = glm::vec4(light.direction, 1.0);
+					lightData.dirLight.diffuse = glm::vec4(light.diffuse, 1.0);
+					lightData.dirLight.specular = glm::vec4(light.specular, 1.0);
+					lightData.dirLight.ambient = glm::vec4(light.ambient, 1.0);
+				}
+				else
+				{
+					ENGINE_WARN("Too many direction lights! limit is 1.");
+				}
 			}
 			else if (light.type == "point_light")
 			{
@@ -155,24 +161,54 @@ namespace ENGINE_CORE::Systems {
 				}
 				else
 				{
-					// 可选：打印警告，提示场景光源过多
-					ENGINE_WARN("Too many point lights! limit is 4");
+					ENGINE_WARN("Too many point lights! limit is 4.");
 				}
 			}
 		}
-		// uniform block -- lighting
 		lightsUbo->UpdateUniformBuffer(&lightData, sizeof(LightBlock), 0);
 
-		// shadow pass
-		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
-		if (shadowMap->Width()!= finalOutputFB->Width() || shadowMap->Height() != finalOutputFB->Height())
+	}
+
+	void RenderSystem::Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+
+		glm::vec3 dirLightPos = glm::vec3(0.0f); // 假设根据方向光的方向反向推导出一个位置
+		glm::vec3 dirLightDir = glm::vec3(-1.0f);
+		glm::mat4 lightSpaceMatrix{ 0.0f };
+		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
+		for (auto [_, light] : lightView.each())
 		{
-			shadowMap->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+			if (light.type == "direction_light")
+			{
+				// calculate dirlight Pos
+				dirLightDir = light.direction;
+				dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
+
+				// calculate lightSpaceMatrix
+				glm::mat4 lightViewMatrix, lightProjectionMatrix;
+				float near_plane = 0.1f, far_plane = 50.0f; // 确保 10.0f 在这个区间内
+				glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+				lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
+				lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+				lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+			}
 		}
+
+		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
+		shadowMap->SetLightSpaceMatrix(lightSpaceMatrix);
 		shadowMap->Bind();
 		glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT);
+
+		auto depthShader = assetManager.GetShader("depthShader");
+		if (depthShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 		depthShader->Enable();
 		depthShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
 		glm::mat4 model = glm::mat4(1.0f);
@@ -216,16 +252,48 @@ namespace ENGINE_CORE::Systems {
 		}
 		shadowMap->Unbind();
 		shadowMap->CheckResize();
+	}
 
-		finalOutputFB->Bind();
-		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	void RenderSystem::Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto skybox_texture = assetManager.GetTexture("skybox");
+
+		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
+
+		// get shaders
+		auto mainShader = assetManager.GetShader("mainShader");
+		if (mainShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		auto colorShader = assetManager.GetShader("colorShader");
+		if (colorShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		auto skyboxShader = assetManager.GetShader("skyboxShader");
+		if (skyboxShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		auto colliderShader = assetManager.GetShader("colliderShader");
+		if (colliderShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 
 		// render point light sphere
 		colorShader->Enable();
 		int rendered_point_light = 0;
+		const int MAX_POINT_LIGHTS = 4;
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
+		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
 			if (light.type == "point_light" && rendered_point_light < MAX_POINT_LIGHTS)
@@ -246,6 +314,7 @@ namespace ENGINE_CORE::Systems {
 
 		// render object
 		mainShader->Enable();
+		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
 			if (!meshR.shouldRender)
@@ -269,8 +338,7 @@ namespace ENGINE_CORE::Systems {
 				meshR.ResetMaterial(meshes);
 			}
 
-
-			model = glm::mat4(1.0f);
+			glm::mat4 model = glm::mat4(1.0f);
 			//translate
 			model = glm::translate(model, transform.position);
 			//rotation
@@ -312,6 +380,7 @@ namespace ENGINE_CORE::Systems {
 				mainShader->SetUniformBool("useTexture", cur_material.m_useTexture);
 				glActiveTexture(GL_TEXTURE10);
 				glBindTexture(GL_TEXTURE_2D, shadowMap->GetTextureID());
+				glm::mat4 lightSpaceMatrix = shadowMap->GetLightSpaceMatrix();
 				mainShader->SetUniformInt("shadowMap", 10);
 				mainShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
 				// set uniform textures
@@ -361,7 +430,8 @@ namespace ENGINE_CORE::Systems {
 		glStencilMask(0x00);					// 禁止写入模板值
 		glDepthMask(GL_FALSE);					//禁止深度写入
 		colorShader->Enable();
-		model = glm::mat4(1.0f);
+		glm::mat4 model = glm::mat4(1.0f);
+		view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
 			if (!meshR.shouldRender || !id.selected)
@@ -421,6 +491,8 @@ namespace ENGINE_CORE::Systems {
 		glDepthMask(GL_TRUE);						// 恢复深度写入
 
 		// draw skybox
+		auto viewMatrix = camera->GetViewMatrix();
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
@@ -465,18 +537,6 @@ namespace ENGINE_CORE::Systems {
 			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-
-		finalOutputFB->Resolve();
-		finalOutputFB->Unbind();
-		finalOutputFB->CheckResize();
-	}
-
-	void RenderSystem::Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry)
-	{
-	}
-
-	void RenderSystem::Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
-	{
 	}
 }
 
