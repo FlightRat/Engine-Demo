@@ -91,6 +91,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 s
     vec3 diffuse  = vec3(light.diffuse)  * diff * albedo;
     vec3 specular = vec3(light.specular) * spec * specMap;
 
+    // return ambient + diffuse + specular;
     return ambient + (1 - shadow) * (diffuse + specular);
 }
 
