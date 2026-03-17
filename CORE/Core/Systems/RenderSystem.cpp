@@ -52,8 +52,8 @@ namespace ENGINE_CORE::Systems {
 	}
 
 	void RenderSystem::ExecuteRenderPipeline(
-		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, 
-		ENGINE_CORE::ECS::Registry& runtimeRegistry, 
+		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
+		ENGINE_CORE::ECS::Registry& runtimeRegistry,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -314,6 +314,7 @@ namespace ENGINE_CORE::Systems {
 
 		// render object
 		mainShader->Enable();
+		glm::mat4 model = glm::mat4(1.0f);
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -425,12 +426,29 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 
+		// draw skybox
+		auto viewMatrix = camera->GetViewMatrix();
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		glDepthFunc(GL_LEQUAL);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+		model = glm::mat4(1.0f);
+		glm::mat4 skybox_view = glm::mat4(glm::mat3(viewMatrix));	//移除观察矩阵中的位移
+		skyboxShader->Enable();
+		skyboxShader->SetUniformMat4("model", model);
+		skyboxShader->SetUniformMat4("view", skybox_view);
+		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
+		skyboxShader->SetUniformInt("skybox", 0);
+		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
+		skybox[0].Draw();
+		glDepthFunc(GL_LESS);
+
 		//模板测试
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);					// 禁止写入模板值
 		glDepthMask(GL_FALSE);					//禁止深度写入
 		colorShader->Enable();
-		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::mat4(1.0f);
 		view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -489,24 +507,6 @@ namespace ENGINE_CORE::Systems {
 		glStencilMask(0xFF);						// 允许写入模板值
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// 总是通过模板测试，且ref为0
 		glDepthMask(GL_TRUE);						// 恢复深度写入
-
-		// draw skybox
-		auto viewMatrix = camera->GetViewMatrix();
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
-		glDepthFunc(GL_LEQUAL);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(5.0f));
-		glm::mat4 skybox_view = glm::mat4(glm::mat3(viewMatrix));	//移除观察矩阵中的位移
-		skyboxShader->Enable();
-		skyboxShader->SetUniformMat4("model", model);
-		skyboxShader->SetUniformMat4("view", skybox_view);
-		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
-		skyboxShader->SetUniformInt("skybox", 0);
-		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
-		skybox[0].Draw();
-		glDepthFunc(GL_LESS);
 
 		// physics debug pass
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
