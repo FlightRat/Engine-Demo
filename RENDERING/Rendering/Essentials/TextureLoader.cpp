@@ -87,6 +87,21 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
+	bool TextureLoader::LoadShadowmapTexture(GLuint& id, int& width, int& height)
+	{
+		float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };	//边界填充
+
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		return true;
+	}
+
 	bool TextureLoader::LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended)
 	{
 		// 1. 定义 OpenGL 要求的 Cubemap 标准顺序
@@ -226,24 +241,27 @@ namespace ENGINE_RENDERING{
 
 	std::shared_ptr<Texture> TextureLoader::Create(Texture::TextureType type, int width, int height, const bool multiSample)
 	{
-		assert(type == Texture::TextureType::FRAMEBUFFER && "Must be framebuffer type!");
-
-		if (type != Texture::TextureType::FRAMEBUFFER)
-		{
-			ENGINE_ERROR("Failed to create texture for framebuffer -- Input type is wrong!");
-			return nullptr;
-		}
-
 		GLuint id;
 		glGenTextures(1, &id);
-		if (multiSample)
+		switch (type)
 		{
-			LoadFBTexture_multisample(id, width, height);
+		case ENGINE_RENDERING::Texture::TextureType::FRAMEBUFFER:
+			if (multiSample)
+			{
+				LoadFBTexture_multisample(id, width, height);
+			}
+			else {
+				LoadFBTexture_normal(id, width, height);
+			}
+			break;
+		case ENGINE_RENDERING::Texture::TextureType::SHADOWMAP:
+			LoadShadowmapTexture(id, width, height);
+			break;
+		default:
+			assert(false && "The current type is not defined, Please use a defined texture type!");
+			return nullptr;
 		}
-		else {
-			LoadFBTexture_normal(id, width, height);
-		}
-
+		
 		return std::make_shared<Texture>(id, width, height, type);
 	}
 	
