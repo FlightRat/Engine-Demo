@@ -14,7 +14,7 @@ namespace ENGINE_RENDERING {
 		glm::vec4 diffuse = glm::vec4(0.0f);
 		glm::vec4 specular = glm::vec4(0.0f);
 		glm::vec4 ambient = glm::vec4(0.0f);
-		glm::vec4 attenuation = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+		glm::vec4 attenuation = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 	};
 
 	struct LightBlock {
