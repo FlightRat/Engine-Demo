@@ -173,31 +173,46 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
+		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
 
-		glm::vec3 dirLightPos = glm::vec3(0.0f); // 假设根据方向光的方向反向推导出一个位置
+		// 查找方向光
+		bool hasDirLight = false;
 		glm::vec3 dirLightDir = glm::vec3(-1.0f);
-		glm::mat4 lightSpaceMatrix{ 0.0f };
+		glm::mat4 lightSpaceMatrix = glm::mat4(0.0f);
+
 		auto lightView = runtimeRegistry.GetRegistry().view<LightComponent>();
 		for (auto [_, light] : lightView.each())
 		{
 			if (light.type == "direction_light")
 			{
-				// calculate dirlight Pos
+				hasDirLight = true;
 				dirLightDir = light.direction;
-				dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
+				glm::vec3 dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
 
-				// calculate lightSpaceMatrix
-				glm::mat4 lightViewMatrix, lightProjectionMatrix;
-				float near_plane = 0.1f, far_plane = 50.0f; // 确保 10.0f 在这个区间内
-				glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-				lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
-				lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+				float near_plane = 0.1f, far_plane = 50.0f;
+				glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f
+					? glm::vec3(0.0f, 0.0f, 1.0f)
+					: glm::vec3(0.0f, 1.0f, 0.0f);
+				glm::mat4 lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
+				glm::mat4 lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
 				lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
+				break; // 只取第一个方向光
 			}
 		}
 
-		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
 		shadowMap->SetLightSpaceMatrix(lightSpaceMatrix);
+
+		// 没有方向光 → 清空 shadow map 后直接返回
+		if (!hasDirLight)
+		{
+			shadowMap->Bind();
+			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+			glClear(GL_DEPTH_BUFFER_BIT);
+			shadowMap->Unbind();
+			shadowMap->CheckResize();
+			return;
+		}
+
 		shadowMap->Bind();
 		glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -207,28 +222,24 @@ namespace ENGINE_CORE::Systems {
 		if (depthShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
+			shadowMap->Unbind();
 			return;
 		}
 		depthShader->Enable();
 		depthShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
+
 		glm::mat4 model = glm::mat4(1.0f);
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
 			if (!meshR.shouldRender)
-			{
 				continue;
-			}
 
 			model = glm::mat4(1.0f);
-			//translate
 			model = glm::translate(model, transform.position);
-			//rotation
-			glm::mat4 rotation = glm::toMat4(transform.rotation_quat);
-			model = model * rotation;
-			//scale
+			model = model * glm::toMat4(transform.rotation_quat);
 			model = glm::scale(model, transform.scale);
-			// parent MVP
+
 			if (id.parent_id != -1)
 			{
 				auto parent_entity = static_cast<entt::entity>(id.parent_id);
@@ -245,10 +256,8 @@ namespace ENGINE_CORE::Systems {
 
 			depthShader->SetUniformMat4("model", model);
 			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
-			for (int i = 0; i < meshes.size(); i++)
-			{
+			for (size_t i = 0; i < meshes.size(); i++)
 				meshes[i].Draw();
-			}
 		}
 		shadowMap->Unbind();
 		shadowMap->CheckResize();

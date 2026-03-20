@@ -96,6 +96,9 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 s
 }
 
 float ShadowCalculation(vec4 fragPosLightSpace){
+    // 没有方向光时不计算阴影
+    if (dirLight.direction.w < 0.5) return 0.0;
+
     // 裁剪空间
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     // 调整范围到[0,1]，和深度图一样
@@ -175,13 +178,19 @@ void main()
     vec3 result = vec3(0.0);
 
     // 定向光
-    float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
-    result += CalcDirLight(dirLight, norm, viewDir, albedo, specMap, shadow);
+    if (dirLight.direction.w > 0.5)
+    {
+        float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+        result += CalcDirLight(dirLight, norm, viewDir, albedo, specMap, shadow);
+    }
 
     // 点光源循环
-    // 编译器通常会自动展开这个固定次数的循环
     for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-        result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir, albedo, specMap);
+        // 通过 position.w 或 attenuation 判断点光源是否有效
+        if (pointLights[i].attenuation.x > 0.0 || pointLights[i].attenuation.y > 0.0 || pointLights[i].attenuation.z > 0.0)
+        {
+            result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir, albedo, specMap);
+        }
     }
 
     // reflect map
