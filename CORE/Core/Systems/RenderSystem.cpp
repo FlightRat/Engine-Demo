@@ -9,6 +9,7 @@
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
 #include<Rendering/Buffers/render_uniformbuffers.h>
+#include<Rendering/Buffers/render_shadowmaps.h>
 #include<Logger/Logger.h>
 #include<../CORE/Core/ECS/MainRegistry.h>
 #include "../ECS/Entity.h"
@@ -57,10 +58,11 @@ namespace ENGINE_CORE::Systems {
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
-		if (shadowMap->Width() != finalOutputFB->Width() || shadowMap->Height() != finalOutputFB->Height())
+		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		auto& dir_shadowmap = RenderShadowMap->mapShadowmaps[ENGINE_RENDERING::ShadowmapType::DIRLIGHT];
+		if (dir_shadowmap->Width() != finalOutputFB->Width() || dir_shadowmap->Height() != finalOutputFB->Height())
 		{
-			shadowMap->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+			dir_shadowmap->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
 		}
 
 		Param_Pass(camera, runtimeRegistry);
@@ -173,7 +175,8 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
-		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
+		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		auto& dir_shadowmap = RenderShadowMap->mapShadowmaps[ENGINE_RENDERING::ShadowmapType::DIRLIGHT];
 
 		// 查找方向光
 		bool hasDirLight = false;
@@ -200,21 +203,21 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 
-		shadowMap->SetLightSpaceMatrix(lightSpaceMatrix);
+		dir_shadowmap->SetLightSpaceMatrix(lightSpaceMatrix);
 
 		// 没有方向光 → 清空 shadow map 后直接返回
 		if (!hasDirLight)
 		{
-			shadowMap->Bind();
-			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+			dir_shadowmap->Bind();
+			glViewport(0, 0, dir_shadowmap->Width(), dir_shadowmap->Height());
 			glClear(GL_DEPTH_BUFFER_BIT);
-			shadowMap->Unbind();
-			shadowMap->CheckResize();
+			dir_shadowmap->Unbind();
+			dir_shadowmap->CheckResize();
 			return;
 		}
 
-		shadowMap->Bind();
-		glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+		dir_shadowmap->Bind();
+		glViewport(0, 0, dir_shadowmap->Width(), dir_shadowmap->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -222,7 +225,7 @@ namespace ENGINE_CORE::Systems {
 		if (depthShader->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
-			shadowMap->Unbind();
+			dir_shadowmap->Unbind();
 			return;
 		}
 		depthShader->Enable();
@@ -259,8 +262,8 @@ namespace ENGINE_CORE::Systems {
 			for (size_t i = 0; i < meshes.size(); i++)
 				meshes[i].Draw();
 		}
-		shadowMap->Unbind();
-		shadowMap->CheckResize();
+		dir_shadowmap->Unbind();
+		dir_shadowmap->CheckResize();
 	}
 
 	void RenderSystem::Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -269,7 +272,8 @@ namespace ENGINE_CORE::Systems {
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 
-		auto& shadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>();
+		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		auto& dir_shadowmap = RenderShadowMap->mapShadowmaps[ENGINE_RENDERING::ShadowmapType::DIRLIGHT];
 
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
@@ -389,8 +393,8 @@ namespace ENGINE_CORE::Systems {
 				mainShader->SetUniformFloat("material.shininess", cur_material.shininess);
 				mainShader->SetUniformBool("useTexture", cur_material.m_useTexture);
 				glActiveTexture(GL_TEXTURE10);
-				glBindTexture(GL_TEXTURE_2D, shadowMap->GetTextureID());
-				glm::mat4 lightSpaceMatrix = shadowMap->GetLightSpaceMatrix();
+				glBindTexture(GL_TEXTURE_2D, dir_shadowmap->GetTextureID());
+				glm::mat4 lightSpaceMatrix = dir_shadowmap->GetLightSpaceMatrix();
 				mainShader->SetUniformInt("shadowMap", 10);
 				mainShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
 				// set uniform textures

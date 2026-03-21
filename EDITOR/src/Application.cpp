@@ -14,6 +14,7 @@
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
 #include<Rendering/Buffers/render_uniformbuffers.h>
+#include<Rendering/Buffers/render_shadowmaps.h>
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/MainRegistry.h>
@@ -178,27 +179,31 @@ namespace ENGINE_EDITOR {
 		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
 		
 		// shadowmap
-		auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(600, 600);
-		if (!shadowMap) {
-			ENGINE_ERROR("Failed to create the shadowmap");
-			return false;
-		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::ShadowMap>>(shadowMap))
+		auto pRenderShadowmap = std::make_shared<ENGINE_RENDERING::RenderShadowMaps>();
+		if (!pRenderShadowmap)
 		{
-			ENGINE_ERROR("Failed to add the shadowmap to the main registry context!");
+			ENGINE_ERROR("Failed to create the RenderShadowMap");
 			return false;
 		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>(pRenderShadowmap))
+		{
+			ENGINE_ERROR("Failed to add the RenderShadowMaps to the main registry context!");
+			return false;
+		}
+		// shadowmap for direction light
+		auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(600, 600);
+		pRenderShadowmap->mapShadowmaps.emplace(ENGINE_RENDERING::ShadowmapType::DIRLIGHT, shadowMap);
 
 		// render uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
 		auto pRenderUniformbuffer = std::make_shared<ENGINE_RENDERING::RenderUniformbuffers>();
 		if (!pRenderUniformbuffer)
 		{
-			ENGINE_ERROR("Failed to create the EditorUniformbuffer");
+			ENGINE_ERROR("Failed to create the RenderUniformbuffer");
 			return false;
 		}
 		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::RenderUniformbuffers>>(pRenderUniformbuffer))
 		{
-			ENGINE_ERROR("Failed to add the Editoruniformbuffer to the main registry context!");
+			ENGINE_ERROR("Failed to add the RenderUniformbuffers to the main registry context!");
 			return false;
 		}
 		// view&projection matrix ubo
