@@ -146,6 +146,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Rendering\Buffers\render_uniformbuffers.h" />
     <ClInclude Include="Rendering\Buffers\Framebuffer.h" />
     <ClInclude Include="Rendering\Buffers\ShadowMap.h" />
     <ClInclude Include="Rendering\Buffers\UniformBuffer.h" />

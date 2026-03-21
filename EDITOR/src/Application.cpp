@@ -13,6 +13,7 @@
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
+#include<Rendering/Buffers/render_uniformbuffers.h>
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/MainRegistry.h>
@@ -26,7 +27,6 @@
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Scripting/InputManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
-#include<Core/CoreUtilities/CoreUniformbuffers.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
 #include<Sounds/SoundFxPlayer/SoundFxPlayer.h>
@@ -189,24 +189,24 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// core uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
-		auto pCoreUniformbuffer = std::make_shared<ENGINE_CORE::CoreUniformbuffers>();
-		if (!pCoreUniformbuffer)
+		// render uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
+		auto pRenderUniformbuffer = std::make_shared<ENGINE_RENDERING::RenderUniformbuffers>();
+		if (!pRenderUniformbuffer)
 		{
 			ENGINE_ERROR("Failed to create the EditorUniformbuffer");
 			return false;
 		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::CoreUniformbuffers>>(pCoreUniformbuffer))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::RenderUniformbuffers>>(pRenderUniformbuffer))
 		{
 			ENGINE_ERROR("Failed to add the Editoruniformbuffer to the main registry context!");
 			return false;
 		}
 		// view&projection matrix ubo
 		auto matrixUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(2 * sizeof(glm::mat4), 0);
-		pCoreUniformbuffer->mapUniformbuffers.emplace("matrix", matrixUniformbuffer);
+		pRenderUniformbuffer->mapUniformbuffers.emplace("matrix", matrixUniformbuffer);
 		// lights ubo
 		auto lightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(sizeof(ENGINE_RENDERING::LightBlock), 1);
-		pCoreUniformbuffer->mapUniformbuffers.emplace("lights", lightsUniformbuffer);
+		pRenderUniformbuffer->mapUniformbuffers.emplace("lights", lightsUniformbuffer);
 
 
 		if (!CreateDisplays())

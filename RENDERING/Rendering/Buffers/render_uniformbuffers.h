@@ -1,10 +1,10 @@
 #pragma once
 #include <map>
 #include <string>
-#include "Rendering/Buffers/UniformBuffer.h"
+#include "../Buffers/UniformBuffer.h"
 
-namespace ENGINE_CORE {
-	struct CoreUniformbuffers
+namespace ENGINE_RENDERING{
+	struct RenderUniformbuffers
 	{
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::UniformBuffer>> mapUniformbuffers;
 	};

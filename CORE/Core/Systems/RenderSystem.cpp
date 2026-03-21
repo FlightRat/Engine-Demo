@@ -8,9 +8,9 @@
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
+#include<Rendering/Buffers/render_uniformbuffers.h>
 #include<Logger/Logger.h>
 #include<../CORE/Core/ECS/MainRegistry.h>
-#include<../CORE/Core/CoreUtilities/CoreUniformbuffers.h>
 #include "../ECS/Entity.h"
 #include "../Resources/AssetManager.h"
 #include "../ECS/Components/TransformComponent.h"
@@ -110,9 +110,9 @@ namespace ENGINE_CORE::Systems {
 		colliderShader->BindUniformBlock("Matrices", 0);
 
 		// uniform block buffers
-		auto& coreUniformbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::CoreUniformbuffers>>();
-		auto& matrixUbo = coreUniformbuffers->mapUniformbuffers["matrix"];
-		auto& lightsUbo = coreUniformbuffers->mapUniformbuffers["lights"];
+		auto& RenderUniformbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderUniformbuffers>>();
+		auto& matrixUbo = RenderUniformbuffers->mapUniformbuffers["matrix"];
+		auto& lightsUbo = RenderUniformbuffers->mapUniformbuffers["lights"];
 
 		// uniform block -- camera param 
 		auto viewMatrix = camera->GetViewMatrix();

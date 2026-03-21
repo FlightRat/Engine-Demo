@@ -165,7 +165,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\CoreUtilities\CoreEngineData.h" />
-    <ClInclude Include="Core\CoreUtilities\CoreUniformbuffers.h" />
     <ClInclude Include="Core\CoreUtilities\FollowCamera.h" />
     <ClInclude Include="Core\ECS\Components\ComponentSerializer.h" />
     <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h" />
