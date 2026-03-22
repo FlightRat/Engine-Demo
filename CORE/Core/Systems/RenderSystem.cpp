@@ -227,32 +227,13 @@ namespace ENGINE_CORE::Systems {
 			depthShader->Enable();
 			depthShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-			glm::mat4 model = glm::mat4(1.0f);
 			auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 			for (auto [entity, transform, meshF, meshR, id] : view.each())
 			{
 				if (!meshR.shouldRender)
 					continue;
 
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, transform.position);
-				model = model * glm::toMat4(transform.rotation_quat);
-				model = glm::scale(model, transform.scale);
-
-				if (id.parent_id != -1)
-				{
-					auto parent_entity = static_cast<entt::entity>(id.parent_id);
-					if (runtimeRegistry.GetRegistry().valid(parent_entity))
-					{
-						auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
-						glm::mat4 parentModel = glm::mat4(1.0f);
-						parentModel = glm::translate(parentModel, parent_transform.position);
-						parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
-						parentModel = glm::scale(parentModel, parent_transform.scale);
-						model = parentModel * model;
-					}
-				}
-
+				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 				depthShader->SetUniformMat4("model", model);
 				const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 				for (size_t i = 0; i < meshes.size(); i++)
@@ -298,32 +279,13 @@ namespace ENGINE_CORE::Systems {
 					depthCubeShader->SetUniformMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
 
 				// render scene
-				glm::mat4 model = glm::mat4(1.0f);
 				auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 				for (auto [entity, transform, meshF, meshR, id] : view.each())
 				{
 					if (!meshR.shouldRender)
 						continue;
 
-					model = glm::mat4(1.0f);
-					model = glm::translate(model, transform.position);
-					model = model * glm::toMat4(transform.rotation_quat);
-					model = glm::scale(model, transform.scale);
-
-					if (id.parent_id != -1)
-					{
-						auto parent_entity = static_cast<entt::entity>(id.parent_id);
-						if (runtimeRegistry.GetRegistry().valid(parent_entity))
-						{
-							auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
-							glm::mat4 parentModel = glm::mat4(1.0f);
-							parentModel = glm::translate(parentModel, parent_transform.position);
-							parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
-							parentModel = glm::scale(parentModel, parent_transform.scale);
-							model = parentModel * model;
-						}
-					}
-
+					glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 					depthCubeShader->SetUniformMat4("model", model);
 					const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 					for (size_t i = 0; i < meshes.size(); i++)
@@ -401,7 +363,6 @@ namespace ENGINE_CORE::Systems {
 
 		// render object
 		mainShader->Enable();
-		glm::mat4 model = glm::mat4(1.0f);
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -426,29 +387,7 @@ namespace ENGINE_CORE::Systems {
 				meshR.ResetMaterial(meshes);
 			}
 
-			glm::mat4 model = glm::mat4(1.0f);
-			//translate
-			model = glm::translate(model, transform.position);
-			//rotation
-			glm::mat4 rotation = glm::toMat4(transform.rotation_quat);
-			model = model * rotation;
-			//scale
-			model = glm::scale(model, transform.scale);
-			// parent MVP
-			if (id.parent_id != -1)
-			{
-				auto parent_entity = static_cast<entt::entity>(id.parent_id);
-				if (runtimeRegistry.GetRegistry().valid(parent_entity))
-				{
-					auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
-					glm::mat4 parentModel = glm::mat4(1.0f);
-					parentModel = glm::translate(parentModel, parent_transform.position);
-					parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
-					parentModel = glm::scale(parentModel, parent_transform.scale);
-					model = parentModel * model;
-				}
-			}
-
+			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 			for (int i = 0; i < meshes.size(); i++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);
@@ -540,11 +479,9 @@ namespace ENGINE_CORE::Systems {
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-		model = glm::mat4(1.0f);
-		glm::mat4 skybox_view = glm::mat4(glm::mat3(viewMatrix));	//移除观察矩阵中的位移
 		skyboxShader->Enable();
-		skyboxShader->SetUniformMat4("model", model);
-		skyboxShader->SetUniformMat4("view", skybox_view);
+		skyboxShader->SetUniformMat4("model", glm::mat4(1.0f));
+		skyboxShader->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
 		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
 		skyboxShader->SetUniformInt("skybox", 0);
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
@@ -556,7 +493,6 @@ namespace ENGINE_CORE::Systems {
 		glStencilMask(0x00);					// 禁止写入模板值
 		glDepthMask(GL_FALSE);					//禁止深度写入
 		colorShader->Enable();
-		model = glm::mat4(1.0f);
 		view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -572,30 +508,7 @@ namespace ENGINE_CORE::Systems {
 				meshR.ResetMaterial(meshes);
 			}
 
-			model = glm::mat4(1.0f);
-			//translate
-			model = glm::translate(model, transform.position);
-			//rotation
-			glm::mat4 rotation = glm::toMat4(transform.rotation_quat);
-			model = model * rotation;
-			//scale
-			model = glm::scale(model, transform.scale * glm::vec3(1.025f));
-			// parent MVP
-			if (id.parent_id != -1)
-			{
-				auto parent_entity = static_cast<entt::entity>(id.parent_id);
-				if (runtimeRegistry.GetRegistry().valid(parent_entity))
-				{
-					auto parent_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
-					glm::mat4 parentModel = glm::mat4(1.0f);
-					parentModel = glm::translate(parentModel, parent_transform.position);
-					parentModel = parentModel * glm::toMat4(parent_transform.rotation_quat);
-					parentModel = glm::scale(parentModel, parent_transform.scale);
-					model = parentModel * model;
-				}
-			}
-
-
+			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 			for (int i = 0; i < meshes.size(); i++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(i);
@@ -623,8 +536,7 @@ namespace ENGINE_CORE::Systems {
 			auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 			colliderShader->Enable();
-			model = glm::mat4(1.0f);
-			colliderShader->SetUniformMat4("model", model);
+			colliderShader->SetUniformMat4("model", glm::mat4(1.0f));
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -645,6 +557,25 @@ namespace ENGINE_CORE::Systems {
 			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
+	}
+
+	glm::mat4 RenderSystem::CalculateModelMatrix(const TransformComponent& transform, const Identification& id, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.position);
+		model *= glm::toMat4(transform.rotation_quat);
+		model = glm::scale(model, transform.scale);
+
+		if (id.parent_id != -1) {
+			auto parent_entity = static_cast<entt::entity>(id.parent_id);
+			if (runtimeRegistry.GetRegistry().valid(parent_entity)) {
+				auto& p_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
+				glm::mat4 parentModel = glm::translate(glm::mat4(1.0f), p_transform.position);
+				parentModel *= glm::toMat4(p_transform.rotation_quat);
+				parentModel = glm::scale(parentModel, p_transform.scale);
+				model = parentModel * model;
+			}
+		}
+		return model;
 	}
 }
 

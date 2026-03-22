@@ -6,6 +6,11 @@
 #include <Rendering/Core/Camera3D.h>
 #include <Rendering/Buffers/Framebuffer.h>
 
+namespace ENGINE_CORE::ECS {
+	class TransformComponent;
+	class Identification;
+}
+
 namespace ENGINE_CORE::Systems {
 	class RenderSystem
 	{
@@ -24,5 +29,10 @@ namespace ENGINE_CORE::Systems {
 		void Param_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+
+		glm::mat4 CalculateModelMatrix(
+			const ENGINE_CORE::ECS::TransformComponent& transform,
+			const ENGINE_CORE::ECS::Identification& id,
+			ENGINE_CORE::ECS::Registry& runtimeRegistry);
 	};
 }
