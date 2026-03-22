@@ -11,6 +11,7 @@ namespace ENGINE_RENDERING {
 		GLuint m_FboID;
 		std::shared_ptr<Texture> m_pDepthTexture;
 		int m_Width, m_Height;
+		bool m_bCube;
 		bool m_bShouldResize;
 		glm::mat4 m_lightSpaceMatrix;
 	private:
@@ -18,7 +19,7 @@ namespace ENGINE_RENDERING {
 		void CleanUp();
 	public:
 		ShadowMap();
-		ShadowMap(int width, int height);
+		ShadowMap(int width, int height, bool bCube=false);
 		~ShadowMap();
 
 		void Bind();
