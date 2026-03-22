@@ -211,6 +211,9 @@
     <None Include="assets\shaders\bugShader.vert" />
     <None Include="assets\shaders\colorShader.frag" />
     <None Include="assets\shaders\colorShader.vert" />
+    <None Include="assets\shaders\depthCubeShader.frag" />
+    <None Include="assets\shaders\depthCubeShader.geom" />
+    <None Include="assets\shaders\depthCubeShader.vert" />
     <None Include="assets\shaders\depthShader.frag" />
     <None Include="assets\shaders\depthShader.vert" />
     <None Include="assets\shaders\mainShader.frag" />

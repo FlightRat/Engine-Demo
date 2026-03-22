@@ -98,6 +98,9 @@
     <None Include="assets\shaders\skyboxShader.frag" />
     <None Include="assets\shaders\depthShader.vert" />
     <None Include="assets\shaders\depthShader.frag" />
+    <None Include="assets\shaders\depthCubeShader.vert" />
+    <None Include="assets\shaders\depthCubeShader.frag" />
+    <None Include="assets\shaders\depthCubeShader.geom" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
