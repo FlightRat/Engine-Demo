@@ -4,7 +4,6 @@
 struct Material{
     vec4 color;
     float shininess;
-    samplerCube skybox;
     sampler2D diffuse;
     sampler2D specular; 
     sampler2D reflection;
@@ -41,22 +40,27 @@ in VS_OUT{
 out vec4 FragColor;
 
 // --- Uniforms ---
-uniform sampler2D shadowMap;
 uniform bool bug;
 uniform bool flipUV;
 uniform bool useTexture;
+
 uniform vec3 viewPos;
+uniform float far_plane;
+
 uniform Material material;
-layout (std140) uniform Lighting
-{
+
+uniform samplerCube skybox;
+uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
+uniform sampler2D shadowMap;
+
+layout (std140) uniform Lighting{
     DirLight dirLight;
     PointLight pointLights[NR_POINT_LIGHTS];
 };
 
 // 优化：使用 Blinn-Phong 模型 (Halfway Vector)
 // 比 reflect() 计算更快，且高光过渡更自然
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, vec3 specMap)
-{
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, vec3 specMap, float shadow){
     vec3 lightDir = normalize(vec3(light.position) - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir); // Blinn-Phong 核心
 
@@ -72,15 +76,15 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * distance + light.attenuation.z * (distance * distance));
 
     // 合并
-    vec3 ambient  = vec3(light.ambient)  * albedo;
-    vec3 diffuse  = vec3(light.diffuse)  * diff * albedo;
-    vec3 specular = vec3(light.specular) * spec * specMap;
+    vec3 ambient  = vec3(light.ambient)  * albedo * attenuation;
+    vec3 diffuse  = vec3(light.diffuse)  * diff * albedo * attenuation;
+    vec3 specular = vec3(light.specular) * spec * specMap * attenuation;
 
-    return (ambient + diffuse + specular) * attenuation;
+    // return ambient + diffuse + specular;
+    return ambient + (1 - shadow) * (diffuse + specular);
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 specMap, float shadow)
-{
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 specMap, float shadow){
     vec3 lightDir = normalize(-vec3(light.direction));
     vec3 halfwayDir = normalize(lightDir + viewDir);
 
@@ -95,7 +99,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 s
     return ambient + (1 - shadow) * (diffuse + specular);
 }
 
-float ShadowCalculation(vec4 fragPosLightSpace){
+float ShadowCalculation_dir(vec4 fragPosLightSpace){
     // 没有方向光时不计算阴影
     if (dirLight.direction.w < 0.5) return 0.0;
 
@@ -131,8 +135,40 @@ float ShadowCalculation(vec4 fragPosLightSpace){
     return shadow;
 }
 
-void main()
-{
+vec3 sampleOffsetDirections[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);
+float ShadowCalculation_point(vec3 fragPos, vec3 normal, int index){
+    vec3 fragToLight = fragPos - vec3(pointLights[index].position);
+    float currentDepth = length(fragToLight);
+    
+    vec3 lightDir = normalize(-fragToLight);
+    float bias = max(0.15 * (1.0 - dot(normal, lightDir)), 0.05);
+    
+    float shadow = 0.0;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    // 距离摄像机越远，采样的散布半径越小，或者根据需要写死为 0.05
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;  
+
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(shadowCubeMap[index], fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+        closestDepth *= far_plane;   // 恢复到线性距离
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);  
+    
+    return shadow;
+}
+
+void main(){
     // 1. 几何数据准备
     vec3 norm = normalize(fs_in.Normal);
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
@@ -180,7 +216,7 @@ void main()
     // 定向光
     if (dirLight.direction.w > 0.5)
     {
-        float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+        float shadow = ShadowCalculation_dir(fs_in.FragPosLightSpace);
         result += CalcDirLight(dirLight, norm, viewDir, albedo, specMap, shadow);
     }
 
@@ -189,13 +225,14 @@ void main()
         // 通过 position.w 或 attenuation 判断点光源是否有效
         if (pointLights[i].attenuation.x > 0.0 || pointLights[i].attenuation.y > 0.0 || pointLights[i].attenuation.z > 0.0)
         {
-            result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir, albedo, specMap);
+            float shadow = ShadowCalculation_point(fs_in.FragPos, norm, i);
+            result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir, albedo, specMap, shadow);
         }
     }
 
     // reflect map
     if (material.useReflect && useTexture) {
-        result += vec3(texture(material.reflection, fs_in.TexCoord)) * texture(material.skybox, R).rgb;
+        result += vec3(texture(material.reflection, fs_in.TexCoord)) * texture(skybox, R).rgb;
     }
     
     // 4. 输出
