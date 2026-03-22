@@ -100,17 +100,17 @@ namespace ENGINE_RENDERING {
 		glUniform4f(GetUniformLocation(name), x, y, z, w);
 	}
 
-	void Shader::SetUniformMat2(const std::string& name, glm::mat2& mat)
+	void Shader::SetUniformMat2(const std::string& name, const glm::mat2& mat)
 	{
 		glUniformMatrix2fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
 	}
 
-	void Shader::SetUniformMat3(const std::string& name, glm::mat3& mat)
+	void Shader::SetUniformMat3(const std::string& name, const glm::mat3& mat)
 	{
 		glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
 	}
 
-	void Shader::SetUniformMat4(const std::string& name, glm::mat4& mat)
+	void Shader::SetUniformMat4(const std::string& name, const glm::mat4& mat)
 	{
 		glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &mat[0][0]);
 	}

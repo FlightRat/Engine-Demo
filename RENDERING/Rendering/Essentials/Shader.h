@@ -33,9 +33,9 @@ namespace ENGINE_RENDERING {
 		void SetUniformVec4(const std::string& name, const glm::vec4& value);
 		void SetUniformVec4(const std::string& name, float x, float y, float z, float w);
 		// Mat
-		void SetUniformMat2(const std::string& name, glm::mat2& mat);
-		void SetUniformMat3(const std::string& name, glm::mat3& mat);
-		void SetUniformMat4(const std::string& name, glm::mat4& mat);
+		void SetUniformMat2(const std::string& name, const glm::mat2& mat);
+		void SetUniformMat3(const std::string& name, const glm::mat3& mat);
+		void SetUniformMat4(const std::string& name, const glm::mat4& mat);
 		
 
 		//TODU: getters
