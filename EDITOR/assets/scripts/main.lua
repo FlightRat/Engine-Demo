@@ -27,9 +27,9 @@ Wall_4 = LoadEntity(EnvirDefs["wall4"])
 Cube_Moveable = LoadEntity(EnvirDefs["cube_3"])
 Cube_Trigger = LoadEntity(EnvirDefs["cube_2"])
 
-nanosuit = LoadEntity(ModelDefs["nanosuit"])
-backpack = LoadEntity(ModelDefs["backpack"])
 cyborg = LoadEntity(ModelDefs["cyborg"])
+nanosuit = LoadEntity(ModelDefs["nanosuit"])
+--backpack = LoadEntity(ModelDefs["backpack"])
 
 point_light_1 = LoadEntity(LightDefs["point_light_1"])
 point_light_2 = LoadEntity(LightDefs["point_light_2"])
