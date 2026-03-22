@@ -191,8 +191,17 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 		// shadowmap for direction light
-		auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(600, 600);
-		pRenderShadowmap->mapShadowmaps.emplace(ENGINE_RENDERING::ShadowmapType::DIRLIGHT, shadowMap);
+		auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, false);
+		pRenderShadowmap->mapShadowmaps.emplace("shadow_map", shadowMap);
+		// shadowmap for point light
+		auto shadowCubemap_1 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
+		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_1", shadowCubemap_1);
+		auto shadowCubemap_2 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
+		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_2", shadowCubemap_2);
+		auto shadowCubemap_3 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
+		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_3", shadowCubemap_3);
+		auto shadowCubemap_4 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
+		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_4", shadowCubemap_4);
 
 		// render uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
 		auto pRenderUniformbuffer = std::make_shared<ENGINE_RENDERING::RenderUniformbuffers>();
@@ -256,35 +265,42 @@ namespace ENGINE_EDITOR {
 		auto& assetManager = mainRegistry.GetAssetManager();
 
 		// main shader
-		if (!assetManager.AddShader("mainShader", "assets/shaders/mainShader.vert", "assets/shaders/mainShader.frag"))
+		if (!assetManager.AddShader("mainShader", "assets/shaders/mainShader.vert", "assets/shaders/mainShader.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// color shader
-		if (!assetManager.AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag"))
+		if (!assetManager.AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// skybox shader TODO: hide shyboxShader from UI
-		if (!assetManager.AddShader("skyboxShader", "assets/shaders/skyboxShader.vert", "assets/shaders/skyboxShader.frag"))
+		if (!assetManager.AddShader("skyboxShader", "assets/shaders/skyboxShader.vert", "assets/shaders/skyboxShader.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// colliderShader
-		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag"))
+		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// depthShader
-		if(!assetManager.AddShader("depthShader", "assets/shaders/depthShader.vert", "assets/shaders/depthShader.frag"))
+		if(!assetManager.AddShader("depthShader", "assets/shaders/depthShader.vert", "assets/shaders/depthShader.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// depthCubeShader
+		if (!assetManager.AddShader("depthCubeShader", "assets/shaders/depthCubeShader.vert", "assets/shaders/depthCubeShader.frag", "assets/shaders/depthCubeShader.geom"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
