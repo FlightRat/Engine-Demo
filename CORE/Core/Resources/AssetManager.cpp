@@ -172,7 +172,7 @@ namespace ENGINE_RESOURCES {
     }
 
     // shader
-    bool AssetManager::AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath)
+    bool AssetManager::AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath)
     {
         // check if shader already loaded
         if (m_mapShader.find(shaderName) != m_mapShader.end())
@@ -180,16 +180,16 @@ namespace ENGINE_RESOURCES {
             ENGINE_ERROR("Failed to add shader [{0}] -- Already exists!", shaderName);
             return false;
         }
-        auto shader = std::move(ENGINE_RENDERING::ShaderLoader::Create(vertexPath, fragmentPath));
+        auto shader = std::move(ENGINE_RENDERING::ShaderLoader::Create(vertexPath, fragmentPath, geometryPath));
         if (!shader)
         {
-            ENGINE_ERROR("Failed to load shader [{0}] at vert path [{1}] and frag path [{2}]", shaderName, vertexPath, fragmentPath);
+            ENGINE_ERROR("Failed to load shader [{0}] at vert path [{1}], frag path [{2}] and geom path [{3}]", shaderName, vertexPath, fragmentPath, geometryPath);
             return false;
         }
         m_mapShader.emplace(shaderName, std::move(shader));
         return true;
     }
-    bool AssetManager::AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader)
+    bool AssetManager::AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader, const char* geometryShader)
     {
         if (m_mapShader.contains(shaderName))
         {
@@ -197,7 +197,7 @@ namespace ENGINE_RESOURCES {
             return false;
         }
 
-        auto pShader = ENGINE_RENDERING::ShaderLoader::CreateFromMemory(vertexShader, fragmentShader);
+        auto pShader = ENGINE_RENDERING::ShaderLoader::CreateFromMemory(vertexShader, fragmentShader, geometryShader);
         auto [itr, bSuccess] = m_mapShader.insert(std::make_pair(shaderName, std::move(pShader)));
 
         return bSuccess;

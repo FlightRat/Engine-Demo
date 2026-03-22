@@ -9,14 +9,14 @@ namespace ENGINE_RENDERING {
 	{
 	private:
 		GLuint m_ShaderProgramID;
-		std::string m_sVertexPath, m_sFragmentPath;
+		std::string m_sVertexPath, m_sFragmentPath, m_sGeometryPath;
 		std::unordered_map<std::string, GLuint> m_UniformLocationMap;
 		std::unordered_map<std::string, GLuint> m_UniformBlockIndexMap;
 		GLuint GetUniformLocation(const std::string& uniformName);
 		GLuint GetUniformBlockIndex(const std::string& uniformBlockName);
 	public:
 		Shader();
-		Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath);
+		Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath, const std::string& geometryPath);
 		~Shader();
 
 		void BindUniformBlock(const std::string& name, int index);

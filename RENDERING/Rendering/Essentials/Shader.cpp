@@ -3,10 +3,10 @@
 #include<Logger/Logger.h>
 
 namespace ENGINE_RENDERING {
-	Shader::Shader():Shader(0, "", ""){ }
+	Shader::Shader():Shader(0, "", "", "") { }
 
-	Shader::Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath):
-		m_ShaderProgramID{ program }, m_sVertexPath{vertexPath}, m_sFragmentPath{fragmentPath}
+	Shader::Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath, const std::string& geometryPath):
+		m_ShaderProgramID{ program }, m_sVertexPath{vertexPath}, m_sFragmentPath{fragmentPath}, m_sGeometryPath{geometryPath}
 	{
 	}
 

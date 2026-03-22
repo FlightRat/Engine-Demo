@@ -41,8 +41,8 @@ namespace ENGINE_RESOURCES {
 		bool AddSkyboxTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt);
 		std::shared_ptr<ENGINE_RENDERING::Texture> GetTexture(const std::string& textureName);
 
-		bool AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath);
-		bool AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader);
+		bool AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath=std::string());
+		bool AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader, const char* geometryShader=nullptr);
 		std::shared_ptr<ENGINE_RENDERING::Shader> GetShader(const std::string& shaderName);
 
 		bool AddMusic(const std::string& musicName, const std::string& musicPath);

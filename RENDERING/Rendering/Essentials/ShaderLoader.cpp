@@ -4,15 +4,32 @@
 #include<Logger/Logger.h>
 
 namespace ENGINE_RENDERING {
-    GLuint ShaderLoader::CreateProgram(const std::string& vertexShader, const std::string& fragmentShader)
+    GLuint ShaderLoader::CreateProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::string& geometryShader)
     {
         const GLuint program = glCreateProgram();
         const GLuint vertex = CompileShader(GL_VERTEX_SHADER, vertexShader);
         const GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-        
-        if (vertex == 0 || fragment == 0)
+
+        if (vertex == 0 || fragment == 0) {
+            if (vertex != 0) glDeleteShader(vertex);
+            if (fragment != 0) glDeleteShader(fragment);
+            glDeleteProgram(program);
             return 0;
-        if (!LinkShader(program, vertex, fragment))
+        }
+
+        GLuint geometry = 0;
+        if (!geometryShader.empty()) {
+            geometry = CompileShader(GL_GEOMETRY_SHADER, geometryShader);
+            // 如果几何着色器编译失败，也需要清理
+            if (geometry == 0) {
+                glDeleteShader(vertex);
+                glDeleteShader(fragment);
+                glDeleteProgram(program);
+                return 0;
+            }
+        }
+
+        if (!LinkShader(program, vertex, fragment, geometry))
         {
             ENGINE_ERROR("Failed to link Shaders!");
             return 0;
@@ -49,14 +66,31 @@ namespace ENGINE_RENDERING {
         return shaderID;
     }
 
-    GLuint ShaderLoader::CreateProgram(const char* vertexShader, const char* fragmentShader)
+    GLuint ShaderLoader::CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader)
     {
         const GLuint program = glCreateProgram();
         const GLuint vertex = CompileShader(GL_VERTEX_SHADER, vertexShader);
         const GLuint fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-        if (vertex == 0 || fragment == 0)
+        if (vertex == 0 || fragment == 0) {
+            if (vertex != 0) glDeleteShader(vertex);
+            if (fragment != 0) glDeleteShader(fragment);
+            glDeleteProgram(program);
             return 0;
-        if (!LinkShader(program, vertex, fragment))
+        }
+
+        GLuint geometry = 0;
+        if (geometryShader!=nullptr) {
+            geometry = CompileShader(GL_GEOMETRY_SHADER, geometryShader);
+            // 如果几何着色器编译失败，也需要清理
+            if (geometry == 0) {
+                glDeleteShader(vertex);
+                glDeleteShader(fragment);
+                glDeleteProgram(program);
+                return 0;
+            }
+        }
+
+        if (!LinkShader(program, vertex, fragment, geometry))
         {
             ENGINE_ERROR("Failed to link Shaders!");
             return 0;
@@ -87,7 +121,7 @@ namespace ENGINE_RENDERING {
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
             std::string errorLog(maxLength, ' ');
             glGetShaderInfoLog(shader, maxLength, &maxLength, errorLog.data());
-            std::cout << "Shader Compile failed:" << std::string(errorLog) << std::endl;
+            ENGINE_ERROR("Shader Compile failed: [{0}]", std::string(errorLog));
             glDeleteShader(shader);
             return false;
         }
@@ -104,16 +138,18 @@ namespace ENGINE_RENDERING {
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
             std::string errorLog(maxLength, ' ');
             glGetProgramInfoLog(program, maxLength, &maxLength, errorLog.data());
-            std::cout << "Shader Program link failed:" << std::string(errorLog) << std::endl;
+            ENGINE_ERROR("Shader Program link failed: [{0}]", std::string(errorLog));
             return false;
         }
         return true;
     }
 
-    bool ShaderLoader::LinkShader(GLuint program, GLuint vertexShader, GLuint fragmentShader)
+    bool ShaderLoader::LinkShader(GLuint program, GLuint vertexShader, GLuint fragmentShader, GLuint geometryShader)
     {
         glAttachShader(program, vertexShader);
         glAttachShader(program, fragmentShader);
+        if (geometryShader != 0)
+            glAttachShader(program, geometryShader);
         glLinkProgram(program);
 
         if (!IsProgramValid(program))
@@ -121,30 +157,36 @@ namespace ENGINE_RENDERING {
             glDeleteProgram(program);
             glDeleteShader(vertexShader);
             glDeleteShader(fragmentShader);
+            if (geometryShader != 0)
+                glDeleteShader(geometryShader);
             return false;
         }
 
         glDetachShader(program, vertexShader);
-        glDetachShader(program, vertexShader);
+        glDetachShader(program, fragmentShader);
+        if (geometryShader != 0)
+            glDetachShader(program, geometryShader);
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
+        if (geometryShader != 0)
+            glDeleteShader(geometryShader);
 
         return true;
     }
 
-    std::shared_ptr<Shader> ShaderLoader::Create(const std::string& vertexShaderPath, const std::string& fragmentShaderPath)
+    std::shared_ptr<Shader> ShaderLoader::Create(const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geometryShaderPath)
     {
-        GLuint program = CreateProgram(vertexShaderPath, fragmentShaderPath);
+        GLuint program = CreateProgram(vertexShaderPath, fragmentShaderPath, geometryShaderPath);
         if (program)
-            return std::make_shared<Shader>(program, vertexShaderPath, fragmentShaderPath);
+            return std::make_shared<Shader>(program, vertexShaderPath, fragmentShaderPath, geometryShaderPath);
         return nullptr;
     }
 
-    std::shared_ptr<Shader> ShaderLoader::CreateFromMemory(const char* vertexShader, const char* fragmentShader)
+    std::shared_ptr<Shader> ShaderLoader::CreateFromMemory(const char* vertexShader, const char* fragmentShader, const char* geometryShader)
     {
-        GLuint program = CreateProgram(vertexShader, fragmentShader);
+        GLuint program = CreateProgram(vertexShader, fragmentShader, geometryShader);
         if (program)
-            return std::make_shared<Shader>(program, vertexShader, fragmentShader);
+            return std::make_shared<Shader>(program, vertexShader, fragmentShader, geometryShader);
         return nullptr;
     }
 
@@ -153,7 +195,7 @@ namespace ENGINE_RENDERING {
         if (pShader->ShaderProgramID() <= 0)
             return false;
 
-        glDeleteShader(pShader->ShaderProgramID());
+        glDeleteProgram(pShader->ShaderProgramID());
         return true;
     }
 
