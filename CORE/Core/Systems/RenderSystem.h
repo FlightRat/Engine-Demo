@@ -1,7 +1,7 @@
 #pragma once
-#include"../ECS/Registry.h"
-#include<glad/glad.h>
-#include<glm/glm.hpp>
+#include "../ECS/Registry.h"
+#include <glad/glad.h>
+#include <glm/glm.hpp>
 #include <Physics/RP3D_Wrappers.h>
 #include <Rendering/Core/Camera3D.h>
 #include <Rendering/Buffers/Framebuffer.h>
