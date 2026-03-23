@@ -13,6 +13,6 @@ namespace ENGINE_RENDERING {
 		UniformBuffer(size_t size, int bindingPoint);
 		~UniformBuffer();
 
-		void UpdateUniformBuffer(void* data, size_t size, size_t offset);
+		void UpdateUniformBuffer(const void* data, size_t size, size_t offset);
 	};
 }

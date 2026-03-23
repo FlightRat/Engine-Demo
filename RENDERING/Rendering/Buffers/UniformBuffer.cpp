@@ -16,7 +16,7 @@ namespace ENGINE_RENDERING {
 		CleanUp();
 	}
 
-	void UniformBuffer::UpdateUniformBuffer(void* data, size_t size, size_t offset)
+	void UniformBuffer::UpdateUniformBuffer(const void* data, size_t size, size_t offset)
 	{
 		glBindBuffer(GL_UNIFORM_BUFFER, m_UboID);
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data);
