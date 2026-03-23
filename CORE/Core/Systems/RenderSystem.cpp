@@ -22,9 +22,6 @@
 #include "../ECS/Components/LightComponent.h"
 #include "../CoreUtilities/CoreEngineData.h"
 
-const static int MAX_POINT_LIGHTS = 4;
-const static int MAX_DIR_LIGHTS = 1;
-
 namespace {
 	struct TextureSlot {
 		const char* key;            // 材质 Map 中的 key (如 "diffuse")
@@ -458,6 +455,7 @@ namespace ENGINE_CORE::Systems {
 		glDepthFunc(GL_LESS);
 
 		//模板测试 TODO:修复scale相同导致无法显示轮廓的bug
+		float OUTLINE_OFFSET = 0.05f;
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);					// 禁止写入模板值
 		glDepthMask(GL_FALSE);					//禁止深度写入
