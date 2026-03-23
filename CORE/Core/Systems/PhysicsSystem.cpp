@@ -7,13 +7,13 @@ using namespace ENGINE_CORE::ECS;
 using namespace reactphysics3d;
 
 namespace ENGINE_CORE::Systems {
-	PhysicsSystem::PhysicsSystem(ENGINE_CORE::ECS::Registry& registry) :m_Registry{ registry }
+	PhysicsSystem::PhysicsSystem()
 	{
 	}
 
-	void PhysicsSystem::Update(entt::registry& registry, rp3d::decimal factor)
+	void PhysicsSystem::Update(ENGINE_CORE::ECS::Registry& runtimeRegistry, rp3d::decimal factor)
 	{
-		auto view = m_Registry.GetRegistry().view<TransformComponent, PhysicsComponent>();
+		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, PhysicsComponent>();
 		for (auto [entity, transform, physics] : view.each())
 		{
 			auto pRigidBody = physics.GetRigidBody();

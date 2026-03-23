@@ -6,11 +6,9 @@
 namespace ENGINE_CORE::Systems {
 	class PhysicsSystem
 	{
-	private:
-		ENGINE_CORE::ECS::Registry& m_Registry; // TODO: move away this
 	public:
-		PhysicsSystem(ENGINE_CORE::ECS::Registry& registry);
+		PhysicsSystem();
 		~PhysicsSystem() = default;
-		void Update(entt::registry& registry, rp3d::decimal factor);
+		void Update(ENGINE_CORE::ECS::Registry& runtimeRegistry, rp3d::decimal factor);
 	};
 }
