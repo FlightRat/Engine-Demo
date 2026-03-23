@@ -24,7 +24,7 @@ void main()
 {
     vs_out.FragPos   = vec3(model * vec4(aPosition, 1.0));
     // 注意：法线矩阵建议 CPU 端预计算，避免 GPU 上 inverse() 的高开销
-    vs_out.Normal    = mat3(transpose(inverse(model))) * aNormal;
+    vs_out.Normal    = normalize(mat3(transpose(inverse(model))) * aNormal);
     vs_out.TexCoord  = aTexCoord;
 
     // 为每个方向光计算其裁剪空间坐标

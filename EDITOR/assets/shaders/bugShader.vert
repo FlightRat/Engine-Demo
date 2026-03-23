@@ -18,7 +18,7 @@ void main()
 {
     FragPos = vec3(model * vec4(aPosition, 1.0));
     // 建议：transpose(inverse(model)) 最好在 CPU 端计算好传入，不要在 Shader 里算，性能开销大
-    Normal = mat3(transpose(inverse(model))) * aNormal; 
+    Normal = normalize(mat3(transpose(inverse(model))) * aNormal); 
     TexCoord = aTexCoord;
     gl_Position = projection * view * model * vec4(aPosition, 1.0f);
 }
