@@ -455,7 +455,6 @@ namespace ENGINE_CORE::Systems {
 		glDepthFunc(GL_LESS);
 
 		//模板测试 TODO:修复scale相同导致无法显示轮廓的bug
-		float OUTLINE_OFFSET = 0.05f;
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);					// 禁止写入模板值
 		glDepthMask(GL_FALSE);					//禁止深度写入
@@ -476,6 +475,7 @@ namespace ENGINE_CORE::Systems {
 			}
 
 			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+			model = BuildOutlineMatrix(model, 0.05f);
 			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
@@ -524,6 +524,31 @@ namespace ENGINE_CORE::Systems {
 			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
+	}
+
+	glm::mat4 RenderSystem::BuildOutlineMatrix(const glm::mat4& originalModel, float outlineOffset)
+	{
+		// 提取每列的缩放量（列向量的长度即为该轴的 scale）
+		float scaleX = glm::length(glm::vec3(originalModel[0]));
+		float scaleY = glm::length(glm::vec3(originalModel[1]));
+		float scaleZ = glm::length(glm::vec3(originalModel[2]));
+
+		// 构造新的 Scale 矩阵：在原始 scale 基础上加固定偏移
+		glm::vec3 outlineScale = glm::vec3(
+			scaleX + outlineOffset,
+			scaleY + outlineOffset,
+			scaleZ + outlineOffset
+		);
+
+		// 从原矩阵中提取"归一化的旋转+平移"部分
+		// 做法：把每列除以原来的缩放量，得到纯旋转矩阵，再乘以新的scale
+		glm::mat4 outlineModel = originalModel;
+		outlineModel[0] = glm::vec4(glm::vec3(originalModel[0]) / scaleX * outlineScale.x, 0.0f);
+		outlineModel[1] = glm::vec4(glm::vec3(originalModel[1]) / scaleY * outlineScale.y, 0.0f);
+		outlineModel[2] = glm::vec4(glm::vec3(originalModel[2]) / scaleZ * outlineScale.z, 0.0f);
+		// 第四列（平移）保持不变
+
+		return outlineModel;
 	}
 
 	glm::mat4 RenderSystem::CalculateModelMatrix(const TransformComponent& transform, const Identification& id, ENGINE_CORE::ECS::Registry& runtimeRegistry)
