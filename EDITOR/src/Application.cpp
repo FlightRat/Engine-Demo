@@ -26,6 +26,7 @@
 #include<Core/Systems/ScriptingSystem.h>
 #include<Core/Systems/RenderSystem.h>
 #include<Core/Systems/PhysicsSystem.h>
+#include<Core/Systems/LightSystem.h>
 #include<Core/Scripting/InputManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
 #include<Windowing/Inputs/Keyboard.h>
@@ -153,9 +154,22 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create the render system!");
 			return false;
 		}
-		if (!mainRegistry.AddToContext<std::shared_ptr< ENGINE_CORE::Systems::RenderSystem>>(renderSystem))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>(renderSystem))
 		{
 			ENGINE_ERROR("Failed to add the render system to the registry context!");
+			return false;
+		}
+
+		// Light System
+		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(4, 4);
+		if (!lightSystem)
+		{
+			ENGINE_ERROR("Failed to create the light system!");
+			return false;
+		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>(lightSystem))
+		{
+			ENGINE_ERROR("Failed to add the light system to the registry context!");
 			return false;
 		}
 
@@ -191,17 +205,17 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 		// shadowmap for direction light
-		auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, false);
-		pRenderShadowmap->mapShadowmaps.emplace("shadow_map", shadowMap);
+		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++) 
+		{
+			auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, false);
+			pRenderShadowmap->mapShadowmaps.emplace("shadow_map_"+ std::to_string(i), shadowMap);
+		}
 		// shadowmap for point light
-		auto shadowCubemap_1 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
-		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_1", shadowCubemap_1);
-		auto shadowCubemap_2 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
-		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_2", shadowCubemap_2);
-		auto shadowCubemap_3 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
-		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_3", shadowCubemap_3);
-		auto shadowCubemap_4 = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
-		pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_4", shadowCubemap_4);
+		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
+		{
+			auto shadowCubemap = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
+			pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_" + std::to_string(i), shadowCubemap);
+		}
 
 		// render uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
 		auto pRenderUniformbuffer = std::make_shared<ENGINE_RENDERING::RenderUniformbuffers>();
@@ -218,10 +232,14 @@ namespace ENGINE_EDITOR {
 		// view&projection matrix ubo
 		auto matrixUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(2 * sizeof(glm::mat4), 0);
 		pRenderUniformbuffer->mapUniformbuffers.emplace("matrix", matrixUniformbuffer);
-		// lights ubo
-		auto lightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(sizeof(ENGINE_RENDERING::LightBlock), 1);
-		pRenderUniformbuffer->mapUniformbuffers.emplace("lights", lightsUniformbuffer);
-
+		// direction lights ubo
+		auto dirLightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(
+			lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
+		pRenderUniformbuffer->mapUniformbuffers.emplace("DirLights", dirLightsUniformbuffer);
+		// point lights ubo
+		auto pointLightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(
+			lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
+		pRenderUniformbuffer->mapUniformbuffers.emplace("PointLights", pointLightsUniformbuffer);
 
 		if (!CreateDisplays())
 		{
