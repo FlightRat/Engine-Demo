@@ -15,10 +15,6 @@ namespace ENGINE_RENDERING {
 		glm::vec4 specular = glm::vec4(0.0f);
 		glm::vec4 ambient = glm::vec4(0.0f);
 		glm::vec4 attenuation = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-	};
-
-	struct LightBlock {
-		DirLight dirLight;
-		PointLight pointLights[4];
+		//bool render{ false };
 	};
 }
