@@ -234,6 +234,6 @@ namespace ENGINE_EDITOR
 
 		// ²»²åÖµversion
 		physicsWorld->update(1.0f/60.0f);
-		physicsSystem->Update(runtimeRegistry.GetRegistry(), 0.0f);
+		physicsSystem->Update(runtimeRegistry, 0.0f);
 	}
 }

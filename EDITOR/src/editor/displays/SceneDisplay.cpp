@@ -48,7 +48,7 @@ namespace ENGINE_EDITOR {
 		physicsWorld->setEventListener(contactListener.get());
 
 		// Physics System
-		auto physicsSystem = std::make_shared<PhysicsSystem>(runtimeRegistry);
+		auto physicsSystem = std::make_shared<PhysicsSystem>();
 		runtimeRegistry.AddToContext<std::shared_ptr< PhysicsSystem>>(physicsSystem);
 
 		// Script system
