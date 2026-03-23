@@ -1,4 +1,5 @@
 #version 450 core
+#define NR_DIR_LIGHTS   4
 #define NR_POINT_LIGHTS 4
 
 struct Material{
@@ -30,12 +31,12 @@ struct PointLight {
     vec4 attenuation;
 };
 
-in VS_OUT{
+in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoord;
-    vec4 FragPosLightSpace;
-}fs_in;
+    vec4 FragPosLightSpace[NR_DIR_LIGHTS]; // 接收数组
+} fs_in;
 
 out vec4 FragColor;
 
@@ -51,11 +52,13 @@ uniform Material material;
 
 uniform samplerCube skybox;
 uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
-uniform sampler2D shadowMap;
+uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
 
-layout (std140) uniform Lighting{
-    DirLight dirLight;
-    PointLight pointLights[NR_POINT_LIGHTS];
+layout (std140, binding = 1) uniform DirLights {
+    DirLight dir_lights[NR_DIR_LIGHTS];
+};
+layout (std140, binding = 2) uniform PointLights {
+    PointLight point_lights[NR_POINT_LIGHTS];
 };
 
 // 优化：使用 Blinn-Phong 模型 (Halfway Vector)
@@ -99,40 +102,27 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, vec3 s
     return ambient + (1 - shadow) * (diffuse + specular);
 }
 
-float ShadowCalculation_dir(vec4 fragPosLightSpace){
-    // 没有方向光时不计算阴影
-    if (dirLight.direction.w < 0.5) return 0.0;
-
-    // 裁剪空间
+// 参数改为传入对应的 sampler 和光方向，而不依赖全局变量
+float ShadowCalculation_dir(sampler2D shadowMap, vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // 调整范围到[0,1]，和深度图一样
     projCoords = projCoords * 0.5 + 0.5;
-    // 获取当前元素在深度图里对应的值
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
-    // 当前元素实际深度
+
+    // 超出光锥范围直接不产生阴影
+    if (projCoords.z > 1.0) return 0.0;
+
     float currentDepth = projCoords.z;
-    // bias
-    vec3 normal = normalize(fs_in.Normal);
-    vec3 lightDir = normalize(-vec3(dirLight.direction));
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-    // PCF
+
+    // PCF 3x3
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
-    {
-        for(int y = -1; y <= 1; ++y)
-        {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
-        }    
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += (currentDepth - bias > pcfDepth) ? 1.0 : 0.0;
+        }
     }
-    shadow /= 9.0;
-    
-    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    if(projCoords.z > 1.0)
-        shadow = 0.0;
-        
-    return shadow;
+    return shadow / 9.0;
 }
 
 vec3 sampleOffsetDirections[20] = vec3[]
@@ -143,8 +133,8 @@ vec3 sampleOffsetDirections[20] = vec3[]
    vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
-float ShadowCalculation_point(vec3 fragPos, vec3 normal, int index){
-    vec3 fragToLight = fragPos - vec3(pointLights[index].position);
+float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fragPos, vec3 normal){
+    vec3 fragToLight = fragPos - lightPos;
     float currentDepth = length(fragToLight);
     
     vec3 lightDir = normalize(-fragToLight);
@@ -158,7 +148,7 @@ float ShadowCalculation_point(vec3 fragPos, vec3 normal, int index){
 
     for(int i = 0; i < samples; ++i)
     {
-        float closestDepth = texture(shadowCubeMap[index], fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+        float closestDepth = texture(shadowCubeMap, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
         closestDepth *= far_plane;   // 恢复到线性距离
         if(currentDepth - bias > closestDepth)
             shadow += 1.0;
@@ -214,19 +204,23 @@ void main(){
     vec3 result = vec3(0.0);
 
     // 定向光
-    if (dirLight.direction.w > 0.5)
-    {
-        float shadow = ShadowCalculation_dir(fs_in.FragPosLightSpace);
-        result += CalcDirLight(dirLight, norm, viewDir, albedo, specMap, shadow);
+    for (int i = 0; i < NR_DIR_LIGHTS; i++) {
+        if (dir_lights[i].direction.w < 0.5) continue;
+
+        vec3 lightDir = normalize(-vec3(dir_lights[i].direction));
+
+        float shadow = ShadowCalculation_dir(shadowMaps[i], fs_in.FragPosLightSpace[i], norm, lightDir);
+        result += CalcDirLight(dir_lights[i], norm, viewDir, albedo, specMap, shadow);
     }
 
-    // 点光源循环
+    // 点光源
     for(int i = 0; i < NR_POINT_LIGHTS; i++) {
         // 通过 position.w 或 attenuation 判断点光源是否有效
-        if (pointLights[i].attenuation.x > 0.0 || pointLights[i].attenuation.y > 0.0 || pointLights[i].attenuation.z > 0.0)
+        if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0)
         {
-            float shadow = ShadowCalculation_point(fs_in.FragPos, norm, i);
-            result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir, albedo, specMap, shadow);
+            vec3 lightPos = vec3(point_lights[i].position);
+            float shadow = ShadowCalculation_point(shadowCubeMap[i], lightPos, fs_in.FragPos, norm);
+            result += CalcPointLight(point_lights[i], norm, fs_in.FragPos, viewDir, albedo, specMap, shadow);
         }
     }
 
