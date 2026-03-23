@@ -7,7 +7,7 @@ namespace ENGINE_CORE::Systems {
 	class PhysicsSystem
 	{
 	private:
-		ENGINE_CORE::ECS::Registry& m_Registry;
+		ENGINE_CORE::ECS::Registry& m_Registry; // TODO: move away this
 	public:
 		PhysicsSystem(ENGINE_CORE::ECS::Registry& registry);
 		~PhysicsSystem() = default;
