@@ -8,9 +8,8 @@ namespace ENGINE_RENDERING {
 	class Framebuffer
 	{
 	private:
-		GLuint m_MultisampleFboID, m_MultisampleRboID, m_ResolvedFboID;
-		std::shared_ptr<Texture> m_pMultisampleTexture;
-		std::shared_ptr<Texture> m_pResolvedTexture;
+		GLuint m_RboID, m_FboID;
+		std::shared_ptr<Texture> m_pTexture;
 		int m_Width, m_Height;
 		bool m_bShouldResize, m_bUseRbo;
 
@@ -22,16 +21,14 @@ namespace ENGINE_RENDERING {
 		Framebuffer(int width, int height, bool bUseRbo);
 		~Framebuffer();
 
-		void Resolve();
-
 		void Bind();
 		void Unbind();
 
 		void Resize(int width, int height);
 		void CheckResize();
 
-		inline const GLuint GetID() const { return m_MultisampleFboID; }
-		inline const GLuint GetTextureID() const { return m_pResolvedTexture ? m_pResolvedTexture->GetID() : 0; }
+		inline const GLuint GetID() const { return m_FboID; }
+		inline const GLuint GetTextureID() const { return m_pTexture ? m_pTexture->GetID() : 0; }
 		inline const int Width() const { return m_Width; }
 		inline const int Height() const { return m_Height; }
 	};

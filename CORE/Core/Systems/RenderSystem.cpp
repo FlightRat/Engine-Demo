@@ -81,7 +81,6 @@ namespace ENGINE_CORE::Systems {
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		Forward_Pass(camera, runtimeRegistry);
-		finalOutputFB->Resolve();
 		finalOutputFB->Unbind();
 		finalOutputFB->CheckResize();
 	}
