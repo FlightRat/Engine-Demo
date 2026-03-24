@@ -7,6 +7,75 @@
 
 namespace ENGINE_RENDERING {
 	namespace Primitives {
+		void CalculateTangents(std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) {
+			// 1. 清空/初始化所有切线和副切线为 0 向量
+			for (auto& v : vertices) {
+				v.Tangent = glm::vec3(0.0f);
+				v.Bitangent = glm::vec3(0.0f);
+			}
+
+			// 2. 遍历每个三角形面，计算切线并累加到顶点
+			for (size_t i = 0; i < indices.size(); i += 3) {
+				Vertex& v1 = vertices[indices[i]];
+				Vertex& v2 = vertices[indices[i + 1]];
+				Vertex& v3 = vertices[indices[i + 2]];
+
+				glm::vec3 edge1 = v2.Position - v1.Position;
+				glm::vec3 edge2 = v3.Position - v1.Position;
+				glm::vec2 deltaUV1 = v2.TexCoords - v1.TexCoords;
+				glm::vec2 deltaUV2 = v3.TexCoords - v1.TexCoords;
+
+				// 计算行列式
+				float determinant = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+				// 【新增安全检查】：防止 UV 退化或未分配导致除以 0 产生 NaN
+				float f = (determinant == 0.0f) ? 0.0f : 1.0f / determinant;
+
+				glm::vec3 tangent;
+				tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+				tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+				tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+				glm::vec3 bitangent;
+				bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+				bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+				bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+				// 累加到顶点（如果是平滑表面，共享顶点会得到加权平均值）
+				v1.Tangent += tangent;
+				v2.Tangent += tangent;
+				v3.Tangent += tangent;
+
+				v1.Bitangent += bitangent;
+				v2.Bitangent += bitangent;
+				v3.Bitangent += bitangent;
+			}
+
+			// 3. 【核心修复】：遍历所有顶点，进行 Gram-Schmidt 正交化与归一化
+			for (auto& v : vertices) {
+				const glm::vec3& n = v.Normal;
+				const glm::vec3& t = v.Tangent;
+				const glm::vec3& b = v.Bitangent;
+
+				// 避免极小向量导致归一化失败
+				if (glm::length(t) > 0.0001f && glm::length(n) > 0.0001f) {
+					// Gram-Schmidt 正交化：T' = T - (T · N) * N
+					// 强制让切线与法线保持绝对垂直
+					v.Tangent = glm::normalize(t - n * glm::dot(n, t));
+				}
+
+				if (glm::length(b) > 0.0001f && glm::length(n) > 0.0001f) {
+					// 同样处理副切线，使其与法线绝对垂直
+					glm::vec3 orthogonalized_b = b - n * glm::dot(n, b);
+
+					// 进一步让副切线也与切线垂直，构成完美的 TBN 正交基
+					orthogonalized_b = orthogonalized_b - v.Tangent * glm::dot(v.Tangent, orthogonalized_b);
+
+					v.Bitangent = glm::normalize(orthogonalized_b);
+				}
+			}
+		}
+
 		void LoadCube(std::vector<Vertex>& vertex_data, std::vector<unsigned int>& index_data)
 		{
 			// 定义唯一的顶点 (8个角)
@@ -85,6 +154,8 @@ namespace ENGINE_RENDERING {
 			// 4. 将索引数据拷贝到 vector
 			size_t index_count = sizeof(indices) / sizeof(unsigned int);
 			index_data.assign(indices, indices + index_count);
+
+			CalculateTangents(vertex_data, index_data);
 		}
 
 		void LoadSphere(std::vector<Vertex>& vertex_data, std::vector<unsigned int>& index_data)
@@ -157,6 +228,7 @@ namespace ENGINE_RENDERING {
 				vertex_data.push_back(v);
 			}
 
+			CalculateTangents(vertex_data, index_data);
 			// 渲染注意事项：
 			// 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, index_data.size(), GL_UNSIGNED_INT, 0);
 		}
@@ -345,6 +417,8 @@ namespace ENGINE_RENDERING {
 
 			// 拷贝索引数据
 			index_data = indices;
+
+			CalculateTangents(vertex_data, index_data);
 		}
 
 		void LoadPlane(std::vector<Vertex>& vertex_data, std::vector<unsigned int>& index_data) {
@@ -385,6 +459,7 @@ namespace ENGINE_RENDERING {
 			// 将索引数据添加到组件的 vector 中
 			index_data.assign(indices, indices + 6);
 
+			CalculateTangents(vertex_data, index_data);
 			// 渲染注意事项：
 			// 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		}
