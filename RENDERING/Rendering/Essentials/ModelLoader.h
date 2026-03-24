@@ -4,12 +4,9 @@
 #include <string>
 #include <vector>
 #include <map>
-
-struct aiNode;
-struct aiMesh;
-struct aiScene;
-struct aiMaterial;
-enum aiTextureType;
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 namespace ENGINE_RENDERING {
 	class ModelLoader

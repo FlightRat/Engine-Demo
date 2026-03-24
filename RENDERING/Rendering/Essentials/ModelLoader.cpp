@@ -1,9 +1,7 @@
 #include "ModelLoader.h"
 #include "Logger/Logger.h"
 #include <filesystem>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include "TextureCommon.h"
 
 namespace ENGINE_RENDERING {
 	namespace Primitives {
@@ -667,15 +665,10 @@ namespace ENGINE_RENDERING {
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 			// ´«µÝ directory ²ÎÊý
-			std::string default_diffuse_name = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", textures, directory);
-			std::string default_specular_name = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", textures, directory);
-			std::string default_normal_name = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal", textures, directory);
-			std::string default_reflect_name = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_reflection", textures, directory);
-
-			default_textures.emplace("diffuse", default_diffuse_name);
-			default_textures.emplace("specular", default_specular_name);
-			default_textures.emplace("normal", default_normal_name);
-			default_textures.emplace("reflect", default_reflect_name);
+			for (const auto& slot : TextureRegistry::GetSlots()) {
+				std::string texName = loadMaterialTextures(material, slot.assimpType, slot.key, textures, directory);
+				default_textures.emplace(slot.key, texName);
+			}
 		}
 
 		// return a mesh object created from the extracted mesh data

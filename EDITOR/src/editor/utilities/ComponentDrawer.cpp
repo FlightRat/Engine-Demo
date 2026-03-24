@@ -7,6 +7,7 @@
 #include "UTILITIES/EngineUtilities.h"
 #include "Logger/Logger.h"
 #include "ImGuiUtils.h"
+#include "Rendering/Essentials/TextureCommon.h"
 
 using namespace ENGINE_CORE::ECS;
 using namespace ENGINE_PHYSICS;
@@ -125,17 +126,17 @@ namespace ENGINE_EDITOR {
 						ImGui::TableSetupColumn("Slot", ImGuiTableColumnFlags_WidthFixed, 80.0f);
 						ImGui::TableSetupColumn("Texture");
 
-						const char* textureSlots[] = { "diffuse", "specular", "normal", "reflect"};
-						for (const char* slot : textureSlots)
+						const auto& textureSlots = ENGINE_RENDERING::TextureRegistry::GetSlots();
+						for (const auto& slot : textureSlots)
 						{
 							ImGui::TableNextRow();
 							ImGui::TableSetColumnIndex(0);
-							ImGui::Text("%s", slot);
+							ImGui::Text("%s", slot.displayName.c_str());
 
 							ImGui::TableSetColumnIndex(1);
-							ImGui::PushID(slot);
+							ImGui::PushID(slot.key.c_str());
 
-							std::string& currentTextureName = m.m_textures[slot];
+							std::string& currentTextureName = m.m_textures[slot.key];
 							const char* previewValue = currentTextureName.empty() ? "None" : currentTextureName.c_str();
 
 							if (ImGui::BeginCombo("##tex", previewValue))

@@ -6,6 +6,7 @@
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Essentials/Shader.h>
 #include<Rendering/Essentials/Lights.h>
+#include<Rendering/Essentials/TextureCommon.h>
 #include<Rendering/Buffers/Framebuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
 #include<Rendering/Buffers/render_uniformbuffers.h>
@@ -371,6 +372,7 @@ namespace ENGINE_CORE::Systems {
 				glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
 				mainShader->SetUniformInt("skybox", 10);
 
+				// set direction light shadowMap
 				for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 				{
 					std::string key = "shadow_map_" + std::to_string(dir_light_index);
@@ -385,8 +387,7 @@ namespace ENGINE_CORE::Systems {
 					}
 				}
 
-				// 动态绑定点光源 Shadow CubeMap
-				//纹理单元从 11+MAX_DIR_LIGHTS 开始，避免冲突
+				// set point light shadowCubemap
 				int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 15
 				for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 				{
@@ -402,37 +403,23 @@ namespace ENGINE_CORE::Systems {
 				}
 
 				// set uniform textures
-				if (cur_material.m_useTexture)
-				{
-					for (const auto& slot : TEXTURE_SLOTS)
-					{
-						// 1. 查找材质中是否存在该类型的贴图
+				if (cur_material.m_useTexture) {
+					const auto& slots = TextureRegistry::GetSlots();
+					for (size_t slot_index = 0; slot_index < slots.size(); ++slot_index) {
+						const auto& slot = slots[slot_index];
+
 						auto it = cur_material.m_textures.find(slot.key);
 						bool hasTexture = (it != cur_material.m_textures.end() && !it->second.empty());
 
-						// 2. 设置 Shader 的 bool 开关
-						mainShader->SetUniformBool(slot.useUniform, hasTexture);
+						mainShader->SetUniformBool(slot.shaderFlag, hasTexture);
 
-						if (hasTexture)
-						{
-							// 3. 激活对应的纹理单元 (GL_TEXTURE0 + 0, GL_TEXTURE0 + 1, ...)
-							glActiveTexture(GL_TEXTURE0 + slot.unitIndex);
-
-							// 4. 获取并绑定纹理
-							// 注意：使用迭代器 it->second 获取纹理名，比再次用 [] 查找更快
+						if (hasTexture) {
+							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // 按索引自动分配纹理单元
 							auto tex = assetManager.GetTexture(it->second);
-							if (tex)
-							{
+							if (tex) {
 								glBindTexture(GL_TEXTURE_2D, tex->GetID());
+								mainShader->SetUniformInt(slot.shaderSampler, (int)slot_index);
 							}
-							else
-							{
-								// 防御性编程：名字存在但资源未加载，绑定0防止错误的纹理采样
-								glBindTexture(GL_TEXTURE_2D, 0);
-							}
-
-							// 5. 告诉 Shader 该采样器应该去读哪个纹理单元
-							mainShader->SetUniformInt(slot.samplerUniform, slot.unitIndex);
 						}
 					}
 				}

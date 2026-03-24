@@ -159,6 +159,7 @@
     <ClInclude Include="Rendering\Essentials\Shader.h" />
     <ClInclude Include="Rendering\Essentials\ShaderLoader.h" />
     <ClInclude Include="Rendering\Essentials\Texture.h" />
+    <ClInclude Include="Rendering\Essentials\TextureCommon.h" />
     <ClInclude Include="Rendering\Essentials\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
