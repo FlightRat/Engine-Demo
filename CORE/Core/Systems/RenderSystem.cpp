@@ -31,11 +31,11 @@ namespace {
 	};
 
 	// 使用 constexpr 让它在编译期就确定，性能最高
-	constexpr std::array<TextureSlot, 3> TEXTURE_SLOTS = { {
+	constexpr std::array<TextureSlot, 4> TEXTURE_SLOTS = { {
 		{ "diffuse",  "material.useDiffuse",  "material.diffuse",    0},
 		{ "specular", "material.useSpecular", "material.specular",   1 },
-		{ "reflect",  "material.useReflect",  "material.reflection", 2 },
-		//{ "normal",   "material.useNormal",   "material.normal",     4 },
+		{ "normal",   "material.useNormal",   "material.normal",     2 },
+		{ "reflect",  "material.useReflect",  "material.reflection", 3 }
 	} };
 }
 

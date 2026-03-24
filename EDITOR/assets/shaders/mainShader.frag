@@ -6,14 +6,14 @@ struct Material{
     vec4 color;
     float shininess;
     sampler2D diffuse;
-    sampler2D specular; 
-    sampler2D reflection;
+    sampler2D specular;
     sampler2D normal;
+    sampler2D reflection;
 
     bool useDiffuse;
     bool useSpecular;
-    bool useReflect;
     bool useNormal;
+    bool useReflect;
 };
 
 struct DirLight {
@@ -35,6 +35,7 @@ in VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoord;
+    mat3 TBN;
     vec4 FragPosLightSpace[NR_DIR_LIGHTS]; // 接收数组
 } fs_in;
 
@@ -160,7 +161,15 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
 
 void main(){
     // 1. 几何数据准备
-    vec3 norm = normalize(fs_in.Normal);
+    vec3 norm;
+    if(material.useNormal && useTexture){
+        norm = texture(material.normal, fs_in.TexCoord).rgb;
+        norm = normalize(norm * 2.0 - 1.0);
+        norm = normalize(fs_in.TBN * norm);
+    }
+    else{
+        norm = normalize(fs_in.Normal);
+    }
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     vec3 I = normalize(fs_in.FragPos - viewPos);
     vec3 R = reflect(I,normalize(fs_in.Normal));

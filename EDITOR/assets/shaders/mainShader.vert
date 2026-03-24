@@ -2,6 +2,8 @@
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aTangent;
+layout (location = 4) in vec3 aBitangent;
 
 #define NR_DIR_LIGHTS 4
 
@@ -9,6 +11,7 @@ out VS_OUT {
     vec3 FragPos;
     vec3 Normal;
     vec2 TexCoord;
+    mat3 TBN;
     vec4 FragPosLightSpace[NR_DIR_LIGHTS];
 } vs_out;
 
@@ -26,6 +29,13 @@ void main()
     // 注意：法线矩阵建议 CPU 端预计算，避免 GPU 上 inverse() 的高开销
     vs_out.Normal    = normalize(mat3(transpose(inverse(model))) * aNormal);
     vs_out.TexCoord  = aTexCoord;
+
+    mat3 normalMatrix = transpose(inverse(mat3(model)));
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
+    vec3 N = normalize(normalMatrix * aNormal);
+    mat3 TBN = transpose(mat3(T, B, N));
+    vs_out.TBN = TBN;
 
     // 为每个方向光计算其裁剪空间坐标
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
