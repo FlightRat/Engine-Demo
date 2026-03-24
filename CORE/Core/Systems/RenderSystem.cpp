@@ -271,11 +271,6 @@ namespace ENGINE_CORE::Systems {
 		auto skybox_texture = assetManager.GetTexture("skybox");
 
 		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
-		auto& shadowMap = RenderShadowMap->mapShadowmaps["shadow_map"];
-		auto& shadowCubemap_1 = RenderShadowMap->mapShadowmaps["shadow_cubemap_1"];
-		auto& shadowCubemap_2 = RenderShadowMap->mapShadowmaps["shadow_cubemap_2"];
-		auto& shadowCubemap_3 = RenderShadowMap->mapShadowmaps["shadow_cubemap_3"];
-		auto& shadowCubemap_4 = RenderShadowMap->mapShadowmaps["shadow_cubemap_4"];
 
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
