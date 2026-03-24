@@ -82,8 +82,6 @@
     <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
     <None Include="assets\shaders\mainShader.vert" />
     <None Include="assets\shaders\mainShader.frag" />
-    <None Include="assets\shaders\bugShader.vert" />
-    <None Include="assets\shaders\bugShader.frag" />
     <None Include="assimp-vc143-mtd.dll" />
     <None Include="assets\scripts\GameDemo\Defs\ModelDefs.lua" />
     <None Include="assets\models\backpack\backpack.mtl" />

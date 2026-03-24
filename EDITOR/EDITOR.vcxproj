@@ -207,8 +207,6 @@
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\Defs\envirDefs.lua" />
     <None Include="assets\scripts\main.lua" />
-    <None Include="assets\shaders\bugShader.frag" />
-    <None Include="assets\shaders\bugShader.vert" />
     <None Include="assets\shaders\colorShader.frag" />
     <None Include="assets\shaders\colorShader.vert" />
     <None Include="assets\shaders\depthCubeShader.frag" />
