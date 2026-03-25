@@ -544,10 +544,10 @@ namespace ENGINE_CORE::Systems {
 	void RenderSystem::DeferredRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& Gbuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
-		if (Gbuffer->Width() != finalOutputFB->Width() || Gbuffer->Height() != finalOutputFB->Height())
+		auto& gBuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
+		if (gBuffer->Width() != finalOutputFB->Width() || gBuffer->Height() != finalOutputFB->Height())
 		{
-			Gbuffer->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+			gBuffer->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
 		}
 
 		Prepare_Pass(camera, runtimeRegistry);
@@ -572,13 +572,13 @@ namespace ENGINE_CORE::Systems {
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto gbufferShader = assetManager.GetShader("deferGbuffer");
 
-		auto& Gbuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
-		Gbuffer->Bind();
+		auto& gBuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
+		gBuffer->Bind();
 		glDisable(GL_BLEND);         // <-- MUST DISABLE BLENDING
 		glDisable(GL_STENCIL_TEST);  // <-- DISABLE STENCIL FOR STANDARD PASS
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // ±£Ö¤ Position Îª 0
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glViewport(0, 0, Gbuffer->Width(), Gbuffer->Height());
+		glViewport(0, 0, gBuffer->Width(), gBuffer->Height());
 
 		// render object
 		gbufferShader->Enable();
@@ -648,8 +648,8 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 
-		Gbuffer->Unbind();
-		Gbuffer->CheckResize();
+		gBuffer->Unbind();
+		gBuffer->CheckResize();
 	}
 
 	void RenderSystem::Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -660,7 +660,7 @@ namespace ENGINE_CORE::Systems {
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& dirLightData = lightSystem->GetDirLightData();
 
-		auto& Gbuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
+		auto& gBuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
 		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
@@ -674,19 +674,19 @@ namespace ENGINE_CORE::Systems {
 		lightingShader->SetUniformVec3("viewPos", camera->GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetPosition());
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetPosition());
 		lightingShader->SetUniformInt("gPosition", 0);
 
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetNormal());
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetNormal());
 		lightingShader->SetUniformInt("gNormal", 1);
 
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetAlbedoSpec());
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetAlbedoSpec());
 		lightingShader->SetUniformInt("gAlbedoSpec", 2);
 
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetRefl());
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetRefl());
 		lightingShader->SetUniformInt("gRefl", 3);
 
 		glActiveTexture(GL_TEXTURE10);
