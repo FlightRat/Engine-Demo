@@ -111,11 +111,8 @@ namespace ENGINE_EDITOR
 		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		camera->SetWidth(fb->Width());
 		camera->SetHeight(fb->Height());
+		//renderSystem->ForwardRenderPipeline(camera, runtimeRegistry, fb);
 		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, fb);
-		//if (keyboard.IsKeyPressed(ENGINE_KEY_1))
-		//	renderSystem->ForwardRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
-		//else
-		//	renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
 	}
 
 	void GameDisplay::Draw()
