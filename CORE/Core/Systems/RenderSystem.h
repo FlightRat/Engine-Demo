@@ -27,16 +27,17 @@ namespace ENGINE_CORE::Systems {
 		);
 		void DeferredRenderPipeline(
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
-			ENGINE_CORE::ECS::Registry& runtimeRegistry, 
+			ENGINE_CORE::ECS::Registry& runtimeRegistry,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB
-			);
+		);
 	private:
-		void GeometryPass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-		void LightingPass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-
-		void Param_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry);
+
 		void Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+
+		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 
 		glm::mat4 CalculateModelMatrix(
 			const ENGINE_CORE::ECS::TransformComponent& transform,

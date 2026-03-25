@@ -70,7 +70,7 @@ namespace ENGINE_CORE::Systems {
 		//	shadowCubemap_4->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
 		//}
 
-		Param_Pass(camera, runtimeRegistry);
+		Prepare_Pass(camera, runtimeRegistry);
 
 		Shadow_Pass(runtimeRegistry);
 
@@ -83,7 +83,7 @@ namespace ENGINE_CORE::Systems {
 		finalOutputFB->CheckResize();
 	}
 
-	void RenderSystem::Param_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
@@ -176,7 +176,7 @@ namespace ENGINE_CORE::Systems {
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto depthShader = assetManager.GetShader("depthShader");
 		auto depthCubeShader = assetManager.GetShader("depthCubeShader");
-		
+
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
@@ -231,7 +231,7 @@ namespace ENGINE_CORE::Systems {
 		// µã¹âÔ´
 		depthCubeShader->Enable();
 		for (int lightIdx = 0; lightIdx < lightSystem->GetActivatedPointLights(); lightIdx++)
-		{	
+		{
 			auto& shadowCubemap = RenderShadowMap->mapShadowmaps["shadow_cubemap_" + std::to_string(lightIdx)];
 			shadowCubemap->Bind();
 
@@ -550,22 +550,22 @@ namespace ENGINE_CORE::Systems {
 			Gbuffer->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
 		}
 
-		Param_Pass(camera, runtimeRegistry);
+		Prepare_Pass(camera, runtimeRegistry);
 
 		Shadow_Pass(runtimeRegistry);
 
-		GeometryPass(camera, runtimeRegistry);
+		Geometry_Pass(camera, runtimeRegistry);
 
 		finalOutputFB->Bind();
 		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		LightingPass(camera, runtimeRegistry);
+		Lighting_Pass(camera, runtimeRegistry);
 		finalOutputFB->Unbind();
 		finalOutputFB->CheckResize();
 	}
 
-	void RenderSystem::GeometryPass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	void RenderSystem::Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
@@ -647,12 +647,12 @@ namespace ENGINE_CORE::Systems {
 				meshes[mesh_index].Draw();
 			}
 		}
-	
+
 		Gbuffer->Unbind();
 		Gbuffer->CheckResize();
 	}
 
-	void RenderSystem::LightingPass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	void RenderSystem::Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
@@ -667,7 +667,7 @@ namespace ENGINE_CORE::Systems {
 		auto skybox_texture = assetManager.GetTexture("skybox");
 		auto gbufferShader = assetManager.GetShader("deferGbuffer");
 		auto lightingShader = assetManager.GetShader("deferLighting");
-	
+
 		lightingShader->Enable();
 
 		lightingShader->SetUniformFloat("far_plane", 50.0f);
