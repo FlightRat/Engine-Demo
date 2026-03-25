@@ -160,23 +160,20 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
 }
 
 void main(){
-    // 1. 几何数据准备
-    vec3 norm;
-    if(material.useNormal && useTexture){
-        norm = texture(material.normal, fs_in.TexCoord).rgb;
-        norm = normalize(norm * 2.0 - 1.0);
-        norm = normalize(fs_in.TBN * norm);
-    }
-    else{
-        norm = normalize(fs_in.Normal);
-    }
-    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
-    vec3 I = normalize(fs_in.FragPos - viewPos);
-    vec3 R = reflect(I,normalize(fs_in.Normal));
-    
     // UV 处理
     vec2 uv = fs_in.TexCoord;
     if (flipUV) uv.y = 1.0 - uv.y;
+
+    // 1. 几何数据准备
+    vec3 norm = normalize(fs_in.Normal); // 默认原始法线
+    if (material.useNormal && useTexture) {
+        vec3 texNorm = texture(material.normal, uv).rgb;
+        texNorm = normalize(texNorm * 2.0 - 1.0);
+        norm = normalize(fs_in.TBN * texNorm);
+    }
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+    vec3 I = normalize(fs_in.FragPos - viewPos);
+    vec3 R = reflect(I,normalize(norm));
 
     // 2. 材质属性获取 (Albedo 和 SpecularMap)
     vec3 albedo;
@@ -235,7 +232,7 @@ void main(){
 
     // reflect map
     if (material.useReflect && useTexture) {
-        result += vec3(texture(material.reflection, fs_in.TexCoord)) * texture(skybox, R).rgb;
+        result += vec3(texture(material.reflection, uv)) * texture(skybox, R).rgb;
     }
     
     // 4. 输出
