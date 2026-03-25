@@ -11,6 +11,8 @@ namespace ENGINE_RENDERING {
 		static bool LoadFBTexture_multisample(GLuint& id, int& width, int& height);
 		static bool LoadShadowmapTexture(GLuint& id, int& width, int& height);
 		static bool LoadShadowCubemapTexture(GLuint& id, int& width, int& height);
+		static bool LoadGbufferTexture_type1(GLuint& id, int& width, int& height);
+		static bool LoadGbufferTexture_type2(GLuint& id, int& width, int& height);
 		static bool LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended = false);
 		static bool LoadTextureFromMemory(const unsigned char* imageData, size_t length, GLuint& id, int& width, 
 			int& height, bool blended = false);

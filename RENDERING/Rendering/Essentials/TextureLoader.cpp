@@ -116,6 +116,26 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
+	bool TextureLoader::LoadGbufferTexture_type1(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		return true;
+	}
+
+	bool TextureLoader::LoadGbufferTexture_type2(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		return true;
+	}
+
 	bool TextureLoader::LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended)
 	{
 		// 1. 定义 OpenGL 要求的 Cubemap 标准顺序
@@ -273,6 +293,12 @@ namespace ENGINE_RENDERING{
 			break;
 		case ENGINE_RENDERING::Texture::TextureType::SHADOWCUBEMAP:
 			LoadShadowCubemapTexture(id, width, height);
+			break;
+		case ENGINE_RENDERING::Texture::TextureType::GBUFFER_TYPE1:
+			LoadGbufferTexture_type1(id, width, height);
+			break;
+		case ENGINE_RENDERING::Texture::TextureType::GBUFFER_TYPE2:
+			LoadGbufferTexture_type2(id, width, height);
 			break;
 		default:
 			assert(false && "The current type is not defined, Please use a defined texture type!");
