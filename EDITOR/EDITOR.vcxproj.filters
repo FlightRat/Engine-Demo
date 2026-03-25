@@ -99,6 +99,10 @@
     <None Include="assets\shaders\depthCubeShader.vert" />
     <None Include="assets\shaders\depthCubeShader.frag" />
     <None Include="assets\shaders\depthCubeShader.geom" />
+    <None Include="assets\shaders\Defer_Gbuffer.vert" />
+    <None Include="assets\shaders\Defer_Gbuffer.frag" />
+    <None Include="assets\shaders\Defer_Lighting.vert" />
+    <None Include="assets\shaders\Defer_Lighting.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

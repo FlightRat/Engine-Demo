@@ -209,6 +209,10 @@
     <None Include="assets\scripts\main.lua" />
     <None Include="assets\shaders\colorShader.frag" />
     <None Include="assets\shaders\colorShader.vert" />
+    <None Include="assets\shaders\Defer_Gbuffer.frag" />
+    <None Include="assets\shaders\Defer_Gbuffer.vert" />
+    <None Include="assets\shaders\Defer_Lighting.frag" />
+    <None Include="assets\shaders\Defer_Lighting.vert" />
     <None Include="assets\shaders\depthCubeShader.frag" />
     <None Include="assets\shaders\depthCubeShader.geom" />
     <None Include="assets\shaders\depthCubeShader.vert" />
