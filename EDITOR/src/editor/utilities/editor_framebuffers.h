@@ -5,7 +5,7 @@
 namespace ENGINE_EDITOR {
 	enum class FramebufferType
 	{
-		GAME,SCENE,NO_TYPE
+		GAME, SCENE, NO_TYPE
 	};
 
 	struct Editorframebuffers
