@@ -548,6 +548,61 @@ namespace ENGINE_RENDERING {
 			// 渲染注意事项：
 			// 在 GPU 端设置 VBO/EBO 后，渲染时应使用 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		}
+		
+		void LoadGbufferQuad(std::vector<Vertex>& vertex_data, std::vector<unsigned int>& index_data)
+		{
+			// 原始给定的数据：位置 (X, Y, Z) 和 UV (U, V)
+			GLfloat quadVertices[] = {
+				// Positions        // Texture Coords
+				-1.0f,  1.0f, 0.0f, 0.0f, 1.0f, // 0: 左上 (Top-Left)
+				-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // 1: 左下 (Bottom-Left)
+				 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, // 2: 右上 (Top-Right)
+				 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // 3: 右下 (Bottom-Right)
+			};
+
+			// 清空容器，防止追加到旧数据上
+			vertex_data.clear();
+			index_data.clear();
+
+			// 预设全屏 Quad 的正交基（虽然屏幕空间着色器大概率用不到它们，但需填补数据结构）
+			glm::vec3 quadNormal(0.0f, 0.0f, 1.0f);    // 面朝屏幕外 Z+
+			glm::vec3 quadTangent(1.0f, 0.0f, 0.0f);   // U轴方向 X+
+			glm::vec3 quadBitangent(0.0f, 1.0f, 0.0f); // V轴方向 Y+
+
+			// 1. 组装顶点数据
+			for (int i = 0; i < 4; ++i) {
+				Vertex v;
+
+				// 从数组提取 Position
+				v.Position = glm::vec3(
+					quadVertices[i * 5 + 0],
+					quadVertices[i * 5 + 1],
+					quadVertices[i * 5 + 2]
+				);
+
+				// 从数组提取 UV
+				v.TexCoords = glm::vec2(
+					quadVertices[i * 5 + 3],
+					quadVertices[i * 5 + 4]
+				);
+
+				// 填充剩余的属性以满足 VAO 步长要求
+				v.Normal = quadNormal;
+				v.Tangent = quadTangent;
+				v.Bitangent = quadBitangent;
+
+				vertex_data.push_back(v);
+			}
+
+			// 2. 组装索引数据 (构成两个三角形)
+			// 使用逆时针 (CCW) 缠绕顺序，确保开启背面剔除时不会被过滤掉
+			unsigned int indices[] = {
+				0, 1, 2,  // 三角形 1: 左上 -> 左下 -> 右上
+				1, 3, 2   // 三角形 2: 左下 -> 右下 -> 右上
+			};
+
+			index_data.assign(indices, indices + 6);
+		}
 	}
 
 	std::string ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
@@ -726,6 +781,10 @@ namespace ENGINE_RENDERING {
 		}
 		else if (shapeName == "hud_quad") {
 			Primitives::LoadHudQuad(vertices, indices);
+			found = true;
+		}
+		else if (shapeName == "gbuffer_quad") {
+			Primitives::LoadGbufferQuad(vertices, indices);
 			found = true;
 		}
 
