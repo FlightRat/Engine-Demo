@@ -282,6 +282,7 @@
     <ClInclude Include="src\editor\tools\ToolManager.h" />
     <ClInclude Include="src\editor\utilities\ComponentDrawer.h" />
     <ClInclude Include="src\editor\utilities\editor_framebuffers.h" />
+    <ClInclude Include="src\editor\utilities\editor_gbuffers.h" />
     <ClInclude Include="src\editor\utilities\editor_textures.h" />
     <ClInclude Include="src\editor\utilities\editor_utilities.h" />
     <ClInclude Include="src\editor\utilities\ImGuiUtils.h" />

@@ -263,6 +263,9 @@
     <ClInclude Include="src\editor\displays\SceneHierarchyDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\editor\utilities\editor_gbuffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Media Include="assets\music\2-23am.wav">
