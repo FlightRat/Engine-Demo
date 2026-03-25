@@ -11,6 +11,7 @@
 #include "Physics/ContactListener.h"
 #include "../utilities/editor_framebuffers.h"
 #include "../utilities/editor_utilities.h"
+#include "../utilities/editor_gbuffers.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
 #include "../tools/ToolManager.h"
@@ -76,19 +77,21 @@ namespace ENGINE_EDITOR {
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		if (!pCurrentScene) 
 			return;
-
+		
+		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+		auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+		auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
+		const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
+		const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::SCENE];
+		
 		m_pSceneCam->SetWidth(fb->Width());
 		m_pSceneCam->SetHeight(fb->Height());
 
-		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
-		auto& keyboard = inputManager.GetKeyBoard();
 		//renderSystem->ForwardRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
-		renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
+		renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, fb);
 	}
 
 	void SceneDisplay::LoadNewScene()
@@ -108,11 +111,15 @@ namespace ENGINE_EDITOR {
 			return;
 		}
 		RenderScene();
-		auto& mainRegistry = MAIN_REGISTRY();
 		if (ImGui::BeginChild("##SceneChild", ImVec2{ 0,0 }, false, ImGuiWindowFlags_NoScrollWithMouse))
 		{
+			auto& mainRegistry = MAIN_REGISTRY();
+
 			auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+			auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
 			const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
+			const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::SCENE];
+
 			ImVec2 imageSize{ static_cast<float>(fb->Width()),static_cast<float>(fb->Height()) };
 			ImVec2 windowSize{ ImGui::GetWindowSize() };
 
@@ -130,8 +137,10 @@ namespace ENGINE_EDITOR {
 			ControlCam();
 
 			// check size
-			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y))
+			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y)) {
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				gb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+			}
 
 			if (ImGui::BeginDragDropTarget())
 			{

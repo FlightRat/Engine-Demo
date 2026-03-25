@@ -1,7 +1,6 @@
 #include "GameDisplay.h"
 #include "imgui.h"
 #include "Logger/Logger.h"
-#include "Rendering/Buffers/Framebuffer.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Systems/RenderSystem.h"
 #include "Core/Systems/PhysicsSystem.h"
@@ -13,6 +12,7 @@
 #include "Physics/RP3D_Wrappers.h"
 #include "Physics/ContactListener.h"
 #include "../utilities/editor_framebuffers.h"
+#include "../utilities/editor_gbuffers.h"
 #include <Core/Systems/ScriptingSystem.h>
 #include <Core/Systems/RenderSystem.h>
 #include <Rendering/Core/Camera3D.h>
@@ -103,16 +103,21 @@ namespace ENGINE_EDITOR
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		if (!pCurrentScene)
 			return;
+
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-		const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
+		auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+		auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
+		const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
+		const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::GAME];
+
 		auto& runtimeRegistry = pCurrentScene->GetRegistry();
 		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		camera->SetWidth(fb->Width());
 		camera->SetHeight(fb->Height());
+
 		//renderSystem->ForwardRenderPipeline(camera, runtimeRegistry, fb);
-		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, fb);
+		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, fb);
 	}
 
 	void GameDisplay::Draw()
@@ -177,9 +182,12 @@ namespace ENGINE_EDITOR
 		if (ImGui::BeginChild("##GameChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
 		{
 			auto& mainRegistry = MAIN_REGISTRY();
-			auto& editorFramebuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-			const auto& fb = editorFramebuffer->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
-			//const auto& fb = m_Registry.GetContext<std::shared_ptr<ENGINE_RENDERING::Framebuffer>>();
+
+			auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
+			auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
+			const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
+			const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::GAME];
+
 			ImGui::SetCursorPos(ImVec2{ 0.f,0.f });
 			ImGui::Image(
 				(ImTextureID)fb->GetTextureID(),
@@ -192,8 +200,10 @@ namespace ENGINE_EDITOR
 			ImGui::EndChild();
 
 			ImVec2 windowSize{ ImGui::GetWindowSize() };
-			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y))
+			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y)) {
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				gb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+			}
 		}
 		ImGui::End();
 	}

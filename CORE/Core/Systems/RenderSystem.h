@@ -5,6 +5,7 @@
 #include <Physics/RP3D_Wrappers.h>
 #include <Rendering/Core/Camera3D.h>
 #include <Rendering/Buffers/Framebuffer.h>
+#include <Rendering/Buffers/Gbuffer.h>
 
 namespace ENGINE_CORE::ECS {
 	class TransformComponent;
@@ -28,6 +29,7 @@ namespace ENGINE_CORE::Systems {
 		void DeferredRenderPipeline(
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
 			ENGINE_CORE::ECS::Registry& runtimeRegistry,
+			std::shared_ptr<ENGINE_RENDERING::Gbuffer> intermediateGB,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB
 		);
 	private:
@@ -37,7 +39,7 @@ namespace ENGINE_CORE::Systems {
 		void Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 
 		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-		void Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Gbuffer> intermediateGB);
 
 		glm::mat4 CalculateModelMatrix(
 			const ENGINE_CORE::ECS::TransformComponent& transform,
