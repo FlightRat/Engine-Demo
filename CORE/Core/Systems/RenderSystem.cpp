@@ -52,35 +52,23 @@ namespace ENGINE_CORE::Systems {
 		glGenBuffers(1, &m_DebugVBO);
 	}
 
-	void RenderSystem::ForwardRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+	glm::mat4 RenderSystem::CalculateModelMatrix(const TransformComponent& transform, const Identification& id, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
-		//auto& mainRegistry = MAIN_REGISTRY();
-		//auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
-		//auto& shadowMap = RenderShadowMap->mapShadowmaps["shadow_map"];
-		//auto& shadowCubemap_1 = RenderShadowMap->mapShadowmaps["shadow_cubemap_1"];
-		//auto& shadowCubemap_2 = RenderShadowMap->mapShadowmaps["shadow_cubemap_2"];
-		//auto& shadowCubemap_3 = RenderShadowMap->mapShadowmaps["shadow_cubemap_3"];
-		//auto& shadowCubemap_4 = RenderShadowMap->mapShadowmaps["shadow_cubemap_4"];
-		//if (shadowMap->Width() != finalOutputFB->Width() || shadowMap->Height() != finalOutputFB->Height())
-		//{
-		//	shadowMap->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
-		//	shadowCubemap_1->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
-		//	shadowCubemap_2->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
-		//	shadowCubemap_3->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
-		//	shadowCubemap_4->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
-		//}
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.position);
+		model *= glm::toMat4(transform.rotation_quat);
+		model = glm::scale(model, transform.scale);
 
-		Prepare_Pass(camera, runtimeRegistry);
-
-		Shadow_Pass(runtimeRegistry);
-
-		finalOutputFB->Bind();
-		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		Forward_Pass(camera, runtimeRegistry);
-		finalOutputFB->Unbind();
-		finalOutputFB->CheckResize();
+		if (id.parent_id != -1) {
+			auto parent_entity = static_cast<entt::entity>(id.parent_id);
+			if (runtimeRegistry.GetRegistry().valid(parent_entity)) {
+				auto& p_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
+				glm::mat4 parentModel = glm::translate(glm::mat4(1.0f), p_transform.position);
+				parentModel *= glm::toMat4(p_transform.rotation_quat);
+				parentModel = glm::scale(parentModel, p_transform.scale);
+				model = parentModel * model;
+			}
+		}
+		return model;
 	}
 
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -275,6 +263,37 @@ namespace ENGINE_CORE::Systems {
 			shadowCubemap->Unbind();
 			// shadowCubemap->CheckResize(); no need
 		}
+	}
+
+	void RenderSystem::ForwardRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+	{
+		//auto& mainRegistry = MAIN_REGISTRY();
+		//auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		//auto& shadowMap = RenderShadowMap->mapShadowmaps["shadow_map"];
+		//auto& shadowCubemap_1 = RenderShadowMap->mapShadowmaps["shadow_cubemap_1"];
+		//auto& shadowCubemap_2 = RenderShadowMap->mapShadowmaps["shadow_cubemap_2"];
+		//auto& shadowCubemap_3 = RenderShadowMap->mapShadowmaps["shadow_cubemap_3"];
+		//auto& shadowCubemap_4 = RenderShadowMap->mapShadowmaps["shadow_cubemap_4"];
+		//if (shadowMap->Width() != finalOutputFB->Width() || shadowMap->Height() != finalOutputFB->Height())
+		//{
+		//	shadowMap->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		//	shadowCubemap_1->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		//	shadowCubemap_2->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		//	shadowCubemap_3->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		//	shadowCubemap_4->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		//}
+
+		Prepare_Pass(camera, runtimeRegistry);
+
+		Shadow_Pass(runtimeRegistry);
+
+		finalOutputFB->Bind();
+		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		Forward_Pass(camera, runtimeRegistry);
+		finalOutputFB->Unbind();
+		finalOutputFB->CheckResize();
 	}
 
 	void RenderSystem::Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -520,25 +539,6 @@ namespace ENGINE_CORE::Systems {
 			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-	}
-
-	glm::mat4 RenderSystem::CalculateModelMatrix(const TransformComponent& transform, const Identification& id, ENGINE_CORE::ECS::Registry& runtimeRegistry)
-	{
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), transform.position);
-		model *= glm::toMat4(transform.rotation_quat);
-		model = glm::scale(model, transform.scale);
-
-		if (id.parent_id != -1) {
-			auto parent_entity = static_cast<entt::entity>(id.parent_id);
-			if (runtimeRegistry.GetRegistry().valid(parent_entity)) {
-				auto& p_transform = runtimeRegistry.GetRegistry().get<TransformComponent>(parent_entity);
-				glm::mat4 parentModel = glm::translate(glm::mat4(1.0f), p_transform.position);
-				parentModel *= glm::toMat4(p_transform.rotation_quat);
-				parentModel = glm::scale(parentModel, p_transform.scale);
-				model = parentModel * model;
-			}
-		}
-		return model;
 	}
 
 	void RenderSystem::DeferredRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
