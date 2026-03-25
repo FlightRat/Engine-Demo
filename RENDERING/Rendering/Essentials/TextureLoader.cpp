@@ -67,7 +67,7 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
-	bool TextureLoader::LoadFBTexture_normal(GLuint& id, int& width, int& height)
+	bool TextureLoader::LoadFBTexture_singlesample(GLuint& id, int& width, int& height)
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
@@ -285,7 +285,7 @@ namespace ENGINE_RENDERING{
 				LoadFBTexture_multisample(id, width, height);
 			}
 			else {
-				LoadFBTexture_normal(id, width, height);
+				LoadFBTexture_singlesample(id, width, height);
 			}
 			break;
 		case ENGINE_RENDERING::Texture::TextureType::SHADOWMAP:

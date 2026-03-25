@@ -7,7 +7,7 @@ namespace ENGINE_RENDERING {
 	{
 	private:
 		static bool LoadTexture(const std::string& filepath, GLuint& id, int& width, int& height, bool blended = false);
-		static bool LoadFBTexture_normal(GLuint& id, int& width, int& height);
+		static bool LoadFBTexture_singlesample(GLuint& id, int& width, int& height);
 		static bool LoadFBTexture_multisample(GLuint& id, int& width, int& height);
 		static bool LoadShadowmapTexture(GLuint& id, int& width, int& height);
 		static bool LoadShadowCubemapTexture(GLuint& id, int& width, int& height);
