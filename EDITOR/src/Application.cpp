@@ -11,8 +11,6 @@
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Core/Camera3D.h>
-#include<Rendering/Buffers/Framebuffer.h>
-#include<Rendering/Buffers/Gbuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
 #include<Rendering/Buffers/render_uniformbuffers.h>
 #include<Rendering/Buffers/render_shadowmaps.h>
@@ -48,6 +46,7 @@
 #include"editor/displays/SceneHierarchyDisplay.h"
 #include"editor/utilities/editor_textures.h"
 #include"editor/utilities/editor_framebuffers.h"
+#include"editor/utilities/editor_gbuffers.h"
 #include"editor/utilities/ComponentDrawer.h"
 #include"editor/scene/SceneManager.h"
 #include"editor/scene/SceneObject.h"
@@ -174,20 +173,7 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// gbuffer
-		auto pGbuffer = std::make_shared<ENGINE_RENDERING::Gbuffer>(600, 600);
-		if (!pGbuffer)
-		{
-			ENGINE_ERROR("Failed to create the Gbuffer");
-			return false;
-		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>(pGbuffer))
-		{
-			ENGINE_ERROR("Failed to add the Gbuffer to the main registry context!");
-			return false;
-		}
-
-		// editor framebuffer
+		// editor framebuffers
 		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
 		if (!pEditorFramebuffer)
 		{
@@ -206,7 +192,26 @@ namespace ENGINE_EDITOR {
 		auto sceneFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
 		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
 		
-		// shadowmap
+		// editor gbuffers
+		auto pEditorGbuffer = std::make_shared<ENGINE_EDITOR::Editorgbuffers>();
+		if (!pEditorGbuffer)
+		{
+			ENGINE_ERROR("Failed to create the EditorGbuffer");
+			return false;
+		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>(pEditorGbuffer))
+		{
+			ENGINE_ERROR("Failed to add the EditorGbuffer to the main registry context!");
+			return false;
+		}
+		// game gbuffer
+		auto gameGbuffer = std::make_shared<ENGINE_RENDERING::Gbuffer>(600, 600);
+		pEditorGbuffer->mapGbuffers.emplace(GbufferType::GAME, gameGbuffer);
+		// scene gbuffer
+		auto sceneGbuffer = std::make_shared<ENGINE_RENDERING::Gbuffer>(600, 600);
+		pEditorGbuffer->mapGbuffers.emplace(GbufferType::SCENE, sceneGbuffer);
+
+		// render shadowmap
 		auto pRenderShadowmap = std::make_shared<ENGINE_RENDERING::RenderShadowMaps>();
 		if (!pRenderShadowmap)
 		{
