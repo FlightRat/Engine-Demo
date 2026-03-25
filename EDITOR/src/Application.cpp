@@ -12,6 +12,7 @@
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Core/Camera3D.h>
 #include<Rendering/Buffers/Framebuffer.h>
+#include<Rendering/Buffers/Gbuffer.h>
 #include<Rendering/Buffers/ShadowMap.h>
 #include<Rendering/Buffers/render_uniformbuffers.h>
 #include<Rendering/Buffers/render_shadowmaps.h>
@@ -173,6 +174,19 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// gbuffer
+		auto pGbuffer = std::make_shared<ENGINE_RENDERING::Gbuffer>(600, 600);
+		if (!pGbuffer)
+		{
+			ENGINE_ERROR("Failed to create the Gbuffer");
+			return false;
+		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>(pGbuffer))
+		{
+			ENGINE_ERROR("Failed to add the Gbuffer to the main registry context!");
+			return false;
+		}
+
 		// editor framebuffer
 		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
 		if (!pEditorFramebuffer)
@@ -324,6 +338,20 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// deferGbuffer
+		if (!assetManager.AddShader("deferGbuffer", "assets/shaders/Defer_Gbuffer.vert", "assets/shaders/Defer_Gbuffer.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// deferLighting
+		if (!assetManager.AddShader("deferLighting", "assets/shaders/Defer_Lighting.vert", "assets/shaders/Defer_Lighting.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -398,7 +426,14 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load default mesh [hud_quad]!");
 			return false;
 		}
+		if (!assetManager.AddModelFromMemory("gbuffer_quad", "gbuffer_quad"))
+		{
+			ENGINE_ERROR("Failed to load default mesh [gbuffer_quad]!");
+			return false;
+		}
 
+		assetManager.GetModel("hud_quad")->SetIsEditorModel(true);
+		assetManager.GetModel("gbuffer_quad")->SetIsEditorModel(true);
 		assetManager.GetModel("skybox")->SetIsEditorModel(true);
 		return true;
 	}
