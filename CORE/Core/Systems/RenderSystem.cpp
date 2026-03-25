@@ -11,6 +11,7 @@
 #include<Rendering/Buffers/ShadowMap.h>
 #include<Rendering/Buffers/render_uniformbuffers.h>
 #include<Rendering/Buffers/render_shadowmaps.h>
+#include<Rendering/Buffers/Gbuffer.h>
 #include<Logger/Logger.h>
 #include<../CORE/Core/ECS/MainRegistry.h>
 #include "../CORE/Core/Systems/LightSystem.h"
@@ -51,10 +52,7 @@ namespace ENGINE_CORE::Systems {
 		glGenBuffers(1, &m_DebugVBO);
 	}
 
-	void RenderSystem::ExecuteRenderPipeline(
-		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
-		ENGINE_CORE::ECS::Registry& runtimeRegistry,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+	void RenderSystem::ForwardRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		//auto& mainRegistry = MAIN_REGISTRY();
 		//auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
@@ -118,6 +116,22 @@ namespace ENGINE_CORE::Systems {
 		mainShader->BindUniformBlock("PointLights", 2);
 		colorShader->BindUniformBlock("Matrices", 0);
 		colliderShader->BindUniformBlock("Matrices", 0);
+
+		auto defer_gbuffer = assetManager.GetShader("deferGbuffer");
+		if (defer_gbuffer->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		auto defer_lighting = assetManager.GetShader("deferLighting");
+		if (defer_lighting->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		defer_gbuffer->BindUniformBlock("Matrices", 0);
+		defer_lighting->BindUniformBlock("DirLights", 1);
+		defer_lighting->BindUniformBlock("PointLights", 2);
 
 		// uniform block buffers
 		auto& RenderUniformbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderUniformbuffers>>();
@@ -525,6 +539,194 @@ namespace ENGINE_CORE::Systems {
 			}
 		}
 		return model;
+	}
+
+	void RenderSystem::DeferredRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& Gbuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
+		if (Gbuffer->Width() != finalOutputFB->Width() || Gbuffer->Height() != finalOutputFB->Height())
+		{
+			Gbuffer->Resize(static_cast<int>(finalOutputFB->Width()), static_cast<int>(finalOutputFB->Height()));
+		}
+
+		Param_Pass(camera, runtimeRegistry);
+
+		Shadow_Pass(runtimeRegistry);
+
+		GeometryPass(camera, runtimeRegistry);
+
+		finalOutputFB->Bind();
+		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		LightingPass(camera, runtimeRegistry);
+		finalOutputFB->Unbind();
+		finalOutputFB->CheckResize();
+	}
+
+	void RenderSystem::GeometryPass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto gbufferShader = assetManager.GetShader("deferGbuffer");
+
+		auto& Gbuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
+		Gbuffer->Bind();
+		glDisable(GL_BLEND);         // <-- MUST DISABLE BLENDING
+		glDisable(GL_STENCIL_TEST);  // <-- DISABLE STENCIL FOR STANDARD PASS
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // 保证 Position 为 0
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glViewport(0, 0, Gbuffer->Width(), Gbuffer->Height());
+
+		// render object
+		gbufferShader->Enable();
+		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		for (auto [entity, transform, meshF, meshR, id] : view.each())
+		{
+			if (!meshR.shouldRender)
+			{
+				continue;
+			}
+			//if (id.selected)
+			//{
+			//	glStencilFunc(GL_ALWAYS, 1, 0xFF);		// 总是通过模板测试，且ref为1
+			//	glStencilMask(0xFF);					// 允许写入模板值
+			//}
+			//else
+			//{
+			//	glStencilMask(0x00);					// 禁止写入模板值
+			//}
+
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			if (meshF.changed || meshR.CheckMaterialEmpty())
+			{
+				meshF.changed = false;
+				meshR.ResetMaterial(meshes);
+			}
+
+			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
+			{
+				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
+
+				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+
+				std::string shaderName = cur_material.shaderName;
+
+				gbufferShader->SetUniformMat4("model", model);
+				gbufferShader->SetUniformBool("bug", textureBug);
+				gbufferShader->SetUniformBool("flipUV", meshR.flipUV);
+				gbufferShader->SetUniformBool("useTexture", cur_material.m_useTexture);
+				gbufferShader->SetUniformVec4("material.color", cur_material.color);
+				//gbufferShader->SetUniformFloat("material.shininess", cur_material.shininess);
+
+				// set uniform textures
+				if (cur_material.m_useTexture) {
+					const auto& slots = TextureRegistry::GetSlots();
+					for (size_t slot_index = 0; slot_index < slots.size(); ++slot_index) {
+						const auto& slot = slots[slot_index];
+
+						auto it = cur_material.m_textures.find(slot.key);
+						bool hasTexture = (it != cur_material.m_textures.end() && !it->second.empty());
+
+						gbufferShader->SetUniformBool(slot.shaderFlag, hasTexture);
+
+						if (hasTexture) {
+							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // 按索引自动分配纹理单元
+							auto tex = assetManager.GetTexture(it->second);
+							if (tex) {
+								glBindTexture(GL_TEXTURE_2D, tex->GetID());
+								gbufferShader->SetUniformInt(slot.shaderSampler, (int)slot_index);
+							}
+						}
+					}
+				}
+				meshes[mesh_index].Draw();
+			}
+		}
+	
+		Gbuffer->Unbind();
+		Gbuffer->CheckResize();
+	}
+
+	void RenderSystem::LightingPass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+
+		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
+		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& dirLightData = lightSystem->GetDirLightData();
+
+		auto& Gbuffer = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Gbuffer>>();
+		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto skybox_texture = assetManager.GetTexture("skybox");
+		auto gbufferShader = assetManager.GetShader("deferGbuffer");
+		auto lightingShader = assetManager.GetShader("deferLighting");
+	
+		lightingShader->Enable();
+
+		lightingShader->SetUniformFloat("far_plane", 50.0f);
+		lightingShader->SetUniformVec3("viewPos", camera->GetPosition());
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetPosition());
+		lightingShader->SetUniformInt("gPosition", 0);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetNormal());
+		lightingShader->SetUniformInt("gNormal", 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetAlbedoSpec());
+		lightingShader->SetUniformInt("gAlbedoSpec", 2);
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, Gbuffer->GetRefl());
+		lightingShader->SetUniformInt("gRefl", 3);
+
+		glActiveTexture(GL_TEXTURE10);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+		lightingShader->SetUniformInt("skybox", 10);
+
+		// set direction light shadowMap
+		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
+		{
+			std::string key = "shadow_map_" + std::to_string(dir_light_index);
+			auto it = RenderShadowMap->mapShadowmaps.find(key);
+			if (it != RenderShadowMap->mapShadowmaps.end())
+			{
+				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
+				glActiveTexture(GL_TEXTURE0 + texUnit);
+				glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
+				lightingShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
+				lightingShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", it->second->GetLightSpaceMatrix());
+			}
+		}
+
+		// set point light shadowCubemap
+		int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 15
+		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
+		{
+			std::string key = "shadow_cubemap_" + std::to_string(point_light_index);
+			auto it = RenderShadowMap->mapShadowmaps.find(key);
+			if (it != RenderShadowMap->mapShadowmaps.end())
+			{
+				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
+				glActiveTexture(GL_TEXTURE0 + texUnit);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, it->second->GetTextureID());
+				lightingShader->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
+			}
+		}
+
+		glDisable(GL_DEPTH_TEST);
+		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
+		gbuffer_quad[0].Draw();
+		glEnable(GL_DEPTH_TEST);
 	}
 }
 
