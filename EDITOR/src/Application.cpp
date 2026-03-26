@@ -375,7 +375,7 @@ namespace ENGINE_EDITOR {
 			bufferManager.AddFrameBuffer(
 				"shadow_map_" + std::to_string(i), 
 				ENGINE_RENDERING::BufferType::SHADOWMAP, 
-				600, 600, false);
+				2048, 2048, false);
 		}
 		// shadowcubemap for point light
 		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
@@ -383,7 +383,7 @@ namespace ENGINE_EDITOR {
 			bufferManager.AddFrameBuffer(
 				"shadow_cubemap_" + std::to_string(i), 
 				ENGINE_RENDERING::BufferType::SHADOWCUBEMAP, 
-				600, 600, false);
+				2048, 2048, false);
 		}
 
 		// uniform buffer
