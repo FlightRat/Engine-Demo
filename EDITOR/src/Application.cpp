@@ -11,9 +11,6 @@
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Core/Camera3D.h>
-#include<Rendering/Buffers/ShadowMap.h>
-#include<Rendering/Buffers/render_uniformbuffers.h>
-#include<Rendering/Buffers/render_shadowmaps.h>
 #include<entt.hpp>
 #include<Core/ECS/Entity.h>
 #include<Core/ECS/MainRegistry.h>
@@ -27,6 +24,7 @@
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Systems/LightSystem.h>
 #include<Core/Inputs/InputManager.h>
+#include<Core/Buffers/BufferManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
@@ -45,8 +43,6 @@
 #include"editor/displays/MenuDisplay.h"
 #include"editor/displays/SceneHierarchyDisplay.h"
 #include"editor/utilities/editor_textures.h"
-#include"editor/utilities/editor_framebuffers.h"
-#include"editor/utilities/editor_gbuffers.h"
 #include"editor/utilities/ComponentDrawer.h"
 #include"editor/scene/SceneManager.h"
 #include"editor/scene/SceneObject.h"
@@ -160,7 +156,7 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// Light System
+		// Light System  do this before LoadBuffers!!!
 		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(4, 4);
 		if (!lightSystem)
 		{
@@ -172,93 +168,6 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to add the light system to the registry context!");
 			return false;
 		}
-
-		// editor framebuffers
-		auto pEditorFramebuffer = std::make_shared<ENGINE_EDITOR::Editorframebuffers>();
-		if (!pEditorFramebuffer)
-		{
-			ENGINE_ERROR("Failed to create the EditorFramebuffer");
-			return false;
-		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>(pEditorFramebuffer))
-		{
-			ENGINE_ERROR("Failed to add the EditorFramebuffer to the main registry context!");
-			return false;
-		}
-		// game framebuffer
-		auto gameFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
-		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::GAME, gameFramebuffer);
-		// scene framebuffer
-		auto sceneFramebuffer = std::make_shared<ENGINE_RENDERING::Framebuffer>(600, 600, true);
-		pEditorFramebuffer->mapFramebuffers.emplace(FramebufferType::SCENE, sceneFramebuffer);
-		
-		// editor gbuffers
-		auto pEditorGbuffer = std::make_shared<ENGINE_EDITOR::Editorgbuffers>();
-		if (!pEditorGbuffer)
-		{
-			ENGINE_ERROR("Failed to create the EditorGbuffer");
-			return false;
-		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>(pEditorGbuffer))
-		{
-			ENGINE_ERROR("Failed to add the EditorGbuffer to the main registry context!");
-			return false;
-		}
-		// game gbuffer
-		auto gameGbuffer = std::make_shared<ENGINE_RENDERING::Gbuffer>(600, 600);
-		pEditorGbuffer->mapGbuffers.emplace(GbufferType::GAME, gameGbuffer);
-		// scene gbuffer
-		auto sceneGbuffer = std::make_shared<ENGINE_RENDERING::Gbuffer>(600, 600);
-		pEditorGbuffer->mapGbuffers.emplace(GbufferType::SCENE, sceneGbuffer);
-
-		// render shadowmap
-		auto pRenderShadowmap = std::make_shared<ENGINE_RENDERING::RenderShadowMaps>();
-		if (!pRenderShadowmap)
-		{
-			ENGINE_ERROR("Failed to create the RenderShadowMap");
-			return false;
-		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>(pRenderShadowmap))
-		{
-			ENGINE_ERROR("Failed to add the RenderShadowMaps to the main registry context!");
-			return false;
-		}
-		// shadowmap for direction light
-		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++) 
-		{
-			auto shadowMap = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, false);
-			pRenderShadowmap->mapShadowmaps.emplace("shadow_map_"+ std::to_string(i), shadowMap);
-		}
-		// shadowmap for point light
-		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
-		{
-			auto shadowCubemap = std::make_shared<ENGINE_RENDERING::ShadowMap>(1024, 1024, true);
-			pRenderShadowmap->mapShadowmaps.emplace("shadow_cubemap_" + std::to_string(i), shadowCubemap);
-		}
-
-		// render uniformbuffer TODO: 给uniformbuffer找个更合适的地方？
-		auto pRenderUniformbuffer = std::make_shared<ENGINE_RENDERING::RenderUniformbuffers>();
-		if (!pRenderUniformbuffer)
-		{
-			ENGINE_ERROR("Failed to create the RenderUniformbuffer");
-			return false;
-		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::RenderUniformbuffers>>(pRenderUniformbuffer))
-		{
-			ENGINE_ERROR("Failed to add the RenderUniformbuffers to the main registry context!");
-			return false;
-		}
-		// view&projection matrix ubo
-		auto matrixUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(2 * sizeof(glm::mat4), 0);
-		pRenderUniformbuffer->mapUniformbuffers.emplace("matrix", matrixUniformbuffer);
-		// direction lights ubo
-		auto dirLightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(
-			lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
-		pRenderUniformbuffer->mapUniformbuffers.emplace("DirLights", dirLightsUniformbuffer);
-		// point lights ubo
-		auto pointLightsUniformbuffer = std::make_shared<ENGINE_RENDERING::UniformBuffer>(
-			lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
-		pRenderUniformbuffer->mapUniformbuffers.emplace("PointLights", pointLightsUniformbuffer);
 
 		if (!CreateDisplays())
 		{
@@ -278,6 +187,11 @@ namespace ENGINE_EDITOR {
 		if (!LoadDefaultMeshes())
 		{
 			ENGINE_ERROR("Failed to load the default meshes!");
+			return false;
+		}
+		if (!LoadBuffers())
+		{
+			ENGINE_ERROR("Failed to load buffers!");
 			return false;
 		}
 
@@ -440,6 +354,43 @@ namespace ENGINE_EDITOR {
 		assetManager.GetModel("hud_quad")->SetIsEditorModel(true);
 		assetManager.GetModel("gbuffer_quad")->SetIsEditorModel(true);
 		assetManager.GetModel("skybox")->SetIsEditorModel(true);
+		return true;
+	}
+
+	bool Application::LoadBuffers()
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
+
+		// frame buffer
+		bufferManager.AddFrameBuffer("GAME_FB", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, true);
+		bufferManager.AddFrameBuffer("SCENE_FB", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, true);
+		// gbuffer
+		bufferManager.AddFrameBuffer("GAME_GB", ENGINE_RENDERING::BufferType::GBUFFER, 600, 600, true);
+		bufferManager.AddFrameBuffer("SCENE_GB", ENGINE_RENDERING::BufferType::GBUFFER, 600, 600, true);
+		// shadowmap for direction light
+		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
+		{
+			bufferManager.AddFrameBuffer(
+				"shadow_map_" + std::to_string(i), 
+				ENGINE_RENDERING::BufferType::SHADOWMAP, 
+				600, 600, false);
+		}
+		// shadowcubemap for point light
+		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
+		{
+			bufferManager.AddFrameBuffer(
+				"shadow_cubemap_" + std::to_string(i), 
+				ENGINE_RENDERING::BufferType::SHADOWCUBEMAP, 
+				600, 600, false);
+		}
+
+		// uniform buffer
+		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
+		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
+		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
+
 		return true;
 	}
 

@@ -1,5 +1,6 @@
 #include "MainRegistry.h"
 #include <Logger/Logger.h>
+#include <../CORE/Core/Buffers/BufferManager.h>
 #include <../CORE/Core/Resources/AssetManager.h>
 #include <SOUNDS/MusicPlayer/MusicPlayer.h>
 #include <Sounds/SoundFxPlayer/SoundFxPlayer.h>
@@ -24,20 +25,22 @@ namespace ENGINE_CORE::ECS {
 		auto pSoundFxPlayer = std::make_shared<ENGINE_SOUNDS::SoundFxPlayer>();
 		m_pMainRegistry->AddToContext<std::shared_ptr<ENGINE_SOUNDS::SoundFxPlayer>>(std::move(pSoundFxPlayer));
 
+		auto pBufferManager = std::make_shared<ENGINE_CORE::BUFFERS::BufferManager>();
+		m_pMainRegistry->AddToContext<std::shared_ptr<ENGINE_CORE::BUFFERS::BufferManager>>(std::move(pBufferManager));
+
 		m_bInitialized = true;
 		return true;
+	}
+
+	ENGINE_CORE::BUFFERS::BufferManager& MainRegistry::GetBufferManager()
+	{
+		assert(m_bInitialized && "Main Registry must be initialized before use.");
+		return *m_pMainRegistry->GetContext<std::shared_ptr<ENGINE_CORE::BUFFERS::BufferManager>>();
 	}
 
 	ENGINE_CORE::RESOURCES::AssetManager& MainRegistry::GetAssetManager()
 	{
 		assert(m_bInitialized && "Main Registry must be initialized before use.");
-
-		// type watch
-		// return std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>&
-		//auto x = m_pMainRegistry->GetContext<std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>>(); 
-		// return ENGINE_CORE::RESOURCES::AssetManager&
-		//return *x;
-
 		return *m_pMainRegistry->GetContext<std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>>();
 	}
 
