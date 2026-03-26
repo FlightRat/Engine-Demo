@@ -40,6 +40,7 @@ namespace ENGINE_CORE::Systems {
 
 		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Gbuffer> intermediateGB);
+		void Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 
 		glm::mat4 CalculateModelMatrix(
 			const ENGINE_CORE::ECS::TransformComponent& transform,

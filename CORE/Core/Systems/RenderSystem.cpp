@@ -541,7 +541,6 @@ namespace ENGINE_CORE::Systems {
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
 		Geometry_Pass(camera, runtimeRegistry);
 		intermediateGB->Unbind();
-		intermediateGB->CheckResize();
 
 		finalOutputFB->Bind();
 		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
@@ -549,6 +548,16 @@ namespace ENGINE_CORE::Systems {
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB);
 		finalOutputFB->Unbind();
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetID());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetID());
+		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(), 0, 0, finalOutputFB->Width(), finalOutputFB->Height(), GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		finalOutputFB->Bind();
+		Postprocess_Pass(camera, runtimeRegistry);
+		finalOutputFB->Unbind();
+
+		intermediateGB->CheckResize();
 		finalOutputFB->CheckResize();
 	}
 
@@ -702,6 +711,35 @@ namespace ENGINE_CORE::Systems {
 		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
 		gbuffer_quad[0].Draw();
 		glEnable(GL_DEPTH_TEST);
+	}
+	
+	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+
+		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
+		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& dirLightData = lightSystem->GetDirLightData();
+
+		auto& assetManager = mainRegistry.GetAssetManager();
+		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
+		auto skybox_texture = assetManager.GetTexture("skybox");
+		auto skyboxShader = assetManager.GetShader("skyboxShader");
+		auto colorShader = assetManager.GetShader("colorShader");
+
+		colorShader->Enable();
+		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
+		{
+			auto point_light = pointLightData[point_light_index];
+			// TODO: check point_light.render to decide if render
+			glm::mat4 light_sphere_model = glm::mat4(1.0f);
+			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
+			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
+			colorShader->SetUniformMat4("model", light_sphere_model);
+			colorShader->SetUniformVec3("color", glm::vec3(point_light.diffuse));
+			colorShader->SetUniformBool("outline", false);
+			sphere[0].Draw();
+		}
 	}
 }
 
