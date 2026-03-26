@@ -5,14 +5,13 @@
 #include "Core/Systems/RenderSystem.h"
 #include "Core/Systems/PhysicsSystem.h"
 #include "Core/Systems/ScriptingSystem.h"
+#include "Core/Buffers/BufferManager.h"
 #include "Core/Resources/AssetManager.h"
 #include "Core/CoreUtilities/CoreEngineData.h"
 #include "Sounds/MusicPlayer/MusicPlayer.h"
 #include "Sounds/SoundFxPlayer/SoundFxPlayer.h"
 #include "Physics/RP3D_Wrappers.h"
 #include "Physics/ContactListener.h"
-#include "../utilities/editor_framebuffers.h"
-#include "../utilities/editor_gbuffers.h"
 #include <Core/Systems/ScriptingSystem.h>
 #include <Core/Systems/RenderSystem.h>
 #include <Rendering/Core/Camera3D.h>
@@ -106,10 +105,9 @@ namespace ENGINE_EDITOR
 
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-		auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
-		const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
-		const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::GAME];
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& fb = bufferManager.GetFrameBuffer("GAME_FB");
+		const auto& gb = bufferManager.GetFrameBuffer("GAME_GB");
 
 		auto& runtimeRegistry = pCurrentScene->GetRegistry();
 		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
@@ -183,10 +181,9 @@ namespace ENGINE_EDITOR
 		{
 			auto& mainRegistry = MAIN_REGISTRY();
 
-			auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-			auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
-			const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::GAME];
-			const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::GAME];
+			auto& bufferManager = mainRegistry.GetBufferManager();
+			const auto& fb = bufferManager.GetFrameBuffer("GAME_FB");
+			const auto& gb = bufferManager.GetFrameBuffer("GAME_GB");
 
 			ImGui::SetCursorPos(ImVec2{ 0.f,0.f });
 			ImGui::Image(

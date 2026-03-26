@@ -3,15 +3,14 @@
 #include "Core/Systems/RenderSystem.h"
 #include "Core/Systems/PhysicsSystem.h"
 #include "Core/Systems/ScriptingSystem.h"
+#include "Core/Buffers/BufferManager.h"
 #include "Core/Resources/AssetManager.h"
 #include "Core/Inputs/InputManager.h"
 #include "Core/CoreUtilities/CoreEngineData.h"
 #include "Rendering/Core/Camera3D.h"
 #include "Physics/RP3D_Wrappers.h"
 #include "Physics/ContactListener.h"
-#include "../utilities/editor_framebuffers.h"
 #include "../utilities/editor_utilities.h"
-#include "../utilities/editor_gbuffers.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
 #include "../tools/ToolManager.h"
@@ -82,10 +81,9 @@ namespace ENGINE_EDITOR {
 		
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-		auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
-		const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
-		const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::SCENE];
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& fb = bufferManager.GetFrameBuffer("SCENE_FB");
+		const auto& gb = bufferManager.GetFrameBuffer("SCENE_GB");
 		
 		m_pSceneCam->SetWidth(fb->Width());
 		m_pSceneCam->SetHeight(fb->Height());
@@ -115,10 +113,9 @@ namespace ENGINE_EDITOR {
 		{
 			auto& mainRegistry = MAIN_REGISTRY();
 
-			auto& editorFramebuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorframebuffers>>();
-			auto& editorGbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::Editorgbuffers>>();
-			const auto& fb = editorFramebuffers->mapFramebuffers[ENGINE_EDITOR::FramebufferType::SCENE];
-			const auto& gb = editorGbuffers->mapGbuffers[ENGINE_EDITOR::GbufferType::SCENE];
+			auto& bufferManager = mainRegistry.GetBufferManager();
+			const auto& fb = bufferManager.GetFrameBuffer("SCENE_FB");
+			const auto& gb = bufferManager.GetFrameBuffer("SCENE_GB");
 
 			ImVec2 imageSize{ static_cast<float>(fb->Width()),static_cast<float>(fb->Height()) };
 			ImVec2 windowSize{ ImGui::GetWindowSize() };
