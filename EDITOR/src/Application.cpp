@@ -391,6 +391,48 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
 
+		// get shaders
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto mainShader = assetManager.GetShader("mainShader");
+		if (mainShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		auto colorShader = assetManager.GetShader("colorShader");
+		if (colorShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		auto colliderShader = assetManager.GetShader("colliderShader");
+		if (colliderShader->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		auto defer_gbuffer = assetManager.GetShader("deferGbuffer");
+		if (defer_gbuffer->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		auto defer_lighting = assetManager.GetShader("deferLighting");
+		if (defer_lighting->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		// bind uniform block index
+		mainShader->BindUniformBlock("Matrices", 0);
+		defer_gbuffer->BindUniformBlock("Matrices", 0);
+		colorShader->BindUniformBlock("Matrices", 0);
+		colliderShader->BindUniformBlock("Matrices", 0);
+		mainShader->BindUniformBlock("DirLights", 1);
+		defer_lighting->BindUniformBlock("DirLights", 1);
+		mainShader->BindUniformBlock("PointLights", 2);
+		defer_lighting->BindUniformBlock("PointLights", 2);
+
 		return true;
 	}
 
