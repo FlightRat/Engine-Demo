@@ -723,10 +723,12 @@ namespace ENGINE_CORE::Systems {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
+		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 		auto skyboxShader = assetManager.GetShader("skyboxShader");
 		auto colorShader = assetManager.GetShader("colorShader");
 
+		// draw pointlight sphere
 		colorShader->Enable();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
@@ -740,6 +742,20 @@ namespace ENGINE_CORE::Systems {
 			colorShader->SetUniformBool("outline", false);
 			sphere[0].Draw();
 		}
+
+		// draw skybox
+		glDepthFunc(GL_LEQUAL);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+		glm::mat4 viewMatrix = camera->GetViewMatrix();
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		skyboxShader->Enable();
+		skyboxShader->SetUniformMat4("model", glm::mat4(1.0f));
+		skyboxShader->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
+		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
+		skyboxShader->SetUniformInt("skybox", 0);
+		skybox[0].Draw();
+		glDepthFunc(GL_LESS);
 	}
 }
 
