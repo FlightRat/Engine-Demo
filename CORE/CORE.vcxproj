@@ -183,7 +183,7 @@
     <ClInclude Include="Core\Loaders\SceneLoader.h" />
     <ClInclude Include="Core\Scripting\CameraLuaBindings.h" />
     <ClInclude Include="Core\Scripting\ContactListenerLuaBindings.h" />
-    <ClInclude Include="Core\Scripting\InputManager.h" />
+    <ClInclude Include="Core\Inputs\InputManager.h" />
     <ClInclude Include="Core\Resources\AssetManager.h" />
     <ClInclude Include="Core\Scripting\GlmLuaBindings.h" />
     <ClInclude Include="Core\Scripting\SoundLuaBindings.h" />
@@ -216,7 +216,7 @@
     <ClCompile Include="Core\Scripting\CameraLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\ContactListenerLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\GlmLuaBindings.cpp" />
-    <ClCompile Include="Core\Scripting\InputManager.cpp" />
+    <ClCompile Include="Core\Inputs\InputManager.cpp" />
     <ClCompile Include="Core\Scripting\SoundLuaBindings.cpp" />
     <ClCompile Include="Core\Scripting\UserDataLuaBindings.cpp" />
     <ClCompile Include="Core\States\State.cpp" />

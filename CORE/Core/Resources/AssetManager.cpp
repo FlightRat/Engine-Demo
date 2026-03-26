@@ -6,7 +6,7 @@
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
 
-namespace ENGINE_RESOURCES {
+namespace ENGINE_CORE::RESOURCES {
 
     Mix_MusicType AssetManager::DetectAudioFormat(const unsigned char* audioData, size_t dataSize)
     {
@@ -452,7 +452,7 @@ namespace ENGINE_RESOURCES {
     // lua register
     void AssetManager::CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
     {
-        //auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
+        //auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>>();
         auto& mainRegistry = MAIN_REGISTRY();
         auto& assetManager = mainRegistry.GetAssetManager();
 

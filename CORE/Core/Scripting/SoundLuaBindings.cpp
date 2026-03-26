@@ -7,7 +7,7 @@
 #include <Logger/Logger.h>
 
 using namespace ENGINE_SOUNDS;
-using namespace ENGINE_RESOURCES;
+using namespace ENGINE_CORE::RESOURCES;
 
 void ENGINE_CORE::Scripting::SoundBindings::CreateLuaSoundBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
 {

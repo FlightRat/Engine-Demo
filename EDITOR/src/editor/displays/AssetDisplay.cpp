@@ -1,7 +1,7 @@
 #include "AssetDisplay.h"
 #include "Utilities/EngineUtilities.h"
 #include "Core/ECS/MainRegistry.h"
-#include "Core/Scripting/InputManager.h"
+#include "Core/Inputs/InputManager.h"
 #include "Core/Resources/AssetManager.h"
 #include "../utilities/editor_utilities.h"
 #include "../scene/SceneManager.h"

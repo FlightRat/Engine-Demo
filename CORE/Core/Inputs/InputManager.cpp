@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 
 
-namespace ENGINE_CORE {
+namespace ENGINE_CORE::INPUTS {
 	InputManager::InputManager():m_pKeyboard{std::make_unique<Keyboard>()}, m_pMouse{ std::make_unique<Mouse>() }
 	{
 

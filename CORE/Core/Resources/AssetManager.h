@@ -15,7 +15,7 @@ namespace ENGINE_UTIL
 	enum class AssetType;
 }
 
-namespace ENGINE_RESOURCES {
+namespace ENGINE_CORE::RESOURCES {
 	class AssetManager
 	{
 	private:

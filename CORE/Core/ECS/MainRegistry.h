@@ -3,7 +3,7 @@
 
 #define MAIN_REGISTRY() ENGINE_CORE::ECS::MainRegistry::GetInstance()
 
-namespace ENGINE_RESOURCES { class AssetManager; }
+namespace ENGINE_CORE::RESOURCES { class AssetManager; }
 namespace ENGINE_SOUNDS { class MusicPlayer; class SoundFxPlayer; }
 
 namespace ENGINE_CORE::ECS {
@@ -33,7 +33,7 @@ namespace ENGINE_CORE::ECS {
 			return m_pMainRegistry->GetContext<TContext>();
 		}
 
-		ENGINE_RESOURCES::AssetManager& GetAssetManager();
+		ENGINE_CORE::RESOURCES::AssetManager& GetAssetManager();
 		ENGINE_SOUNDS::MusicPlayer& GetMusicPlayer();
 		ENGINE_SOUNDS::SoundFxPlayer& GetSoundFxPlayer();
 	};

@@ -5,7 +5,7 @@
 #include <sol/sol.hpp>
 
 using namespace ENGINE_WINDOWING::INPUTS;
-#define INPUT_MANAGER() ENGINE_CORE::InputManager::GetInstance()
+#define INPUT_MANAGER() ENGINE_CORE::INPUTS::InputManager::GetInstance()
 
 /*
 整体思路：
@@ -21,7 +21,7 @@ using namespace ENGINE_WINDOWING::INPUTS;
 	状态修改：检测到"SDLK_a"输入，修改map中"SDLK_a"，即“ENGINE_KEY_A”的状态
 */
 
-namespace ENGINE_CORE {
+namespace ENGINE_CORE::INPUTS {
 	class InputManager
 	{
 	private:

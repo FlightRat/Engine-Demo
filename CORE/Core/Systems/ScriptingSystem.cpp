@@ -14,7 +14,7 @@
 #include "../Scripting/CameraLuaBindings.h"
 #include "../Scripting/UserDataLuaBindings.h"
 #include "../Scripting/ContactListenerLuaBindings.h"
-#include "../Scripting/InputManager.h"
+#include "../Inputs/InputManager.h"
 #include "../CoreUtilities/FollowCamera.h"
 #include "../CoreUtilities/CoreEngineData.h"
 #include"../Resources/AssetManager.h"
@@ -271,11 +271,11 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::Scripting::UserDataBindings::CreateLuaUserDataBind(lua);
 		ENGINE_CORE::Scripting::ContactListenerBindings::CreateLuaContactListenerBind(lua, registry);
 		ENGINE_CORE::FollowCamera::CreateLuaFollowCameraBind(lua, registry);
-		ENGINE_CORE::InputManager::CreateLuaInputBind(lua);
+		ENGINE_CORE::INPUTS::InputManager::CreateLuaInputBind(lua);
 		ENGINE_CORE::State::CreateLuaStateBind(lua);
 		ENGINE_CORE::StateStack::CreateLuaStateStackBind(lua);
 		ENGINE_CORE::StateMachine::CreateLuaStateMachineBind(lua);
-		ENGINE_RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);
+		ENGINE_CORE::RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);
 		ENGINE_UTIL::Timer::CreateLuaTimerBind(lua);
 
 		create_lua_logger(lua);

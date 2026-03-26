@@ -26,7 +26,7 @@
 #include<Core/Systems/RenderSystem.h>
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Systems/LightSystem.h>
-#include<Core/Scripting/InputManager.h>
+#include<Core/Inputs/InputManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
 #include<Windowing/Inputs/Keyboard.h>
 #include<Sounds/MusicPlayer/MusicPlayer.h>
@@ -297,7 +297,7 @@ namespace ENGINE_EDITOR {
 
 	bool Application::LoadShaders()
 	{
-		//auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_RESOURCES::AssetManager>>();
+		//auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>>();
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
 
@@ -455,7 +455,7 @@ namespace ENGINE_EDITOR {
 		//	//auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		//}
 
-		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
+		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
 		auto& engine = ENGINE_CORE::CoreEngineData::GetInstance();
@@ -548,7 +548,7 @@ namespace ENGINE_EDITOR {
 		for (const auto& pDisplay : displayHolder->displays)
 			pDisplay->Update();
 
-		auto& inputManager = ENGINE_CORE::InputManager::GetInstance();
+		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
 		auto& mouse = inputManager.GetMouse();
 		keyboard.Update();

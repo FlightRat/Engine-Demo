@@ -1,6 +1,6 @@
 #include "AbstractTool.h"
 #include "Logger/Logger.h"
-#include "Core/Scripting/InputManager.h"
+#include "Core/Inputs/InputManager.h"
 #include "Core/ECS/Registry.h"
 #include "Rendering/Core/Camera3D.h"
 #include "../utilities/editor_utilities.h"

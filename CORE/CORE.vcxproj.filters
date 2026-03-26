@@ -45,7 +45,7 @@
     <ClInclude Include="Core\Scripting\GlmLuaBindings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Scripting\InputManager.h">
+    <ClInclude Include="Core\Inputs\InputManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Core\ECS\Components\CubeColliderComponent.h">
@@ -134,7 +134,7 @@
     <ClCompile Include="Core\Scripting\GlmLuaBindings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Scripting\InputManager.cpp">
+    <ClCompile Include="Core\Inputs\InputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\ECS\Components\CubeColliderComponent.cpp">

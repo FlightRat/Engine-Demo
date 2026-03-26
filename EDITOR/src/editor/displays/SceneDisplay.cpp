@@ -4,7 +4,7 @@
 #include "Core/Systems/PhysicsSystem.h"
 #include "Core/Systems/ScriptingSystem.h"
 #include "Core/Resources/AssetManager.h"
-#include "Core/Scripting/InputManager.h"
+#include "Core/Inputs/InputManager.h"
 #include "Core/CoreUtilities/CoreEngineData.h"
 #include "Rendering/Core/Camera3D.h"
 #include "Physics/RP3D_Wrappers.h"

@@ -43,7 +43,7 @@ namespace {
 
 using namespace ENGINE_CORE::ECS;
 using namespace ENGINE_RENDERING;
-using namespace ENGINE_RESOURCES;
+using namespace ENGINE_CORE::RESOURCES;
 
 namespace ENGINE_CORE::Systems {
 	RenderSystem::RenderSystem()

@@ -1,6 +1,5 @@
 #include "CameraLuaBindings.h"
 #include "../ECS/Registry.h"
-#include "InputManager.h"
 #include <Rendering/Core/Camera3D.h>
 #include <Logger/Logger.h>
 
