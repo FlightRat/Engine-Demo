@@ -21,6 +21,7 @@ struct DirLight {
     vec4 diffuse;
     vec4 specular;
     vec4 ambient;
+    mat4 lightSpaceMatrices;
 };
 
 struct PointLight {
@@ -36,7 +37,6 @@ in VS_OUT {
     vec3 Normal;
     vec2 TexCoord;
     mat3 TBN;
-    vec4 FragPosLightSpace[NR_DIR_LIGHTS]; // 接收数组
 } fs_in;
 
 out vec4 FragColor;
@@ -215,7 +215,8 @@ void main(){
 
         vec3 lightDir = normalize(-vec3(dir_lights[i].direction));
 
-        float shadow = ShadowCalculation_dir(shadowMaps[i], fs_in.FragPosLightSpace[i], norm, lightDir);
+        vec4 FragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(fs_in.FragPos, 1.0);
+        float shadow = ShadowCalculation_dir(shadowMaps[i], FragPosLightSpace, norm, lightDir);
         result += CalcDirLight(dir_lights[i], norm, viewDir, albedo, specMap, shadow);
     }
 

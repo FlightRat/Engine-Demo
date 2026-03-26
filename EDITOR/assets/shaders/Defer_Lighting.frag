@@ -8,6 +8,7 @@ struct DirLight {
     vec4 diffuse;
     vec4 specular;
     vec4 ambient;
+    mat4 lightSpaceMatrices;
 };
 
 struct PointLight {
@@ -32,7 +33,6 @@ uniform sampler2D gRefl;
 uniform samplerCube skybox;
 uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
 uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
-uniform mat4 lightSpaceMatrices[NR_DIR_LIGHTS];
 
 layout (std140) uniform DirLights {
     DirLight dir_lights[NR_DIR_LIGHTS];
@@ -154,7 +154,7 @@ void main()
         if (dir_lights[i].direction.w < 0.5) continue;
 
         vec3 lightDir = normalize(-vec3(dir_lights[i].direction));
-        vec4 FragPosLightSpace = lightSpaceMatrices[i] * vec4(FragPos, 1.0);
+        vec4 FragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(FragPos, 1.0);
 
         float shadow = ShadowCalculation_dir(shadowMaps[i], FragPosLightSpace, Normal, lightDir);
         result += CalcDirLight(dir_lights[i], Normal, viewDir, Diffuse, Specular, shadow);

@@ -12,7 +12,6 @@ out VS_OUT {
     vec3 Normal;
     vec2 TexCoord;
     mat3 TBN;
-    vec4 FragPosLightSpace[NR_DIR_LIGHTS];
 } vs_out;
 
 uniform mat4 model;
@@ -21,7 +20,6 @@ layout (std140) uniform Matrices
     mat4 view;
     mat4 projection;
 };
-uniform mat4 lightSpaceMatrices[NR_DIR_LIGHTS];
 
 void main()
 {
@@ -36,11 +34,6 @@ void main()
     vec3 N = normalize(normalMatrix * aNormal);
     mat3 TBN = transpose(mat3(T, B, N));
     vs_out.TBN = TBN;
-
-    // 为每个方向光计算其裁剪空间坐标
-    for (int i = 0; i < NR_DIR_LIGHTS; i++) {
-        vs_out.FragPosLightSpace[i] = lightSpaceMatrices[i] * vec4(vs_out.FragPos, 1.0);
-    }
 
     gl_Position = projection * view * model * vec4(aPosition, 1.0);
 }
