@@ -554,7 +554,7 @@ namespace ENGINE_CORE::Systems {
 		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(), 0, 0, finalOutputFB->Width(), finalOutputFB->Height(), GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		finalOutputFB->Bind();
-		Postprocess_Pass(camera, runtimeRegistry);
+		Postprocess_Pass(camera);
 		finalOutputFB->Unbind();
 
 		intermediateGB->CheckResize();
@@ -713,7 +713,7 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_DEPTH_TEST);
 	}
 	
-	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
