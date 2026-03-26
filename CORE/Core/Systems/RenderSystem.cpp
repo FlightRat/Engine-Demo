@@ -7,15 +7,11 @@
 #include<Rendering/Essentials/Shader.h>
 #include<Rendering/Essentials/Lights.h>
 #include<Rendering/Essentials/TextureCommon.h>
-#include<Rendering/Buffers/Framebuffer.h>
-#include<Rendering/Buffers/ShadowMap.h>
-#include<Rendering/Buffers/render_uniformbuffers.h>
-#include<Rendering/Buffers/render_shadowmaps.h>
-#include<Rendering/Buffers/Gbuffer.h>
 #include<Logger/Logger.h>
 #include<../CORE/Core/ECS/MainRegistry.h>
 #include "../CORE/Core/Systems/LightSystem.h"
 #include "../ECS/Entity.h"
+#include "../Buffers/BufferManager.h"
 #include "../Resources/AssetManager.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/Identification.h"
@@ -97,14 +93,6 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-
-		// bind uniform block index
-		mainShader->BindUniformBlock("Matrices", 0);
-		mainShader->BindUniformBlock("DirLights", 1);
-		mainShader->BindUniformBlock("PointLights", 2);
-		colorShader->BindUniformBlock("Matrices", 0);
-		colliderShader->BindUniformBlock("Matrices", 0);
-
 		auto defer_gbuffer = assetManager.GetShader("deferGbuffer");
 		if (defer_gbuffer->ShaderProgramID() == 0)
 		{
@@ -117,15 +105,22 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
+
+		// bind uniform block index
+		mainShader->BindUniformBlock("Matrices", 0);
+		mainShader->BindUniformBlock("DirLights", 1);
+		mainShader->BindUniformBlock("PointLights", 2);
+		colorShader->BindUniformBlock("Matrices", 0);
+		colliderShader->BindUniformBlock("Matrices", 0);
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("PointLights", 2);
 
 		// uniform block buffers
-		auto& RenderUniformbuffers = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderUniformbuffers>>();
-		auto& matrixUbo = RenderUniformbuffers->mapUniformbuffers["matrix"];
-		auto& dirLightsUbo = RenderUniformbuffers->mapUniformbuffers["DirLights"];
-		auto& pointLightsUbo = RenderUniformbuffers->mapUniformbuffers["PointLights"];
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& matrixUbo = bufferManager.GetUniformBuffer("matrix");
+		const auto& dirLightsUbo = bufferManager.GetUniformBuffer("DirLights");
+		const auto& pointLightsUbo = bufferManager.GetUniformBuffer("PointLights");
 
 		// uniform block -- camera param 
 		auto viewMatrix = camera->GetViewMatrix();
@@ -167,15 +162,17 @@ namespace ENGINE_CORE::Systems {
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
+		auto& dirLightDataExtra = lightSystem->GetDirLightDataExtra();
 		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& pointLightDataExtra = lightSystem->GetPointLightDataExtra();
 
-		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		auto& bufferManager = mainRegistry.GetBufferManager();
 
 		// 方向光
 		depthShader->Enable();
 		for (int dir_light_index = 0; dir_light_index < dirLightData.size(); dir_light_index++)
 		{
-			auto& shadowMap = RenderShadowMap->mapShadowmaps["shadow_map_" + std::to_string(dir_light_index)];
+			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(dir_light_index));
 			shadowMap->Bind();
 
 			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
@@ -194,7 +191,7 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
 			glm::mat4 lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
 			glm::mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
-			shadowMap->SetLightSpaceMatrix(lightSpaceMatrix);
+			dirLightDataExtra[dir_light_index].lightSpaceMatrix = lightSpaceMatrix;
 			depthShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 			// render scene
@@ -220,7 +217,7 @@ namespace ENGINE_CORE::Systems {
 		depthCubeShader->Enable();
 		for (int lightIdx = 0; lightIdx < lightSystem->GetActivatedPointLights(); lightIdx++)
 		{
-			auto& shadowCubemap = RenderShadowMap->mapShadowmaps["shadow_cubemap_" + std::to_string(lightIdx)];
+			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(lightIdx));
 			shadowCubemap->Bind();
 
 			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
@@ -286,7 +283,8 @@ namespace ENGINE_CORE::Systems {
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 
-		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& map_FBO = bufferManager.GetAllFBO();
 
 		// get shaders
 		auto mainShader = assetManager.GetShader("mainShader");
@@ -317,7 +315,10 @@ namespace ENGINE_CORE::Systems {
 		// render point light sphere
 		colorShader->Enable();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
+		auto& dirLightData = lightSystem->GetDirLightData();
+		auto& dirLightDataExtra = lightSystem->GetDirLightDataExtra();
 		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& pointLightDataExtra = lightSystem->GetPointLightDataExtra();
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
@@ -387,14 +388,14 @@ namespace ENGINE_CORE::Systems {
 				for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 				{
 					std::string key = "shadow_map_" + std::to_string(dir_light_index);
-					auto it = RenderShadowMap->mapShadowmaps.find(key);
-					if (it != RenderShadowMap->mapShadowmaps.end())
+					auto it = map_FBO.find(key);
+					if (it != map_FBO.end())
 					{
 						int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
 						glActiveTexture(GL_TEXTURE0 + texUnit);
 						glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
 						mainShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
-						mainShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", it->second->GetLightSpaceMatrix());
+						mainShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", dirLightDataExtra[dir_light_index].lightSpaceMatrix);
 					}
 				}
 
@@ -403,8 +404,8 @@ namespace ENGINE_CORE::Systems {
 				for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 				{
 					std::string key = "shadow_cubemap_" + std::to_string(point_light_index);
-					auto it = RenderShadowMap->mapShadowmaps.find(key);
-					if (it != RenderShadowMap->mapShadowmaps.end())
+					auto it = map_FBO.find(key);
+					if (it != map_FBO.end())
 					{
 						int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
 						glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -527,7 +528,7 @@ namespace ENGINE_CORE::Systems {
 
 	void RenderSystem::DeferredRenderPipeline(
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
-		std::shared_ptr<ENGINE_RENDERING::Gbuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		Prepare_Pass(camera, runtimeRegistry);
 
@@ -550,8 +551,8 @@ namespace ENGINE_CORE::Systems {
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB);
 		finalOutputFB->Unbind();
 
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetID());
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetID());
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetFboID());
 		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(),
 			0, 0, finalOutputFB->Width(), finalOutputFB->Height(),
 			GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
@@ -640,15 +641,18 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
-	void RenderSystem::Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Gbuffer> intermediateGB)
+	void RenderSystem::Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
-		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& dirLightData = lightSystem->GetDirLightData();
+		auto& dirLightDataExtra = lightSystem->GetDirLightDataExtra();
+		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& pointLightDataExtra = lightSystem->GetPointLightDataExtra();
 
-		auto& RenderShadowMap = mainRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::RenderShadowMaps>>();
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& map_FBO = bufferManager.GetAllFBO();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
@@ -661,19 +665,19 @@ namespace ENGINE_CORE::Systems {
 		lightingShader->SetUniformVec3("viewPos", camera->GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetPosition());
+		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(0));
 		lightingShader->SetUniformInt("gPosition", 0);
 
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetNormal());
+		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(1));
 		lightingShader->SetUniformInt("gNormal", 1);
 
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetAlbedoSpec());
+		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(2));
 		lightingShader->SetUniformInt("gAlbedoSpec", 2);
 
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetRefl());
+		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(3));
 		lightingShader->SetUniformInt("gRefl", 3);
 
 		glActiveTexture(GL_TEXTURE10);
@@ -684,14 +688,14 @@ namespace ENGINE_CORE::Systems {
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 		{
 			std::string key = "shadow_map_" + std::to_string(dir_light_index);
-			auto it = RenderShadowMap->mapShadowmaps.find(key);
-			if (it != RenderShadowMap->mapShadowmaps.end())
+			auto it = map_FBO.find(key);
+			if (it != map_FBO.end())
 			{
 				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
 				glActiveTexture(GL_TEXTURE0 + texUnit);
 				glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
 				lightingShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
-				lightingShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", it->second->GetLightSpaceMatrix());
+				lightingShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", dirLightDataExtra[dir_light_index].lightSpaceMatrix);
 			}
 		}
 
@@ -700,8 +704,8 @@ namespace ENGINE_CORE::Systems {
 		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 		{
 			std::string key = "shadow_cubemap_" + std::to_string(point_light_index);
-			auto it = RenderShadowMap->mapShadowmaps.find(key);
-			if (it != RenderShadowMap->mapShadowmaps.end())
+			auto it = map_FBO.find(key);
+			if (it != map_FBO.end())
 			{
 				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
 				glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -715,7 +719,7 @@ namespace ENGINE_CORE::Systems {
 		gbuffer_quad[0].Draw();
 		glEnable(GL_DEPTH_TEST);
 	}
-	
+
 	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();

@@ -17,4 +17,12 @@ namespace ENGINE_RENDERING {
 		glm::vec4 attenuation = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		//bool render{ false };
 	};
+
+	struct DirLightExtra {
+		glm::mat4 lightSpaceMatrix{ 0.0f };
+	};
+
+	struct PointLightExtra {
+		bool render{false};
+	};
 }

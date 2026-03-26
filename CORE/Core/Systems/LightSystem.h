@@ -15,6 +15,8 @@ namespace ENGINE_CORE::Systems {
 
 		std::vector<ENGINE_RENDERING::DirLight> m_DirLightData;
 		std::vector<ENGINE_RENDERING::PointLight> m_PointLightData;
+		std::vector<ENGINE_RENDERING::DirLightExtra> m_DirLightDataExtra;
+		std::vector<ENGINE_RENDERING::PointLightExtra> m_PointLightDataExtra;
 
 		// 存储每个方向光的 lightSpaceMatrix，供 Shadow Pass 和 Forward Pass 共用
 		// std::vector<glm::mat4> m_DirLightSpaceMatrices;
@@ -32,5 +34,7 @@ namespace ENGINE_CORE::Systems {
 	
 		inline const std::vector<ENGINE_RENDERING::DirLight>& GetDirLightData() const { return m_DirLightData; }
 		inline const std::vector<ENGINE_RENDERING::PointLight>& GetPointLightData() const { return m_PointLightData; }
+		inline std::vector<ENGINE_RENDERING::DirLightExtra>& GetDirLightDataExtra() { return m_DirLightDataExtra; }
+		inline std::vector<ENGINE_RENDERING::PointLightExtra>& GetPointLightDataExtra() { return m_PointLightDataExtra; }
 	};
 }

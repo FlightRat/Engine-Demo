@@ -9,6 +9,8 @@ namespace ENGINE_CORE::Systems {
         // 构造时就分配好固定大小，后续 assign() 不会重新分配堆内存
         m_DirLightData.resize(MAX_DIR_LIGHTS);
         m_PointLightData.resize(MAX_POINT_LIGHTS);
+        m_DirLightDataExtra.resize(MAX_DIR_LIGHTS);
+        m_PointLightDataExtra.resize(MAX_POINT_LIGHTS);
 	}
 
     //LightSystem::Update() 修复版
@@ -21,6 +23,8 @@ namespace ENGINE_CORE::Systems {
         // 这样 Shader 里未使用的槽位 direction.w == 0.0，会被 continue 跳过
         m_DirLightData.assign(MAX_DIR_LIGHTS, ENGINE_RENDERING::DirLight{});   // w默认0
         m_PointLightData.assign(MAX_POINT_LIGHTS, ENGINE_RENDERING::PointLight{});
+        m_DirLightDataExtra.assign(MAX_DIR_LIGHTS, ENGINE_RENDERING::DirLightExtra{});
+        m_PointLightDataExtra.assign(MAX_POINT_LIGHTS, ENGINE_RENDERING::PointLightExtra{});
 
         auto lightView = runtimeRegistry.GetRegistry().view<ENGINE_CORE::ECS::LightComponent>();
         for (auto [_, light] : lightView.each())
@@ -56,6 +60,7 @@ namespace ENGINE_CORE::Systems {
                         .attenuation = glm::vec4(light.constant, light.linear, light.quadratic, 0.0f),
                         //.render = light.render
                     };
+                    m_PointLightDataExtra[ACTIVATED_POINT_LIGHTS].render = light.render;
                     ACTIVATED_POINT_LIGHTS++;
                 }
                 else
