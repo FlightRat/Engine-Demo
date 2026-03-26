@@ -162,37 +162,23 @@ namespace ENGINE_CORE::Systems {
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
-		auto& dirLightDataExtra = lightSystem->GetDirLightDataExtra();
 		auto& pointLightData = lightSystem->GetPointLightData();
-		auto& pointLightDataExtra = lightSystem->GetPointLightDataExtra();
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
 
 		// 方向光
 		depthShader->Enable();
-		for (int dir_light_index = 0; dir_light_index < dirLightData.size(); dir_light_index++)
+		for (int dirlight_index = 0; dirlight_index < lightSystem->GetActivatedDirLights(); dirlight_index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(dir_light_index));
+			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(dirlight_index));
 			shadowMap->Bind();
 
 			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
 			glClearColor(0.f, 0.f, 0.f, 1.f);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			auto dirLight = dirLightData[dir_light_index];
-
-			// calculate lightSpaceMatrix
-			glm::vec3 dirLightDir = dirLight.direction;
-			glm::vec3 dirLightPos = glm::vec3(0.0f) - (dirLightDir * 10.0f);
-			float near_plane = 0.1f, far_plane = 50.0f;
-			glm::vec3 upVector = glm::abs(dirLightDir.y) > 0.99f
-				? glm::vec3(0.0f, 0.0f, 1.0f)
-				: glm::vec3(0.0f, 1.0f, 0.0f);
-			glm::mat4 lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
-			glm::mat4 lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
-			glm::mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
-			dirLightDataExtra[dir_light_index].lightSpaceMatrix = lightSpaceMatrix;
-			depthShader->SetUniformMat4("lightSpaceMatrix", lightSpaceMatrix);
+			auto dirLight = dirLightData[dirlight_index];
+			depthShader->SetUniformMat4("lightSpaceMatrix", dirLight.lightSpaceMatrix);
 
 			// render scene
 			auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
@@ -215,16 +201,16 @@ namespace ENGINE_CORE::Systems {
 
 		// 点光源
 		depthCubeShader->Enable();
-		for (int lightIdx = 0; lightIdx < lightSystem->GetActivatedPointLights(); lightIdx++)
+		for (int pointlight_index = 0; pointlight_index < lightSystem->GetActivatedPointLights(); pointlight_index++)
 		{
-			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(lightIdx));
+			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(pointlight_index));
 			shadowCubemap->Bind();
 
 			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
 			glClearColor(0.f, 0.f, 0.f, 1.f);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			auto& point_light = pointLightData[lightIdx];
+			auto& point_light = pointLightData[pointlight_index];
 			glm::vec3 point_light_pos = glm::vec3(point_light.position);
 
 			// light space matrix
@@ -316,9 +302,7 @@ namespace ENGINE_CORE::Systems {
 		colorShader->Enable();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
-		auto& dirLightDataExtra = lightSystem->GetDirLightDataExtra();
 		auto& pointLightData = lightSystem->GetPointLightData();
-		auto& pointLightDataExtra = lightSystem->GetPointLightDataExtra();
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
@@ -395,7 +379,6 @@ namespace ENGINE_CORE::Systems {
 						glActiveTexture(GL_TEXTURE0 + texUnit);
 						glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
 						mainShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
-						mainShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", dirLightDataExtra[dir_light_index].lightSpaceMatrix);
 					}
 				}
 
@@ -647,9 +630,7 @@ namespace ENGINE_CORE::Systems {
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
-		auto& dirLightDataExtra = lightSystem->GetDirLightDataExtra();
 		auto& pointLightData = lightSystem->GetPointLightData();
-		auto& pointLightDataExtra = lightSystem->GetPointLightDataExtra();
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
 		const auto& map_FBO = bufferManager.GetAllFBO();
@@ -695,7 +676,6 @@ namespace ENGINE_CORE::Systems {
 				glActiveTexture(GL_TEXTURE0 + texUnit);
 				glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
 				lightingShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
-				lightingShader->SetUniformMat4("lightSpaceMatrices[" + std::to_string(dir_light_index) + "]", dirLightDataExtra[dir_light_index].lightSpaceMatrix);
 			}
 		}
 
