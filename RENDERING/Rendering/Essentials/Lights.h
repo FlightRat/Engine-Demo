@@ -7,6 +7,7 @@ namespace ENGINE_RENDERING {
 		glm::vec4 diffuse = glm::vec4(0.0f);
 		glm::vec4 specular = glm::vec4(0.0f);
 		glm::vec4 ambient = glm::vec4(0.0f);
+		glm::mat4 lightSpaceMatrix = glm::mat4(0.0f);
 	};
 
 	struct PointLight {
@@ -16,13 +17,5 @@ namespace ENGINE_RENDERING {
 		glm::vec4 ambient = glm::vec4(0.0f);
 		glm::vec4 attenuation = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		//bool render{ false };
-	};
-
-	struct DirLightExtra {
-		glm::mat4 lightSpaceMatrix{ 0.0f };
-	};
-
-	struct PointLightExtra {
-		bool render{false};
 	};
 }
