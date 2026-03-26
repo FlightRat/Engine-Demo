@@ -534,8 +534,8 @@ namespace ENGINE_CORE::Systems {
 		Shadow_Pass(runtimeRegistry);
 
 		intermediateGB->Bind();
-		glDisable(GL_BLEND);					// <-- MUST DISABLE BLENDING
-		glDisable(GL_STENCIL_TEST);				// <-- DISABLE STENCIL FOR STANDARD PASS
+		glDisable(GL_BLEND);					// 关闭混合
+		glEnable(GL_STENCIL_TEST);				// 开启模板测试
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// 保证 Position 为 0
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
@@ -543,6 +543,7 @@ namespace ENGINE_CORE::Systems {
 		intermediateGB->Unbind();
 
 		finalOutputFB->Bind();
+		glDisable(GL_STENCIL_TEST);				// 光照计算不需要模板
 		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -551,10 +552,12 @@ namespace ENGINE_CORE::Systems {
 
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetID());
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetID());
-		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(), 0, 0, finalOutputFB->Width(), finalOutputFB->Height(), GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(),
+			0, 0, finalOutputFB->Width(), finalOutputFB->Height(),
+			GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		finalOutputFB->Bind();
-		Postprocess_Pass(camera);
+		Postprocess_Pass(camera, runtimeRegistry);
 		finalOutputFB->Unbind();
 
 		intermediateGB->CheckResize();
@@ -577,15 +580,15 @@ namespace ENGINE_CORE::Systems {
 			{
 				continue;
 			}
-			//if (id.selected)
-			//{
-			//	glStencilFunc(GL_ALWAYS, 1, 0xFF);		// 总是通过模板测试，且ref为1
-			//	glStencilMask(0xFF);					// 允许写入模板值
-			//}
-			//else
-			//{
-			//	glStencilMask(0x00);					// 禁止写入模板值
-			//}
+			if (id.selected)
+			{
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);		// 总是通过模板测试，且ref为1
+				glStencilMask(0xFF);					// 允许写入模板值
+			}
+			else
+			{
+				glStencilMask(0x00);					// 禁止写入模板值
+			}
 
 			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
@@ -713,7 +716,7 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_DEPTH_TEST);
 	}
 	
-	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
+	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
@@ -728,7 +731,7 @@ namespace ENGINE_CORE::Systems {
 		auto skyboxShader = assetManager.GetShader("skyboxShader");
 		auto colorShader = assetManager.GetShader("colorShader");
 
-		// draw pointlight sphere
+		// 绘制点光源
 		colorShader->Enable();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
@@ -743,7 +746,7 @@ namespace ENGINE_CORE::Systems {
 			sphere[0].Draw();
 		}
 
-		// draw skybox
+		// 绘制天空盒
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
@@ -756,6 +759,80 @@ namespace ENGINE_CORE::Systems {
 		skyboxShader->SetUniformInt("skybox", 0);
 		skybox[0].Draw();
 		glDepthFunc(GL_LESS);
+
+		// 模板测试
+		glEnable(GL_STENCIL_TEST);					// 开启模板测试
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// 当目标像素的模板值不等于1时，通过测试
+		glStencilMask(0x00);						// 禁止写入模板值
+		glDepthMask(GL_FALSE);						//禁止深度写入
+		colorShader->Enable();
+		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+		for (auto [entity, transform, meshF, meshR, id] : view.each())
+		{
+			if (!meshR.shouldRender || !id.selected)
+			{
+				continue;
+			}
+
+			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			if (meshF.changed || meshR.CheckMaterialEmpty())
+			{
+				meshF.changed = false;
+				meshR.ResetMaterial(meshes);
+			}
+
+			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
+			{
+				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
+
+				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+
+				std::string shaderName = cur_material.shaderName;
+
+				colorShader->Enable();	// NOTE: now the shader is fixed
+				colorShader->SetUniformMat4("model", model);
+				colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
+				colorShader->SetUniformBool("outline", true);
+
+				meshes[mesh_index].Draw();
+			}
+		}
+		glStencilMask(0xFF);						// 允许写入模板值
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// 总是通过模板测试，且ref为0
+		glDepthMask(GL_TRUE);						// 恢复深度写入
+		glDisable(GL_STENCIL_TEST);					// 关闭模板测试
+
+		// 绘制物理调试线框
+		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
+		{
+			auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
+			auto& physicsDebugger = physicsWorld->getDebugRenderer();
+
+			auto colliderShader = assetManager.GetShader("colliderShader");
+			colliderShader->Enable();
+			colliderShader->SetUniformMat4("model", glm::mat4(1.0f));
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+			const uint nbTriangles = physicsDebugger.getNbTriangles();
+			GLsizei sizeVertices = static_cast<GLsizei>(nbTriangles * sizeof(rp3d::DebugRenderer::DebugTriangle));
+
+			glBindVertexArray(m_DebugVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, m_DebugVBO);
+
+			const void* data = physicsDebugger.getTrianglesArray();
+			glBufferData(GL_ARRAY_BUFFER, sizeVertices, data, GL_STATIC_DRAW);
+
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(rp3d::Vector3) + sizeof(rp3d::uint32), (char*)nullptr);
+			glEnableVertexAttribArray(1);
+			glVertexAttribIPointer(1, 3, GL_UNSIGNED_INT, sizeof(rp3d::Vector3) + sizeof(rp3d::uint32), (void*)sizeof(rp3d::Vector3));
+
+			glDrawArrays(GL_TRIANGLES, 0, physicsDebugger.getNbTriangles() * 3);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 	}
 }
 
