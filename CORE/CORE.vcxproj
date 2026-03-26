@@ -164,6 +164,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Buffers\BufferManager.h" />
     <ClInclude Include="Core\CoreUtilities\CoreEngineData.h" />
     <ClInclude Include="Core\CoreUtilities\FollowCamera.h" />
     <ClInclude Include="Core\ECS\Components\ComponentSerializer.h" />
@@ -197,6 +198,7 @@
     <ClInclude Include="Core\Systems\ScriptingSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\buffers\BufferManager.cpp" />
     <ClCompile Include="Core\CoreUtilities\CoreEngineData.cpp" />
     <ClCompile Include="Core\CoreUtilities\FollowCamera.cpp" />
     <ClCompile Include="Core\ECS\Components\ComponentSerializer.cpp" />
