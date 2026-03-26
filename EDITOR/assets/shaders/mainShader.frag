@@ -215,8 +215,8 @@ void main(){
 
         vec3 lightDir = normalize(-vec3(dir_lights[i].direction));
 
-        vec4 FragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(fs_in.FragPos, 1.0);
-        float shadow = ShadowCalculation_dir(shadowMaps[i], FragPosLightSpace, norm, lightDir);
+        vec4 fragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(fs_in.FragPos, 1.0);
+        float shadow = ShadowCalculation_dir(shadowMaps[i], fragPosLightSpace, norm, lightDir);
         result += CalcDirLight(dir_lights[i], norm, viewDir, albedo, specMap, shadow);
     }
 
