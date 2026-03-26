@@ -20,6 +20,9 @@ namespace ENGINE_CORE::BUFFERS {
 		bool AddFrameBuffer(const std::string& fboNme, ENGINE_RENDERING::BufferType type, int width, int height, bool useRBO);
 		bool AddUniformBuffer(const std::string& uboName, size_t size, int bindingPoint);
 
+		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Framebuffer>>& GetAllFBO() const { return m_mapFBO; }
+		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::UniformBuffer>>& GetAllUBO() const { return m_mapUBO; }
+
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> GetFrameBuffer(const std::string& fboNme);
 		std::shared_ptr<ENGINE_RENDERING::UniformBuffer> GetUniformBuffer(const std::string& uboName);
 	};
