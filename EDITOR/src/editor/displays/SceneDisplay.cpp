@@ -88,8 +88,20 @@ namespace ENGINE_EDITOR {
 		m_pSceneCam->SetWidth(fb->Width());
 		m_pSceneCam->SetHeight(fb->Height());
 
-		//renderSystem->ForwardRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
 		renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, fb);
+
+		// code for test
+		//auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
+		//auto& keyboard = inputManager.GetKeyBoard();
+		//auto& mouse = inputManager.GetMouse();
+		//if (keyboard.IsKeyPressed(ENGINE_KEY_1))
+		//{
+		//	renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, fb);
+		//}
+		//else
+		//{
+		//	renderSystem->ForwardRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
+		//}
 	}
 
 	void SceneDisplay::LoadNewScene()
