@@ -71,50 +71,6 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
-		auto& assetManager = mainRegistry.GetAssetManager();
-		auto skybox_texture = assetManager.GetTexture("skybox");
-
-		// get shaders
-		auto mainShader = assetManager.GetShader("mainShader");
-		if (mainShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		auto colorShader = assetManager.GetShader("colorShader");
-		if (colorShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		auto colliderShader = assetManager.GetShader("colliderShader");
-		if (colliderShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		auto defer_gbuffer = assetManager.GetShader("deferGbuffer");
-		if (defer_gbuffer->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		auto defer_lighting = assetManager.GetShader("deferLighting");
-		if (defer_lighting->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-
-		// bind uniform block index
-		mainShader->BindUniformBlock("Matrices", 0);
-		mainShader->BindUniformBlock("DirLights", 1);
-		mainShader->BindUniformBlock("PointLights", 2);
-		colorShader->BindUniformBlock("Matrices", 0);
-		colliderShader->BindUniformBlock("Matrices", 0);
-		defer_gbuffer->BindUniformBlock("Matrices", 0);
-		defer_lighting->BindUniformBlock("DirLights", 1);
-		defer_lighting->BindUniformBlock("PointLights", 2);
 
 		// uniform block buffers
 		auto& bufferManager = mainRegistry.GetBufferManager();
