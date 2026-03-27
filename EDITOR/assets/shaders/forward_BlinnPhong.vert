@@ -32,7 +32,7 @@ void main()
     vec3 T = normalize(normalMatrix * aTangent);
     vec3 B = normalize(normalMatrix * aBitangent);
     vec3 N = normalize(normalMatrix * aNormal);
-    mat3 TBN = transpose(mat3(T, B, N));
+    mat3 TBN = mat3(T, B, N);
     vs_out.TBN = TBN;
 
     gl_Position = projection * view * model * vec4(aPosition, 1.0);

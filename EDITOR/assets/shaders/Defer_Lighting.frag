@@ -24,11 +24,13 @@ in vec2 TexCoord;
 
 uniform vec3 viewPos;
 uniform float far_plane;
+uniform bool use_SSAO;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 uniform sampler2D gRefl;
+uniform sampler2D ssao;
 
 uniform samplerCube skybox;
 uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
@@ -41,7 +43,7 @@ layout (std140) uniform PointLights {
     PointLight point_lights[NR_POINT_LIGHTS];
 };
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, float specMap, float shadow){
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, float specMap, float ambientOcclusion, float shadow){
     vec3 lightDir = normalize(vec3(light.position) - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir); // Blinn-Phong 核心
 
@@ -57,27 +59,27 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     float attenuation = 1.0 / (light.attenuation.x + light.attenuation.y * distance + light.attenuation.z * (distance * distance));
 
     // 合并
-    vec3 ambient  = vec3(light.ambient)  * albedo * attenuation;
+    vec3 ambient  = vec3(light.ambient)  * ambientOcclusion * albedo * attenuation;
     vec3 diffuse  = vec3(light.diffuse)  * diff * albedo * attenuation;
     vec3 specular = vec3(light.specular) * spec * specMap * attenuation;
 
     // return ambient + diffuse + specular;
-    return ambient + (1 - shadow) * (diffuse + specular);
+    return ambient + (1.0 - shadow) * (diffuse + specular);
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, float specMap, float shadow){
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, float specMap, float ambientOcclusion, float shadow){
     vec3 lightDir = normalize(-vec3(light.direction));
     vec3 halfwayDir = normalize(lightDir + viewDir);
 
     float diff = max(dot(normal, lightDir), 0.0);
     float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
 
-    vec3 ambient  = vec3(light.ambient)  * albedo;
+    vec3 ambient  = vec3(light.ambient)  * ambientOcclusion * albedo;
     vec3 diffuse  = vec3(light.diffuse)  * diff * albedo;
     vec3 specular = vec3(light.specular) * spec * specMap;
 
     // return ambient + diffuse + specular;
-    return ambient + (1 - shadow) * (diffuse + specular);
+    return ambient + (1.0 - shadow) * (diffuse + specular);
 }
 
 float ShadowCalculation_dir(sampler2D shadowMap, vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
@@ -142,7 +144,9 @@ void main()
     vec3 Diffuse = texture(gAlbedoSpec, TexCoord).rgb;
     float Specular = texture(gAlbedoSpec, TexCoord).a;
     vec3 Reflection = texture(gRefl, TexCoord).rgb;
-
+    float AmbientOcclusion = 1.0;
+    if (use_SSAO)
+        AmbientOcclusion = texture(ssao, TexCoord).r;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 I = normalize(FragPos - viewPos);
     vec3 R = reflect(I,normalize(Normal));
@@ -157,7 +161,7 @@ void main()
         vec4 FragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(FragPos, 1.0);
 
         float shadow = ShadowCalculation_dir(shadowMaps[i], FragPosLightSpace, Normal, lightDir);
-        result += CalcDirLight(dir_lights[i], Normal, viewDir, Diffuse, Specular, shadow);
+        result += CalcDirLight(dir_lights[i], Normal, viewDir, Diffuse, Specular, AmbientOcclusion, shadow);
     }
 
     // 点光源
@@ -167,7 +171,7 @@ void main()
         {
             vec3 lightPos = vec3(point_lights[i].position);
             float shadow = ShadowCalculation_point(shadowCubeMap[i], lightPos, FragPos, Normal);
-            result += CalcPointLight(point_lights[i], Normal, FragPos, viewDir, Diffuse, Specular, shadow);
+            result += CalcPointLight(point_lights[i], Normal, FragPos, viewDir, Diffuse, Specular, AmbientOcclusion, shadow);
         }
     }
 
@@ -175,7 +179,8 @@ void main()
     result += Reflection * texture(skybox, R).rgb;
     
     // 4. 输出
-    result = pow(result, vec3(1.0/2.2));    // gamma correction
+    result = result / (result + vec3(1.0));     // Reinhard Tone Mapping
+    result = pow(result, vec3(1.0/2.2));        // gamma correction
     FragColor = vec4(result, 1.0);
 
     // for test
