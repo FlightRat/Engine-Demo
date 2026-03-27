@@ -215,57 +215,57 @@ namespace ENGINE_EDITOR {
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
 
-		// main shader
-		if (!assetManager.AddShader("mainShader", "assets/shaders/mainShader.vert", "assets/shaders/mainShader.frag", ""))
+		// forward BlinnPhong
+		if (!assetManager.AddShader("forward_BlinnPhong", "assets/shaders/forward_BlinnPhong.vert", "assets/shaders/forward_BlinnPhong.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// color shader
-		if (!assetManager.AddShader("colorShader", "assets/shaders/colorShader.vert", "assets/shaders/colorShader.frag", ""))
+		// forward color
+		if (!assetManager.AddShader("forward_Color", "assets/shaders/forward_Color.vert", "assets/shaders/forward_Color.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
 		// skybox shader TODO: hide shyboxShader from UI
-		if (!assetManager.AddShader("skyboxShader", "assets/shaders/skyboxShader.vert", "assets/shaders/skyboxShader.frag", ""))
+		if (!assetManager.AddShader("skybox", "assets/shaders/skybox.vert", "assets/shaders/skybox.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// colliderShader
-		if (!assetManager.AddShader("colliderShader", "assets/shaders/physicsDebugShader.vert", "assets/shaders/physicsDebugShader.frag", ""))
+		// physicsDebug
+		if (!assetManager.AddShader("physics_Debug", "assets/shaders/physics_Debug.vert", "assets/shaders/physics_Debug.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// depthShader
-		if(!assetManager.AddShader("depthShader", "assets/shaders/depthShader.vert", "assets/shaders/depthShader.frag", ""))
+		// shadowmap
+		if(!assetManager.AddShader("shadow_Map", "assets/shaders/shadow_Map.vert", "assets/shaders/shadow_Map.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// depthCubeShader
-		if (!assetManager.AddShader("depthCubeShader", "assets/shaders/depthCubeShader.vert", "assets/shaders/depthCubeShader.frag", "assets/shaders/depthCubeShader.geom"))
+		// shadowCubemap
+		if (!assetManager.AddShader("shadow_Cubemap", "assets/shaders/shadow_Cubemap.vert", "assets/shaders/shadow_Cubemap.frag", "assets/shaders/shadow_Cubemap.geom"))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// deferGbuffer
-		if (!assetManager.AddShader("deferGbuffer", "assets/shaders/Defer_Gbuffer.vert", "assets/shaders/Defer_Gbuffer.frag", ""))
+		// defer Gbuffer
+		if (!assetManager.AddShader("defer_Gbuffer", "assets/shaders/defer_Gbuffer.vert", "assets/shaders/defer_Gbuffer.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// deferLighting
-		if (!assetManager.AddShader("deferLighting", "assets/shaders/Defer_Lighting.vert", "assets/shaders/Defer_Lighting.frag", ""))
+		// defer Lighting
+		if (!assetManager.AddShader("defer_Lighting", "assets/shaders/defer_Lighting.vert", "assets/shaders/defer_Lighting.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
@@ -391,46 +391,48 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
 
-		// get shaders
 		auto& assetManager = mainRegistry.GetAssetManager();
-		auto mainShader = assetManager.GetShader("mainShader");
-		if (mainShader->ShaderProgramID() == 0)
+		// forward rendering shader
+		auto forward_BlinnPhong = assetManager.GetShader("forward_BlinnPhong");
+		if (forward_BlinnPhong->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
-		auto colorShader = assetManager.GetShader("colorShader");
-		if (colorShader->ShaderProgramID() == 0)
+		auto forward_Color = assetManager.GetShader("forward_Color");
+		if (forward_Color->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
-		auto colliderShader = assetManager.GetShader("colliderShader");
-		if (colliderShader->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return false;
-		}
-		auto defer_gbuffer = assetManager.GetShader("deferGbuffer");
+		// defer rendering shader
+		auto defer_gbuffer = assetManager.GetShader("defer_Gbuffer");
 		if (defer_gbuffer->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
-		auto defer_lighting = assetManager.GetShader("deferLighting");
+		auto defer_lighting = assetManager.GetShader("defer_Lighting");
 		if (defer_lighting->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
+		//
+		auto physics_Debug = assetManager.GetShader("physics_Debug");
+		if (physics_Debug->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
 		// bind uniform block index
-		mainShader->BindUniformBlock("Matrices", 0);
+		forward_BlinnPhong->BindUniformBlock("Matrices", 0);
+		forward_Color->BindUniformBlock("Matrices", 0);
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
-		colorShader->BindUniformBlock("Matrices", 0);
-		colliderShader->BindUniformBlock("Matrices", 0);
-		mainShader->BindUniformBlock("DirLights", 1);
+		physics_Debug->BindUniformBlock("Matrices", 0);
+		forward_BlinnPhong->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("DirLights", 1);
-		mainShader->BindUniformBlock("PointLights", 2);
+		forward_BlinnPhong->BindUniformBlock("PointLights", 2);
 		defer_lighting->BindUniformBlock("PointLights", 2);
 
 		return true;

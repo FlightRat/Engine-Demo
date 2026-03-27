@@ -65,8 +65,8 @@
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\Defs\assetDefs.lua" />
     <None Include="SDL2_mixer.dll" />
-    <None Include="assets\shaders\physicsDebugShader.vert" />
-    <None Include="assets\shaders\physicsDebugShader.frag" />
+    <None Include="assets\shaders\physics_Debug.vert" />
+    <None Include="assets\shaders\physics_Debug.frag" />
     <None Include="imgui.ini" />
     <None Include="assets\scripts\GameDemo\script_list.lua" />
     <None Include="assets\scripts\GameDemo\Defs\playerDefs.lua" />
@@ -80,8 +80,8 @@
     <None Include="assets\scripts\GameDemo\platform.lua" />
     <None Include="assets\scripts\GameDemo\plat.lua" />
     <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
-    <None Include="assets\shaders\mainShader.vert" />
-    <None Include="assets\shaders\mainShader.frag" />
+    <None Include="assets\shaders\forward_BlinnPhong.vert" />
+    <None Include="assets\shaders\forward_BlinnPhong.frag" />
     <None Include="assimp-vc143-mtd.dll" />
     <None Include="assets\scripts\GameDemo\Defs\ModelDefs.lua" />
     <None Include="assets\models\backpack\backpack.mtl" />
@@ -90,19 +90,19 @@
     <None Include="assets\models\cyborg\cyborg.blend" />
     <None Include="assets\models\cyborg\cyborg.blend1" />
     <None Include="assets\models\cyborg\cyborg.mtl" />
-    <None Include="assets\shaders\colorShader.vert" />
-    <None Include="assets\shaders\colorShader.frag" />
-    <None Include="assets\shaders\skyboxShader.vert" />
-    <None Include="assets\shaders\skyboxShader.frag" />
-    <None Include="assets\shaders\depthShader.vert" />
-    <None Include="assets\shaders\depthShader.frag" />
-    <None Include="assets\shaders\depthCubeShader.vert" />
-    <None Include="assets\shaders\depthCubeShader.frag" />
-    <None Include="assets\shaders\depthCubeShader.geom" />
-    <None Include="assets\shaders\Defer_Gbuffer.vert" />
-    <None Include="assets\shaders\Defer_Gbuffer.frag" />
-    <None Include="assets\shaders\Defer_Lighting.vert" />
-    <None Include="assets\shaders\Defer_Lighting.frag" />
+    <None Include="assets\shaders\forward_Color.vert" />
+    <None Include="assets\shaders\forward_Color.frag" />
+    <None Include="assets\shaders\skybox.vert" />
+    <None Include="assets\shaders\skybox.frag" />
+    <None Include="assets\shaders\shadow_Map.vert" />
+    <None Include="assets\shaders\shadow_Map.frag" />
+    <None Include="assets\shaders\shadow_Cubemap.vert" />
+    <None Include="assets\shaders\shadow_Cubemap.frag" />
+    <None Include="assets\shaders\shadow_Cubemap.geom" />
+    <None Include="assets\shaders\defer_Gbuffer.vert" />
+    <None Include="assets\shaders\defer_Gbuffer.frag" />
+    <None Include="assets\shaders\defer_Lighting.vert" />
+    <None Include="assets\shaders\defer_Lighting.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

@@ -113,8 +113,8 @@ namespace ENGINE_CORE::Systems {
 		auto& mainRegistry = MAIN_REGISTRY();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
-		auto depthShader = assetManager.GetShader("depthShader");
-		auto depthCubeShader = assetManager.GetShader("depthCubeShader");
+		auto Shader_ShadowMap = assetManager.GetShader("shadow_Map");
+		auto Shader_ShadowCubemap = assetManager.GetShader("shadow_Cubemap");
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
@@ -123,7 +123,7 @@ namespace ENGINE_CORE::Systems {
 		auto& bufferManager = mainRegistry.GetBufferManager();
 
 		// 方向光
-		depthShader->Enable();
+		Shader_ShadowMap->Enable();
 		for (int dirlight_index = 0; dirlight_index < lightSystem->GetActivatedDirLights(); dirlight_index++)
 		{
 			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(dirlight_index));
@@ -134,7 +134,7 @@ namespace ENGINE_CORE::Systems {
 			glClear(GL_DEPTH_BUFFER_BIT);
 
 			auto dirLight = dirLightData[dirlight_index];
-			depthShader->SetUniformMat4("lightSpaceMatrix", dirLight.lightSpaceMatrix);
+			Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", dirLight.lightSpaceMatrix);
 
 			// render scene
 			auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
@@ -144,7 +144,7 @@ namespace ENGINE_CORE::Systems {
 					continue;
 
 				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
-				depthShader->SetUniformMat4("model", model);
+				Shader_ShadowMap->SetUniformMat4("model", model);
 				const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 					meshes[meshIdx].Draw();
@@ -156,7 +156,7 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// 点光源
-		depthCubeShader->Enable();
+		Shader_ShadowCubemap->Enable();
 		for (int pointlight_index = 0; pointlight_index < lightSystem->GetActivatedPointLights(); pointlight_index++)
 		{
 			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(pointlight_index));
@@ -180,10 +180,10 @@ namespace ENGINE_CORE::Systems {
 			shadowTransforms.push_back(shadowProj * glm::lookAt(point_light_pos, point_light_pos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
 			shadowTransforms.push_back(shadowProj * glm::lookAt(point_light_pos, point_light_pos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
 			shadowTransforms.push_back(shadowProj * glm::lookAt(point_light_pos, point_light_pos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
-			depthCubeShader->SetUniformFloat("far_plane", far_plane);
-			depthCubeShader->SetUniformVec3("lightPos", point_light_pos);
+			Shader_ShadowCubemap->SetUniformFloat("far_plane", far_plane);
+			Shader_ShadowCubemap->SetUniformVec3("lightPos", point_light_pos);
 			for (int face = 0; face < 6; ++face)
-				depthCubeShader->SetUniformMat4("shadowMatrices[" + std::to_string(face) + "]", shadowTransforms[face]);
+				Shader_ShadowCubemap->SetUniformMat4("shadowMatrices[" + std::to_string(face) + "]", shadowTransforms[face]);
 
 			// render scene
 			auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
@@ -193,7 +193,7 @@ namespace ENGINE_CORE::Systems {
 					continue;
 
 				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
-				depthCubeShader->SetUniformMat4("model", model);
+				Shader_ShadowCubemap->SetUniformMat4("model", model);
 				const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
 				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 					meshes[meshIdx].Draw();
@@ -229,33 +229,33 @@ namespace ENGINE_CORE::Systems {
 		const auto& map_FBO = bufferManager.GetAllFBO();
 
 		// get shaders
-		auto mainShader = assetManager.GetShader("mainShader");
-		if (mainShader->ShaderProgramID() == 0)
+		auto Shader_BlinnPhong = assetManager.GetShader("forward_BlinnPhong");
+		if (Shader_BlinnPhong->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto colorShader = assetManager.GetShader("colorShader");
-		if (colorShader->ShaderProgramID() == 0)
+		auto Shader_Color = assetManager.GetShader("forward_Color");
+		if (Shader_Color->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto skyboxShader = assetManager.GetShader("skyboxShader");
-		if (skyboxShader->ShaderProgramID() == 0)
+		auto Shader_Skybox = assetManager.GetShader("skybox");
+		if (Shader_Skybox->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
-		auto colliderShader = assetManager.GetShader("colliderShader");
-		if (colliderShader->ShaderProgramID() == 0)
+		auto Shader_PhysicsDebug = assetManager.GetShader("physics_Debug");
+		if (Shader_PhysicsDebug->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
 
 		// render point light sphere
-		colorShader->Enable();
+		Shader_Color->Enable();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
@@ -267,14 +267,14 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
-			colorShader->SetUniformMat4("model", light_sphere_model);
-			colorShader->SetUniformVec3("color", glm::vec3(point_light.diffuse));
-			colorShader->SetUniformBool("outline", false);
+			Shader_Color->SetUniformMat4("model", light_sphere_model);
+			Shader_Color->SetUniformVec3("color", glm::vec3(point_light.diffuse));
+			Shader_Color->SetUniformBool("outline", false);
 			sphere[0].Draw();
 		}
 
 		// render object
-		mainShader->Enable();
+		Shader_BlinnPhong->Enable();
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -309,20 +309,20 @@ namespace ENGINE_CORE::Systems {
 
 				std::string shaderName = cur_material.shaderName;
 
-				mainShader->Enable();	// NOTE: now the shader is fixed
-				mainShader->SetUniformMat4("model", model);
-				mainShader->SetUniformVec3("viewPos", camera->GetPosition());
-				mainShader->SetUniformBool("bug", textureBug);
-				mainShader->SetUniformBool("flipUV", meshR.flipUV);
-				mainShader->SetUniformVec4("material.color", cur_material.color);
-				mainShader->SetUniformFloat("material.shininess", cur_material.shininess);
-				mainShader->SetUniformBool("useTexture", cur_material.m_useTexture);
+				Shader_BlinnPhong->Enable();	// NOTE: now the shader is fixed
+				Shader_BlinnPhong->SetUniformMat4("model", model);
+				Shader_BlinnPhong->SetUniformVec3("viewPos", camera->GetPosition());
+				Shader_BlinnPhong->SetUniformBool("bug", textureBug);
+				Shader_BlinnPhong->SetUniformBool("flipUV", meshR.flipUV);
+				Shader_BlinnPhong->SetUniformVec4("material.color", cur_material.color);
+				Shader_BlinnPhong->SetUniformFloat("material.shininess", cur_material.shininess);
+				Shader_BlinnPhong->SetUniformBool("useTexture", cur_material.m_useTexture);
 
-				mainShader->SetUniformFloat("far_plane", 50.0f);
+				Shader_BlinnPhong->SetUniformFloat("far_plane", 50.0f);
 
 				glActiveTexture(GL_TEXTURE10);
 				glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-				mainShader->SetUniformInt("skybox", 10);
+				Shader_BlinnPhong->SetUniformInt("skybox", 10);
 
 				// set direction light shadowMap
 				for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
@@ -334,7 +334,7 @@ namespace ENGINE_CORE::Systems {
 						int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
 						glActiveTexture(GL_TEXTURE0 + texUnit);
 						glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
-						mainShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
+						Shader_BlinnPhong->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
 					}
 				}
 
@@ -349,7 +349,7 @@ namespace ENGINE_CORE::Systems {
 						int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
 						glActiveTexture(GL_TEXTURE0 + texUnit);
 						glBindTexture(GL_TEXTURE_CUBE_MAP, it->second->GetTextureID());
-						mainShader->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
+						Shader_BlinnPhong->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
 					}
 				}
 
@@ -362,14 +362,14 @@ namespace ENGINE_CORE::Systems {
 						auto it = cur_material.m_textures.find(slot.key);
 						bool hasTexture = (it != cur_material.m_textures.end() && !it->second.empty());
 
-						mainShader->SetUniformBool(slot.shaderFlag, hasTexture);
+						Shader_BlinnPhong->SetUniformBool(slot.shaderFlag, hasTexture);
 
 						if (hasTexture) {
 							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // 按索引自动分配纹理单元
 							auto tex = assetManager.GetTexture(it->second);
 							if (tex) {
 								glBindTexture(GL_TEXTURE_2D, tex->GetID());
-								mainShader->SetUniformInt(slot.shaderSampler, (int)slot_index);
+								Shader_BlinnPhong->SetUniformInt(slot.shaderSampler, (int)slot_index);
 							}
 						}
 					}
@@ -384,11 +384,11 @@ namespace ENGINE_CORE::Systems {
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-		skyboxShader->Enable();
-		skyboxShader->SetUniformMat4("model", glm::mat4(1.0f));
-		skyboxShader->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
-		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
-		skyboxShader->SetUniformInt("skybox", 0);
+		Shader_Skybox->Enable();
+		Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
+		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
+		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
+		Shader_Skybox->SetUniformInt("skybox", 0);
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		skybox[0].Draw();
 		glDepthFunc(GL_LESS);
@@ -397,7 +397,7 @@ namespace ENGINE_CORE::Systems {
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);					// 禁止写入模板值
 		glDepthMask(GL_FALSE);					//禁止深度写入
-		colorShader->Enable();
+		Shader_Color->Enable();
 		view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -423,10 +423,10 @@ namespace ENGINE_CORE::Systems {
 
 				std::string shaderName = cur_material.shaderName;
 
-				colorShader->Enable();	// NOTE: now the shader is fixed
-				colorShader->SetUniformMat4("model", model);
-				colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
-				colorShader->SetUniformBool("outline", true);
+				Shader_Color->Enable();	// NOTE: now the shader is fixed
+				Shader_Color->SetUniformMat4("model", model);
+				Shader_Color->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
+				Shader_Color->SetUniformBool("outline", true);
 
 				meshes[mesh_index].Draw();
 			}
@@ -441,8 +441,8 @@ namespace ENGINE_CORE::Systems {
 			auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 			auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
-			colliderShader->Enable();
-			colliderShader->SetUniformMat4("model", glm::mat4(1.0f));
+			Shader_PhysicsDebug->Enable();
+			Shader_PhysicsDebug->SetUniformMat4("model", glm::mat4(1.0f));
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -509,10 +509,10 @@ namespace ENGINE_CORE::Systems {
 		auto& mainRegistry = MAIN_REGISTRY();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
-		auto gbufferShader = assetManager.GetShader("deferGbuffer");
+		auto Shader_Gbuffer = assetManager.GetShader("defer_Gbuffer");
 
 		// render object
-		gbufferShader->Enable();
+		Shader_Gbuffer->Enable();
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -547,12 +547,12 @@ namespace ENGINE_CORE::Systems {
 
 				std::string shaderName = cur_material.shaderName;
 
-				gbufferShader->SetUniformMat4("model", model);
-				gbufferShader->SetUniformBool("bug", textureBug);
-				gbufferShader->SetUniformBool("flipUV", meshR.flipUV);
-				gbufferShader->SetUniformBool("useTexture", cur_material.m_useTexture);
-				gbufferShader->SetUniformVec4("material.color", cur_material.color);
-				//gbufferShader->SetUniformFloat("material.shininess", cur_material.shininess);
+				Shader_Gbuffer->SetUniformMat4("model", model);
+				Shader_Gbuffer->SetUniformBool("bug", textureBug);
+				Shader_Gbuffer->SetUniformBool("flipUV", meshR.flipUV);
+				Shader_Gbuffer->SetUniformBool("useTexture", cur_material.m_useTexture);
+				Shader_Gbuffer->SetUniformVec4("material.color", cur_material.color);
+				//Shader_Gbuffer->SetUniformFloat("material.shininess", cur_material.shininess);
 
 				// set uniform textures
 				if (cur_material.m_useTexture) {
@@ -563,14 +563,14 @@ namespace ENGINE_CORE::Systems {
 						auto it = cur_material.m_textures.find(slot.key);
 						bool hasTexture = (it != cur_material.m_textures.end() && !it->second.empty());
 
-						gbufferShader->SetUniformBool(slot.shaderFlag, hasTexture);
+						Shader_Gbuffer->SetUniformBool(slot.shaderFlag, hasTexture);
 
 						if (hasTexture) {
 							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // 按索引自动分配纹理单元
 							auto tex = assetManager.GetTexture(it->second);
 							if (tex) {
 								glBindTexture(GL_TEXTURE_2D, tex->GetID());
-								gbufferShader->SetUniformInt(slot.shaderSampler, (int)slot_index);
+								Shader_Gbuffer->SetUniformInt(slot.shaderSampler, (int)slot_index);
 							}
 						}
 					}
@@ -593,33 +593,32 @@ namespace ENGINE_CORE::Systems {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
-		auto gbufferShader = assetManager.GetShader("deferGbuffer");
-		auto lightingShader = assetManager.GetShader("deferLighting");
+		auto Shader_Lighting = assetManager.GetShader("defer_Lighting");
 
-		lightingShader->Enable();
+		Shader_Lighting->Enable();
 
-		lightingShader->SetUniformFloat("far_plane", 50.0f);
-		lightingShader->SetUniformVec3("viewPos", camera->GetPosition());
+		Shader_Lighting->SetUniformFloat("far_plane", 50.0f);
+		Shader_Lighting->SetUniformVec3("viewPos", camera->GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(0));
-		lightingShader->SetUniformInt("gPosition", 0);
+		Shader_Lighting->SetUniformInt("gPosition", 0);
 
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(1));
-		lightingShader->SetUniformInt("gNormal", 1);
+		Shader_Lighting->SetUniformInt("gNormal", 1);
 
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(2));
-		lightingShader->SetUniformInt("gAlbedoSpec", 2);
+		Shader_Lighting->SetUniformInt("gAlbedoSpec", 2);
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(3));
-		lightingShader->SetUniformInt("gRefl", 3);
+		Shader_Lighting->SetUniformInt("gRefl", 3);
 
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-		lightingShader->SetUniformInt("skybox", 10);
+		Shader_Lighting->SetUniformInt("skybox", 10);
 
 		// set direction light shadowMap
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
@@ -631,7 +630,7 @@ namespace ENGINE_CORE::Systems {
 				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
 				glActiveTexture(GL_TEXTURE0 + texUnit);
 				glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
-				lightingShader->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
+				Shader_Lighting->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
 			}
 		}
 
@@ -646,7 +645,7 @@ namespace ENGINE_CORE::Systems {
 				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
 				glActiveTexture(GL_TEXTURE0 + texUnit);
 				glBindTexture(GL_TEXTURE_CUBE_MAP, it->second->GetTextureID());
-				lightingShader->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
+				Shader_Lighting->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
 			}
 		}
 
@@ -668,11 +667,11 @@ namespace ENGINE_CORE::Systems {
 		const std::vector<Mesh>& sphere = assetManager.GetModel("sphere")->GetMeshes();
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		auto skybox_texture = assetManager.GetTexture("skybox");
-		auto skyboxShader = assetManager.GetShader("skyboxShader");
-		auto colorShader = assetManager.GetShader("colorShader");
+		auto Shader_Skybox = assetManager.GetShader("skybox");
+		auto Shader_Color = assetManager.GetShader("forward_Color");
 
 		// 绘制点光源
-		colorShader->Enable();
+		Shader_Color->Enable();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
 			auto point_light = pointLightData[point_light_index];
@@ -680,9 +679,9 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
-			colorShader->SetUniformMat4("model", light_sphere_model);
-			colorShader->SetUniformVec3("color", glm::vec3(point_light.diffuse));
-			colorShader->SetUniformBool("outline", false);
+			Shader_Color->SetUniformMat4("model", light_sphere_model);
+			Shader_Color->SetUniformVec3("color", glm::vec3(point_light.diffuse));
+			Shader_Color->SetUniformBool("outline", false);
 			sphere[0].Draw();
 		}
 
@@ -692,11 +691,11 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
 		glm::mat4 viewMatrix = camera->GetViewMatrix();
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
-		skyboxShader->Enable();
-		skyboxShader->SetUniformMat4("model", glm::mat4(1.0f));
-		skyboxShader->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
-		skyboxShader->SetUniformMat4("projection", PerspectiveMatrix);
-		skyboxShader->SetUniformInt("skybox", 0);
+		Shader_Skybox->Enable();
+		Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
+		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
+		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
+		Shader_Skybox->SetUniformInt("skybox", 0);
 		skybox[0].Draw();
 		glDepthFunc(GL_LESS);
 
@@ -705,7 +704,7 @@ namespace ENGINE_CORE::Systems {
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);						// 禁止写入模板值
 		glDepthMask(GL_FALSE);						//禁止深度写入
-		colorShader->Enable();
+		Shader_Color->Enable();
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -731,10 +730,10 @@ namespace ENGINE_CORE::Systems {
 
 				std::string shaderName = cur_material.shaderName;
 
-				colorShader->Enable();	// NOTE: now the shader is fixed
-				colorShader->SetUniformMat4("model", model);
-				colorShader->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
-				colorShader->SetUniformBool("outline", true);
+				Shader_Color->Enable();	// NOTE: now the shader is fixed
+				Shader_Color->SetUniformMat4("model", model);
+				Shader_Color->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
+				Shader_Color->SetUniformBool("outline", true);
 
 				meshes[mesh_index].Draw();
 			}
@@ -750,9 +749,9 @@ namespace ENGINE_CORE::Systems {
 			auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 			auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
-			auto colliderShader = assetManager.GetShader("colliderShader");
-			colliderShader->Enable();
-			colliderShader->SetUniformMat4("model", glm::mat4(1.0f));
+			auto Shader_PhysicsDebug = assetManager.GetShader("physics_Debug");
+			Shader_PhysicsDebug->Enable();
+			Shader_PhysicsDebug->SetUniformMat4("model", glm::mat4(1.0f));
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
