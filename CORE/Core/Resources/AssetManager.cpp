@@ -160,6 +160,26 @@ namespace ENGINE_CORE::RESOURCES {
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
     }
+
+    bool AssetManager::AddNoiseTexture(const std::string& textureName)
+    {
+        // check if texture already loaded
+        if (m_mapTexture.find(textureName) != m_mapTexture.end())
+        {
+            ENGINE_ERROR("Failed to add texture [{0}] -- Already exists!", textureName);
+            return false;
+        }
+        auto texture = std::move(ENGINE_RENDERING::TextureLoader::CreateNoise());
+        if (!texture)
+        {
+            ENGINE_ERROR("Failed to load texture [{0}]].", textureName);
+            return false;
+        }
+
+        m_mapTexture.emplace(textureName, std::move(texture));
+        return true;
+    }
+
     std::shared_ptr<ENGINE_RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
         auto texItr = m_mapTexture.find(textureName);
