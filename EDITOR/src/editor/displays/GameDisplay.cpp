@@ -108,13 +108,15 @@ namespace ENGINE_EDITOR
 		auto& bufferManager = mainRegistry.GetBufferManager();
 		const auto& fb = bufferManager.GetFrameBuffer("GAME_FB");
 		const auto& gb = bufferManager.GetFrameBuffer("GAME_GB");
+		const auto& ssao = bufferManager.GetFrameBuffer("GAME_SSAO");
+		const auto& ssaoBlur = bufferManager.GetFrameBuffer("GAME_SSAO_Blur");
 
 		auto& runtimeRegistry = pCurrentScene->GetRegistry();
 		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
 		camera->SetWidth(fb->Width());
 		camera->SetHeight(fb->Height());
 
-		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, fb);
+		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ssao, ssaoBlur, fb);
 
 		// code for test
 		//auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
@@ -196,6 +198,8 @@ namespace ENGINE_EDITOR
 			auto& bufferManager = mainRegistry.GetBufferManager();
 			const auto& fb = bufferManager.GetFrameBuffer("GAME_FB");
 			const auto& gb = bufferManager.GetFrameBuffer("GAME_GB");
+			const auto& ssao = bufferManager.GetFrameBuffer("GAME_SSAO");
+			const auto& ssaoBlur = bufferManager.GetFrameBuffer("GAME_SSAO_Blur");
 
 			ImGui::SetCursorPos(ImVec2{ 0.f,0.f });
 			ImGui::Image(
@@ -212,6 +216,8 @@ namespace ENGINE_EDITOR
 			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y)) {
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
 				gb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				ssao->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				ssaoBlur->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
 			}
 		}
 		ImGui::End();

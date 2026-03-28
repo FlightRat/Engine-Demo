@@ -84,11 +84,13 @@ namespace ENGINE_EDITOR {
 		auto& bufferManager = mainRegistry.GetBufferManager();
 		const auto& fb = bufferManager.GetFrameBuffer("SCENE_FB");
 		const auto& gb = bufferManager.GetFrameBuffer("SCENE_GB");
+		const auto& ssao = bufferManager.GetFrameBuffer("SCENE_SSAO");
+		const auto& ssaoBlur = bufferManager.GetFrameBuffer("SCENE_SSAO_Blur");
 		
 		m_pSceneCam->SetWidth(fb->Width());
 		m_pSceneCam->SetHeight(fb->Height());
 
-		renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, fb);
+		renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, ssao, ssaoBlur, fb);
 
 		// code for test
 		//auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
@@ -128,6 +130,8 @@ namespace ENGINE_EDITOR {
 			auto& bufferManager = mainRegistry.GetBufferManager();
 			const auto& fb = bufferManager.GetFrameBuffer("SCENE_FB");
 			const auto& gb = bufferManager.GetFrameBuffer("SCENE_GB");
+			const auto& ssao = bufferManager.GetFrameBuffer("SCENE_SSAO");
+			const auto& ssaoBlur = bufferManager.GetFrameBuffer("SCENE_SSAO_Blur");
 
 			ImVec2 imageSize{ static_cast<float>(fb->Width()),static_cast<float>(fb->Height()) };
 			ImVec2 windowSize{ ImGui::GetWindowSize() };
@@ -149,6 +153,8 @@ namespace ENGINE_EDITOR {
 			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y)) {
 				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
 				gb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				ssao->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
+				ssaoBlur->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
 			}
 
 			if (ImGui::BeginDragDropTarget())
