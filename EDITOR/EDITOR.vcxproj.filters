@@ -103,6 +103,10 @@
     <None Include="assets\shaders\defer_Gbuffer.frag" />
     <None Include="assets\shaders\defer_Lighting.vert" />
     <None Include="assets\shaders\defer_Lighting.frag" />
+    <None Include="assets\shaders\defer_ssao.vert" />
+    <None Include="assets\shaders\defer_ssao.frag" />
+    <None Include="assets\shaders\defer_ssaoBlur.vert" />
+    <None Include="assets\shaders\defer_ssaoBlur.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

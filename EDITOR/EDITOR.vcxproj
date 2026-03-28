@@ -207,6 +207,9 @@
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\Defs\envirDefs.lua" />
     <None Include="assets\scripts\main.lua" />
+    <None Include="assets\shaders\defer_ssao.frag" />
+    <None Include="assets\shaders\defer_ssaoBlur.frag" />
+    <None Include="assets\shaders\defer_ssaoBlur.vert" />
     <None Include="assets\shaders\forward_Color.frag" />
     <None Include="assets\shaders\forward_Color.vert" />
     <None Include="assets\shaders\defer_Gbuffer.frag" />
@@ -224,6 +227,7 @@
     <None Include="assets\shaders\physics_Debug.vert" />
     <None Include="assets\shaders\skybox.frag" />
     <None Include="assets\shaders\skybox.vert" />
+    <None Include="assets\shaders\defer_ssao.vert" />
     <None Include="assimp-vc143-mtd.dll" />
     <None Include="imgui.ini" />
     <None Include="SDL2.dll" />
