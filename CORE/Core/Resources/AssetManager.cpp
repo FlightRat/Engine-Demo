@@ -419,7 +419,7 @@ namespace ENGINE_CORE::RESOURCES {
             }
             case ENGINE_UTIL::AssetType::SHADER:
             {
-                return ENGINE_UTIL::GetKeys(m_mapShader);
+                return editor? ENGINE_UTIL::GetKeys(m_mapShader): ENGINE_UTIL::GetKeys(m_mapShader, [](const auto& pair) {return !pair.second->IsEditorShader(); });
                 break;
             }
             default:
