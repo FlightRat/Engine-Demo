@@ -5,7 +5,7 @@
 namespace ENGINE_RENDERING {
 	class Texture
 	{
-	public: enum class TextureType { PIXEL = 0, BLENDED, FRAMEBUFFER, GBUFFER_TYPE1, GBUFFER_TYPE2, SHADOWMAP, SHADOWCUBEMAP, NONE };
+	public: enum class TextureType { PIXEL = 0, BLENDED, FRAMEBUFFER, GBUFFER_TYPE1, GBUFFER_TYPE2, SHADOWMAP, SHADOWCUBEMAP, SSAO, NONE };
 	private:
 		int m_Width, m_Height;
 		GLuint m_TextureID;
