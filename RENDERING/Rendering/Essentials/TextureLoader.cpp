@@ -1,5 +1,7 @@
 #include "TextureLoader.h"
+#include <random>
 #include <filesystem>
+#include <glm/glm.hpp>
 #include <SOIL/SOIL.h>
 #include "Logger/Logger.h"
 
@@ -122,6 +124,8 @@ namespace ENGINE_RENDERING{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return true;
 	}
@@ -130,6 +134,16 @@ namespace ENGINE_RENDERING{
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		return true;
+	}
+
+	bool TextureLoader::LoadSSAOTexture(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -300,6 +314,9 @@ namespace ENGINE_RENDERING{
 		case ENGINE_RENDERING::Texture::TextureType::GBUFFER_TYPE2:
 			LoadGbufferTexture_type2(id, width, height);
 			break;
+		case ENGINE_RENDERING::Texture::TextureType::SSAO:
+			LoadSSAOTexture(id, width, height);
+			break;
 		default:
 			assert(false && "The current type is not defined, Please use a defined texture type!");
 			return nullptr;
@@ -329,6 +346,29 @@ namespace ENGINE_RENDERING{
 			return nullptr;
 		}
 		return std::make_shared<Texture>(id, width, height, type, texturePath);
+	}
+
+	std::shared_ptr<Texture> TextureLoader::CreateNoise()
+	{
+		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+		std::default_random_engine generator;
+		std::vector<glm::vec3> ssaoNoise;
+		for (unsigned int i = 0; i < 16; i++)
+		{
+			glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f); // rotate around z-axis (in tangent space)
+			ssaoNoise.push_back(noise);
+		}
+
+		GLuint id;
+		glGenTextures(1, &id);
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		return std::make_shared<Texture>(id, 0, 0, Texture::TextureType::PIXEL, "");
 	}
 
 	std::shared_ptr<Texture> TextureLoader::CreateFromMemory(const unsigned char* imageData, size_t length, bool blended, bool bTileset)
