@@ -2,11 +2,11 @@
 out float FragColor;
 in vec2 TexCoord;
 
-uniform sampler2D gPosition;   // 世界空间位置（从 GBuffer）
-uniform sampler2D gNormal;     // 世界空间法线（从 GBuffer）
-uniform sampler2D texNoise;
-uniform vec2 screenSize;
-uniform vec3 samples[64];
+uniform sampler2D gPosition;    // 世界空间位置（从 GBuffer）
+uniform sampler2D gNormal;      // 世界空间法线（从 GBuffer）
+uniform sampler2D texNoise;     // 噪声纹理
+uniform vec2 screenSize;        // 屏幕大小
+uniform vec3 samples[64];       // 在切线空间的64个半球偏移采样点
 
 int kernelSize = 64;
 float radius = 0.5;
@@ -29,9 +29,10 @@ void main()
     vec3 worldNormal = normalize(texture(gNormal, TexCoord).rgb);
     vec3 normal = normalize(mat3(view) * worldNormal);  // 法线也转到观察空间
 
-    vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz);
+    // 由于噪声纹理4x4，纹理坐标是0~1,直接采样会重复在4x4中采样，需要根据屏幕缩放UV，然后自动在repeat的4x4纹理中采样
+    vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz);  
 
-    // 构建 TBN（现在在观察空间中）
+    // 构建 TBN（切线空间 → 观察空间）
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
     vec3 bitangent = cross(normal, tangent);
     mat3 TBN = mat3(tangent, bitangent, normal);
@@ -39,9 +40,8 @@ void main()
     float occlusion = 0.0;
     for(int i = 0; i < kernelSize; ++i)
     {
-        // 采样点位置（观察空间）
-        vec3 samplePos = TBN * samples[i];
-        samplePos = fragPos + samplePos * radius;
+        vec3 samplePos = TBN * samples[i];          // 观察空间的半球偏移量
+        samplePos = fragPos + samplePos * radius;   // 观察空间的半球采样点
 
         // 投影到屏幕空间获取 UV
         vec4 offset = vec4(samplePos, 1.0);
@@ -49,15 +49,19 @@ void main()
         offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5 + 0.5;
 
-        // === 修复2：采样到的世界空间位置也必须转换到观察空间再取 z ===
+        // 半球采样点在观察空间上的表面深度
         vec3 sampledWorldPos = texture(gPosition, offset.xy).xyz;
         float sampleDepth = (view * vec4(sampledWorldPos, 1.0)).z;  // 转到观察空间
 
-        // === 修复3：rangeCheck 也要用观察空间的深度 ===
+        // 根据距离对遮蔽贡献进行衰减，防止远处的物体对近处的点产生影响
         float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+
+        // 半球采样点在观察空间上的表面深度 VS 半球采样点在观察空间上的实际深度（类似shadowmap）
         occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
     }
-    occlusion = 1.0 - (occlusion / kernelSize);
+
+    // 平均采用点贡献并反转
+    occlusion = 1.0 - (occlusion / kernelSize); 
 
     FragColor = occlusion;
 }
