@@ -160,7 +160,6 @@ namespace ENGINE_CORE::RESOURCES {
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
     }
-
     bool AssetManager::AddNoiseTexture(const std::string& textureName)
     {
         // check if texture already loaded
@@ -179,7 +178,6 @@ namespace ENGINE_CORE::RESOURCES {
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
     }
-
     std::shared_ptr<ENGINE_RENDERING::Texture> AssetManager::GetTexture(const std::string& textureName)
     {
         auto texItr = m_mapTexture.find(textureName);
@@ -440,6 +438,8 @@ namespace ENGINE_CORE::RESOURCES {
         case ENGINE_UTIL::AssetType::TEXTURE:return ENGINE_UTIL::ChangeKey(m_mapTexture, sOldName, sNewName);
         case ENGINE_UTIL::AssetType::MUSIC:return ENGINE_UTIL::ChangeKey(m_mapMusic, sOldName, sNewName);
         case ENGINE_UTIL::AssetType::SOUNDFX:return ENGINE_UTIL::ChangeKey(m_mapSoundFx, sOldName, sNewName);
+        case ENGINE_UTIL::AssetType::MODEL:return ENGINE_UTIL::ChangeKey(m_mapModel, sOldName, sNewName);
+        case ENGINE_UTIL::AssetType::SHADER:return ENGINE_UTIL::ChangeKey(m_mapShader, sOldName, sNewName);
         default:assert(false && "Cannot get this type!");
         }
         return false;
@@ -452,6 +452,8 @@ namespace ENGINE_CORE::RESOURCES {
         case ENGINE_UTIL::AssetType::TEXTURE:return m_mapTexture.contains(checkName);
         case ENGINE_UTIL::AssetType::MUSIC:return m_mapMusic.contains(checkName);
         case ENGINE_UTIL::AssetType::SOUNDFX:return m_mapSoundFx.contains(checkName);
+        case ENGINE_UTIL::AssetType::MODEL:return m_mapModel.contains(checkName);
+        case ENGINE_UTIL::AssetType::SHADER:return m_mapShader.contains(checkName);
         default:assert(false && "Cannot get this type!");
         }
         return false;
@@ -464,6 +466,8 @@ namespace ENGINE_CORE::RESOURCES {
         case ENGINE_UTIL::AssetType::TEXTURE:return std::erase_if(m_mapTexture, [&](const auto& pair) {return pair.first == assetName; }) > 0;
         case ENGINE_UTIL::AssetType::MUSIC:return std::erase_if(m_mapMusic, [&](const auto& pair) {return pair.first == assetName; }) > 0;
         case ENGINE_UTIL::AssetType::SOUNDFX:return std::erase_if(m_mapSoundFx, [&](const auto& pair) {return pair.first == assetName; }) > 0;
+        case ENGINE_UTIL::AssetType::MODEL:return std::erase_if(m_mapModel, [&](const auto& pair) {return pair.first == assetName; }) > 0;
+        case ENGINE_UTIL::AssetType::SHADER:return std::erase_if(m_mapShader, [&](const auto& pair) {return pair.first == assetName; }) > 0;
         default:assert(false && "Cannot get this type!");
         }
         return false;
