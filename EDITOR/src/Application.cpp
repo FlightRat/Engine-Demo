@@ -175,7 +175,7 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create displays!");
 			return false;
 		}
-		if (!LoadShaders())
+		if (!LoadEditorShaders())
 		{
 			ENGINE_ERROR("Failed to load the shaders!");
 			return false;
@@ -210,7 +210,7 @@ namespace ENGINE_EDITOR {
 		return true;
 	}
 
-	bool Application::LoadShaders()
+	bool Application::LoadEditorShaders()
 	{
 		//auto& assetManager = m_pRegistry->GetContext<std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>>();
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -285,6 +285,17 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
+
+		assetManager.GetShader("forward_BlinnPhong")->SetIsEditorShader(true);
+		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_Lighting")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_SSAO")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_SSAOBlur")->SetIsEditorShader(true);
+		assetManager.GetShader("shadow_Map")->SetIsEditorShader(true);
+		assetManager.GetShader("shadow_Cubemap")->SetIsEditorShader(true);
+		assetManager.GetShader("skybox")->SetIsEditorShader(true);
+		assetManager.GetShader("physics_Debug")->SetIsEditorShader(true);
 
 		return true;
 	}

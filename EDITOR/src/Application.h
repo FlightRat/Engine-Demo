@@ -14,7 +14,7 @@ namespace ENGINE_EDITOR{
 	private:
 		Application();
 		bool Initialize();
-		bool LoadShaders();
+		bool LoadEditorShaders();
 		bool LoadEditorTextures();
 		bool LoadEditorMeshes();
 		bool LoadBuffers();
