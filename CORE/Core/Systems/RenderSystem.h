@@ -32,6 +32,8 @@ namespace ENGINE_CORE::Systems {
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
 			ENGINE_CORE::ECS::Registry& runtimeRegistry,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB
 		);
 	private:
@@ -41,7 +43,11 @@ namespace ENGINE_CORE::Systems {
 		void Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 
 		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-		void Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
+		void SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
+		void SSAOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB);
+		void Lighting_Pass(
+			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, 
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB);
 		void Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 
 		glm::mat4 CalculateModelMatrix(
