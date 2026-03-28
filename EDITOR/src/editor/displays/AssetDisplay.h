@@ -12,7 +12,7 @@ namespace ENGINE_EDITOR
 	class AssetDisplay :public IDisplay
 	{
 	private:
-		const std::vector<std::string> m_SelectableTypes{ "TEXTURE","MUSIC","SOUNDFX","SCENE" };
+		const std::vector<std::string> m_SelectableTypes{ "TEXTURE", "MODEL", "MUSIC", "SOUNDFX", "SCENE", "SHADER"};
 		bool m_bItemHovered, m_bAssetTypeChanged, m_bRename;
 		bool m_bWindowSelected, m_bWindowHovered;
 		std::string m_sSelectedAssetName, m_sSelectedType, m_sDragSource, m_sRenameBuf;

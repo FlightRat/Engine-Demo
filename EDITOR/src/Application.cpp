@@ -185,7 +185,7 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load the editor textures!");
 			return false;
 		}
-		if (!LoadDefaultMeshes())
+		if (!LoadEditorMeshes())
 		{
 			ENGINE_ERROR("Failed to load the default meshes!");
 			return false;
@@ -313,6 +313,16 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [scene_icon] from memory!");
 			return false;
 		}
+		if (!assetManager.AddTextureFromMemory("model_icon", model_icon, sizeof(model_icon) / sizeof(model_icon[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [model_icon] from memory!");
+			return false;
+		}
+		if (!assetManager.AddTextureFromMemory("shader_icon", shader_icon, sizeof(shader_icon) / sizeof(shader_icon[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [shader_icon] from memory!");
+			return false;
+		}
 		if (!assetManager.AddSkyboxTexture("skybox", "assets/textures/skybox", false))
 		{
 			ENGINE_ERROR("Failed to load texture [skybox] from memory!");
@@ -327,12 +337,14 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("music_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("scene_icon")->SetIsEditorTexture(true);
+		assetManager.GetTexture("model_icon")->SetIsEditorTexture(true);
+		assetManager.GetTexture("shader_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
 		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
 		return true;
 	}
 
-	bool Application::LoadDefaultMeshes()
+	bool Application::LoadEditorMeshes()
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();

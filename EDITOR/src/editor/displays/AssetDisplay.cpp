@@ -21,6 +21,16 @@ namespace ENGINE_EDITOR {
 			m_eSelectedType = ENGINE_UTIL::AssetType::TEXTURE;
 			m_sDragSource = std::string{ DROP_TEXTURE_SRC };
 		}
+		else if (m_sSelectedType == "MODEL")
+		{
+			m_eSelectedType = ENGINE_UTIL::AssetType::MODEL;
+			m_sDragSource = std::string{ DROP_TEXTURE_SRC };
+		}
+		else if (m_sSelectedType == "SHADER")
+		{
+			m_eSelectedType = ENGINE_UTIL::AssetType::SHADER;
+			m_sDragSource = std::string{ DROP_TEXTURE_SRC };
+		}
 		else if (m_sSelectedType == "MUSIC")
 		{
 			m_eSelectedType = ENGINE_UTIL::AssetType::MUSIC;
@@ -176,6 +186,12 @@ namespace ENGINE_EDITOR {
 				return pTexture->GetID();
 			break;
 		}
+		case ENGINE_UTIL::AssetType::MODEL: {
+			auto pTexture = assetManager.GetTexture("model_icon");
+			if (pTexture)
+				return pTexture->GetID();
+			break;
+		}
 		case ENGINE_UTIL::AssetType::SOUNDFX: {
 			auto pTexture = assetManager.GetTexture("music_icon");
 			if (pTexture)
@@ -185,6 +201,12 @@ namespace ENGINE_EDITOR {
 		}
 		case ENGINE_UTIL::AssetType::MUSIC:{
 			auto pTexture = assetManager.GetTexture("music_icon");
+			if (pTexture)
+				return pTexture->GetID();
+			break;
+		}
+		case ENGINE_UTIL::AssetType::SHADER: {
+			auto pTexture = assetManager.GetTexture("shader_icon");
 			if (pTexture)
 				return pTexture->GetID();
 			break;
