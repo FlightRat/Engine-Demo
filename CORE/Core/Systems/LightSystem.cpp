@@ -5,13 +5,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace ENGINE_CORE::Systems {
-	LightSystem::LightSystem(int max_dir_light, int max_point_light):
-		MAX_POINT_LIGHTS{max_point_light}, MAX_DIR_LIGHTS{max_dir_light}
-	{
+    LightSystem::LightSystem(int max_dir_light, int max_point_light) :
+        MAX_POINT_LIGHTS{ max_point_light }, MAX_DIR_LIGHTS{ max_dir_light }
+    {
         // 构造时就分配好固定大小，后续 assign() 不会重新分配堆内存
         m_DirLightData.resize(MAX_DIR_LIGHTS);
         m_PointLightData.resize(MAX_POINT_LIGHTS);
-	}
+    }
 
     //LightSystem::Update() 修复版
     void LightSystem::Update(ENGINE_CORE::ECS::Registry& runtimeRegistry)
