@@ -271,6 +271,20 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// defer ssao
+		if (!assetManager.AddShader("defer_SSAO", "assets/shaders/defer_ssao.vert", "assets/shaders/defer_ssao.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// defer ssao blur
+		if (!assetManager.AddShader("defer_SSAOBlur", "assets/shaders/defer_ssaoBlur.vert", "assets/shaders/defer_ssaoBlur.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -303,11 +317,17 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [skybox] from memory!");
 			return false;
 		}
+		if (!assetManager.AddNoiseTexture("ssaoNoise"))
+		{
+			ENGINE_ERROR("Failed to load texture [ssaoNoise] from memory!");
+			return false;
+		}
 		assetManager.GetTexture("play_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("music_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("scene_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
+		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
 		return true;
 	}
 
@@ -369,6 +389,11 @@ namespace ENGINE_EDITOR {
 		// gbuffer
 		bufferManager.AddFrameBuffer("GAME_GB", ENGINE_RENDERING::BufferType::GBUFFER, 600, 600, true);
 		bufferManager.AddFrameBuffer("SCENE_GB", ENGINE_RENDERING::BufferType::GBUFFER, 600, 600, true);
+		// ssao
+		bufferManager.AddFrameBuffer("GAME_SSAO",ENGINE_RENDERING::BufferType::SSAO, 600,600,false);
+		bufferManager.AddFrameBuffer("GAME_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_SSAO", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
 		// shadowmap for direction light
 		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
 		{
@@ -425,10 +450,18 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
+		// defer SSAO
+		auto defer_SSAO = assetManager.GetShader("defer_SSAO");
+		if (defer_SSAO->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
 		// bind uniform block index
 		forward_BlinnPhong->BindUniformBlock("Matrices", 0);
 		forward_Color->BindUniformBlock("Matrices", 0);
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
+		defer_SSAO->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
 		forward_BlinnPhong->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("DirLights", 1);
