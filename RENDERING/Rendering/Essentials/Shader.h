@@ -14,6 +14,7 @@ namespace ENGINE_RENDERING {
 		std::unordered_map<std::string, GLuint> m_UniformBlockIndexMap;
 		GLuint GetUniformLocation(const std::string& uniformName);
 		GLuint GetUniformBlockIndex(const std::string& uniformBlockName);
+		bool m_bEditorShader;
 	public:
 		Shader();
 		Shader(GLuint program, const std::string vertexPath, const std::string& fragmentPath, const std::string& geometryPath);
@@ -44,5 +45,8 @@ namespace ENGINE_RENDERING {
 		void Disable();
 
 		inline const GLuint ShaderProgramID() const { return m_ShaderProgramID; }
+		
+		inline const bool IsEditorShader() const { return m_bEditorShader; }
+		inline void SetIsEditorShader(bool bIsEditorShader) { m_bEditorShader = bIsEditorShader; }
 	};
 }
