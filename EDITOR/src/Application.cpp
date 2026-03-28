@@ -2,6 +2,7 @@
 #include<SDL.h>
 #include<SDL_opengl.h>
 #include<glad/glad.h>
+#include<random>
 #include<iostream>
 #include<SOIL/SOIL.h>
 #include<glm/glm.hpp>
@@ -415,6 +416,7 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
+		bufferManager.AddUniformBuffer("SSAO_samples", 64 * sizeof(glm::vec4), 3);
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// forward rendering shader
@@ -467,6 +469,29 @@ namespace ENGINE_EDITOR {
 		defer_lighting->BindUniformBlock("DirLights", 1);
 		forward_BlinnPhong->BindUniformBlock("PointLights", 2);
 		defer_lighting->BindUniformBlock("PointLights", 2);
+		defer_SSAO->BindUniformBlock("SSAO_samples", 3);
+
+		// uniform block -- ssao samoles (it never update, so set it here)
+		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0);
+		std::default_random_engine generator;
+		std::vector<glm::vec4> ssaoKernel; // 声明为 vec4 以满足 std140 对齐
+		for (GLuint i = 0; i < 64; ++i)
+		{
+			glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
+			sample = glm::normalize(sample);
+			sample *= randomFloats(generator);
+			GLfloat scale = GLfloat(i) / 64.0;
+			scale = 0.1f + (scale * scale) * (1.0f - 0.1f);
+			sample *= scale;
+			// 放入 vec4，第四个常量 w 设为 0.0f
+			ssaoKernel.push_back(glm::vec4(sample, 0.0f));
+		}
+		const auto& ssaoSamplesUBO = bufferManager.GetUniformBuffer("SSAO_samples");
+		ssaoSamplesUBO->UpdateUniformBuffer(
+			ssaoKernel.data(),
+			64 * sizeof(glm::vec4), // 使用 vec4 的总大小 (1024 字节)
+			0
+		);
 
 		return true;
 	}

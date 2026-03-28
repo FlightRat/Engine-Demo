@@ -6,7 +6,6 @@ uniform sampler2D gPosition;    // 世界空间位置（从 GBuffer）
 uniform sampler2D gNormal;      // 世界空间法线（从 GBuffer）
 uniform sampler2D texNoise;     // 噪声纹理
 uniform vec2 screenSize;        // 屏幕大小
-uniform vec3 samples[64];       // 在切线空间的64个半球偏移采样点
 
 int kernelSize = 64;
 float radius = 0.5;
@@ -16,6 +15,10 @@ layout (std140) uniform Matrices
 {
     mat4 view;
     mat4 projection;
+};
+layout (std140) uniform SSAO_samples    // 在切线空间的64个半球偏移采样点
+{
+    vec4 samples[64];
 };
 
 void main()
@@ -40,7 +43,7 @@ void main()
     float occlusion = 0.0;
     for(int i = 0; i < kernelSize; ++i)
     {
-        vec3 samplePos = TBN * samples[i];          // 观察空间的半球偏移量
+        vec3 samplePos = TBN * samples[i].xyz;      // 观察空间的半球偏移量
         samplePos = fragPos + samplePos * radius;   // 观察空间的半球采样点
 
         // 投影到屏幕空间获取 UV

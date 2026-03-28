@@ -1,5 +1,4 @@
 ﻿#include "RenderSystem.h"
-#include<random>
 #include<glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include<glm/gtx/quaternion.hpp>
@@ -21,28 +20,6 @@
 #include "../ECS/Components/LightComponent.h"
 #include "../CoreUtilities/CoreEngineData.h"
 #include "../Core/Core/Inputs/InputManager.h"
-
-namespace {
-	struct TextureSlot {
-		const char* key;            // 材质 Map 中的 key (如 "diffuse")
-		const char* useUniform;     // Shader bool 开关 (如 "material.useDiffuse")
-		const char* samplerUniform; // Shader sampler2D 名字 (如 "material.diffuse")
-		int unitIndex;              // 纹理单元 (0, 1)
-	};
-
-	// 使用 constexpr 让它在编译期就确定，性能最高
-	constexpr std::array<TextureSlot, 4> TEXTURE_SLOTS = { {
-		{ "diffuse",  "material.useDiffuse",  "material.diffuse",    0},
-		{ "specular", "material.useSpecular", "material.specular",   1 },
-		{ "normal",   "material.useNormal",   "material.normal",     2 },
-		{ "reflect",  "material.useReflect",  "material.reflection", 3 }
-	} };
-
-	GLfloat lerp(GLfloat a, GLfloat b, GLfloat f)
-	{
-		return a + f * (b - a);
-	}
-}
 
 using namespace ENGINE_CORE::ECS;
 using namespace ENGINE_RENDERING;
@@ -620,27 +597,8 @@ namespace ENGINE_CORE::Systems {
 		auto Shader_SSAO = assetManager.GetShader("defer_SSAO");
 		auto noise_texture = assetManager.GetTexture("ssaoNoise");
 
-		// TODO: make this uniform block???
-		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-		std::default_random_engine generator;
-		std::vector<glm::vec3> ssaoKernel;
-		for (GLuint i = 0; i < 64; ++i)
-		{
-			glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
-			sample = glm::normalize(sample);
-			sample *= randomFloats(generator);
-			GLfloat scale = GLfloat(i) / 64.0;
-
-			// Scale samples s.t. they're more aligned to center of kernel
-			scale = lerp(0.1f, 1.0f, scale * scale);
-			sample *= scale;
-			ssaoKernel.push_back(sample);
-		}
-
 		Shader_SSAO->Enable();
 		Shader_SSAO->SetUniformVec2("screenSize", glm::vec2(intermediateGB->Width(), intermediateGB->Height()));
-		for (unsigned int kernel_index = 0; kernel_index < 64; ++kernel_index)
-			Shader_SSAO->SetUniformVec3("samples[" + std::to_string(kernel_index) + "]", ssaoKernel[kernel_index]);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(0));
