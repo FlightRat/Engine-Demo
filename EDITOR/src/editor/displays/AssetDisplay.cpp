@@ -71,21 +71,29 @@ namespace ENGINE_EDITOR {
 		if (assetNames.empty())
 			return;
 
-		float windowWidth = ImGui::GetWindowWidth();
-		int numCols = static_cast<int>((windowWidth - m_AssetSize) / m_AssetSize);
-		int numRows = static_cast<int>(assetNames.size() / (numCols <= 1 ? 1 : numCols) + 1);
-		if (!numCols || !numRows)
-			return;
+		// 1. [核心修复] 获取当前可用的真实内容区域宽度（剔除 padding 和滚动条）
+		float availableWidth = ImGui::GetContentRegionAvail().x;
 
-		ImGuiTableFlags tableFlags{ 0 };
-		tableFlags |= ImGuiTableFlags_SizingFixedFit;
+		// 评估每个 Cell 需要占用的宽度 (Image 大小 + ImGui 各自默认的 padding)
+		ImGuiStyle& style = ImGui::GetStyle();
+		float cellPadding = style.CellPadding.x * 2.0f;
+		float cellSize = m_AssetSize + cellPadding;
+
+		// 2. [核心修复] 动态计算列数，至少保证有 1 列，防止除 0 和显示异常
+		int numCols = (std::max)(1, static_cast<int>(availableWidth / cellSize));
+
+		// 3. [核心修复] 更改 Table Flag 为 SizingFixedSame 强制所有列宽一致，不受内部长文本影响
+		ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_PadOuterX;
+
 		int k{ 0 }, id{ 0 };
 		auto assetItr = assetNames.begin();
-		
+
 		if (ImGui::BeginTable("Assets", numCols, tableFlags))
 		{
-			for (int row = 0; row < numRows; row++)
+			for (int row = 0; row < assetNames.size(); row++) // 使用资源数量做防护
 			{
+				if (assetItr == assetNames.end()) break;
+
 				ImGui::TableNextRow();
 				for (int col = 0; col < numCols; col++)
 				{
@@ -100,11 +108,12 @@ namespace ENGINE_EDITOR {
 					if (bSelectedAsset)
 						ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(ImVec4{ 0.0f,0.9f,0.f,0.3f }));
 
-					// image button
 					GLuint textureID{ GetTextureID(*assetItr) };
 					if (textureID == 0)
 						break;
-					ImGui::ImageButton("asset image button",(ImTextureID)textureID, ImVec2{m_AssetSize,m_AssetSize});
+
+					// 为了让图片在列中居中或排版好看，可以稍微控制一下 X 偏移，这里暂时保持你的设定
+					ImGui::ImageButton("asset image button", (ImTextureID)textureID, ImVec2{ m_AssetSize, m_AssetSize });
 
 					// select if mouse click the button
 					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !m_bRename)
@@ -126,14 +135,19 @@ namespace ENGINE_EDITOR {
 						ImGui::EndDragDropSource();
 					}
 
-					// show asset name
+					// 4. [核心修复] 长文本处理：包裹和裁剪，而不是撑大元素
 					if (!m_bRename || !bSelectedAsset)
-						ImGui::Text(sAssetName);
+					{
+						// 使用 TextWrapped 让文本到达列宽边界时自动换行，保持布局整洁
+						ImGui::TextWrapped("%s", sAssetName);
+					}
 
 					// do the rename
 					std::string sCheckName{ m_sRenameBuf.data() };
 					if (m_bRename && bSelectedAsset)
 					{
+						// 5. [核心修复] 限制 InputText 的宽度，防止输入超长字符串时撑大 UI 列宽 (-FLT_MIN 表示占据该列全部剩余宽度)
+						ImGui::SetNextItemWidth(-FLT_MIN);
 						ImGui::SetKeyboardFocusHere();
 						if (ImGui::InputText("##rename", m_sRenameBuf.data(), 255, ImGuiInputTextFlags_EnterReturnsTrue))
 						{
@@ -144,7 +158,7 @@ namespace ENGINE_EDITOR {
 							m_sRenameBuf.clear();
 							m_bRename = false;
 						}
-						else if (m_bRename && ImGui::IsKeyPressed(ImGuiKey_Escape)) //TODO: add check here
+						else if (m_bRename && ImGui::IsKeyPressed(ImGuiKey_Escape))
 						{
 							m_sRenameBuf.clear();
 							m_bRename = false;
@@ -155,7 +169,9 @@ namespace ENGINE_EDITOR {
 					if (!m_bRename && bSelectedAsset && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
 					{
 						m_sRenameBuf.clear();
-						m_sRenameBuf = *assetItr;
+						// 注意：考虑到 string 预分配 buffer, 虽然你直接赋值可能可以工作，但为了配合 InputText(data, 255)
+						m_sRenameBuf.resize(255, '\0');
+						std::copy((*assetItr).begin(), (*assetItr).end(), m_sRenameBuf.begin());
 						m_bRename = true;
 					}
 
@@ -174,7 +190,7 @@ namespace ENGINE_EDITOR {
 			ImGui::EndTable();
 		}
 	}
-
+	
 	unsigned int AssetDisplay::GetTextureID(const std::string& sAssetName)
 	{
 		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
