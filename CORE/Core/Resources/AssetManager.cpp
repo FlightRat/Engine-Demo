@@ -393,18 +393,18 @@ namespace ENGINE_CORE::RESOURCES {
     }
 
     /* get all asset key names of specific asset type*/
-    std::vector<std::string> AssetManager::GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType) const
+    std::vector<std::string> AssetManager::GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType, bool editor) const
     {
         switch (eAssetType)
         {
             case ENGINE_UTIL::AssetType::TEXTURE:
             {
-                return ENGINE_UTIL::GetKeys(m_mapTexture, [](const auto& pair) {return !pair.second->IsEditorTexture(); });
+                return editor ? ENGINE_UTIL::GetKeys(m_mapTexture) : ENGINE_UTIL::GetKeys(m_mapTexture, [](const auto& pair) {return !pair.second->IsEditorTexture(); });
                 break;
             }
             case ENGINE_UTIL::AssetType::MODEL:
             {
-                return ENGINE_UTIL::GetKeys(m_mapModel, [](const auto& pair) {return !pair.second->IsEditorModel(); });
+                return editor ? ENGINE_UTIL::GetKeys(m_mapModel) : ENGINE_UTIL::GetKeys(m_mapModel, [](const auto& pair) {return !pair.second->IsEditorModel(); });
                 break;
             }
             case ENGINE_UTIL::AssetType::MUSIC:

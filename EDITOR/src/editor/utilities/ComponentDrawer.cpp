@@ -64,7 +64,7 @@ namespace ENGINE_EDITOR {
 			std::string sSelectedMesh{ meshFilter.mesh };
 			if (ImGui::BeginCombo("##mesh", sSelectedMesh.c_str()))
 			{
-				for (const auto& sMeshName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::MODEL))
+				for (const auto& sMeshName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::MODEL, true))
 				{
 					if (ImGui::Selectable(sMeshName.c_str(), sMeshName == sSelectedMesh))
 					{

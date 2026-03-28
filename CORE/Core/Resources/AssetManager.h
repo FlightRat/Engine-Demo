@@ -57,7 +57,7 @@ namespace ENGINE_CORE::RESOURCES {
 		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Texture>>& GetAllTextures() const { return m_mapTexture; }
 		inline const std::vector<std::string> GetSelectableMesh(){ return m_SelectableMesh; }
 
-		std::vector<std::string> GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType) const;
+		std::vector<std::string> GetAssetKeyName(ENGINE_UTIL::AssetType eAssetType, bool editor=false) const;
 		bool ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType);
 		bool CheckHasAsset(const std::string& checkName, ENGINE_UTIL::AssetType eAssetType);
 		bool DeleteAsset(const std::string& assetName, ENGINE_UTIL::AssetType eAssetType);
