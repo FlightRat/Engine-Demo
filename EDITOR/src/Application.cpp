@@ -378,15 +378,19 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load default mesh [hud_quad]!");
 			return false;
 		}
-		if (!assetManager.AddModelFromMemory("gbuffer_quad", "gbuffer_quad"))
+		if (!assetManager.AddModelFromMemory("quad", "quad"))
 		{
-			ENGINE_ERROR("Failed to load default mesh [gbuffer_quad]!");
+			ENGINE_ERROR("Failed to load default mesh [quad]!");
 			return false;
 		}
 
-		assetManager.GetModel("hud_quad")->SetIsEditorModel(true);
-		assetManager.GetModel("gbuffer_quad")->SetIsEditorModel(true);
+		assetManager.GetModel("cube")->SetIsEditorModel(true);
+		assetManager.GetModel("sphere")->SetIsEditorModel(true);
+		assetManager.GetModel("capsule")->SetIsEditorModel(true);
+		assetManager.GetModel("plane")->SetIsEditorModel(true);
 		assetManager.GetModel("skybox")->SetIsEditorModel(true);
+		assetManager.GetModel("hud_quad")->SetIsEditorModel(true);
+		assetManager.GetModel("quad")->SetIsEditorModel(true);
 		return true;
 	}
 

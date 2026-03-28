@@ -632,8 +632,8 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_2D, noise_texture->GetID());
 		Shader_SSAO->SetUniformInt("texNoise", 2);
 
-		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
-		gbuffer_quad[0].Draw();
+		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
+		quad[0].Draw();
 	}
 
 	void RenderSystem::SSAOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB)
@@ -654,8 +654,8 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_2D, ssaoFB->GetTextureID(0));
 		Shader_SSAOBlur->SetUniformInt("ssaoInput", 0);
 
-		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
-		gbuffer_quad[0].Draw();
+		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
+		quad[0].Draw();
 	}
 
 	void RenderSystem::Lighting_Pass(
@@ -743,8 +743,8 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		glDisable(GL_DEPTH_TEST);
-		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
-		gbuffer_quad[0].Draw();
+		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
+		quad[0].Draw();
 		glEnable(GL_DEPTH_TEST);
 	}
 

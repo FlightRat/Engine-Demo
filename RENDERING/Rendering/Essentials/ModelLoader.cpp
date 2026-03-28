@@ -783,7 +783,7 @@ namespace ENGINE_RENDERING {
 			Primitives::LoadHudQuad(vertices, indices);
 			found = true;
 		}
-		else if (shapeName == "gbuffer_quad") {
+		else if (shapeName == "quad") {
 			Primitives::LoadGbufferQuad(vertices, indices);
 			found = true;
 		}
