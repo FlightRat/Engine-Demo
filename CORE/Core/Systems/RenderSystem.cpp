@@ -98,7 +98,17 @@ namespace ENGINE_CORE::Systems {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto Shader_ShadowMap = assetManager.GetShader("shadow_Map");
+		if (Shader_ShadowMap->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 		auto Shader_ShadowCubemap = assetManager.GetShader("shadow_Cubemap");
+		if (Shader_ShadowCubemap->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
@@ -519,6 +529,11 @@ namespace ENGINE_CORE::Systems {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto Shader_Gbuffer = assetManager.GetShader("defer_Gbuffer");
+		if (Shader_Gbuffer->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 
 		// render object
 		Shader_Gbuffer->Enable();
@@ -595,6 +610,11 @@ namespace ENGINE_CORE::Systems {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto Shader_SSAO = assetManager.GetShader("defer_SSAO");
+		if (Shader_SSAO->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 		auto noise_texture = assetManager.GetTexture("ssaoNoise");
 
 		Shader_SSAO->Enable();
@@ -622,6 +642,11 @@ namespace ENGINE_CORE::Systems {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto Shader_SSAOBlur = assetManager.GetShader("defer_SSAOBlur");
+		if (Shader_SSAOBlur->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 
 		Shader_SSAOBlur->Enable();
 		
@@ -649,6 +674,11 @@ namespace ENGINE_CORE::Systems {
 		auto& assetManager = mainRegistry.GetAssetManager();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 		auto Shader_Lighting = assetManager.GetShader("defer_Lighting");
+		if (Shader_Lighting->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 
 		Shader_Lighting->Enable();
 
@@ -731,7 +761,17 @@ namespace ENGINE_CORE::Systems {
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		auto skybox_texture = assetManager.GetTexture("skybox");
 		auto Shader_Skybox = assetManager.GetShader("skybox");
+		if (Shader_Skybox->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 		auto Shader_Color = assetManager.GetShader("forward_Color");
+		if (Shader_Color->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
 
 		// 绘制点光源
 		Shader_Color->Enable();
@@ -813,6 +853,11 @@ namespace ENGINE_CORE::Systems {
 			auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 			auto Shader_PhysicsDebug = assetManager.GetShader("physics_Debug");
+			if (Shader_PhysicsDebug->ShaderProgramID() == 0)
+			{
+				ENGINE_ERROR("Shader has not been set correctly!");
+				return;
+			}
 			Shader_PhysicsDebug->Enable();
 			Shader_PhysicsDebug->SetUniformMat4("model", glm::mat4(1.0f));
 
