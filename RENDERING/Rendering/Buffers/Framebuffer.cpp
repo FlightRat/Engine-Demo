@@ -48,6 +48,9 @@ namespace ENGINE_RENDERING {
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE2, m_Width, m_Height, false));
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE2, m_Width, m_Height, false));
 			break;
+		case BufferType::SSAO:
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SSAO, m_Width, m_Height, false));
+			break;
 		}
 		return true;
 	}
@@ -104,6 +107,11 @@ namespace ENGINE_RENDERING {
 			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Width, m_Height);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
+			break;
+		}
+		case ENGINE_RENDERING::BufferType::SSAO:
+		{
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pTextures[0]->GetID(), 0);
 			break;
 		}
 		default:

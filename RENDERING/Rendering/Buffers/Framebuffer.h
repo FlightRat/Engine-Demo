@@ -10,7 +10,8 @@ namespace ENGINE_RENDERING {
         FRAMEBUFFER,    // 普通场景渲染：1 Color + 1 Depth RBO
         SHADOWMAP,      // 方向光阴影：1 Depth Texture (2D)
         SHADOWCUBEMAP,  // 点光源阴影：1 Depth Texture (Cube)
-        GBUFFER         // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
+        GBUFFER,        // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
+        SSAO            // SSAO: 1 Color
     };
 
     class Framebuffer {
