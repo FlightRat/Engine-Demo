@@ -1,4 +1,5 @@
-#include "RenderSystem.h"
+ï»¿#include "RenderSystem.h"
+#include<random>
 #include<glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include<glm/gtx/quaternion.hpp>
@@ -19,22 +20,28 @@
 #include "../ECS/Components/MeshRender.h"
 #include "../ECS/Components/LightComponent.h"
 #include "../CoreUtilities/CoreEngineData.h"
+#include "../Core/Core/Inputs/InputManager.h"
 
 namespace {
 	struct TextureSlot {
-		const char* key;            // ²ÄÖÊ Map ÖĞµÄ key (Èç "diffuse")
-		const char* useUniform;     // Shader bool ¿ª¹Ø (Èç "material.useDiffuse")
-		const char* samplerUniform; // Shader sampler2D Ãû×Ö (Èç "material.diffuse")
-		int unitIndex;              // ÎÆÀíµ¥Ôª (0, 1)
+		const char* key;            // æè´¨ Map ä¸­çš„ key (å¦‚ "diffuse")
+		const char* useUniform;     // Shader bool å¼€å…³ (å¦‚ "material.useDiffuse")
+		const char* samplerUniform; // Shader sampler2D åå­— (å¦‚ "material.diffuse")
+		int unitIndex;              // çº¹ç†å•å…ƒ (0, 1)
 	};
 
-	// Ê¹ÓÃ constexpr ÈÃËüÔÚ±àÒëÆÚ¾ÍÈ·¶¨£¬ĞÔÄÜ×î¸ß
+	// ä½¿ç”¨ constexpr è®©å®ƒåœ¨ç¼–è¯‘æœŸå°±ç¡®å®šï¼Œæ€§èƒ½æœ€é«˜
 	constexpr std::array<TextureSlot, 4> TEXTURE_SLOTS = { {
 		{ "diffuse",  "material.useDiffuse",  "material.diffuse",    0},
 		{ "specular", "material.useSpecular", "material.specular",   1 },
 		{ "normal",   "material.useNormal",   "material.normal",     2 },
 		{ "reflect",  "material.useReflect",  "material.reflection", 3 }
 	} };
+
+	GLfloat lerp(GLfloat a, GLfloat b, GLfloat f)
+	{
+		return a + f * (b - a);
+	}
 }
 
 using namespace ENGINE_CORE::ECS;
@@ -91,15 +98,15 @@ namespace ENGINE_CORE::Systems {
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
 
-		// Ìî³ä·½Ïò¹â UBO
-		// Êı¾İÒÑ¾­ÊÇ¹Ì¶¨ MAX_DIR_LIGHTS ´óĞ¡£¬Ö±½ÓÒ»´ÎĞÔÉÏ´«£¬ĞÔÄÜ×îÓÅ
+		// å¡«å……æ–¹å‘å…‰ UBO
+		// æ•°æ®å·²ç»æ˜¯å›ºå®š MAX_DIR_LIGHTS å¤§å°ï¼Œç›´æ¥ä¸€æ¬¡æ€§ä¸Šä¼ ï¼Œæ€§èƒ½æœ€ä¼˜
 		dirLightsUbo->UpdateUniformBuffer(
-			dirLightData.data(),// Êı¾İÖ¸Õë
-			lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), // ×Ü´óĞ¡
-			0                // Æ«ÒÆÁ¿
+			dirLightData.data(),// æ•°æ®æŒ‡é’ˆ
+			lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), // æ€»å¤§å°
+			0                // åç§»é‡
 		);
 
-		// Ìî³äµã¹âÔ´ UBO
+		// å¡«å……ç‚¹å…‰æº UBO
 		pointLightsUbo->UpdateUniformBuffer(
 			pointLightData.data(),
 			lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight),
@@ -122,7 +129,7 @@ namespace ENGINE_CORE::Systems {
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
 
-		// ·½Ïò¹â
+		// æ–¹å‘å…‰
 		Shader_ShadowMap->Enable();
 		for (int dirlight_index = 0; dirlight_index < lightSystem->GetActivatedDirLights(); dirlight_index++)
 		{
@@ -155,7 +162,7 @@ namespace ENGINE_CORE::Systems {
 
 		}
 
-		// µã¹âÔ´
+		// ç‚¹å…‰æº
 		Shader_ShadowCubemap->Enable();
 		for (int pointlight_index = 0; pointlight_index < lightSystem->GetActivatedPointLights(); pointlight_index++)
 		{
@@ -171,7 +178,7 @@ namespace ENGINE_CORE::Systems {
 
 			// light space matrix
 			GLfloat aspect = (GLfloat)shadowCubemap->Width() / (GLfloat)shadowCubemap->Height();
-			float near_plane = 0.1f, far_plane = 50.0f;
+			float near_plane = 0.1f, far_plane = 100.0f;
 			glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane);
 			std::vector<glm::mat4> shadowTransforms;
 			shadowTransforms.push_back(shadowProj * glm::lookAt(point_light_pos, point_light_pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
@@ -284,12 +291,12 @@ namespace ENGINE_CORE::Systems {
 			}
 			if (id.selected)
 			{
-				glStencilFunc(GL_ALWAYS, 1, 0xFF);		// ×ÜÊÇÍ¨¹ıÄ£°å²âÊÔ£¬ÇÒrefÎª1
-				glStencilMask(0xFF);					// ÔÊĞíĞ´ÈëÄ£°åÖµ
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);		// æ€»æ˜¯é€šè¿‡æ¨¡æ¿æµ‹è¯•ï¼Œä¸”refä¸º1
+				glStencilMask(0xFF);					// å…è®¸å†™å…¥æ¨¡æ¿å€¼
 			}
 			else
 			{
-				glStencilMask(0x00);					// ½ûÖ¹Ğ´ÈëÄ£°åÖµ
+				glStencilMask(0x00);					// ç¦æ­¢å†™å…¥æ¨¡æ¿å€¼
 			}
 
 			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
@@ -318,7 +325,7 @@ namespace ENGINE_CORE::Systems {
 				Shader_BlinnPhong->SetUniformFloat("material.shininess", cur_material.shininess);
 				Shader_BlinnPhong->SetUniformBool("useTexture", cur_material.m_useTexture);
 
-				Shader_BlinnPhong->SetUniformFloat("far_plane", 50.0f);
+				Shader_BlinnPhong->SetUniformFloat("far_plane", 100.0f);
 
 				glActiveTexture(GL_TEXTURE10);
 				glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
@@ -331,7 +338,7 @@ namespace ENGINE_CORE::Systems {
 					auto it = map_FBO.find(key);
 					if (it != map_FBO.end())
 					{
-						int texUnit = 11 + dir_light_index; // ÎÆÀíµ¥Ôª 11, 12, 13, 14
+						int texUnit = 11 + dir_light_index; // çº¹ç†å•å…ƒ 11, 12, 13, 14
 						glActiveTexture(GL_TEXTURE0 + texUnit);
 						glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
 						Shader_BlinnPhong->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
@@ -365,7 +372,7 @@ namespace ENGINE_CORE::Systems {
 						Shader_BlinnPhong->SetUniformBool(slot.shaderFlag, hasTexture);
 
 						if (hasTexture) {
-							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // °´Ë÷Òı×Ô¶¯·ÖÅäÎÆÀíµ¥Ôª
+							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // æŒ‰ç´¢å¼•è‡ªåŠ¨åˆ†é…çº¹ç†å•å…ƒ
 							auto tex = assetManager.GetTexture(it->second);
 							if (tex) {
 								glBindTexture(GL_TEXTURE_2D, tex->GetID());
@@ -386,17 +393,17 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
 		Shader_Skybox->Enable();
 		Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
-		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//ÒÆ³ı¹Û²ì¾ØÕóÖĞµÄÎ»ÒÆ
+		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//ç§»é™¤è§‚å¯ŸçŸ©é˜µä¸­çš„ä½ç§»
 		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
 		Shader_Skybox->SetUniformInt("skybox", 0);
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		skybox[0].Draw();
 		glDepthFunc(GL_LESS);
 
-		//Ä£°å²âÊÔ TODO:ĞŞ¸´scaleÏàÍ¬µ¼ÖÂÎŞ·¨ÏÔÊ¾ÂÖÀªµÄbug
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// µ±Ä¿±êÏñËØµÄÄ£°åÖµ²»µÈÓÚ1Ê±£¬Í¨¹ı²âÊÔ
-		glStencilMask(0x00);					// ½ûÖ¹Ğ´ÈëÄ£°åÖµ
-		glDepthMask(GL_FALSE);					//½ûÖ¹Éî¶ÈĞ´Èë
+		//æ¨¡æ¿æµ‹è¯• TODO:ä¿®å¤scaleç›¸åŒå¯¼è‡´æ— æ³•æ˜¾ç¤ºè½®å»“çš„bug
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);	// å½“ç›®æ ‡åƒç´ çš„æ¨¡æ¿å€¼ä¸ç­‰äº1æ—¶ï¼Œé€šè¿‡æµ‹è¯•
+		glStencilMask(0x00);					// ç¦æ­¢å†™å…¥æ¨¡æ¿å€¼
+		glDepthMask(GL_FALSE);					//ç¦æ­¢æ·±åº¦å†™å…¥
 		Shader_Color->Enable();
 		view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
@@ -431,9 +438,9 @@ namespace ENGINE_CORE::Systems {
 				meshes[mesh_index].Draw();
 			}
 		}
-		glStencilMask(0xFF);						// ÔÊĞíĞ´ÈëÄ£°åÖµ
-		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// ×ÜÊÇÍ¨¹ıÄ£°å²âÊÔ£¬ÇÒrefÎª0
-		glDepthMask(GL_TRUE);						// »Ö¸´Éî¶ÈĞ´Èë
+		glStencilMask(0xFF);						// å…è®¸å†™å…¥æ¨¡æ¿å€¼
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// æ€»æ˜¯é€šè¿‡æ¨¡æ¿æµ‹è¯•ï¼Œä¸”refä¸º0
+		glDepthMask(GL_TRUE);						// æ¢å¤æ·±åº¦å†™å…¥
 
 		// physics debug pass
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
@@ -467,29 +474,52 @@ namespace ENGINE_CORE::Systems {
 
 	void RenderSystem::DeferredRenderPipeline(
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, 
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
 	{
 		Prepare_Pass(camera, runtimeRegistry);
 
 		Shadow_Pass(runtimeRegistry);
 
+		// å‡ ä½•pass
 		intermediateGB->Bind();
-		glDisable(GL_BLEND);					// ¹Ø±Õ»ìºÏ
-		glEnable(GL_STENCIL_TEST);				// ¿ªÆôÄ£°å²âÊÔ
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// ±£Ö¤ Position Îª 0
+		glDisable(GL_BLEND);					// å…³é—­æ··åˆ
+		glEnable(GL_STENCIL_TEST);				// å¼€å¯æ¨¡æ¿æµ‹è¯•
+		// glCullFace(GL_BACK);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// ä¿è¯ Position ä¸º 0
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
 		Geometry_Pass(camera, runtimeRegistry);
 		intermediateGB->Unbind();
 
+		// ssao pass
+		ssaoFB->Bind();
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(0, 0, ssaoFB->Width(), ssaoFB->Height());
+		SSAO_Pass(camera, runtimeRegistry, intermediateGB);
+		ssaoFB->Unbind();
+
+		// ssaoæ¨¡ç³Špass
+		ssaoBlurFB->Bind();
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(0, 0, ssaoBlurFB->Width(), ssaoBlurFB->Height());
+		SSAOBlur_Pass(camera, runtimeRegistry, ssaoFB);
+		ssaoBlurFB->Unbind();
+
+		// å…‰ç…§pass
 		finalOutputFB->Bind();
-		glDisable(GL_STENCIL_TEST);				// ¹âÕÕ¼ÆËã²»ĞèÒªÄ£°å
+		glDisable(GL_STENCIL_TEST);				// å…‰ç…§è®¡ç®—ä¸éœ€è¦æ¨¡æ¿
 		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		Lighting_Pass(camera, runtimeRegistry, intermediateGB);
+		Lighting_Pass(camera, runtimeRegistry, intermediateGB, ssaoBlurFB);
 		finalOutputFB->Unbind();
 
+		// åå¤„ç†passï¼ˆç‚¹å…‰æº+æ¨¡æ¿æµ‹è¯•+å¤©ç©ºç›’ï¼‰
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetFboID());
 		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(),
@@ -501,6 +531,8 @@ namespace ENGINE_CORE::Systems {
 		finalOutputFB->Unbind();
 
 		intermediateGB->CheckResize();
+		ssaoFB->CheckResize();
+		ssaoBlurFB->CheckResize();
 		finalOutputFB->CheckResize();
 	}
 
@@ -522,12 +554,12 @@ namespace ENGINE_CORE::Systems {
 			}
 			if (id.selected)
 			{
-				glStencilFunc(GL_ALWAYS, 1, 0xFF);		// ×ÜÊÇÍ¨¹ıÄ£°å²âÊÔ£¬ÇÒrefÎª1
-				glStencilMask(0xFF);					// ÔÊĞíĞ´ÈëÄ£°åÖµ
+				glStencilFunc(GL_ALWAYS, 1, 0xFF);		// æ€»æ˜¯é€šè¿‡æ¨¡æ¿æµ‹è¯•ï¼Œä¸”refä¸º1
+				glStencilMask(0xFF);					// å…è®¸å†™å…¥æ¨¡æ¿å€¼
 			}
 			else
 			{
-				glStencilMask(0x00);					// ½ûÖ¹Ğ´ÈëÄ£°åÖµ
+				glStencilMask(0x00);					// ç¦æ­¢å†™å…¥æ¨¡æ¿å€¼
 			}
 
 			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
@@ -566,7 +598,7 @@ namespace ENGINE_CORE::Systems {
 						Shader_Gbuffer->SetUniformBool(slot.shaderFlag, hasTexture);
 
 						if (hasTexture) {
-							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // °´Ë÷Òı×Ô¶¯·ÖÅäÎÆÀíµ¥Ôª
+							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // æŒ‰ç´¢å¼•è‡ªåŠ¨åˆ†é…çº¹ç†å•å…ƒ
 							auto tex = assetManager.GetTexture(it->second);
 							if (tex) {
 								glBindTexture(GL_TEXTURE_2D, tex->GetID());
@@ -580,7 +612,72 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
-	void RenderSystem::Lighting_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
+	void RenderSystem::SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto Shader_SSAO = assetManager.GetShader("defer_SSAO");
+		auto noise_texture = assetManager.GetTexture("ssaoNoise");
+
+		// TODO: make this uniform block???
+		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+		std::default_random_engine generator;
+		std::vector<glm::vec3> ssaoKernel;
+		for (GLuint i = 0; i < 64; ++i)
+		{
+			glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
+			sample = glm::normalize(sample);
+			sample *= randomFloats(generator);
+			GLfloat scale = GLfloat(i) / 64.0;
+
+			// Scale samples s.t. they're more aligned to center of kernel
+			scale = lerp(0.1f, 1.0f, scale * scale);
+			sample *= scale;
+			ssaoKernel.push_back(sample);
+		}
+
+		Shader_SSAO->Enable();
+		Shader_SSAO->SetUniformVec2("screenSize", glm::vec2(intermediateGB->Width(), intermediateGB->Height()));
+		for (unsigned int kernel_index = 0; kernel_index < 64; ++kernel_index)
+			Shader_SSAO->SetUniformVec3("samples[" + std::to_string(kernel_index) + "]", ssaoKernel[kernel_index]);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(0));
+		Shader_SSAO->SetUniformInt("gPosition", 0);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(1));
+		Shader_SSAO->SetUniformInt("gNormal", 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, noise_texture->GetID());
+		Shader_SSAO->SetUniformInt("texNoise", 2);
+
+		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
+		gbuffer_quad[0].Draw();
+	}
+
+	void RenderSystem::SSAOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto Shader_SSAOBlur = assetManager.GetShader("defer_SSAOBlur");
+
+		Shader_SSAOBlur->Enable();
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ssaoFB->GetTextureID(0));
+		Shader_SSAOBlur->SetUniformInt("ssaoInput", 0);
+
+		const std::vector<Mesh>& gbuffer_quad = assetManager.GetModel("gbuffer_quad")->GetMeshes();
+		gbuffer_quad[0].Draw();
+	}
+
+	void RenderSystem::Lighting_Pass(
+		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, 
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
@@ -597,7 +694,7 @@ namespace ENGINE_CORE::Systems {
 
 		Shader_Lighting->Enable();
 
-		Shader_Lighting->SetUniformFloat("far_plane", 50.0f);
+		Shader_Lighting->SetUniformFloat("far_plane", 100.0f);
 		Shader_Lighting->SetUniformVec3("viewPos", camera->GetPosition());
 
 		glActiveTexture(GL_TEXTURE0);
@@ -616,9 +713,17 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(3));
 		Shader_Lighting->SetUniformInt("gRefl", 3);
 
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, ssaoBlurFB->GetTextureID(0));
+		Shader_Lighting->SetUniformInt("ssao", 4);
+
 		glActiveTexture(GL_TEXTURE10);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
 		Shader_Lighting->SetUniformInt("skybox", 10);
+
+		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
+		auto& keyboard = inputManager.GetKeyBoard();
+		Shader_Lighting->SetUniformBool("use_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_2));
 
 		// set direction light shadowMap
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
@@ -627,7 +732,7 @@ namespace ENGINE_CORE::Systems {
 			auto it = map_FBO.find(key);
 			if (it != map_FBO.end())
 			{
-				int texUnit = 11 + dir_light_index; // ÎÆÀíµ¥Ôª 11, 12, 13, 14
+				int texUnit = 11 + dir_light_index; // çº¹ç†å•å…ƒ 11, 12, 13, 14
 				glActiveTexture(GL_TEXTURE0 + texUnit);
 				glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
 				Shader_Lighting->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
@@ -670,7 +775,7 @@ namespace ENGINE_CORE::Systems {
 		auto Shader_Skybox = assetManager.GetShader("skybox");
 		auto Shader_Color = assetManager.GetShader("forward_Color");
 
-		// »æÖÆµã¹âÔ´
+		// ç»˜åˆ¶ç‚¹å…‰æº
 		Shader_Color->Enable();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
@@ -685,7 +790,7 @@ namespace ENGINE_CORE::Systems {
 			sphere[0].Draw();
 		}
 
-		// »æÖÆÌì¿ÕºĞ
+		// ç»˜åˆ¶å¤©ç©ºç›’
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
@@ -693,17 +798,17 @@ namespace ENGINE_CORE::Systems {
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 		Shader_Skybox->Enable();
 		Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
-		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//ÒÆ³ı¹Û²ì¾ØÕóÖĞµÄÎ»ÒÆ
+		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//ç§»é™¤è§‚å¯ŸçŸ©é˜µä¸­çš„ä½ç§»
 		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
 		Shader_Skybox->SetUniformInt("skybox", 0);
 		skybox[0].Draw();
 		glDepthFunc(GL_LESS);
 
-		// Ä£°å²âÊÔ
-		glEnable(GL_STENCIL_TEST);					// ¿ªÆôÄ£°å²âÊÔ
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// µ±Ä¿±êÏñËØµÄÄ£°åÖµ²»µÈÓÚ1Ê±£¬Í¨¹ı²âÊÔ
-		glStencilMask(0x00);						// ½ûÖ¹Ğ´ÈëÄ£°åÖµ
-		glDepthMask(GL_FALSE);						//½ûÖ¹Éî¶ÈĞ´Èë
+		// æ¨¡æ¿æµ‹è¯•
+		glEnable(GL_STENCIL_TEST);					// å¼€å¯æ¨¡æ¿æµ‹è¯•
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// å½“ç›®æ ‡åƒç´ çš„æ¨¡æ¿å€¼ä¸ç­‰äº1æ—¶ï¼Œé€šè¿‡æµ‹è¯•
+		glStencilMask(0x00);						// ç¦æ­¢å†™å…¥æ¨¡æ¿å€¼
+		glDepthMask(GL_FALSE);						//ç¦æ­¢æ·±åº¦å†™å…¥
 		Shader_Color->Enable();
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
@@ -738,12 +843,12 @@ namespace ENGINE_CORE::Systems {
 				meshes[mesh_index].Draw();
 			}
 		}
-		glStencilMask(0xFF);						// ÔÊĞíĞ´ÈëÄ£°åÖµ
-		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// ×ÜÊÇÍ¨¹ıÄ£°å²âÊÔ£¬ÇÒrefÎª0
-		glDepthMask(GL_TRUE);						// »Ö¸´Éî¶ÈĞ´Èë
-		glDisable(GL_STENCIL_TEST);					// ¹Ø±ÕÄ£°å²âÊÔ
+		glStencilMask(0xFF);						// å…è®¸å†™å…¥æ¨¡æ¿å€¼
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// æ€»æ˜¯é€šè¿‡æ¨¡æ¿æµ‹è¯•ï¼Œä¸”refä¸º0
+		glDepthMask(GL_TRUE);						// æ¢å¤æ·±åº¦å†™å…¥
+		glDisable(GL_STENCIL_TEST);					// å…³é—­æ¨¡æ¿æµ‹è¯•
 
-		// »æÖÆÎïÀíµ÷ÊÔÏß¿ò
+		// ç»˜åˆ¶ç‰©ç†è°ƒè¯•çº¿æ¡†
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
 		{
 			auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
