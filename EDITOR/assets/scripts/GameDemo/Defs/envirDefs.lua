@@ -244,12 +244,12 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(20.0, 2.5, 0),
-				scale = vec3(0.25, 1.0, 2.0),
-				rotation = vec3(0.0, 0.0, 90.0)
+				position = vec3(21.0, 2.5, 0),
+				scale = vec3(1.0, 2.5, 20.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
-				type = "plane"
+				type = "cube"
 			},
 			MeshRender = {
 				material = {
@@ -266,7 +266,7 @@ EnvirDefs =
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
-				box_halfExtents = vec3(2.5, 0.0005, 20.0)
+				box_halfExtents = vec3(1.0, 2.5, 20.0)
 			}
 		}
 	},
@@ -277,12 +277,12 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(-20.0, 2.5, 0),
-				scale = vec3(0.25, 1.0, 2.0),
-				rotation = vec3(0.0, 0.0, 90.0)
+				position = vec3(-21.0, 2.5, 0),
+				scale = vec3(1.0, 2.5, 20.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
-				type = "plane"
+				type = "cube"
 			},
 			MeshRender = {
 				material = {
@@ -299,7 +299,7 @@ EnvirDefs =
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
-				box_halfExtents = vec3(2.5, 0.0005, 20.0)
+				box_halfExtents = vec3(1.0, 2.5, 20.0)
 			}
 		}
 	},
@@ -310,12 +310,12 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(0.0, 2.5, -20.0),
-				scale = vec3(2.0, 1.0, 0.25),
-				rotation = vec3(90.0, 0.0, 0.0)
+				position = vec3(0.0, 2.5, 21.0),
+				scale = vec3(20.0, 2.5, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
-				type = "plane"
+				type = "cube"
 			},
 			MeshRender = {
 				material = {
@@ -332,7 +332,7 @@ EnvirDefs =
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
-				box_halfExtents = vec3(20.0, 0.0005, 2.5)
+				box_halfExtents = vec3(20.0, 2.5, 1.0)
 			}
 		}
 	},
@@ -343,12 +343,12 @@ EnvirDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(0.0, 2.5, 20.0),
-				scale = vec3(2.0, 1.0, 0.25),
-				rotation = vec3(90.0, 0.0, 0.0)
+				position = vec3(0.0, 2.5, -21.0),
+				scale = vec3(20.0, 2.5, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
-				type = "plane"
+				type = "cube"
 			},
 			MeshRender = {
 				material = {
@@ -365,7 +365,7 @@ EnvirDefs =
 			Physics = {
 				type = BodyType.Static,
 				shape = "box",
-				box_halfExtents = vec3(20.0, 0.0005, 2.5)
+				box_halfExtents = vec3(20.0, 2.5, 1.0)
 			}
 		}
 	}
