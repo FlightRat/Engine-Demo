@@ -139,7 +139,12 @@ namespace ENGINE_CORE::Systems {
 
 				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 				Shader_ShadowMap->SetUniformMat4("model", model);
-				const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+				auto pModel = assetManager.GetModel(meshF.mesh);
+				if (!pModel)
+				{
+					pModel = assetManager.GetModel("cube");
+				}
+				const std::vector<Mesh>& meshes = pModel->GetMeshes();
 				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 					meshes[meshIdx].Draw();
 			}
@@ -188,7 +193,12 @@ namespace ENGINE_CORE::Systems {
 
 				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 				Shader_ShadowCubemap->SetUniformMat4("model", model);
-				const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+				auto pModel = assetManager.GetModel(meshF.mesh);
+				if (!pModel)
+				{
+					pModel = assetManager.GetModel("cube");
+				}
+				const std::vector<Mesh>& meshes = pModel->GetMeshes();
 				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 					meshes[meshIdx].Draw();
 			}
@@ -286,7 +296,12 @@ namespace ENGINE_CORE::Systems {
 				glStencilMask(0x00);					// 禁止写入模板值
 			}
 
-			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			auto pModel = assetManager.GetModel(meshF.mesh);
+			if (!pModel)
+			{
+				pModel = assetManager.GetModel("cube");
+			}
+			const std::vector<Mesh>& meshes = pModel->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
@@ -400,7 +415,12 @@ namespace ENGINE_CORE::Systems {
 				continue;
 			}
 
-			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			auto pModel = assetManager.GetModel(meshF.mesh);
+			if (!pModel)
+			{
+				pModel = assetManager.GetModel("cube");
+			}
+			const std::vector<Mesh>& meshes = pModel->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
@@ -554,7 +574,12 @@ namespace ENGINE_CORE::Systems {
 				glStencilMask(0x00);					// 禁止写入模板值
 			}
 
-			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			auto pModel = assetManager.GetModel(meshF.mesh);
+			if (!pModel)
+			{
+				pModel = assetManager.GetModel("cube");
+			}
+			const std::vector<Mesh>& meshes = pModel->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
@@ -816,7 +841,12 @@ namespace ENGINE_CORE::Systems {
 				continue;
 			}
 
-			const std::vector<Mesh>& meshes = assetManager.GetModel(meshF.mesh)->GetMeshes();
+			auto pModel = assetManager.GetModel(meshF.mesh);
+			if (!pModel)
+			{
+				pModel = assetManager.GetModel("cube");
+			}
+			const std::vector<Mesh>& meshes = pModel->GetMeshes();
 			if (meshF.changed || meshR.CheckMaterialEmpty())
 			{
 				meshF.changed = false;
