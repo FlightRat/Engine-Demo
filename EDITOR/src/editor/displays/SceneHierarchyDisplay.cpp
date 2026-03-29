@@ -287,9 +287,8 @@ namespace ENGINE_EDITOR {
 			ImGui::EndPopup();
 		}
 
-		auto& registry = pCurrentScene->GetRegistry();
-
 		// »æÖÆ×ó²àentity
+		auto& registry = pCurrentScene->GetRegistry();
 		auto sceneEntities = registry.GetRegistry().view<entt::entity>(entt::exclude<ENGINE_CORE::ECS::ScriptComponent>);
 		for (auto entity : sceneEntities)
 		{
