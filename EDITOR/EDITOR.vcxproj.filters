@@ -107,6 +107,8 @@
     <None Include="assets\shaders\defer_ssao.frag" />
     <None Include="assets\shaders\defer_ssaoBlur.vert" />
     <None Include="assets\shaders\defer_ssaoBlur.frag" />
+    <None Include="assets\shaders\test.vert" />
+    <None Include="assets\shaders\test.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

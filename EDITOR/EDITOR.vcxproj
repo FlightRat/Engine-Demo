@@ -228,6 +228,8 @@
     <None Include="assets\shaders\skybox.frag" />
     <None Include="assets\shaders\skybox.vert" />
     <None Include="assets\shaders\defer_ssao.vert" />
+    <None Include="assets\shaders\test.frag" />
+    <None Include="assets\shaders\test.vert" />
     <None Include="assimp-vc143-mtd.dll" />
     <None Include="imgui.ini" />
     <None Include="SDL2.dll" />
