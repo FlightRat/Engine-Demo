@@ -278,6 +278,7 @@ namespace ENGINE_EDITOR {
 			return;
 		}
 
+		// ÓÒ»÷¿Õ°×´¦µÄ²Ëµ¥
 		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 		{
 			if (ImGui::Selectable("Add New Game Object"))
