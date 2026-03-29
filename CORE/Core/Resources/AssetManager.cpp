@@ -502,6 +502,9 @@ namespace ENGINE_CORE::RESOURCES {
             },
             "add_soundFx", [&](const std::string& soundFxName, const std::string& soundFxPath) {
                 return assetManager.AddSoundFx(soundFxName, soundFxPath);
+            },
+            "add_shader", [&](const std::string& vsPath, const std::string& fsPath, const std::string& gsPath=std::string()) {
+                return assetManager.AddShader(vsPath, fsPath, gsPath);
             }
         );
     }
