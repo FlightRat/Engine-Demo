@@ -26,6 +26,10 @@ AssetDefs =
 		{name="jump",path="assets/soundFx/jumping.wav"},
 		{name="land",path="assets/soundFx/landing.wav"},
 		{name="shot",path="assets/soundFx/shooting.wav"},
+	},
+	shader =
+	{
+		{name="test", vsPath="assets/shaders/test.vert", fsPath="assets/shaders/test.frag"}
 	}
 }
 
@@ -66,6 +70,13 @@ function LoadAssets()
 		end
 	end
 
-	-- TODO:Shader
+	-- Shader
+	for k, v in pairs(AssetDefs.shader) do
+		if not AssetManager.add_shader(v.name, v.vsPath, v.fsPath) then
+			ENGINE_Error("Failed to load shader [%s] at vsPath [%s] and fsPath [%s]", v.name, v.vsPath, v.fsPath)
+		else
+			ENGINE_Log("Loaded shader [&s]", v.name)
+		end
+	end
 
 end
