@@ -22,6 +22,10 @@ namespace ENGINE_EDITOR {
 		newEntity.AddComponent<ENGINE_CORE::ECS::TransformComponent>();
 		};
 
+	auto delete_entity = [&](std::shared_ptr<ENGINE_CORE::ECS::Entity> entityToDelete) {
+		entityToDelete->Kill();
+		};
+
 	/*为单个实体绘制左侧树节点*/
 	bool SceneHierarchyDisplay::OpenTreeNode(ENGINE_CORE::ECS::Entity& entity)
 	{
@@ -36,6 +40,14 @@ namespace ENGINE_EDITOR {
 		}
 
 		bool bTreeNodeOpen = ImGui::TreeNodeEx(entity.GetName().c_str(), nodeFlags);
+
+		// 绘制当前entity左侧节点时，如果被选中+右键，弹窗
+		if (isSelected && ImGui::BeginPopupContextItem())
+		{
+			if (ImGui::MenuItem("Delete Game Object"))
+				m_bDeleteGameObject = true;
+			ImGui::EndPopup();
+		}
 
 		// click event
 		if (ImGui::IsItemClicked())
@@ -266,7 +278,7 @@ namespace ENGINE_EDITOR {
 			return;
 		}
 
-		if (ImGui::BeginPopupContextWindow())
+		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 		{
 			if (ImGui::Selectable("Add New Game Object"))
 			{
@@ -284,6 +296,28 @@ namespace ENGINE_EDITOR {
 			ENGINE_CORE::ECS::Entity ent{ registry, entity };
 			if (OpenTreeNode(ent))
 				ImGui::TreePop();
+		}
+
+		// 左击空白处取消选中entity
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
+		{
+			if (m_pSelectedEntity)
+			{
+				if (m_pSelectedEntity->GetRegistry().valid(m_pSelectedEntity->GetEntity()))
+				{
+					auto& oldId = m_pSelectedEntity->GetComponent<ENGINE_CORE::ECS::Identification>();
+					oldId.selected = false;
+				}
+				m_pSelectedEntity.reset();
+			}
+		}
+
+		// 执行删除entity
+		if (m_pSelectedEntity && m_bDeleteGameObject)
+		{
+			delete_entity(m_pSelectedEntity);
+			m_pSelectedEntity.reset();
+			m_bDeleteGameObject = false;
 		}
 
 		ImGui::End();

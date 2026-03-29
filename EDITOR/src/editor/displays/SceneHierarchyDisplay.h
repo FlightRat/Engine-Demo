@@ -9,6 +9,7 @@ namespace ENGINE_EDITOR {
 	private:
 		std::shared_ptr<ENGINE_CORE::ECS::Entity> m_pSelectedEntity{ nullptr };
 		bool m_bAddComponent{ false };
+		bool m_bDeleteGameObject{ false };
 
 	private:
 		bool OpenTreeNode(ENGINE_CORE::ECS::Entity& entity);
