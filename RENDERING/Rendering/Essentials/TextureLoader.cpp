@@ -1,6 +1,8 @@
 #include "TextureLoader.h"
 #include <random>
 #include <filesystem>
+#include <fstream>
+#include <vector>
 #include <glm/glm.hpp>
 #include <SOIL/SOIL.h>
 #include "Logger/Logger.h"
@@ -9,20 +11,44 @@ namespace ENGINE_RENDERING{
 	bool TextureLoader::LoadTexture(const std::string& filepath, GLuint& id, int& width, int& height, bool blended)
 	{
 		int channels = 0;
-		
-		// clang-format off
-		unsigned char* image = SOIL_load_image(filepath.c_str(), // Filename			-- Image file to be loaded
-			&width,			  // Width				-- Width of the image
-			&height,		  // height				-- Height of the image
-			&channels,		  // channels			-- Number of channels
-			SOIL_LOAD_AUTO	  // force_channels		-- Force the channels count
+
+		// 1. [核心架构转换] 使用 C++20 filesystem 安全处理 UTF-8 中文路径
+		std::filesystem::path safePath = reinterpret_cast<const char8_t*>(filepath.c_str());
+
+		// 2. [底层 I/O] 以二进制模式并在文件尾部打开，为了快速获取文件大小
+		std::ifstream file(safePath, std::ios::binary | std::ios::ate);
+		if (!file.is_open())
+		{
+			ENGINE_ERROR("Failed to open file via filesystem [{0}]", filepath);
+			return false;
+		}
+
+		// 3. [内存管理] 一次性分配整块内存并完整读取，极致的 Cache-friendly 做法
+		std::streamsize fileSize = file.tellg();
+		file.seekg(0, std::ios::beg); // 光标移回文件头
+
+		std::vector<unsigned char> fileBuffer(static_cast<size_t>(fileSize));
+		if (!file.read(reinterpret_cast<char*>(fileBuffer.data()), fileSize))
+		{
+			ENGINE_ERROR("Failed to read file data to memory [{0}]", filepath);
+			return false;
+		}
+		file.close(); // 尽早释放句柄
+
+		// 4. [图像解码] 放弃有缺陷的底层 fopen，强制要求 SOIL 从我们构造的安全内存中解码
+		unsigned char* image = SOIL_load_image_from_memory(
+			fileBuffer.data(),
+			static_cast<int>(fileBuffer.size()),
+			&width,
+			&height,
+			&channels,
+			SOIL_LOAD_AUTO
 		);
-		// clang-format on
 
 		// Check to see if the image is successful
 		if (!image)
 		{
-			ENGINE_ERROR("SOIL failed to load image [{0}] -- {1}", filepath, SOIL_last_result());
+			ENGINE_ERROR("SOIL failed to parse image memory [{0}] -- {1}", filepath, SOIL_last_result());
 			return false;
 		}
 
@@ -35,15 +61,15 @@ namespace ENGINE_RENDERING{
 		}
 
 		glTexImage2D(
-			GL_TEXTURE_2D,	// target			-- Specifies the target texture
-			0,				// level			-- Level of detail. 0 is the base image level
-			format,			// internal format	-- The number of color components
-			width,			// width			-- width of the texture image
-			height,			// height			-- height of the texture image
-			0,				// border
-			format,			// format			-- format of the pixel data
-			GL_UNSIGNED_BYTE, // type				-- The data type of the pixel data
-			image				// data
+			GL_TEXTURE_2D,   // target      -- Specifies the target texture
+			0,               // level       -- Level of detail
+			format,          // internal format
+			width,           // width
+			height,          // height
+			0,               // border
+			format,          // format
+			GL_UNSIGNED_BYTE,// type
+			image            // data
 		);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -51,7 +77,7 @@ namespace ENGINE_RENDERING{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-		
+
 		if (!blended)
 		{
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
