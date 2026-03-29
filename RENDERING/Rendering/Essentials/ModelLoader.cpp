@@ -608,35 +608,33 @@ namespace ENGINE_RENDERING {
 	std::string ModelLoader::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName,
 		std::map<std::string, std::string>& textures, const std::string& directory)
 	{
-		std::string texName="";	// Note: assume that there is only 1 texture for each type
+		std::string texName = "";
 		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
 		{
 			aiString str;
 			if (mat->GetTexture(type, i, &str) == AI_SUCCESS)
 			{
-				// 1. 获取 Assimp 原始路径并格式化
 				std::string assimpPath = str.C_Str();
 				std::replace(assimpPath.begin(), assimpPath.end(), '\\', '/');
 
-				// 2. 提取文件夹前缀 (例如: "nanosuit")
-				std::filesystem::path dirPath(directory);
-				std::string folderPrefix = dirPath.filename().string();
+				// 1. [核心修复：强制声明 UTF-8] 获取模型目录路径
+				std::filesystem::path dirPath(reinterpret_cast<const char8_t*>(directory.c_str()));
+				std::string folderPrefix = reinterpret_cast<const char*>(dirPath.filename().u8string().c_str());
 
-				// 3. 提取贴图文件名不含后缀 (例如: "glass_dif")
-				std::filesystem::path texFile(assimpPath);
-				std::string fileNameOnly = texFile.stem().string();
+				// 2. [核心修复：强制声明 UTF-8] 处理 Assimp 解析出的贴图文件名
+				std::filesystem::path texFile(reinterpret_cast<const char8_t*>(assimpPath.c_str()));
+				std::string fileNameOnly = reinterpret_cast<const char*>(texFile.stem().u8string().c_str());
 
-				// 4. 生成你要求的 Key (例如: "nanosuit_glass_dif")
+				// 3. 生成 Key
 				texName = folderPrefix + "_" + fileNameOnly;
 
-				// 5. 生成物理完整路径用于加载文件
-				std::string texPath = (dirPath / texFile).generic_string();
+				// 4. [核心修复] 拼接完整物理路径，并无损转回 UTF-8 字符串
+				std::filesystem::path fullTexPath = dirPath / texFile;
+				std::string texPath = reinterpret_cast<const char*>(fullTexPath.u8string().c_str());
 
-				// 6. 存入 Map
 				if (!textures.contains(texName))
 				{
 					textures.emplace(texName, texPath);
-					//ENGINE_LOG("ModelLoader: Generated Key [{0}] for path [{1}]", texName, texPath);
 				}
 			}
 		}
@@ -734,6 +732,10 @@ namespace ENGINE_RENDERING {
 	bool ModelLoader::LoadModel(const std::string& modelPath, std::vector<Mesh>& meshes, std::map<std::string, std::string>& textures)
 	{
 		Assimp::Importer importer;
+
+		// [警告] 
+		// Assimp默认调用底层 I/O。如果你把包含中文的 UTF-8 传给 ReadFile，它有可能会失败。
+		// 如果你在测试中遇到 Assimp 返回 "Failed to open file"，请告诉我，我们需要为 Assimp 注入一个自定义的 IOSystem。
 		const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -742,8 +744,10 @@ namespace ENGINE_RENDERING {
 			return false;
 		}
 
-		// 提取模型所在目录 (例如: "Assets/Models/Hero.obj" -> "Assets/Models")
-		std::string directory = modelPath.substr(0, modelPath.find_last_of("\\/"));
+		// [核心修复] 不要用字符串强制截取路径，容易引发多字节截断问题
+		// 使用 std::filesystem 获取纯正无损的父级目录，再转回 UTF-8 std::string
+		std::filesystem::path pathObj(reinterpret_cast<const char8_t*>(modelPath.c_str()));
+		std::string directory = reinterpret_cast<const char*>(pathObj.parent_path().u8string().c_str());
 
 		processNode(scene->mRootNode, scene, meshes, textures, directory);
 

@@ -1,6 +1,8 @@
 #include "ShaderLoader.h"
 #include<iostream>
-#include<fstream>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 #include<Logger/Logger.h>
 
 namespace ENGINE_RENDERING {
@@ -39,27 +41,36 @@ namespace ENGINE_RENDERING {
 
     GLuint ShaderLoader::CompileShader(GLuint shaderType, const std::string& filepath)
     {
-        // read the shader file
-        std::ifstream ifs(filepath);
-        if(ifs.fail())
+        // 1. [核心修复] 使用 C++20 filesystem 安全无损地转换 UTF-8 中文路径
+        std::filesystem::path safePath = reinterpret_cast<const char8_t*>(filepath.c_str());
+
+        // 2. 将安全的 path 对象直接传给 ifstream 构造函数
+        // 这样在 Windows 底层，C++ 标准库会自动调用安全宽字符 API (CreateFileW)
+        std::ifstream ifs(safePath);
+        if (!ifs.is_open())  // 使用 is_open() 比 fail() 具有多一层防御语义
         {
             ENGINE_ERROR("Shader Failed to open [{}]!", filepath);
             return 0;
         }
-        std::string contents{ "" };
-        std::string line;
-        while (std::getline(ifs, line))
-        {
-            contents += line + "\n";
-        }
+
+        // 3. [性能优化] 废弃原先极为低效的 while(getline) 字符串堆内存拼接操作
+        // 利用底层 rdbuf 将文件流的数据一次性块状读入，这是现代 C++ 极为高效且优雅的做法
+        std::stringstream buffer;
+        buffer << ifs.rdbuf();
+        std::string contents = buffer.str();
         ifs.close();
 
+        // ========= OpenGL编译核心逻辑 =========
         const GLuint shaderID = glCreateShader(shaderType);
         const char* contentsPtr = contents.c_str();
+
         glShaderSource(shaderID, 1, &contentsPtr, nullptr);
         glCompileShader(shaderID);
+
         if (!CompileSuccess(shaderID))
         {
+            // 注意这里报错依然打印原始的 UTF-8 string，如果终端不支持显示中文可能看上去是乱码，
+            // 但这不会影响你的引擎逻辑，因为底层路径是绝对正确的
             ENGINE_ERROR("Failed to compile shader [{}]!", filepath);
             return 0;
         }

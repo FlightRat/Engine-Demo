@@ -233,7 +233,7 @@ namespace ENGINE_CORE::RESOURCES {
 
     // music
     bool AssetManager::AddMusic(const std::string& musicName, const std::string& musicPath)
-    {   
+    {
         // check if exists
         if (m_mapMusic.find(musicName) != m_mapMusic.end())
         {
@@ -241,12 +241,21 @@ namespace ENGINE_CORE::RESOURCES {
             return false;
         }
 
-        // load music data
-        Mix_Music* music = Mix_LoadMUS(musicPath.c_str());
+        // [核心架构防御]：放弃 Mix_LoadMUS 直接解析路径，防止它底层误调有缺陷的 C I/O API。
+        // 强制使用 SDL2 核心的 SDL_RWFromFile，它原生完美支持跨平台 UTF-8 路径！
+        SDL_RWops* rw = SDL_RWFromFile(musicPath.c_str(), "rb");
+        if (!rw)
+        {
+            ENGINE_ERROR("SDL_RWFromFile failed for [{}] at path [{}] -- Error: {}", musicName, musicPath, SDL_GetError());
+            return false;
+        }
+
+        // 第二个参数传 1 (int freesrc)，表示当 Mix_Music 被释放时，自动帮我们 fclose 关闭文件句柄，防止内存/句柄泄漏！
+        Mix_Music* music = Mix_LoadMUS_RW(rw, 1);
         if (!music)
         {
             std::string error{ Mix_GetError() };
-            ENGINE_ERROR("Failed to load [{}] at path [{}]-- Mixer Error:{}", musicName, musicPath, error);
+            ENGINE_ERROR("Failed to decode music [{}] -- Mixer Error: {}", musicName, error);
             return false;
         }
 
@@ -261,12 +270,12 @@ namespace ENGINE_CORE::RESOURCES {
         auto musicPtr = std::make_shared<ENGINE_SOUNDS::Music>(params, MusicPtr{ music });
         if (!musicPtr)
         {
-            ENGINE_ERROR("Failed to create the must ptr for [{}]", musicName);
+            ENGINE_ERROR("Failed to create the music ptr for [{}]", musicName);
             return false;
         }
 
         m_mapMusic.emplace(musicName, std::move(musicPtr));
-        
+
         return true;
     }
     bool AssetManager::AddMusicFromMemory(const std::string& musicName, const unsigned char* musicData, size_t dataSize)
@@ -330,12 +339,20 @@ namespace ENGINE_CORE::RESOURCES {
             return false;
         }
 
-        // load soundfx data
-        Mix_Chunk* chunk = Mix_LoadWAV(soundFxPath.c_str());
+        // [核心架构防御]：同样使用 SDL_RWops 安全隔离文件 I/O
+        SDL_RWops* rw = SDL_RWFromFile(soundFxPath.c_str(), "rb");
+        if (!rw)
+        {
+            ENGINE_ERROR("SDL_RWFromFile failed for [{}] at path [{}] -- Error: {}", soundFxName, soundFxPath, SDL_GetError());
+            return false;
+        }
+
+        // 同理，传 1 让 SDL_mixer 托管文件句柄的释放
+        Mix_Chunk* chunk = Mix_LoadWAV_RW(rw, 1);
         if (!chunk)
         {
             std::string error{ Mix_GetError() };
-            ENGINE_ERROR("Failed to load [{}] at path [{}] -- Mixer Error [{}]", soundFxName, soundFxPath, error);
+            ENGINE_ERROR("Failed to decode SoundFX [{}] -- Mixer Error [{}]", soundFxName, error);
             return false;
         }
 
@@ -343,6 +360,8 @@ namespace ENGINE_CORE::RESOURCES {
         ENGINE_SOUNDS::SoundParams params{
             .name = soundFxName,
             .filename = soundFxPath,
+            // 注意：你这里的除数 179.4 是一个硬编码（Hardcode）大概的魔法数字。
+            // 以后如果有时间，建议重构成读取 chunk 的频率、位深来动态计算！
             .duration = chunk->alen / 179.4
         };
 
@@ -350,7 +369,7 @@ namespace ENGINE_CORE::RESOURCES {
         auto chunkPtr = std::make_shared<ENGINE_SOUNDS::SoundFx>(params, SoundFxPtr{ chunk });
         if (!chunkPtr)
         {
-            ENGINE_ERROR("Failed to create the must ptr for [{}]", soundFxName);
+            ENGINE_ERROR("Failed to create the soundfx ptr for [{}]", soundFxName);
             return false;
         }
 
