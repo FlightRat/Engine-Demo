@@ -813,6 +813,20 @@ namespace ENGINE_CORE::Systems {
 			sphere[0].Draw();
 		}
 
+		// 绘制方向光
+		for (int dir_light_index = 0; dir_light_index < lightSystem->GetActivatedDirLights(); dir_light_index++)
+		{
+			auto dir_light = dirLightData[dir_light_index];
+			glm::vec3 pos = glm::vec3(0.0f) - glm::vec3((dir_light.direction * 10.0f));
+			glm::mat4 light_sphere_model = glm::mat4(1.0f);
+			light_sphere_model = glm::translate(light_sphere_model, pos);
+			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
+			Shader_Color->SetUniformMat4("model", light_sphere_model);
+			Shader_Color->SetUniformVec3("color", glm::vec3(1.0,1.0,0.0));
+			Shader_Color->SetUniformBool("outline", false);
+			sphere[0].Draw();
+		}
+
 		// 绘制天空盒
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
