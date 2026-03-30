@@ -7,6 +7,8 @@
 #include "../scene/SceneManager.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
+#include <SDL.h>
+#include "FileSystem/Dialogs/FileDialog.h"
 
 constexpr float DEFAULT_ASSET_SIZE = 128.f;
 constexpr ImVec2 DRAG_ASSET_SIZE = ImVec2{ 32.f,32.f };
@@ -24,12 +26,12 @@ namespace ENGINE_EDITOR {
 		else if (m_sSelectedType == "MODEL")
 		{
 			m_eSelectedType = ENGINE_UTIL::AssetType::MODEL;
-			m_sDragSource = std::string{ DROP_TEXTURE_SRC };
+			m_sDragSource = std::string{ DROP_MODEL_SRC };
 		}
 		else if (m_sSelectedType == "SHADER")
 		{
 			m_eSelectedType = ENGINE_UTIL::AssetType::SHADER;
-			m_sDragSource = std::string{ DROP_TEXTURE_SRC };
+			m_sDragSource = std::string{ DROP_SHADER_SRC };
 		}
 		else if (m_sSelectedType == "MUSIC")
 		{
@@ -187,6 +189,87 @@ namespace ENGINE_EDITOR {
 					ImGui::PopID();
 				}
 			}
+			
+			// draw right click menu
+			if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+			{
+				switch (m_eSelectedType)
+				{
+				case ENGINE_UTIL::AssetType::TEXTURE:
+					if (ImGui::Selectable("Add Texture"))
+					{
+						ENGINE_FileSystem::FileDialog fd{};
+						auto file = fd.OpenFileDialog("Open texture", SDL_GetBasePath(), { "*.jpg", "*.png" });
+						if (!file.empty())
+						{
+							assetManager.AddTexture("new_texture", file, false);
+						}
+					}
+					break;
+				case ENGINE_UTIL::AssetType::MODEL:
+					if (ImGui::Selectable("Add Model"))
+					{
+						ENGINE_FileSystem::FileDialog fd{};
+						auto file = fd.OpenFileDialog("Open model", SDL_GetBasePath(), { "*.obj" });
+						if (!file.empty())
+						{
+							std::map<std::string, std::string> textures;
+							assetManager.AddModel("new_model", file, textures);
+							for (const auto& [texName, texPath] : textures) {
+								if (!assetManager.CheckHasAsset(texName, ENGINE_UTIL::AssetType::TEXTURE)) {
+									assetManager.AddTexture(texName, texPath, false);
+								}
+							}
+						}
+					}
+					break;
+				case ENGINE_UTIL::AssetType::MUSIC:
+					if (ImGui::Selectable("Add Music"))
+					{
+						ENGINE_FileSystem::FileDialog fd{};
+						auto file = fd.OpenFileDialog("Open music", SDL_GetBasePath(), { "*.wav" });
+						if (!file.empty())
+						{
+							assetManager.AddMusic("new_music", file);
+						}
+					}
+					break;
+				case ENGINE_UTIL::AssetType::SOUNDFX:
+					if (ImGui::Selectable("Add SoundFX"))
+					{
+						ENGINE_FileSystem::FileDialog fd{};
+						auto file = fd.OpenFileDialog("Open soundFX", SDL_GetBasePath(), { "*.wav" });
+						if (!file.empty())
+						{
+							assetManager.AddSoundFx("new_soundfx", file);
+						}
+					}
+					break;
+				case ENGINE_UTIL::AssetType::SCENE:
+					if (ImGui::Selectable("Add Scene"))
+					{
+						SCENE_MANAGER().AddScene("new_scene");
+					}
+					break;
+				case ENGINE_UTIL::AssetType::SHADER:
+					if (ImGui::Selectable("Add Shader"))
+					{
+						ENGINE_FileSystem::FileDialog fd{};
+						auto vsPath = fd.OpenFileDialog("Open vertex shader", SDL_GetBasePath(), { "*.vert" });
+						auto fsPath = fd.OpenFileDialog("Open fragment shader", SDL_GetBasePath(), { "*.frag" });
+						if (!vsPath.empty() && !fsPath.empty()) {
+							assetManager.AddShader("new_shader", vsPath, fsPath);
+						}
+					}
+					break;
+				case ENGINE_UTIL::AssetType::NO_TYPE:
+					break;
+				default:
+					break;
+				}
+				ImGui::EndPopup();
+			}
+
 			ImGui::EndTable();
 		}
 	}
@@ -356,6 +439,7 @@ namespace ENGINE_EDITOR {
 			DrawSelectedAssets();
 			ImGui::EndChild();
 		}
+		
 		ImGui::End();
 	}
 
