@@ -21,7 +21,22 @@ AssetDefs =
 		{name="wall_normal", path="assets/textures/pbr/wall/normal.png", pixel_art=false},
 		{name="wall_metallic", path="assets/textures/pbr/wall/metallic.png", pixel_art=false},
 		{name="wall_roughness", path="assets/textures/pbr/wall/roughness.png", pixel_art=false},
-		{name="wall_ao", path="assets/textures/pbr/wall/ao.png", pixel_art=false}
+		{name="wall_ao", path="assets/textures/pbr/wall/ao.png", pixel_art=false},
+		{name="plastic_albedo", path="assets/textures/pbr/plastic/albedo.png", pixel_art=false},
+		{name="plastic_normal", path="assets/textures/pbr/plastic/normal.png", pixel_art=false},
+		{name="plastic_metallic", path="assets/textures/pbr/plastic/metallic.png", pixel_art=false},
+		{name="plastic_roughness", path="assets/textures/pbr/plastic/roughness.png", pixel_art=false},
+		{name="plastic_ao", path="assets/textures/pbr/plastic/ao.png", pixel_art=false},
+		{name="gold_albedo", path="assets/textures/pbr/gold/albedo.png", pixel_art=false},
+		{name="gold_normal", path="assets/textures/pbr/gold/normal.png", pixel_art=false},
+		{name="gold_metallic", path="assets/textures/pbr/gold/metallic.png", pixel_art=false},
+		{name="gold_roughness", path="assets/textures/pbr/gold/roughness.png", pixel_art=false},
+		{name="gold_ao", path="assets/textures/pbr/gold/ao.png", pixel_art=false},
+		{name="rusted_iron_albedo", path="assets/textures/pbr/rusted_iron/albedo.png", pixel_art=false},
+		{name="rusted_iron_normal", path="assets/textures/pbr/rusted_iron/normal.png", pixel_art=false},
+		{name="rusted_iron_metallic", path="assets/textures/pbr/rusted_iron/metallic.png", pixel_art=false},
+		{name="rusted_iron_roughness", path="assets/textures/pbr/rusted_iron/roughness.png", pixel_art=false},
+		{name="rusted_iron_ao", path="assets/textures/pbr/rusted_iron/ao.png", pixel_art=false}
 	},
 	music=
 	{
