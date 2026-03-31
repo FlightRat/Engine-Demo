@@ -7,7 +7,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(50, 50, 50),
+				color = vec3(10, 10, 10),
 
 				type = "point_light",
 
@@ -26,7 +26,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(50, 50, 50),
+				color = vec3(10, 10, 10),
 
 				type = "point_light",
 
@@ -45,7 +45,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(50, 50, 50),
+				color = vec3(10, 10, 10),
 
 				type = "point_light",
 
@@ -64,7 +64,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(50, 50, 50),
+				color = vec3(10, 10, 10),
 
 				type = "point_light",
 
@@ -83,7 +83,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(50, 50, 50),
+				color = vec3(10, 10, 10),
 
 				type = "point_light",
 
@@ -102,7 +102,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(50, 50, 50),
+				color = vec3(10, 10, 10),
 
 				type = "direction_light",
 
