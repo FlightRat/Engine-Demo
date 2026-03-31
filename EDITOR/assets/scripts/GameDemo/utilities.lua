@@ -57,15 +57,20 @@ function LoadEntity( def )
 		for i, mDef in ipairs(materialsData) do
 			local material = Material()
 
-			material.shaderName = mDef.shaderName
-			material.color = mDef.color
-			material.shininess = mDef.shininess
+			material.shadingModel = mDef.shadingModel
+			material.color = mDef.color or vec4(0.5, 0.5, 0.5, 1.0)
+
+			material.metallic = mDef.metallic or 0.5
+			material.roughness = mDef.roughness or 0.5
+			material.ao = mDef.ao or 1.0
+
 			material.useTex = mDef.useTex
 			-- TODO: make this automatic
-			material:addTexture("diffuse", mDef.diffuse or "")
-			material:addTexture("specular", mDef.specular or "")
-			material:addTexture("normal", mDef.normal or "")
-			material:addTexture("reflect", mDef.reflect or "")
+			material:addTexture("albedo", mDef.albedoMap or "")
+			material:addTexture("normal", mDef.normalMap or "")
+			material:addTexture("metallic", mDef.metallicMap or "")
+			material:addTexture("roughness", mDef.roughnessMap or "")
+			material:addTexture("ao", mDef.aoMap or "")
 		
 			meshR:add_material(material)
 		end
@@ -74,9 +79,7 @@ function LoadEntity( def )
 	if def.components.Light then
 		local light = newEntity:add_component(
 			Light(
-				def.components.Light.diffuse or vec3(0.8, 0.8, 0.8),
-				def.components.Light.specular or vec3(1.0, 1.0, 1.0),
-				def.components.Light.ambient or vec3(0.05, 0.05, 0.05),
+				def.components.Light.color or vec3(50, 50, 50),
 
 				def.components.Light.type or "point_light",
 

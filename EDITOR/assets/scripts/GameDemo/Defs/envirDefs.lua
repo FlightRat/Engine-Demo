@@ -23,12 +23,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = true,
-						diffuse = "rust",
-						specular = ""
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -56,12 +61,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
-						useTex = true,
-						diffuse = "container",
-						specular = "container_specular"
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -93,12 +103,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
-						color = vec4(0.0, 1.0, 0.0, 1.0),
-						shininess = 64.0,
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -127,12 +142,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
-						color = vec4(0.0, 1.0, 0.0, 1.0),
-						shininess = 64.0,
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			}
@@ -155,12 +175,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
-						color = vec4(1.0, 0.0, 0.0, 1.0),
-						shininess = 64.0,
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -188,12 +213,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
-						color = vec4(0.0, 0.0, 1.0, 1.0),
-						shininess = 64.0,
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -221,12 +251,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -254,12 +289,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -287,12 +327,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -320,12 +365,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -353,12 +403,17 @@ EnvirDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 1.0, 1.0, 1.0),
-						shininess = 64.0,
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},

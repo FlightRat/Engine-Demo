@@ -17,12 +17,9 @@ BulletDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 0.0, 0.0, 1.0),
-						shininess = 64.0,
-						useTex = false,
-						diffuse = "",
-						specular = ""
+						useTex = false
 					}
 				}
 			},

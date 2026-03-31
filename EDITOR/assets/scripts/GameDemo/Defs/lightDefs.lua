@@ -7,9 +7,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				diffuse = vec3(0.8, 0.8, 0.8),
-				specular = vec3(1.0, 1.0, 1.0),
-				ambient = vec3(0.05, 0.05, 0.05),
+				color = vec3(50, 50, 50),
 
 				type = "point_light",
 
@@ -28,9 +26,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				diffuse = vec3(0.8, 0.8, 0.8),
-				specular = vec3(1.0, 1.0, 1.0),
-				ambient = vec3(0.05, 0.05, 0.05),
+				color = vec3(50, 50, 50),
 
 				type = "point_light",
 
@@ -49,9 +45,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				diffuse = vec3(0.8, 0.8, 0.8),
-				specular = vec3(1.0, 1.0, 1.0),
-				ambient = vec3(0.05, 0.05, 0.05),
+				color = vec3(50, 50, 50),
 
 				type = "point_light",
 
@@ -70,9 +64,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				diffuse = vec3(0.8, 0.8, 0.8),
-				specular = vec3(1.0, 1.0, 1.0),
-				ambient = vec3(0.05, 0.05, 0.05),
+				color = vec3(50, 50, 50),
 
 				type = "point_light",
 
@@ -91,9 +83,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				diffuse = vec3(0.8, 0.8, 0.8),
-				specular = vec3(1.0, 1.0, 1.0),
-				ambient = vec3(0.05, 0.05, 0.05),
+				color = vec3(50, 50, 50),
 
 				type = "point_light",
 
@@ -112,9 +102,7 @@ LightDefs =
 		components =
 		{
 			Light = {
-				diffuse = vec3(0.4, 0.4, 0.4),
-				specular = vec3(0.5, 0.5, 0.5),
-				ambient = vec3(0.05, 0.05, 0.05),
+				color = vec3(50, 50, 50),
 
 				type = "direction_light",
 

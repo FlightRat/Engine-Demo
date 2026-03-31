@@ -19,12 +19,17 @@ PlayerDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(0.678, 0.847, 1.0, 1.0),
-						shininess = 64.0,
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			},
@@ -57,12 +62,17 @@ PlayerDefs =
 			MeshRender = {
 				material = {
 					{
-						shaderName = "mainShader",
+						shadingModel = "PBR",
 						color = vec4(1.0, 0.647, 0.0, 1.0),
-						shininess = 64.0,
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
 						useTex = false,
-						diffuse = "",
-						specular = ""
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
 					}
 				}
 			}
