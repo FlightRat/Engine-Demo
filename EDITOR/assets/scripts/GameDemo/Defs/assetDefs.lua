@@ -16,10 +16,10 @@ AssetDefs =
 		{name="container_specular", path="assets/textures/container_specular.png", pixel_art=false},
 		{name="rust", path="assets/textures/rust.png", pixel_art=false},
 		{name="wall_albedo", path="assets/textures/pbr/wall/albedo.png", pixel_art=false},
-		{name="wall_normal", path="assets/textures/pbr/wall/albedo.png", pixel_art=false},
-		{name="wall_metallic", path="assets/textures/pbr/wall/albedo.png", pixel_art=false},
-		{name="wall_roughness", path="assets/textures/pbr/wall/albedo.png", pixel_art=false},
-		{name="wall_ao", path="assets/textures/pbr/wall/albedo.png", pixel_art=false}
+		{name="wall_normal", path="assets/textures/pbr/wall/normal.png", pixel_art=false},
+		{name="wall_metallic", path="assets/textures/pbr/wall/metallic.png", pixel_art=false},
+		{name="wall_roughness", path="assets/textures/pbr/wall/roughness.png", pixel_art=false},
+		{name="wall_ao", path="assets/textures/pbr/wall/ao.png", pixel_art=false}
 	},
 	music=
 	{

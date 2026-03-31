@@ -56,8 +56,14 @@ namespace ENGINE_RENDERING{
 
 		switch (channels)
 		{
+		case 1: format = GL_RED; break;   // 单通道灰度图（metallic/roughness）
+		case 2: format = GL_RG; break;    // 双通道（如 metallic+roughness 打包）
 		case 3: format = GL_RGB; break;
 		case 4: format = GL_RGBA; break;
+		default:
+			ENGINE_ERROR("Unsupported channel count [{0}] for texture [{1}]", channels, filepath);
+			SOIL_free_image_data(image);
+			return false;
 		}
 
 		glTexImage2D(
