@@ -4,8 +4,9 @@
 #include <fstream>
 #include <vector>
 #include <glm/glm.hpp>
-#include <SOIL/SOIL.h>
 #include "Logger/Logger.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 namespace ENGINE_RENDERING{
 	bool TextureLoader::LoadTexture(const std::string& filepath, GLuint& id, int& width, int& height, bool blended)
@@ -36,19 +37,19 @@ namespace ENGINE_RENDERING{
 		file.close(); // 尽早释放句柄
 
 		// 4. [图像解码] 放弃有缺陷的底层 fopen，强制要求 SOIL 从我们构造的安全内存中解码
-		unsigned char* image = SOIL_load_image_from_memory(
+		unsigned char* image = stbi_load_from_memory(
 			fileBuffer.data(),
 			static_cast<int>(fileBuffer.size()),
 			&width,
 			&height,
 			&channels,
-			SOIL_LOAD_AUTO
+			0  // 0 = 保持原始通道数
 		);
 
 		// Check to see if the image is successful
-		if (!image)
+		if (!image) 
 		{
-			ENGINE_ERROR("SOIL failed to parse image memory [{0}] -- {1}", filepath, SOIL_last_result());
+			ENGINE_ERROR("stb_image failed [{0}] -- {1}", filepath, stbi_failure_reason());
 			return false;
 		}
 
@@ -62,7 +63,7 @@ namespace ENGINE_RENDERING{
 		case 4: format = GL_RGBA; break;
 		default:
 			ENGINE_ERROR("Unsupported channel count [{0}] for texture [{1}]", channels, filepath);
-			SOIL_free_image_data(image);
+			stbi_image_free(image);
 			return false;
 		}
 
@@ -96,7 +97,7 @@ namespace ENGINE_RENDERING{
 		}
 
 		// Delete the image data from SOIL
-		SOIL_free_image_data(image);
+		stbi_image_free(image);
 
 		return true;
 	}
@@ -184,11 +185,8 @@ namespace ENGINE_RENDERING{
 
 	bool TextureLoader::LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended)
 	{
-		// 1. 定义 OpenGL 要求的 Cubemap 标准顺序
-			// 对应：右 (px), 左 (nx), 上 (py), 下 (ny), 前 (pz), 后 (nz)
-		std::vector<std::string> suffixes = {"right", "left", "top", "bottom", "front", "back"};
-
-		std::vector<std::string> faces(6, ""); // 预留6个位置供排序
+		std::vector<std::string> suffixes = { "right", "left", "top", "bottom", "front", "back" };
+		std::vector<std::string> faces(6, "");
 
 		try {
 			if (!std::filesystem::exists(filepath) || !std::filesystem::is_directory(filepath)) {
@@ -196,12 +194,9 @@ namespace ENGINE_RENDERING{
 				return false;
 			}
 
-			// 2. 遍历文件夹并根据关键字匹配顺序
 			for (const auto& entry : std::filesystem::directory_iterator(filepath)) {
 				std::string fileName = entry.path().filename().string();
 				std::string fullPath = entry.path().string();
-
-				// 将文件名转为小写进行模糊匹配
 				std::string lowerName = fileName;
 				std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
 
@@ -218,7 +213,6 @@ namespace ENGINE_RENDERING{
 			return false;
 		}
 
-		// 检查是否找齐了6张图
 		for (int i = 0; i < 6; i++) {
 			if (faces[i].empty()) {
 				ENGINE_ERROR("Skybox face [{0}] missing in directory: {1}", suffixes[i], filepath);
@@ -226,39 +220,24 @@ namespace ENGINE_RENDERING{
 			}
 		}
 
-		int channels = 0;
+		int nrComponents = 0; //  移到循环外声明
 		for (unsigned int i = 0; i < faces.size(); i++)
 		{
-			// clang-format off
-			unsigned char* image = SOIL_load_image(faces[i].c_str(), // Filename			-- Image file to be loaded
-				&width,			  // Width				-- Width of the image
-				&height,		  // height				-- Height of the image
-				&channels,		  // channels			-- Number of channels
-				SOIL_LOAD_AUTO	  // force_channels		-- Force the channels count
-			);
-			// clang-format on
+			unsigned char* image = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
 
-			// Check to see if the image is successful
 			if (!image)
 			{
-				ENGINE_ERROR("SOIL failed to load image [{0}] -- {1}", faces[i], SOIL_last_result());
+				ENGINE_ERROR("stbi_image failed to load [{0}] -- {1}", faces[i], stbi_failure_reason()); // 改为 stbi_failure_reason
 				return false;
 			}
 
-			GLint format = GL_RGBA;
-
-			switch (channels)
-			{
-			case 3: format = GL_RGB; break;
-			case 4: format = GL_RGBA; break;
-			}
+			GLint format = (nrComponents == 3) ? GL_RGB : GL_RGBA; // 改为 nrComponents
 
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
 
-			SOIL_free_image_data(image);
+			stbi_image_free(image);
 		}
 
-		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -270,29 +249,36 @@ namespace ENGINE_RENDERING{
 
 	bool TextureLoader::LoadTextureFromMemory(const unsigned char* imageData, size_t length, GLuint& id, int& width, int& height, bool blended)
 	{
-		id = SOIL_load_OGL_texture_from_memory(imageData, length, SOIL_LOAD_RGBA, SOIL_CREATE_NEW_ID, NULL);
-		if (id == 0)
+		int channels;
+		unsigned char* image = stbi_load_from_memory(imageData, static_cast<int>(length), &width, &height, &channels, 0);
+
+		if (!image)
 		{
-			ENGINE_ERROR("Failed to load texture from memory!");
+			ENGINE_ERROR("stbi_image failed to load from memory -- {0}", stbi_failure_reason());
 			return false;
 		}
 
+		GLint format = (channels == 3) ? GL_RGB : GL_RGBA;
+
+		glGenTextures(1, &id);
 		glBindTexture(GL_TEXTURE_2D, id);
-		glad_glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_HEIGHT, &height);
-		glad_glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_WIDTH, &width);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		if (!blended)
+
+		if (blended)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+		else
 		{
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		}
+		stbi_image_free(image);
 		return true;
 	}
 
