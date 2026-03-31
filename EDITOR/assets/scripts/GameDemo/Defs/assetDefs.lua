@@ -8,6 +8,8 @@ AssetDefs =
 	},
 	textures=
 	{
+		--{name="backpack_roughness", path="assets/models/backpack/roughness.jpg", pixel_art=false},
+		--{name="backpack_ao", path="assets/models/backpack/ao.jpg", pixel_art=false},
 		{name="dragon_girl", path="assets/textures/dragon_girl.jpg", pixel_art=false},
 		{name="mafuyu", path="assets/textures/mafuyu.png", pixel_art=false},
 		{name="brick", path="assets/textures/brick.png", pixel_art=false},
