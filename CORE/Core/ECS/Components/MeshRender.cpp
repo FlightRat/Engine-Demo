@@ -49,29 +49,34 @@ void ENGINE_CORE::ECS::MeshRender::ResetMaterial(const std::vector<ENGINE_RENDER
         if (!tex_map_ref.empty())
         {
             // 使用find避免自动插入不存在的键
-            auto diffuse_it = tex_map_ref.find("diffuse");
-            auto specular_it = tex_map_ref.find("specular");
+            auto albedo_it = tex_map_ref.find("albedo");
             auto normal_it = tex_map_ref.find("normal");
-            auto reflect_it = tex_map_ref.find("reflect");
+            auto metallic_it = tex_map_ref.find("metallic");
+            auto roughness_it = tex_map_ref.find("roughness");
+            auto ao_it = tex_map_ref.find("ao");
 
             // 存在则取对应值，不存在则设为空字符串
-            tex_map["diffuse"] = (diffuse_it != tex_map_ref.end()) ? diffuse_it->second : "";
-            tex_map["specular"] = (specular_it != tex_map_ref.end()) ? specular_it->second : "";
+            tex_map["albedo"] = (albedo_it != tex_map_ref.end()) ? albedo_it->second : "";
             tex_map["normal"] = (normal_it != tex_map_ref.end()) ? normal_it->second : "";
-            tex_map["reflect"] = (reflect_it != tex_map_ref.end()) ? reflect_it->second : "";
+            tex_map["metallic"] = (metallic_it != tex_map_ref.end()) ? metallic_it->second : "";
+            tex_map["roughness"] = (roughness_it != tex_map_ref.end()) ? roughness_it->second : "";
+            tex_map["ao"] = (ao_it != tex_map_ref.end()) ? ao_it->second : "";
         }
         else
         {
-            tex_map["diffuse"] = "";
-            tex_map["specular"] = "";
+            tex_map["albedo"] = "";
             tex_map["normal"] = "";
-            tex_map["reflect"] = "";
+            tex_map["metallic"] = "";
+            tex_map["roughness"] = "";
+            tex_map["ao"] = "";
         }
         materials.push_back(
             Material{
-                .shaderName = "mainShader",
+                .shadingModel = "PBR",
                 .color = glm::vec4 {1.0f},
-                .shininess = 64.0f,
+                .metallic = 1.0f,
+                .roughness = 1.0f,
+                .ao = 1.0f,
                 .m_useTexture = true,
                 .m_textures = tex_map
             }
@@ -89,17 +94,21 @@ void ENGINE_CORE::ECS::MeshRender::CreateLuaMeshRendererBind(sol::state& lua)
 			[](const sol::table& material)
 			{
                 Material m = Material{
-                    .shaderName = material["shaderName"],
+                    .shadingModel = material["shadingModel"],
                     .color = material["color"],
-                    .shininess = material["shininess"],
+                    .metallic = material["metallic"],
+                    .roughness = material["roughness"],
+                    .ao = material["ao"],
                     .m_useTexture = material["useTex"]
 				};
                 return m;
 			}
 		),
-        "shaderName", &Material::shaderName,
+        "shadingModel", &Material::shadingModel,
         "color", &Material::color,
-        "shininess", &Material::shininess,
+        "metallic", &Material::metallic,
+        "roughness", &Material::roughness,
+        "ao", &Material::ao,
         "useTex", &Material::m_useTexture,
         "textures", &Material::m_textures,
         "addTexture", &Material::AddTexture

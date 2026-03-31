@@ -9,11 +9,12 @@
 namespace ENGINE_CORE::ECS {
     struct Material
     {
-        std::string shaderName;
+        std::string shadingModel;
 
         glm::vec4 color{ 1.0f };
-        float shininess = 32.0f;
-
+        float metallic{ 1.0f };
+        float roughness{ 1.0f };
+        float ao{ 1.0f };
         bool m_useTexture{ false };
 		std::map<std::string, std::string> m_textures;
         void AddTexture(const std::string& key, const std::string& texName);
