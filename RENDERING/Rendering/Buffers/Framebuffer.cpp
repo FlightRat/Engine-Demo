@@ -42,7 +42,7 @@ namespace ENGINE_RENDERING {
 			break;
 
 		case BufferType::GBUFFER:
-			// 严格遵循 GBuffer 的协议：0:Pos, 1:Norm, 2:Albedo, 3:Refl
+			// 严格遵循 GBuffer 的协议：0:Pos, 1:Norm, 2:Albedo, 3:metallic + roughness + ao
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE1, m_Width, m_Height, false));
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE1, m_Width, m_Height, false));
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE2, m_Width, m_Height, false));
