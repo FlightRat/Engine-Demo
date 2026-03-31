@@ -4,7 +4,6 @@
 #include<glad/glad.h>
 #include<random>
 #include<iostream>
-#include<SOIL/SOIL.h>
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include<Logger/Logger.h>
