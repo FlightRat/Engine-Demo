@@ -5,9 +5,7 @@
 namespace ENGINE_CORE::ECS {
 	struct LightComponent 
 	{
-		glm::vec3 diffuse;
-		glm::vec3 specular;
-		glm::vec3 ambient;
+		glm::vec3 color;
 
 		std::string type = "point_light"; //TODO: make this enum
 

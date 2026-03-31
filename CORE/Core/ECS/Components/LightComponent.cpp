@@ -10,15 +10,13 @@ namespace ENGINE_CORE::ECS {
 			sol::call_constructor,
 			sol::factories(
 				[](
-					glm::vec3 diffuse, glm::vec3 specular, glm::vec3 ambient, 
+					glm::vec3 color, 
 					std::string type,
 					glm::vec3 pos, float constant, float linear, float quadratic, bool render,
 					glm::vec3 direction)
 				{
 					return LightComponent{
-						.diffuse = diffuse,
-						.specular = specular,
-						.ambient = ambient,
+						.color = color,
 						.type = type,
 						.pos = pos,
 						.constant = constant,
@@ -29,9 +27,7 @@ namespace ENGINE_CORE::ECS {
 					};
 				}
 			),
-			"diffuse", &LightComponent::diffuse,
-			"specular", &LightComponent::specular,
-			"ambient", &LightComponent::ambient,
+			"color", &LightComponent::color,
 			"direction", &LightComponent::direction,
 			"position", &LightComponent::pos,
 			"constant", &LightComponent::constant,
