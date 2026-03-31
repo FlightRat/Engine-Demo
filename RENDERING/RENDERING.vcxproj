@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\Assimp\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\Assimp\include;$(SolutionDir).\Dependencies\STB;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\Assimp\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,9 +140,6 @@
     </ProjectReference>
     <ProjectReference Include="..\LOGGER\LOGGER.vcxproj">
       <Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SOIL\SOIL.vcxproj">
-      <Project>{51e7f6d2-108b-40d0-be47-8772bad4a838}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
