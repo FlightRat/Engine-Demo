@@ -223,6 +223,7 @@ namespace ENGINE_CORE::Systems {
 		finalOutputFB->CheckResize();
 	}
 
+	// not updated any more, useless
 	void RenderSystem::Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -272,7 +273,7 @@ namespace ENGINE_CORE::Systems {
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
-			Shader_Color->SetUniformVec3("color", glm::vec3(point_light.diffuse));
+			Shader_Color->SetUniformVec3("color", glm::vec3(1.0f));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere[0].Draw();
 		}
@@ -313,10 +314,10 @@ namespace ENGINE_CORE::Systems {
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
 
-				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
-				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+				bool emptyAlbedo = cur_material.m_textures.find("albedo")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyAlbedo);
 
-				std::string shaderName = cur_material.shaderName;
+				std::string shaderName = cur_material.shadingModel;
 
 				Shader_BlinnPhong->Enable();	// NOTE: now the shader is fixed
 				Shader_BlinnPhong->SetUniformMat4("model", model);
@@ -324,7 +325,6 @@ namespace ENGINE_CORE::Systems {
 				Shader_BlinnPhong->SetUniformBool("bug", textureBug);
 				Shader_BlinnPhong->SetUniformBool("flipUV", meshR.flipUV);
 				Shader_BlinnPhong->SetUniformVec4("material.color", cur_material.color);
-				Shader_BlinnPhong->SetUniformFloat("material.shininess", cur_material.shininess);
 				Shader_BlinnPhong->SetUniformBool("useTexture", cur_material.m_useTexture);
 
 				Shader_BlinnPhong->SetUniformFloat("far_plane", 100.0f);
@@ -432,10 +432,10 @@ namespace ENGINE_CORE::Systems {
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
 
-				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
-				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+				bool emptyAlbedo = cur_material.m_textures.find("albedo")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyAlbedo);
 
-				std::string shaderName = cur_material.shaderName;
+				std::string shaderName = cur_material.shadingModel;
 
 				Shader_Color->Enable();	// NOTE: now the shader is fixed
 				Shader_Color->SetUniformMat4("model", model);
@@ -591,17 +591,19 @@ namespace ENGINE_CORE::Systems {
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
 
-				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
-				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+				bool emptyAlbedo = cur_material.m_textures.find("albedo")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyAlbedo);
 
-				std::string shaderName = cur_material.shaderName;
+				std::string shaderName = cur_material.shadingModel;
 
 				Shader_Gbuffer->SetUniformMat4("model", model);
 				Shader_Gbuffer->SetUniformBool("bug", textureBug);
 				Shader_Gbuffer->SetUniformBool("flipUV", meshR.flipUV);
 				Shader_Gbuffer->SetUniformBool("useTexture", cur_material.m_useTexture);
 				Shader_Gbuffer->SetUniformVec4("material.color", cur_material.color);
-				//Shader_Gbuffer->SetUniformFloat("material.shininess", cur_material.shininess);
+				Shader_Gbuffer->SetUniformFloat("material.metallic", cur_material.metallic);
+				Shader_Gbuffer->SetUniformFloat("material.roughness", cur_material.roughness);
+				Shader_Gbuffer->SetUniformFloat("material.ao", cur_material.ao);
 
 				// set uniform textures
 				if (cur_material.m_useTexture) {
@@ -720,11 +722,11 @@ namespace ENGINE_CORE::Systems {
 
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(2));
-		Shader_Lighting->SetUniformInt("gAlbedoSpec", 2);
+		Shader_Lighting->SetUniformInt("gAlbedo", 2);
 
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(3));
-		Shader_Lighting->SetUniformInt("gRefl", 3);
+		Shader_Lighting->SetUniformInt("gMRA", 3);
 
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, ssaoBlurFB->GetTextureID(0));
@@ -808,7 +810,7 @@ namespace ENGINE_CORE::Systems {
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
-			Shader_Color->SetUniformVec3("color", glm::vec3(point_light.diffuse));
+			Shader_Color->SetUniformVec3("color", glm::vec3(1.0f));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere[0].Draw();
 		}
@@ -872,10 +874,10 @@ namespace ENGINE_CORE::Systems {
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
 
-				bool emptyDiffuse = cur_material.m_textures.find("diffuse")->second.empty();
-				bool textureBug = (cur_material.m_useTexture == true) && (emptyDiffuse);
+				bool emptyAlbedo = cur_material.m_textures.find("albedo")->second.empty();
+				bool textureBug = (cur_material.m_useTexture == true) && (emptyAlbedo);
 
-				std::string shaderName = cur_material.shaderName;
+				std::string shaderName = cur_material.shadingModel;
 
 				Shader_Color->Enable();	// NOTE: now the shader is fixed
 				Shader_Color->SetUniformMat4("model", model);
