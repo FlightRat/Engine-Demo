@@ -1,21 +1,26 @@
 #version 450 core
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec3 gRefl;
+layout (location = 2) out vec3 gAlbedo;
+layout (location = 3) out vec3 gMRA;
 
 struct Material{
     vec4 color;
-    float shininess;
-    sampler2D diffuse;
-    sampler2D specular;
-    sampler2D normal;
-    sampler2D reflection;
+    float metallic;
+    float roughness;
+    float ao;
 
-    bool useDiffuse;
-    bool useSpecular;
+    sampler2D albedoMap;
+    sampler2D normalMap;
+    sampler2D metallicMap;
+    sampler2D roughnessMap;
+    sampler2D aoMap;
+
+    bool useAlbedo;
     bool useNormal;
-    bool useReflect;
+    bool useMetallic;
+    bool useRoughness;
+    bool useAo;
 };
 
 in VS_OUT {
@@ -42,7 +47,7 @@ void main()
     // gNormal
     gNormal = normalize(fs_in.Normal);
     if(useTexture && material.useNormal){
-        gNormal = texture(material.normal, uv).rgb;
+        gNormal = texture(material.normalMap, uv).rgb;
         gNormal = normalize(gNormal * 2.0 - 1.0);
         gNormal = normalize(fs_in.TBN * gNormal);
     }
@@ -55,23 +60,25 @@ void main()
         float checker = mod(floor(bugUV.x) + floor(bugUV.y), 2.0);
         
         // 黑白格子作为基础色和高光图
-        vec4 checkerColor = (checker > 0.5) ? vec4(1.0) : vec4(0.1);
-        gAlbedoSpec = checkerColor;
+        vec3 checkerColor = (checker > 0.5) ? vec3(1.0) : vec3(0.1);
+        gAlbedo = checkerColor;
     } 
     else{
-        gAlbedoSpec.rgb = material.color.rgb;
-        if(useTexture && material.useDiffuse){
-            gAlbedoSpec.rgb = texture(material.diffuse, uv).rgb;
-        }
-        gAlbedoSpec.a = 1.0;
-        if(useTexture&& material.useSpecular){
-            gAlbedoSpec.a = texture(material.specular, uv).r;
-        }
+        gAlbedo = material.color.rgb;
+        if(useTexture && material.useAlbedo){
+            gAlbedo = texture(material.albedoMap, uv).rgb;
+            }
     }
 
-    // gRefl
-    gRefl = vec3(0.0);
-    if(useTexture&& material.useReflect){
-        gRefl = vec3(texture(material.reflection, uv));
+    // metallic + roughness + ao
+    gMRA = vec3(material.metallic, material.roughness, material.ao);
+    if(useTexture&& material.useMetallic){
+        gMRA.x = texture(material.metallicMap, uv).r;
+    }
+    if(useTexture&& material.useRoughness){
+        gMRA.y = texture(material.roughnessMap, uv).r;
+    }
+    if(useTexture&& material.useAo){
+        gMRA.z = texture(material.aoMap, uv).r;
     }
 }
