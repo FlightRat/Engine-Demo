@@ -114,11 +114,32 @@ namespace ENGINE_EDITOR {
 
 				bool open = ImGui::TreeNodeEx("##mat",
 					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth,
-					"Material %d: %s", i, m.shaderName.c_str());
+					"Material %d: %s", i, m.shadingModel.c_str());
 
 				if (open)
 				{
 					ImGui::ColorEdit4("Base Color", &m.color.x);
+
+					ImGui::Columns(2, "PhysicsCols", false);
+					ImGui::SetColumnWidth(0, 100.0f); // ±êÇ©¿í¶È¹Ì¶¨
+
+					ImGui::Text("Metallic");
+					ImGui::NextColumn();
+					ImGui::DragFloat("##Metallic", &m.metallic, 0.005f, 0.0f, 1.0f);
+					ImGui::NextColumn();
+
+					ImGui::Text("Roughness");
+					ImGui::NextColumn();
+					ImGui::DragFloat("##Roughness", &m.roughness, 0.005f, 0.0f, 1.0f);
+					ImGui::NextColumn();
+
+					ImGui::Text("Ao");
+					ImGui::NextColumn();
+					ImGui::DragFloat("##Ao", &m.ao, 0.005f, 0.0f, 1.0f);
+					ImGui::NextColumn();
+
+					ImGui::Columns(1);
+
 					ImGui::Checkbox("Use Texture", &m.m_useTexture);
 
 					if (ImGui::BeginTable("TexTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
@@ -353,9 +374,7 @@ namespace ENGINE_EDITOR {
 			ImGui::Separator();
 
 			// 2. Colors 
-			ImGui::ColorEdit3("Diffuse", &light.diffuse.r);
-			ImGui::ColorEdit3("Specular", &light.specular.r);
-			ImGui::ColorEdit3("Ambient", &light.ambient.r);
+			ImGui::DrawVec3Control("Color", light.color);
 
 			ImGui::Separator();
 
