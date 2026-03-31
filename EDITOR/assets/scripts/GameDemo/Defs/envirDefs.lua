@@ -28,12 +28,12 @@ EnvirDefs =
 						metallic = 1.0,
 						roughness = 1.0,
 						ao =1.0,
-						useTex = false,
-						albedoMap = "",
-						normalMap = "",
-						metallicMap = "",
-						roughnessMap = "",
-						aoMap = ""
+						useTex = true,
+						albedoMap = "wall_albedo",
+						normalMap = "wall_normal",
+						metallicMap = "wall_metallic",
+						roughnessMap = "wall_roughness",
+						aoMap = "wall_ao"
 					}
 				}
 			},
@@ -66,12 +66,12 @@ EnvirDefs =
 						metallic = 1.0,
 						roughness = 1.0,
 						ao =1.0,
-						useTex = false,
-						albedoMap = "",
-						normalMap = "",
-						metallicMap = "",
-						roughnessMap = "",
-						aoMap = ""
+						useTex = true,
+						albedoMap = "rusted_iron_albedo",
+						normalMap = "rusted_iron_normal",
+						metallicMap = "rusted_iron_metallic",
+						roughnessMap = "rusted_iron_roughness",
+						aoMap = "rusted_iron_ao"
 					}
 				}
 			},
@@ -104,9 +104,9 @@ EnvirDefs =
 				material = {
 					{
 						shadingModel = "PBR",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						metallic = 1.0,
-						roughness = 1.0,
+						color = vec4(0.0, 0.8, 0.0, 1.0),
+						metallic = 0.5,
+						roughness = 0.5,
 						ao =1.0,
 						useTex = false,
 						albedoMap = "",
@@ -180,12 +180,12 @@ EnvirDefs =
 						metallic = 1.0,
 						roughness = 1.0,
 						ao =1.0,
-						useTex = false,
-						albedoMap = "",
-						normalMap = "",
-						metallicMap = "",
-						roughnessMap = "",
-						aoMap = ""
+						useTex = true,
+						albedoMap = "gold_albedo",
+						normalMap = "gold_normal",
+						metallicMap = "gold_metallic",
+						roughnessMap = "gold_roughness",
+						aoMap = "gold_ao"
 					}
 				}
 			},
@@ -214,8 +214,8 @@ EnvirDefs =
 				material = {
 					{
 						shadingModel = "PBR",
-						color = vec4(1.0, 1.0, 1.0, 1.0),
-						metallic = 1.0,
+						color = vec4(0.0, 0.0, 0.8, 1.0),
+						metallic = 0.0,
 						roughness = 1.0,
 						ao =1.0,
 						useTex = false,
