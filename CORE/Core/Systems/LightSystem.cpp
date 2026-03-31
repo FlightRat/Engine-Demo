@@ -43,10 +43,8 @@ namespace ENGINE_CORE::Systems {
 
                     // 直接写入对应槽位，而不是 push_back
                     m_DirLightData[ACTIVATED_DIR_LIGHTS] = ENGINE_RENDERING::DirLight{
+                        .color = glm::vec4(light.color, 1.0),
                         .direction = glm::vec4(light.direction, 1.0f), // w=1.0 → 激活标志
-                        .diffuse = glm::vec4(light.diffuse,   1.0f),
-                        .specular = glm::vec4(light.specular,  1.0f),
-                        .ambient = glm::vec4(light.ambient,   1.0f),
                         .lightSpaceMatrix = lightSpaceMatrix
                     };
                     ACTIVATED_DIR_LIGHTS++;
@@ -62,10 +60,8 @@ namespace ENGINE_CORE::Systems {
                 {
                     m_PointLightData[ACTIVATED_POINT_LIGHTS] = ENGINE_RENDERING::PointLight{
 
-                        .position = glm::vec4(light.pos,      1.0f),
-                        .diffuse = glm::vec4(light.diffuse,  1.0f),
-                        .specular = glm::vec4(light.specular, 1.0f),
-                        .ambient = glm::vec4(light.ambient,  1.0f),
+                        .color = glm::vec4(light.color, 1.0f),
+                        .position = glm::vec4(light.pos, 1.0f),
                         .attenuation = glm::vec4(light.constant, light.linear, light.quadratic, 0.0f),
                         //.render = light.render
                     };
