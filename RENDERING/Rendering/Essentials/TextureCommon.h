@@ -17,12 +17,11 @@ namespace ENGINE_RENDERING {
         static const std::vector<TextureSlotDefinition>& GetSlots()
         {
             static std::vector<TextureSlotDefinition> slots = {
-                { "diffuse",  "Diffuse",  "material.useDiffuse",  "material.diffuse",    aiTextureType_DIFFUSE },
-                { "specular", "Specular", "material.useSpecular", "material.specular",   aiTextureType_SPECULAR },
-                { "normal",   "Normal",   "material.useNormal",   "material.normal",     aiTextureType_HEIGHT }, // Assimp中法线常映射到Height
-                { "reflect",  "Reflect",  "material.useReflect",  "material.reflection", aiTextureType_AMBIENT }
-                // 如果要新增 Roughness，只需在这里添加一行：
-                // { "roughness", "Roughness", "material.useRoughness", "material.roughness", aiTextureType_SHININESS }
+                { "albedo",  "Albedo",  "material.useAlbedo",  "material.albedoMap",    aiTextureType_DIFFUSE },
+                { "normal",   "Normal",   "material.useNormal",   "material.normalMap",     aiTextureType_HEIGHT },
+                { "metallic", "Metallic", "material.useMetallic", "material.metallic", aiTextureType_METALNESS },
+                { "roughness", "Roughness", "material.useRoughness", "material.roughness", aiTextureType_MAYA_SPECULAR_ROUGHNESS },
+                { "ao", "Ao", "material.useAo", "material.ao", aiTextureType_AMBIENT_OCCLUSION}
             };
             return slots;
         }
