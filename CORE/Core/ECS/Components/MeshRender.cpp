@@ -74,7 +74,7 @@ void ENGINE_CORE::ECS::MeshRender::ResetMaterial(const std::vector<ENGINE_RENDER
             Material{
                 .shadingModel = "PBR",
                 .color = glm::vec4 {1.0f},
-                .metallic = 1.0f,
+                .metallic = 0.0f,
                 .roughness = 1.0f,
                 .ao = 1.0f,
                 .m_useTexture = true,
