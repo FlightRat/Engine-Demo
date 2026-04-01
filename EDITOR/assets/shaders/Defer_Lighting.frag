@@ -73,6 +73,8 @@ void main()
     if (use_SSAO){
         ssaoFactor = texture(ssao, TexCoord).r;
         ssaoFactor = pow(ssaoFactor, 0.5);  // 让暗部更暗
+        //FragColor = vec4(vec3(ssaoFactor), 1.0);
+        //return;
     }
 
     vec3 ViewDir = normalize(viewPos - FragPos);
