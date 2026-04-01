@@ -60,8 +60,8 @@ function LoadEntity( def )
 			material.shadingModel = mDef.shadingModel
 			material.color = mDef.color or vec4(0.5, 0.5, 0.5, 1.0)
 
-			material.metallic = mDef.metallic or 0.5
-			material.roughness = mDef.roughness or 0.5
+			material.metallic = mDef.metallic or 0.0
+			material.roughness = mDef.roughness or 1.0
 			material.ao = mDef.ao or 1.0
 
 			material.useTex = mDef.useTex
