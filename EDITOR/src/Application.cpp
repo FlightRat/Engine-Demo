@@ -554,7 +554,7 @@ namespace ENGINE_EDITOR {
 			{
 				//if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 				//	m_bIsRunning = false;
-				if (m_Event.key.keysym.sym == SDLK_0 && pCurrentScene)
+				if (m_Event.key.keysym.sym == SDLK_1 && pCurrentScene)
 				{
 					engine.ToggleRenderCollisions();
 					auto& runtimeRegistry = pCurrentScene->GetRegistry();

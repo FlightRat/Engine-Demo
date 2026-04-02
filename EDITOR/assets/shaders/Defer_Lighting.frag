@@ -20,6 +20,7 @@ in vec2 TexCoord;
 uniform vec3 viewPos;
 uniform float far_plane;
 uniform bool use_SSAO;
+uniform bool debug_SSAO;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -73,8 +74,12 @@ void main()
     if (use_SSAO){
         ssaoFactor = texture(ssao, TexCoord).r;
         ssaoFactor = pow(ssaoFactor, 2.0);  // 让暗部更暗
-        //FragColor = vec4(vec3(ssaoFactor), 1.0);
-        //return;
+    }
+    if(debug_SSAO){
+        ssaoFactor = texture(ssao, TexCoord).r;
+        ssaoFactor = pow(ssaoFactor, 2.0);  // 让暗部更暗
+        FragColor = vec4(vec3(ssaoFactor), 1.0);
+        return;
     }
 
     vec3 ViewDir = normalize(viewPos - FragPos);
