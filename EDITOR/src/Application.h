@@ -17,7 +17,8 @@ namespace ENGINE_EDITOR{
 		bool LoadEditorShaders();
 		bool LoadEditorTextures();
 		bool LoadEditorMeshes();
-		bool LoadBuffers();
+		bool LoadEditorBuffers();
+		void PrepareIBL();
 		void ProcessEvents();
 		void Update();
 		void Render();

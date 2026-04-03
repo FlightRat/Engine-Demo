@@ -123,7 +123,9 @@ namespace ENGINE_EDITOR {
 		}
 
 		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_BLEND);
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_STENCIL_TEST);					// 开启模板测试
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// 当目标像素的模板值不等于1时，通过测试
@@ -184,16 +186,17 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load the shaders!");
 			return false;
 		}
-		if (!LoadBuffers())
-		{
-			ENGINE_ERROR("Failed to load buffers!");
-			return false;
-		}
 		if (!LoadEditorTextures())
 		{
 			ENGINE_ERROR("Failed to load the editor textures!");
 			return false;
 		}
+		if (!LoadEditorBuffers())
+		{
+			ENGINE_ERROR("Failed to load buffers!");
+			return false;
+		}
+		PrepareIBL();
 
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::TransformComponent>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::PhysicsComponent>();
@@ -388,57 +391,6 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
 		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
 
-		auto& bufferManager = mainRegistry.GetBufferManager();
-		const auto& hdr_texture = assetManager.GetTexture("HDR");
-		const auto& ibl_fb = bufferManager.GetFrameBuffer("IBL");
-		const auto& ibl_proj_shader = assetManager.GetShader("ibl_proj");
-		const auto& ibl_conv_shader = assetManager.GetShader("ibl_conv");
-		const auto& cube = assetManager.GetModel("cube");
-
-		glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-		glm::mat4 captureViews[] ={
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-		};
-
-		ibl_fb->Bind();
-		ibl_proj_shader->Enable();
-		ibl_proj_shader->SetUniformInt("equirectangularMap", 0);
-		ibl_proj_shader->SetUniformMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdr_texture->GetID());
-		glViewport(0, 0, ibl_fb->Width(), ibl_fb->Height());
-		for (unsigned int i = 0; i < 6; i++)
-		{
-			ibl_proj_shader->SetUniformMat4("view", captureViews[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(0), 0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			cube->Draw();
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		ibl_fb->Bind();
-		ibl_conv_shader->Enable();
-		ibl_conv_shader->SetUniformInt("environmentMap", 0);
-		ibl_conv_shader->SetUniformMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
-		glViewport(0, 0, 32, 32);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
-		for (unsigned int i = 0; i < 6; i++)
-		{
-			ibl_conv_shader->SetUniformMat4("view", captureViews[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(1), 0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			cube->Draw();
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		return true;
 	}
 
 	bool Application::LoadEditorMeshes()
@@ -491,7 +443,7 @@ namespace ENGINE_EDITOR {
 		return true;
 	}
 
-	bool Application::LoadBuffers()
+	bool Application::LoadEditorBuffers()
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& bufferManager = mainRegistry.GetBufferManager();
@@ -609,6 +561,113 @@ namespace ENGINE_EDITOR {
 		);
 
 		return true;
+	}
+
+	void Application::PrepareIBL()
+	{
+		GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+		GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+		GLboolean cullFaceEnabled = glIsEnabled(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		const auto& hdr_texture = assetManager.GetTexture("HDR");
+		const auto& ibl_fb = bufferManager.GetFrameBuffer("IBL");
+		const auto& ibl_proj_shader = assetManager.GetShader("ibl_proj");
+		const auto& ibl_conv_shader = assetManager.GetShader("ibl_conv");
+		const auto& ibl_prefilter_shader = assetManager.GetShader("ibl_prefilter");
+		const auto& ibl_brdf_shader = assetManager.GetShader("ibl_brdf");
+		const auto& cube = assetManager.GetModel("cube");
+		const auto& quad = assetManager.GetModel("quad");
+
+		glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+		glm::mat4 captureViews[] = {
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+		};
+
+		// project equirectangularMap to cubemap
+		ibl_fb->Bind();
+		ibl_proj_shader->Enable();
+		ibl_proj_shader->SetUniformInt("equirectangularMap", 0);
+		ibl_proj_shader->SetUniformMat4("projection", captureProjection);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, hdr_texture->GetID());
+		glViewport(0, 0, 512, 512);
+		for (unsigned int i = 0; i < 6; i++)
+		{
+			ibl_proj_shader->SetUniformMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(0), 0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cube->Draw();
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		// conv cubemap into irradianceMap
+		ibl_fb->Bind();
+		ibl_conv_shader->Enable();
+		ibl_conv_shader->SetUniformInt("environmentMap", 0);
+		ibl_conv_shader->SetUniformMat4("projection", captureProjection);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		glViewport(0, 0, 32, 32);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+		for (unsigned int i = 0; i < 6; i++)
+		{
+			ibl_conv_shader->SetUniformMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(1), 0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cube->Draw();
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// prefilter cubemap
+		ibl_fb->Bind();
+		ibl_prefilter_shader->Enable();
+		ibl_prefilter_shader->SetUniformInt("environmentMap", 0);
+		ibl_prefilter_shader->SetUniformMat4("projection", captureProjection);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		unsigned int maxMipLevels = 5;
+		for (unsigned int mip = 0; mip < maxMipLevels; mip++)
+		{
+			unsigned int mipWidth = 128 * std::pow(0.5, mip);
+			unsigned int mipHeight = 128 * std::pow(0.5, mip);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
+			glViewport(0, 0, mipWidth, mipHeight);
+
+			float roughness = (float)mip / (float)(maxMipLevels - 1);
+			ibl_prefilter_shader->SetUniformFloat("roughness", roughness);
+			for (unsigned int i = 0; i < 6; i++)
+			{
+				ibl_prefilter_shader->SetUniformMat4("view", captureViews[i]);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(2), mip);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				cube->Draw();
+			}
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// lut
+		ibl_fb->Bind();
+		ibl_brdf_shader->Enable();
+		glViewport(0, 0, 512, 512);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ibl_fb->GetTextureID(3), 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		quad->Draw();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		if (depthTestEnabled) glEnable(GL_DEPTH_TEST); else glDisable(GL_DEPTH_TEST);
+		if (blendEnabled)     glEnable(GL_BLEND);      else glDisable(GL_BLEND);
+		if (cullFaceEnabled)  glEnable(GL_CULL_FACE);  else glDisable(GL_CULL_FACE);
 	}
 
 	void Application::ProcessEvents()
