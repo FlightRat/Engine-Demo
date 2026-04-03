@@ -830,19 +830,32 @@ namespace ENGINE_CORE::Systems {
 			sphere[0].Draw();
 		}
 
-		// 绘制天空盒
+		// HDR_skybox
 		glDepthFunc(GL_LEQUAL);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, mainRegistry.GetBufferManager().GetFrameBuffer("HDR")->GetTextureID(0));
 		glm::mat4 viewMatrix = camera->GetViewMatrix();
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
-		Shader_Skybox->Enable();
-		Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
-		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
-		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
-		Shader_Skybox->SetUniformInt("skybox", 0);
-		skybox[0].Draw();
+		const auto& hdr_skybox_shader = assetManager.GetShader("HDR_skybox");
+		hdr_skybox_shader->Enable();
+		hdr_skybox_shader->SetUniformMat4("view", viewMatrix);
+		hdr_skybox_shader->SetUniformMat4("projection", PerspectiveMatrix);
+		hdr_skybox_shader->SetUniformInt("environmentMap", 0);
+		assetManager.GetModel("cube")->Draw();
 		glDepthFunc(GL_LESS);
+		// LDR_skybox
+		//glDepthFunc(GL_LEQUAL);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
+		//glm::mat4 viewMatrix = camera->GetViewMatrix();
+		//glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		//Shader_Skybox->Enable();
+		//Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
+		//Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
+		//Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
+		//Shader_Skybox->SetUniformInt("skybox", 0);
+		//skybox[0].Draw();
+		//glDepthFunc(GL_LESS);
 
 		// 模板测试
 		glEnable(GL_STENCIL_TEST);					// 开启模板测试
