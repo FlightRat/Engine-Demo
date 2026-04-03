@@ -213,6 +213,9 @@
     <None Include="assets\shaders\defer_Gbuffer.vert" />
     <None Include="assets\shaders\defer_Lighting.frag" />
     <None Include="assets\shaders\defer_Lighting.vert" />
+    <None Include="assets\shaders\ibl_brdf.frag" />
+    <None Include="assets\shaders\ibl_brdf.vert" />
+    <None Include="assets\shaders\ibl_prefilter.frag" />
     <None Include="assets\shaders\ibl_proj.frag" />
     <None Include="assets\shaders\ibl_conv.frag" />
     <None Include="assets\shaders\ibl_cubemap.vert" />

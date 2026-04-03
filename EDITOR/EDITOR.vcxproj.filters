@@ -112,6 +112,9 @@
     <None Include="assets\shaders\skybox.vert" />
     <None Include="assets\shaders\skybox.frag" />
     <None Include="assets\shaders\ibl_conv.frag" />
+    <None Include="assets\shaders\ibl_prefilter.frag" />
+    <None Include="assets\shaders\ibl_brdf.vert" />
+    <None Include="assets\shaders\ibl_brdf.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
