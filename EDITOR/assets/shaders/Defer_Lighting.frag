@@ -29,6 +29,8 @@ uniform sampler2D gMRA;
 uniform sampler2D ssao;
 
 uniform samplerCube irradianceMap;
+uniform samplerCube prefilterMap;
+uniform sampler2D brdfLUT;
 uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
 uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
 
@@ -57,7 +59,7 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
 
 // ==================== 主函数 ====================
 void main()
-{             
+{   
     vec3 FragPos = texture(gPosition, TexCoord).rgb;
     vec3 Normal  = texture(gNormal, TexCoord).rgb;
     vec3 Albedo  = texture(gAlbedo, TexCoord).rgb;
@@ -81,6 +83,7 @@ void main()
     }
 
     vec3 ViewDir = normalize(viewPos - FragPos);
+    vec3 ReflectDir = reflect(-ViewDir, Normal); 
 
     // ============================================================
     // 累加所有直接光照（不含 ambient）
@@ -114,18 +117,22 @@ void main()
     // ============================================================
     vec3 F0 = mix(vec3(0.04), Albedo, metallic);
     // 使用带粗糙度的菲涅尔近似，使粗糙表面环境高光更柔和
-    vec3 kS_ambient = fresnelSchlickRoughness(max(dot(Normal, ViewDir), 0.0), F0, roughness);
+    vec3 F = fresnelSchlickRoughness(max(dot(Normal, ViewDir), 0.0), F0, roughness);
+    vec3 kS_ambient = F;
     vec3 kD_ambient = (1.0 - kS_ambient) * (1.0 - metallic);
 
     // IBL irradiance map diffuse
     vec3 irradiance = texture(irradianceMap, Normal).rgb;
-    vec3 ambientDiffuse = kD_ambient * irradiance * Albedo;
+    vec3 ambientDiffuse = irradiance * Albedo;
     
-    // IBL speculuar to be done
-    vec3 ambientSpecular = vec3(0.0);
+    // IBL speculuar
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(prefilterMap, ReflectDir,  roughness * MAX_REFLECTION_LOD).rgb;    
+    vec2 brdf = texture(brdfLUT, vec2(max(dot(Normal, ViewDir), 0.0), roughness)).rg;
+    vec3 ambientSpecular = prefilteredColor * (F * brdf.x + brdf.y);
 
     // 最终环境光 = (漫反射 + 高光) * AO * SSAO
-    vec3 ambient = (ambientDiffuse + ambientSpecular) * ao * ssaoFactor;
+    vec3 ambient = (kD_ambient * ambientDiffuse + ambientSpecular) * ao * ssaoFactor;
 
     // ============================================================
     // 最终合成
@@ -150,8 +157,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 // 菲涅尔（带粗糙度，用于环境光/IBL）
 // 原理：粗糙表面在掠射角时菲涅尔效果应该被抑制，否则粗糙金属边缘会过亮
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
-}
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+} 
 
 // 法线分布函数 (GGX/Trowbridge-Reitz)
 float DistributionGGX(vec3 N, vec3 H, float roughness) {    
