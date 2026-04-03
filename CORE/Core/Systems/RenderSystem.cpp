@@ -696,11 +696,11 @@ namespace ENGINE_CORE::Systems {
 		auto& pointLightData = lightSystem->GetPointLightData();
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& ibl_fb = bufferManager.GetFrameBuffer("IBL");
 		const auto& map_FBO = bufferManager.GetAllFBO();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// const auto env_cubemap_id = assetManager.GetTexture("skybox")->GetID();
-		const auto env_cubemap_id = mainRegistry.GetBufferManager().GetFrameBuffer("IBL")->GetTextureID(1);
 		auto Shader_Lighting = assetManager.GetShader("defer_Lighting");
 		if (Shader_Lighting->ShaderProgramID() == 0)
 		{
@@ -733,9 +733,15 @@ namespace ENGINE_CORE::Systems {
 		glBindTexture(GL_TEXTURE_2D, ssaoBlurFB->GetTextureID(0));
 		Shader_Lighting->SetUniformInt("ssao", 4);
 
-		glActiveTexture(GL_TEXTURE10);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, env_cubemap_id);
-		Shader_Lighting->SetUniformInt("irradianceMap", 10);
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(1));
+		Shader_Lighting->SetUniformInt("irradianceMap", 5);
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(2));
+		Shader_Lighting->SetUniformInt("prefilterMap", 6);
+		glActiveTexture(GL_TEXTURE7);
+		glBindTexture(GL_TEXTURE_2D, ibl_fb->GetTextureID(3));
+		Shader_Lighting->SetUniformInt("brdfLUT", 7);
 
 		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
