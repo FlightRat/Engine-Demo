@@ -213,10 +213,11 @@
     <None Include="assets\shaders\defer_Gbuffer.vert" />
     <None Include="assets\shaders\defer_Lighting.frag" />
     <None Include="assets\shaders\defer_Lighting.vert" />
-    <None Include="assets\shaders\hdr.frag" />
-    <None Include="assets\shaders\hdr.vert" />
-    <None Include="assets\shaders\hdr_skybox.frag" />
-    <None Include="assets\shaders\hdr_skybox.vert" />
+    <None Include="assets\shaders\ibl_proj.frag" />
+    <None Include="assets\shaders\ibl_conv.frag" />
+    <None Include="assets\shaders\ibl_cubemap.vert" />
+    <None Include="assets\shaders\skybox.frag" />
+    <None Include="assets\shaders\skybox.vert" />
     <None Include="assets\shaders\shadow_Cubemap.frag" />
     <None Include="assets\shaders\shadow_Cubemap.geom" />
     <None Include="assets\shaders\shadow_Cubemap.vert" />
@@ -226,8 +227,6 @@
     <None Include="assets\shaders\forward_BlinnPhong.vert" />
     <None Include="assets\shaders\physics_Debug.frag" />
     <None Include="assets\shaders\physics_Debug.vert" />
-    <None Include="assets\shaders\skybox.frag" />
-    <None Include="assets\shaders\skybox.vert" />
     <None Include="assets\shaders\defer_ssao.vert" />
     <None Include="assets\shaders\test.frag" />
     <None Include="assets\shaders\test.vert" />

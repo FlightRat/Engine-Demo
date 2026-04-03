@@ -92,8 +92,6 @@
     <None Include="assets\models\cyborg\cyborg.mtl" />
     <None Include="assets\shaders\forward_Color.vert" />
     <None Include="assets\shaders\forward_Color.frag" />
-    <None Include="assets\shaders\skybox.vert" />
-    <None Include="assets\shaders\skybox.frag" />
     <None Include="assets\shaders\shadow_Map.vert" />
     <None Include="assets\shaders\shadow_Map.frag" />
     <None Include="assets\shaders\shadow_Cubemap.vert" />
@@ -109,10 +107,11 @@
     <None Include="assets\shaders\defer_ssaoBlur.frag" />
     <None Include="assets\shaders\test.vert" />
     <None Include="assets\shaders\test.frag" />
-    <None Include="assets\shaders\hdr.vert" />
-    <None Include="assets\shaders\hdr.frag" />
-    <None Include="assets\shaders\hdr_skybox.vert" />
-    <None Include="assets\shaders\hdr_skybox.frag" />
+    <None Include="assets\shaders\ibl_cubemap.vert" />
+    <None Include="assets\shaders\ibl_proj.frag" />
+    <None Include="assets\shaders\skybox.vert" />
+    <None Include="assets\shaders\skybox.frag" />
+    <None Include="assets\shaders\ibl_conv.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
