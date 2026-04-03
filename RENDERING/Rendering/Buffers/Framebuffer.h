@@ -12,7 +12,7 @@ namespace ENGINE_RENDERING {
         SHADOWCUBEMAP,  // 点光源阴影：1 Depth Texture (Cube)
         GBUFFER,        // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
         SSAO,           // SSAO: 1 Color
-        HDR
+        IBL
     };
 
     class Framebuffer {
@@ -43,6 +43,7 @@ namespace ENGINE_RENDERING {
         inline const int Width() const { return m_Width; }
         inline const int Height() const { return m_Height; }
         inline GLuint GetFboID() const { return m_FboID; }
+        inline GLuint GetRboID() const { return m_RboID; }
         inline BufferType GetType() const { return m_Type; }
         inline GLuint GetTextureID(size_t index = 0) const { return (index < m_pTextures.size()) ? m_pTextures[index]->GetID() : 0; }
     };

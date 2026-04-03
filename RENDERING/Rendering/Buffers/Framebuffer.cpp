@@ -51,8 +51,9 @@ namespace ENGINE_RENDERING {
 		case BufferType::SSAO:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SSAO, m_Width, m_Height, false));
 			break;
-		case BufferType::HDR:
+		case BufferType::IBL:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::ENVCUBEMAP, m_Width, m_Height));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::ENVCUBEMAP, 32, 32));
 			break;
 		}
 		return true;
@@ -117,7 +118,7 @@ namespace ENGINE_RENDERING {
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pTextures[0]->GetID(), 0);
 			break;
 		}
-		case ENGINE_RENDERING::BufferType::HDR:
+		case ENGINE_RENDERING::BufferType::IBL:
 		{
 			glGenRenderbuffers(1, &m_RboID);
 			glBindRenderbuffer(GL_RENDERBUFFER, m_RboID);
@@ -147,11 +148,15 @@ namespace ENGINE_RENDERING {
 	void Framebuffer::Bind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FboID);
+		if (m_bUseRbo)
+			glBindRenderbuffer(GL_RENDERBUFFER, m_RboID);
 	}
 
 	void Framebuffer::Unbind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		if (m_bUseRbo)
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	}
 
 	void Framebuffer::Resize(int width, int height)
