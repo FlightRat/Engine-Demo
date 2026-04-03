@@ -28,7 +28,7 @@ uniform sampler2D gAlbedo;
 uniform sampler2D gMRA;
 uniform sampler2D ssao;
 
-uniform samplerCube skybox;
+uniform samplerCube irradianceMap;
 uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
 uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
 
@@ -89,31 +89,22 @@ void main()
     // ============================================================
     vec3 Lo = vec3(0.0);
 
+    // ============================================================
     // ---------- 方向光 ----------
+    // ============================================================
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
-        // 通过 direction 或 diffuse 判断方向光是否有效
-        // direction.w 可用作启用标志，或检查 diffuse 是否全零
-        vec3 dirDiffuse = vec3(dir_lights[i].color);
         if (dir_lights[i].direction.w < 0.5) continue;
-        // 计算该片元在光源空间中的位置
-        vec4 fragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(FragPos, 1.0);
-            
-        // 方向光的光照方向（注意 direction 存储的是"从光源出发的方向"，需要取反）
-        vec3 lightDir = normalize(-vec3(dir_lights[i].direction));
-            
-        // 阴影计算
-        float shadow = ShadowCalculation_dir(shadowMaps[i], fragPosLightSpace, Normal, lightDir);
-            
-        // 累加直接光照
-        Lo += CalcDirLight(FragPos, dir_lights[i], ViewDir, Normal, Albedo, MRA, shadow);
+        vec4 fragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(FragPos, 1.0);             // 计算该片元在光源空间中的位置
+        vec3 lightDir = normalize(-vec3(dir_lights[i].direction));                                  // 方向光的光照方向（注意 direction 存储的是"从光源出发的方向"，需要取反）
+        float shadow = ShadowCalculation_dir(shadowMaps[i], fragPosLightSpace, Normal, lightDir);   // 阴影计算          
+        Lo += CalcDirLight(FragPos, dir_lights[i], ViewDir, Normal, Albedo, MRA, shadow);           // 累加直接光照
     }
 
+    // ============================================================
     // ---------- 点光源 ----------
+    // ============================================================
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        if (point_lights[i].attenuation.x > 0.0 || 
-            point_lights[i].attenuation.y > 0.0 || 
-            point_lights[i].attenuation.z > 0.0)
-        {
+        if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0){
             vec3 lightPos = vec3(point_lights[i].position);
             float shadow = ShadowCalculation_point(shadowCubeMap[i], lightPos, FragPos, Normal);
             Lo += CalcPointLight(FragPos, point_lights[i], ViewDir, Normal, Albedo, MRA, shadow);
@@ -121,22 +112,19 @@ void main()
     }
 
     // ============================================================
-    // 🔑 环境光：只计算一次，受 AO 和 SSAO 影响
+    // ---------- 环境光 ----------
     // ============================================================
     vec3 F0 = mix(vec3(0.04), Albedo, metallic);
     // 使用带粗糙度的菲涅尔近似，使粗糙表面环境高光更柔和
     vec3 kS_ambient = fresnelSchlickRoughness(max(dot(Normal, ViewDir), 0.0), F0, roughness);
     vec3 kD_ambient = (1.0 - kS_ambient) * (1.0 - metallic);
 
-    // 简易环境漫反射（如果有 IBL irradiance map 可在此替换）
-    vec3 ambientDiffuse = kD_ambient * Albedo * vec3(0.3);  // 从 0.03 改为 0.3
+    // IBL irradiance map diffuse
+    vec3 irradiance = texture(irradianceMap, Normal).rgb;
+    vec3 ambientDiffuse = kD_ambient * irradiance * Albedo;
     
-    // 简易环境高光（如果有 prefiltered env map + BRDF LUT 可在此替换）
-    // 这里先用一个简单的环境反射采样 skybox
-    vec3 R = reflect(-ViewDir, Normal);
-    vec3 envColor = texture(skybox, R).rgb;
-    // 粗糙度越高，环境高光越弱（简易近似，正式做法用预过滤环境贴图的不同 mip level）
-    vec3 ambientSpecular = kS_ambient * envColor * (1.0 - roughness) * 1.0;  // 从 0.3 改为 1.0
+    // IBL speculuar to be done
+    vec3 ambientSpecular = vec3(0.0);
 
     // 最终环境光 = (漫反射 + 高光) * AO * SSAO
     vec3 ambient = (ambientDiffuse + ambientSpecular) * ao * ssaoFactor;
@@ -164,7 +152,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 // 菲涅尔（带粗糙度，用于环境光/IBL）
 // 原理：粗糙表面在掠射角时菲涅尔效果应该被抑制，否则粗糙金属边缘会过亮
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
-    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 // 法线分布函数 (GGX/Trowbridge-Reitz)
