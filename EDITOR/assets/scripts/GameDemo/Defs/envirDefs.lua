@@ -6,6 +6,34 @@
 
 EnvirDefs = 
 {
+	pbr_ball = 
+	{
+		tag = "pbr_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 0.0, 0.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(0.5, 0.0, 0.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false
+					}
+				}
+			}
+		}
+	},
 	ball_1 = 
 	{
 		tag = "ball_1",
@@ -425,3 +453,32 @@ EnvirDefs =
 		}
 	}
 }
+
+function DisplayPBR()
+	local nrRows = 7
+	local nrColumns = 7
+	local spacing = 2.5
+	for row = 0, nrRows - 1 do
+		local metallic = row / (nrRows - 1)
+		for col = 0, nrColumns - 1 do
+			local ball_id = LoadEntity(EnvirDefs["pbr_ball"])
+			local ball_entity = Entity(ball_id)
+			local transform = ball_entity:get_component(Transform)
+			local meshRender = ball_entity:get_component(MeshRender)
+			local material = meshRender:get_material(0)
+			-- 设置位置：网格居中排列
+			local x = (col - (nrColumns / 2)) * spacing
+			local y = (row - (nrRows / 2)) * spacing + 20.0
+			local z = -40.0
+			transform.position = vec3(x, y, z)
+
+			-- 设置粗糙度：按列渐变 0.05 → 1.0
+			local roughness = col / (nrColumns - 1)
+			roughness = math.max(roughness, 0.05)  -- 替代 clamp，Lua 标准写法
+
+			-- 赋值 PBR 参数
+			material.metallic = metallic
+			material.roughness = roughness
+		end
+	end
+end
