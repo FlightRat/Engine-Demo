@@ -109,6 +109,10 @@
     <None Include="assets\shaders\defer_ssaoBlur.frag" />
     <None Include="assets\shaders\test.vert" />
     <None Include="assets\shaders\test.frag" />
+    <None Include="assets\shaders\hdr.vert" />
+    <None Include="assets\shaders\hdr.frag" />
+    <None Include="assets\shaders\hdr_skybox.vert" />
+    <None Include="assets\shaders\hdr_skybox.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

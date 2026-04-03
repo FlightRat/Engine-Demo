@@ -213,6 +213,10 @@
     <None Include="assets\shaders\defer_Gbuffer.vert" />
     <None Include="assets\shaders\defer_Lighting.frag" />
     <None Include="assets\shaders\defer_Lighting.vert" />
+    <None Include="assets\shaders\hdr.frag" />
+    <None Include="assets\shaders\hdr.vert" />
+    <None Include="assets\shaders\hdr_skybox.frag" />
+    <None Include="assets\shaders\hdr_skybox.vert" />
     <None Include="assets\shaders\shadow_Cubemap.frag" />
     <None Include="assets\shaders\shadow_Cubemap.geom" />
     <None Include="assets\shaders\shadow_Cubemap.vert" />
