@@ -699,7 +699,8 @@ namespace ENGINE_CORE::Systems {
 		const auto& map_FBO = bufferManager.GetAllFBO();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
-		auto skybox_texture = assetManager.GetTexture("skybox");
+		// const auto env_cubemap_id = assetManager.GetTexture("skybox")->GetID();
+		const auto env_cubemap_id = mainRegistry.GetBufferManager().GetFrameBuffer("IBL")->GetTextureID(1);
 		auto Shader_Lighting = assetManager.GetShader("defer_Lighting");
 		if (Shader_Lighting->ShaderProgramID() == 0)
 		{
@@ -733,8 +734,8 @@ namespace ENGINE_CORE::Systems {
 		Shader_Lighting->SetUniformInt("ssao", 4);
 
 		glActiveTexture(GL_TEXTURE10);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-		Shader_Lighting->SetUniformInt("skybox", 10);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, env_cubemap_id);
+		Shader_Lighting->SetUniformInt("irradianceMap", 10);
 
 		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
