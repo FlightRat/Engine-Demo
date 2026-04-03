@@ -151,7 +151,7 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
-	bool TextureLoader::LoadGbufferTexture_type1(GLuint& id, int& width, int& height)
+	bool TextureLoader::LoadGbufferTexture(GLuint& id, int& width, int& height)
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -159,16 +159,6 @@ namespace ENGINE_RENDERING{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		return true;
-	}
-
-	bool TextureLoader::LoadGbufferTexture_type2(GLuint& id, int& width, int& height)
-	{
-		glBindTexture(GL_TEXTURE_2D, id);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return true;
 	}
@@ -189,15 +179,62 @@ namespace ENGINE_RENDERING{
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			// note that we store each face with 16 bit floating point values
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
-				width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // enable pre-filter mipmap sampling (combatting visible dots artifact)
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		return true;
+	}
+
+	bool TextureLoader::LoadIrradianceMap(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+		for (unsigned int i = 0; i < 6; ++i)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
 		}
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		return true;
+	}
 
+	bool TextureLoader::LoadFilterMap(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+		for (unsigned int i = 0; i < 6; i++)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear 
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
+		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+		return true;
+	}
+
+	bool TextureLoader::LoadBRDFLUT(GLuint& id, int& width, int& height)
+	{
+		// pre-allocate enough memory for the LUT texture.
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, width, height, 0, GL_RG, GL_FLOAT, 0);
+		// be sure to set wrapping mode to GL_CLAMP_TO_EDGE
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
 		return true;
 	}
 
@@ -368,17 +405,23 @@ namespace ENGINE_RENDERING{
 		case ENGINE_RENDERING::Texture::TextureType::SHADOWCUBEMAP:
 			LoadShadowCubemapTexture(id, width, height);
 			break;
-		case ENGINE_RENDERING::Texture::TextureType::GBUFFER_TYPE1:
-			LoadGbufferTexture_type1(id, width, height);
-			break;
-		case ENGINE_RENDERING::Texture::TextureType::GBUFFER_TYPE2:
-			LoadGbufferTexture_type2(id, width, height);
+		case ENGINE_RENDERING::Texture::TextureType::GBUFFER:
+			LoadGbufferTexture(id, width, height);
 			break;
 		case ENGINE_RENDERING::Texture::TextureType::SSAO:
 			LoadSSAOTexture(id, width, height);
 			break;
 		case ENGINE_RENDERING::Texture::TextureType::ENVCUBEMAP:
 			LoadEnvCubeMapTexture(id, width, height);
+			break;
+		case ENGINE_RENDERING::Texture::TextureType::IRRADIANCEMAP:
+			LoadIrradianceMap(id, width, height);
+			break;
+		case ENGINE_RENDERING::Texture::TextureType::PREFILTERMAP:
+			LoadFilterMap(id, width, height);
+			break;
+		case ENGINE_RENDERING::Texture::TextureType::BRDFLUT:
+			LoadBRDFLUT(id, width, height);
 			break;
 		default:
 			assert(false && "The current type is not defined, Please use a defined texture type!");
