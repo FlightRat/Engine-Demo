@@ -174,24 +174,24 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create displays!");
 			return false;
 		}
-		if (!LoadEditorShaders())
-		{
-			ENGINE_ERROR("Failed to load the shaders!");
-			return false;
-		}
-		if (!LoadEditorTextures())
-		{
-			ENGINE_ERROR("Failed to load the editor textures!");
-			return false;
-		}
 		if (!LoadEditorMeshes())
 		{
 			ENGINE_ERROR("Failed to load the default meshes!");
 			return false;
 		}
+		if (!LoadEditorShaders())
+		{
+			ENGINE_ERROR("Failed to load the shaders!");
+			return false;
+		}
 		if (!LoadBuffers())
 		{
 			ENGINE_ERROR("Failed to load buffers!");
+			return false;
+		}
+		if (!LoadEditorTextures())
+		{
+			ENGINE_ERROR("Failed to load the editor textures!");
 			return false;
 		}
 
@@ -285,6 +285,20 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// hdr
+		if (!assetManager.AddShader("HDR", "assets/shaders/hdr.vert", "assets/shaders/hdr.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// hdr_skybox
+		if (!assetManager.AddShader("HDR_skybox", "assets/shaders/hdr_skybox.vert", "assets/shaders/hdr_skybox.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		assetManager.GetShader("forward_BlinnPhong")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
@@ -295,6 +309,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("shadow_Cubemap")->SetIsEditorShader(true);
 		assetManager.GetShader("skybox")->SetIsEditorShader(true);
 		assetManager.GetShader("physics_Debug")->SetIsEditorShader(true);
+		assetManager.GetShader("HDR")->SetIsEditorShader(true);
+		assetManager.GetShader("HDR_skybox")->SetIsEditorShader(true);
 
 		return true;
 	}
@@ -338,6 +354,11 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [skybox] from memory!");
 			return false;
 		}
+		if (!assetManager.AddHDRTexture("HDR", "assets/textures/hdr/newport_loft.hdr"))
+		{
+			ENGINE_ERROR("Failed to load texture [HDR] from memory!");
+			return false;
+		}
 		if (!assetManager.AddNoiseTexture("ssaoNoise"))
 		{
 			ENGINE_ERROR("Failed to load texture [ssaoNoise] from memory!");
@@ -351,6 +372,39 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("shader_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
 		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
+
+		auto& bufferManager = mainRegistry.GetBufferManager();
+		const auto& hdr_fb = bufferManager.GetFrameBuffer("HDR");
+		const auto& hdr_shader = assetManager.GetShader("HDR");
+		const auto& hdr_texture = assetManager.GetTexture("HDR");
+		const auto& cube = assetManager.GetModel("cube");
+
+		glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+		glm::mat4 captureViews[] ={
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+		};
+
+		hdr_fb->Bind();
+		hdr_shader->Enable();
+		hdr_shader->SetUniformInt("equirectangularMap", 0);
+		hdr_shader->SetUniformMat4("projection", captureProjection);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, hdr_texture->GetID());
+		glViewport(0, 0, hdr_fb->Width(), hdr_fb->Height());
+		for (unsigned int i = 0; i < 6; i++)
+		{
+			hdr_shader->SetUniformMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, hdr_fb->GetTextureID(0), 0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cube->Draw();
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		return true;
 	}
 
@@ -421,6 +475,8 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddFrameBuffer("GAME_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
 		bufferManager.AddFrameBuffer("SCENE_SSAO", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
 		bufferManager.AddFrameBuffer("SCENE_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
+		bufferManager.AddFrameBuffer("HDR", ENGINE_RENDERING::BufferType::HDR, 600, 600, true);
+		
 		// shadowmap for direction light
 		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
 		{
