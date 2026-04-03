@@ -299,6 +299,20 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// IBL prefilter shader
+		if (!assetManager.AddShader("ibl_prefilter", "assets/shaders/ibl_cubemap.vert", "assets/shaders/ibl_prefilter.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// IBL brdf shader
+		if (!assetManager.AddShader("ibl_brdf", "assets/shaders/ibl_brdf.vert", "assets/shaders/ibl_brdf.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		assetManager.GetShader("forward_BlinnPhong")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
@@ -311,6 +325,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("physics_Debug")->SetIsEditorShader(true);
 		assetManager.GetShader("ibl_proj")->SetIsEditorShader(true);
 		assetManager.GetShader("ibl_conv")->SetIsEditorShader(true);
+		assetManager.GetShader("ibl_prefilter")->SetIsEditorShader(true);
+		assetManager.GetShader("ibl_brdf")->SetIsEditorShader(true);
 		return true;
 	}
 
