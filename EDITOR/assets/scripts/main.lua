@@ -31,6 +31,8 @@ cyborg = LoadEntity(ModelDefs["cyborg"])
 nanosuit = LoadEntity(ModelDefs["nanosuit"])
 --backpack = LoadEntity(ModelDefs["backpack"])
 
+DisplayPBR()
+
 point_light_1 = LoadEntity(LightDefs["point_light_1"])
 point_light_2 = LoadEntity(LightDefs["point_light_2"])
 point_light_3 = LoadEntity(LightDefs["point_light_3"])
