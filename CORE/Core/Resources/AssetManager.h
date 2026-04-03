@@ -39,6 +39,7 @@ namespace ENGINE_CORE::RESOURCES {
 		bool AddTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt = true);
 		bool AddTextureFromMemory(const std::string& texName, const unsigned char* imageData, size_t length, bool pixelArt = true);
 		bool AddSkyboxTexture(const std::string& textureName, const std::string& texturePath, bool pixelArt);
+		bool AddHDRTexture(const std::string& textureName, const std::string& texturePath);
 		bool AddNoiseTexture(const std::string& textureName);
 		std::shared_ptr<ENGINE_RENDERING::Texture> GetTexture(const std::string& textureName);
 

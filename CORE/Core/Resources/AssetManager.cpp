@@ -160,6 +160,24 @@ namespace ENGINE_CORE::RESOURCES {
         m_mapTexture.emplace(textureName, std::move(texture));
         return true;
     }
+    bool AssetManager::AddHDRTexture(const std::string& textureName, const std::string& texturePath)
+    {
+        if (m_mapTexture.find(textureName) != m_mapTexture.end())
+        {
+            ENGINE_ERROR("Failed to add texture [{0}] -- Already exists!", textureName);
+            return false;
+        }
+
+        auto texture = std::move(ENGINE_RENDERING::TextureLoader::CreateHDR(texturePath));
+        if (!texture)
+        {
+            ENGINE_ERROR("Failed to load texture [{0}] at path [{1}]", textureName, texturePath);
+            return false;
+        }
+
+        m_mapTexture.emplace(textureName, std::move(texture));
+        return true;
+    }
     bool AssetManager::AddNoiseTexture(const std::string& textureName)
     {
         // check if texture already loaded
