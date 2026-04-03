@@ -285,15 +285,15 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// hdr
-		if (!assetManager.AddShader("HDR", "assets/shaders/hdr.vert", "assets/shaders/hdr.frag", ""))
+		// IBL proj shader
+		if (!assetManager.AddShader("ibl_proj", "assets/shaders/ibl_cubemap.vert", "assets/shaders/ibl_proj.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// hdr_skybox
-		if (!assetManager.AddShader("HDR_skybox", "assets/shaders/hdr_skybox.vert", "assets/shaders/hdr_skybox.frag", ""))
+		// IBL conv shader
+		if (!assetManager.AddShader("ibl_conv", "assets/shaders/ibl_cubemap.vert", "assets/shaders/ibl_conv.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
@@ -309,9 +309,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("shadow_Cubemap")->SetIsEditorShader(true);
 		assetManager.GetShader("skybox")->SetIsEditorShader(true);
 		assetManager.GetShader("physics_Debug")->SetIsEditorShader(true);
-		assetManager.GetShader("HDR")->SetIsEditorShader(true);
-		assetManager.GetShader("HDR_skybox")->SetIsEditorShader(true);
-
+		assetManager.GetShader("ibl_proj")->SetIsEditorShader(true);
+		assetManager.GetShader("ibl_conv")->SetIsEditorShader(true);
 		return true;
 	}
 
@@ -374,9 +373,10 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
-		const auto& hdr_fb = bufferManager.GetFrameBuffer("HDR");
-		const auto& hdr_shader = assetManager.GetShader("HDR");
 		const auto& hdr_texture = assetManager.GetTexture("HDR");
+		const auto& ibl_fb = bufferManager.GetFrameBuffer("IBL");
+		const auto& ibl_proj_shader = assetManager.GetShader("ibl_proj");
+		const auto& ibl_conv_shader = assetManager.GetShader("ibl_conv");
 		const auto& cube = assetManager.GetModel("cube");
 
 		glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -389,17 +389,34 @@ namespace ENGINE_EDITOR {
 			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 		};
 
-		hdr_fb->Bind();
-		hdr_shader->Enable();
-		hdr_shader->SetUniformInt("equirectangularMap", 0);
-		hdr_shader->SetUniformMat4("projection", captureProjection);
+		ibl_fb->Bind();
+		ibl_proj_shader->Enable();
+		ibl_proj_shader->SetUniformInt("equirectangularMap", 0);
+		ibl_proj_shader->SetUniformMat4("projection", captureProjection);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, hdr_texture->GetID());
-		glViewport(0, 0, hdr_fb->Width(), hdr_fb->Height());
+		glViewport(0, 0, ibl_fb->Width(), ibl_fb->Height());
 		for (unsigned int i = 0; i < 6; i++)
 		{
-			hdr_shader->SetUniformMat4("view", captureViews[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, hdr_fb->GetTextureID(0), 0);
+			ibl_proj_shader->SetUniformMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(0), 0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cube->Draw();
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		ibl_fb->Bind();
+		ibl_conv_shader->Enable();
+		ibl_conv_shader->SetUniformInt("environmentMap", 0);
+		ibl_conv_shader->SetUniformMat4("projection", captureProjection);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		glViewport(0, 0, 32, 32);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+		for (unsigned int i = 0; i < 6; i++)
+		{
+			ibl_conv_shader->SetUniformMat4("view", captureViews[i]);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ibl_fb->GetTextureID(1), 0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			cube->Draw();
 		}
@@ -475,7 +492,7 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddFrameBuffer("GAME_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
 		bufferManager.AddFrameBuffer("SCENE_SSAO", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
 		bufferManager.AddFrameBuffer("SCENE_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
-		bufferManager.AddFrameBuffer("HDR", ENGINE_RENDERING::BufferType::HDR, 600, 600, true);
+		bufferManager.AddFrameBuffer("IBL", ENGINE_RENDERING::BufferType::IBL, 512, 512, true);
 		
 		// shadowmap for direction light
 		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
