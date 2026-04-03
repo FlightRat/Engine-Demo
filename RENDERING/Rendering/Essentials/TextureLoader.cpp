@@ -183,6 +183,24 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
+	bool TextureLoader::LoadEnvCubeMapTexture(GLuint& id, int& width, int& height)
+	{
+		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+		for (unsigned int i = 0; i < 6; ++i)
+		{
+			// note that we store each face with 16 bit floating point values
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
+				width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		return true;
+	}
+
 	bool TextureLoader::LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended)
 	{
 		std::vector<std::string> suffixes = { "right", "left", "top", "bottom", "front", "back" };
@@ -244,6 +262,30 @@ namespace ENGINE_RENDERING{
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+		return true;
+	}
+
+	bool TextureLoader::LoadHDRTexture(const std::string filepath, GLuint& id, int& width, int& height)
+	{
+		stbi_set_flip_vertically_on_load(true);
+		int nrComponents = 0;
+
+		float *image = stbi_loadf(filepath.c_str(), &width, &height, &nrComponents, 0);
+		if (!image)
+		{
+			stbi_set_flip_vertically_on_load(false);
+			ENGINE_ERROR("Failed to load HDR texture at path [{0}] -- [{1}]", filepath, stbi_failure_reason());
+			return false;
+		}
+		
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, image);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
+		stbi_image_free(image);
+		stbi_set_flip_vertically_on_load(false);
 		return true;
 	}
 
@@ -335,6 +377,9 @@ namespace ENGINE_RENDERING{
 		case ENGINE_RENDERING::Texture::TextureType::SSAO:
 			LoadSSAOTexture(id, width, height);
 			break;
+		case ENGINE_RENDERING::Texture::TextureType::ENVCUBEMAP:
+			LoadEnvCubeMapTexture(id, width, height);
+			break;
 		default:
 			assert(false && "The current type is not defined, Please use a defined texture type!");
 			return nullptr;
@@ -364,6 +409,17 @@ namespace ENGINE_RENDERING{
 			return nullptr;
 		}
 		return std::make_shared<Texture>(id, width, height, type, texturePath);
+	}
+
+	std::shared_ptr<Texture> TextureLoader::CreateHDR(const std::string& texturePath)
+	{
+		GLuint id;
+		int width, height;
+
+		glGenTextures(1, &id);
+		glBindTexture(GL_TEXTURE_2D, id);
+		LoadHDRTexture(texturePath, id, width, height);
+		return std::make_shared<Texture>(id, width, height, Texture::TextureType::NONE, texturePath);
 	}
 
 	std::shared_ptr<Texture> TextureLoader::CreateNoise()
