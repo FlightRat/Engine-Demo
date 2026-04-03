@@ -49,10 +49,8 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
 // 直接光照计算（不含 ambient，只返回 Lo）
-vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, 
-                    vec3 normal, vec3 albedo, vec3 mra, float shadow);
-vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, 
-                  vec3 normal, vec3 albedo, vec3 mra, float shadow);
+vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
+vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 
 float ShadowCalculation_dir(sampler2D shadowMap, vec4 fragPosLightSpace, vec3 normal, vec3 lightDir);
 float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fragPos, vec3 normal);
