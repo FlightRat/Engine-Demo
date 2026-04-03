@@ -43,17 +43,19 @@ namespace ENGINE_RENDERING {
 
 		case BufferType::GBUFFER:
 			// 严格遵循 GBuffer 的协议：0:Pos, 1:Norm, 2:Albedo, 3:metallic + roughness + ao
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE1, m_Width, m_Height, false));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE1, m_Width, m_Height, false));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE2, m_Width, m_Height, false));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER_TYPE2, m_Width, m_Height, false));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
 			break;
 		case BufferType::SSAO:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SSAO, m_Width, m_Height, false));
 			break;
 		case BufferType::IBL:
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::ENVCUBEMAP, m_Width, m_Height));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::ENVCUBEMAP, 32, 32));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::ENVCUBEMAP, 512, 512));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::IRRADIANCEMAP, 32, 32));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::PREFILTERMAP, 128, 128));
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::BRDFLUT, 512, 512));
 			break;
 		}
 		return true;
