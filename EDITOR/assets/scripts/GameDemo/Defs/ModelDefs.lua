@@ -60,5 +60,25 @@ ModelDefs =
 				}
 			}
 		}
+	},
+	owl = 
+	{
+		tag = "owl",
+		group = "Models",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 5.0, -15.0),
+				scale = vec3(5.0, 5.0, 5.0),
+				rotation = vec3(90.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "owl"
+			},
+			MeshRender = {
+				material = {
+				}
+			}
+		}
 	}
 }
