@@ -19,9 +19,9 @@ namespace ENGINE_RENDERING {
             static std::vector<TextureSlotDefinition> slots = {
                 { "albedo",  "Albedo",  "material.useAlbedo",  "material.albedoMap",    aiTextureType_DIFFUSE },
                 { "normal",   "Normal",   "material.useNormal",   "material.normalMap",     aiTextureType_HEIGHT },
-                { "metallic", "Metallic", "material.useMetallic", "material.metallic", aiTextureType_METALNESS },
-                { "roughness", "Roughness", "material.useRoughness", "material.roughness", aiTextureType_MAYA_SPECULAR_ROUGHNESS },
-                { "ao", "Ao", "material.useAo", "material.ao", aiTextureType_AMBIENT_OCCLUSION}
+                { "metallic", "Metallic", "material.useMetallic", "material.metallicMap", aiTextureType_METALNESS },
+                { "roughness", "Roughness", "material.useRoughness", "material.roughnessMap", aiTextureType_MAYA_SPECULAR_ROUGHNESS },
+                { "ao", "Ao", "material.useAo", "material.aoMap", aiTextureType_AMBIENT_OCCLUSION}
             };
             return slots;
         }
