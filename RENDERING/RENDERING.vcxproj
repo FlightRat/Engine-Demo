@@ -155,6 +155,7 @@
     <ClInclude Include="Rendering\Essentials\Texture.h" />
     <ClInclude Include="Rendering\Essentials\TextureCommon.h" />
     <ClInclude Include="Rendering\Essentials\TextureLoader.h" />
+    <ClInclude Include="Rendering\Essentials\ModelCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Rendering\Buffers\Framebuffer.cpp" />
