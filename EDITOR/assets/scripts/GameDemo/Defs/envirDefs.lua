@@ -34,6 +34,166 @@ EnvirDefs =
 			}
 		}
 	},
+	rust_ball = {
+		tag = "rust_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-5.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "rusted_iron_albedo",
+						normalMap = "rusted_iron_normal",
+						metallicMap = "rusted_iron_metallic",
+						roughnessMap = "rusted_iron_roughness",
+						aoMap = "rusted_iron_ao"
+					}
+				}
+			}
+		}
+	},
+	gold_ball = {
+		tag = "gold_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-3.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "gold_albedo",
+						normalMap = "gold_normal",
+						metallicMap = "gold_metallic",
+						roughnessMap = "gold_roughness",
+						aoMap = "gold_ao"
+					}
+				}
+			}
+		}
+	},
+	grass_ball = {
+		tag = "grass_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-1.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "grass_albedo",
+						normalMap = "grass_normal",
+						metallicMap = "grass_metallic",
+						roughnessMap = "grass_roughness",
+						aoMap = "grass_ao"
+					}
+				}
+			}
+		}
+	},
+	plastic_ball = {
+		tag = "plastic_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(1.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "plastic_albedo",
+						normalMap = "plastic_normal",
+						metallicMap = "plastic_metallic",
+						roughnessMap = "plastic_roughness",
+						aoMap = "plastic_ao"
+					}
+				}
+			}
+		}
+	},
+	wall_ball = {
+		tag = "wall_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(3.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "wall_albedo",
+						normalMap = "wall_normal",
+						metallicMap = "wall_metallic",
+						roughnessMap = "wall_roughness",
+						aoMap = "wall_ao"
+					}
+				}
+			}
+		}
+	},
 	ball_1 = 
 	{
 		tag = "ball_1",
@@ -481,4 +641,12 @@ function DisplayPBR()
 			material.roughness = roughness
 		end
 	end
+end
+
+function DisplayPBR_tex()
+	LoadEntity(EnvirDefs["gold_ball"])
+	LoadEntity(EnvirDefs["wall_ball"])
+	LoadEntity(EnvirDefs["plastic_ball"])
+	LoadEntity(EnvirDefs["grass_ball"])
+	LoadEntity(EnvirDefs["rust_ball"])
 end
