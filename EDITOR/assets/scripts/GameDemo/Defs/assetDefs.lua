@@ -4,7 +4,8 @@ AssetDefs =
 	{
 		{name="backpack", path="assets/models/backpack/backpack.obj"},
 		{name="nanosuit", path="assets/models/nanosuit/nanosuit.obj"},
-		{name="cyborg", path="assets/models/cyborg/cyborg.obj"}
+		{name="cyborg", path="assets/models/cyborg/cyborg.obj"},
+		{name="owl", path="assets/models/owl/owl.glb"}
 	},
 	textures=
 	{
