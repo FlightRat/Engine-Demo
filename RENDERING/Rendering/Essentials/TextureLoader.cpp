@@ -102,6 +102,41 @@ namespace ENGINE_RENDERING{
 		return true;
 	}
 
+	bool TextureLoader::LoadTextureFromMemory(const unsigned char* imageData, size_t length, GLuint& id, int& width, int& height, bool blended)
+	{
+		int channels;
+		unsigned char* image = stbi_load_from_memory(imageData, static_cast<int>(length), &width, &height, &channels, 0);
+
+		if (!image)
+		{
+			ENGINE_ERROR("stbi_image failed to load from memory -- {0}", stbi_failure_reason());
+			return false;
+		}
+
+		GLint format = (channels == 3) ? GL_RGB : GL_RGBA;
+
+		glGenTextures(1, &id);
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		if (blended)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		}
+		else
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		}
+
+		stbi_image_free(image);
+		return true;
+	}
+
 	bool TextureLoader::LoadFBTexture_singlesample(GLuint& id, int& width, int& height)
 	{
 		glBindTexture(GL_TEXTURE_2D, id);
@@ -323,41 +358,6 @@ namespace ENGINE_RENDERING{
 		
 		stbi_image_free(image);
 		stbi_set_flip_vertically_on_load(false);
-		return true;
-	}
-
-	bool TextureLoader::LoadTextureFromMemory(const unsigned char* imageData, size_t length, GLuint& id, int& width, int& height, bool blended)
-	{
-		int channels;
-		unsigned char* image = stbi_load_from_memory(imageData, static_cast<int>(length), &width, &height, &channels, 0);
-
-		if (!image)
-		{
-			ENGINE_ERROR("stbi_image failed to load from memory -- {0}", stbi_failure_reason());
-			return false;
-		}
-
-		GLint format = (channels == 3) ? GL_RGB : GL_RGBA;
-
-		glGenTextures(1, &id);
-		glBindTexture(GL_TEXTURE_2D, id);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		if (blended)
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		}
-
-		stbi_image_free(image);
 		return true;
 	}
 
