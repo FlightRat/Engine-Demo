@@ -36,7 +36,12 @@ AssetDefs =
 		{name="rusted_iron_normal", path="assets/textures/pbr/rusted_iron/normal.png", pixel_art=false},
 		{name="rusted_iron_metallic", path="assets/textures/pbr/rusted_iron/metallic.png", pixel_art=false},
 		{name="rusted_iron_roughness", path="assets/textures/pbr/rusted_iron/roughness.png", pixel_art=false},
-		{name="rusted_iron_ao", path="assets/textures/pbr/rusted_iron/ao.png", pixel_art=false}
+		{name="rusted_iron_ao", path="assets/textures/pbr/rusted_iron/ao.png", pixel_art=false},
+		{name="grass_albedo", path="assets/textures/pbr/grass/albedo.png", pixel_art=false},
+		{name="grass_normal", path="assets/textures/pbr/grass/normal.png", pixel_art=false},
+		{name="grass_metallic", path="assets/textures/pbr/grass/metallic.png", pixel_art=false},
+		{name="grass_roughness", path="assets/textures/pbr/grass/roughness.png", pixel_art=false},
+		{name="grass_ao", path="assets/textures/pbr/grass/ao.png", pixel_art=false}
 	},
 	music=
 	{
