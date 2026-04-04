@@ -66,7 +66,7 @@ void main()
     else{
         gAlbedo = material.color.rgb;
         if(useTexture && material.useAlbedo){
-            gAlbedo = texture(material.albedoMap, uv).rgb;
+            gAlbedo = pow(texture(material.albedoMap, uv).rgb, vec3(2.2));
             }
     }
 
