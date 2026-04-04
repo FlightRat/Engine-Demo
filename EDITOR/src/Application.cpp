@@ -389,6 +389,7 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("model_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("shader_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
+		assetManager.GetTexture("HDR")->SetIsEditorTexture(true);
 		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
 
 	}
