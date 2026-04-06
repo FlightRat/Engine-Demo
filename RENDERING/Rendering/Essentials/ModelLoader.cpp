@@ -733,10 +733,25 @@ namespace ENGINE_RENDERING {
 	{
 		Assimp::Importer importer;
 
-		// [警告] 
-		// Assimp默认调用底层 I/O。如果你把包含中文的 UTF-8 传给 ReadFile，它有可能会失败。
-		// 如果你在测试中遇到 Assimp 返回 "Failed to open file"，请告诉我，我们需要为 Assimp 注入一个自定义的 IOSystem。
-		const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+		std::filesystem::path p(reinterpret_cast<const char8_t*>(modelPath.c_str()));
+		std::string extension = p.extension().string();
+		std::transform(extension.begin(), extension.end(), extension.begin(),
+			[](unsigned char c) {return static_cast<char>(std::tolower(c)); });
+
+		// Assimp check
+		if (!importer.IsExtensionSupported(extension))
+		{
+			ENGINE_ERROR("ASSIMP: extension [{0}] is not supported by current imported build.", extension);
+			return false;
+		}
+
+		const aiScene* scene = importer.ReadFile(
+			modelPath,
+			aiProcess_Triangulate |
+			aiProcess_GenSmoothNormals |
+			aiProcess_FlipUVs |
+			aiProcess_CalcTangentSpace
+		);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -744,8 +759,6 @@ namespace ENGINE_RENDERING {
 			return false;
 		}
 
-		// [核心修复] 不要用字符串强制截取路径，容易引发多字节截断问题
-		// 使用 std::filesystem 获取纯正无损的父级目录，再转回 UTF-8 std::string
 		std::filesystem::path pathObj(reinterpret_cast<const char8_t*>(modelPath.c_str()));
 		std::string directory = reinterpret_cast<const char*>(pathObj.parent_path().u8string().c_str());
 

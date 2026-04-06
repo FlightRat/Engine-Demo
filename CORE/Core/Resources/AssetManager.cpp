@@ -5,6 +5,7 @@
 #include<Rendering/Essentials/TextureLoader.h>
 #include<Rendering/Essentials/ShaderLoader.h>
 #include<Logger/Logger.h>
+#include"Rendering/Essentials/ModelCommon.h"
 
 namespace ENGINE_CORE::RESOURCES {
 
@@ -59,13 +60,22 @@ namespace ENGINE_CORE::RESOURCES {
             return false;
         }
 
+        if (!ENGINE_RENDERING::ModelRegistry::IsSupportedPath(modelPath))
+        {
+            ENGINE_ERROR("Failed to add model [{0}] -- Unsupported model format: [{1}]", modelName, modelPath);
+            return false;
+        }
+
         auto model = std::move(ENGINE_RENDERING::ModelLoader::CreateModel(modelPath, textures));
         if (!model)
         {
             ENGINE_ERROR("Failed to load model [{0}] at path [{1}]", modelName, modelPath);
             return false;
         }
-        model->SetDir(modelPath.substr(0, modelPath.find_last_of('/')));
+
+        std::filesystem::path pathObj(reinterpret_cast<const char8_t*>(modelPath.c_str()));
+        std::string directory = reinterpret_cast<const char*>(pathObj.parent_path().u8string().c_str());
+        model->SetDir(directory);
 
         m_mapModel.emplace(modelName, std::move(model));
         return true;
