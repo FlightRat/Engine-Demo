@@ -25,14 +25,13 @@ void main()
 {
     vec2 noiseScale = screenSize / 4.0;
 
-    // === 修复1：将位置和法线统一转换到【观察空间】 ===
     vec3 worldPos = texture(gPosition, TexCoord).xyz;
-    vec3 fragPos = vec3(view * vec4(worldPos, 1.0));  // 世界 -> 观察空间
+    vec3 fragPos = vec3(view * vec4(worldPos, 1.0));  // 观察空间position
 
     vec3 worldNormal = normalize(texture(gNormal, TexCoord).rgb);
-    vec3 normal = normalize(mat3(view) * worldNormal);  // 法线也转到观察空间
+    vec3 normal = normalize(mat3(view) * worldNormal);  // 观察空间法线
 
-    // 由于噪声纹理4x4，纹理坐标是0~1,直接采样会重复在4x4中采样，需要根据屏幕缩放UV，然后自动在repeat的4x4纹理中采样
+    // 由于噪声纹理4x4，纹理坐标是0~1, 直接采样会拉伸4x4到整个屏幕，需要根据屏幕缩放UV坐标取值范围，然后自动在repeat的4x4纹理中采样
     vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz);  
 
     // 构建 TBN（切线空间 → 观察空间）
@@ -46,15 +45,14 @@ void main()
         vec3 samplePos = TBN * samples[i].xyz;      // 观察空间的半球偏移量
         samplePos = fragPos + samplePos * radius;   // 观察空间的半球采样点
 
-        // 投影到屏幕空间获取 UV
+       // 把观察空间的半球采样点投影到裁剪空间获取uv
         vec4 offset = vec4(samplePos, 1.0);
         offset = projection * offset;
         offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5 + 0.5;
 
-        // 半球采样点在观察空间上的表面深度
-        vec3 sampledWorldPos = texture(gPosition, offset.xy).xyz;
-        float sampleDepth = (view * vec4(sampledWorldPos, 1.0)).z;  // 转到观察空间
+        vec3 sampledWorldPos = texture(gPosition, offset.xy).xyz;   // 半球采样点在世界空间上的表面位置
+        float sampleDepth = (view * vec4(sampledWorldPos, 1.0)).z;  // 半球采样点在观察空间上的表面深度
 
         // 根据距离对遮蔽贡献进行衰减，防止远处的物体对近处的点产生影响
         float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
