@@ -292,6 +292,7 @@
     <ClInclude Include="src\editor\utilities\ComponentDrawer.h" />
     <ClInclude Include="src\editor\utilities\editor_textures.h" />
     <ClInclude Include="src\editor\utilities\editor_utilities.h" />
+    <ClInclude Include="src\editor\utilities\fonts\IconsFontAwesome5.h" />
     <ClInclude Include="src\editor\utilities\ImGuiUtils.h" />
   </ItemGroup>
   <ItemGroup>
@@ -302,9 +303,13 @@
     <Media Include="assets\soundFx\shooting.wav" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="assets\fonts\LICENSE.txt" />
     <Text Include="assets\models\backpack\source_attribution.txt" />
     <Text Include="assets\models\cyborg\LICENSE.txt" />
     <Text Include="assets\models\nanosuit\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="assets\fonts\fa-solid-900.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

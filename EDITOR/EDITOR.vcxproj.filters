@@ -272,6 +272,9 @@
     <ClInclude Include="src\editor\displays\SceneHierarchyDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\editor\utilities\fonts\IconsFontAwesome5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Media Include="assets\music\2-23am.wav">
@@ -294,5 +297,9 @@
     <Text Include="assets\models\backpack\source_attribution.txt" />
     <Text Include="assets\models\nanosuit\LICENSE.txt" />
     <Text Include="assets\models\cyborg\LICENSE.txt" />
+    <Text Include="assets\fonts\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="assets\fonts\fa-solid-900.ttf" />
   </ItemGroup>
 </Project>
