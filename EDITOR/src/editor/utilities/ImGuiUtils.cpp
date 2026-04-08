@@ -54,6 +54,46 @@ namespace ImGui {
         ImGui::PopID();
     }
 
+    void ActiveButton(const char* label, ImVec2 size)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, BUTTON_HELD);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, BUTTON_HELD);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, BUTTON_HELD);
+        ImGui::Button(label, size);
+        ImGui::PopStyleColor(3);
+    }
+
+    void DisabledButton(const char* label, ImVec2 size, const std::string& disabledMsg)
+    {
+        ImGui::BeginDisabled();
+        ImGui::Button(label, size);
+
+        if (!disabledMsg.empty())
+            ImGui::SetItemTooltip(disabledMsg.c_str());
+        
+        ImGui::EndDisabled();
+    }
+
+    void ActiveImageButton(const char* buttonId, ImTextureID textureID, ImVec2 size)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Button, BUTTON_HELD);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, BUTTON_HELD);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, BUTTON_HELD);
+        ImGui::ImageButton(buttonId, textureID, size);
+        ImGui::PopStyleColor(3);
+    }
+
+    void DisabledImageButton(const char* buttonId, ImTextureID textureID, ImVec2 size, const std::string& disabledMsg)
+    {
+        ImGui::BeginDisabled();
+        ImGui::ImageButton(buttonId, textureID, size);
+
+        if (!disabledMsg.empty())
+            ImGui::SetItemTooltip(disabledMsg.c_str());
+
+        ImGui::EndDisabled();
+    }
+
 	void ColoredLabel(const std::string& label, const ImVec2& size, const ImVec4& color)
 	{
 		ImGui::PushStyleColor(ImGuiCol_Button, color);
