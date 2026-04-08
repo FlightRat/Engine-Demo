@@ -347,6 +347,26 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [stop_button] from memory!");
 			return false;
 		}
+		if (!assetManager.AddTextureFromMemory("translate_button", translate_button, sizeof(translate_button) / sizeof(translate_button[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [translate_button] from memory!");
+			return false;
+		}
+		if (!assetManager.AddTextureFromMemory("rotate_button", rotate_button, sizeof(rotate_button) / sizeof(rotate_button[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [rotate_button] from memory!");
+			return false;
+		}
+		if (!assetManager.AddTextureFromMemory("scale_button", scale_button, sizeof(scale_button) / sizeof(scale_button[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [scale_button] from memory!");
+			return false;
+		}
+		if (!assetManager.AddTextureFromMemory("none_button", none_button, sizeof(none_button) / sizeof(none_button[0])))
+		{
+			ENGINE_ERROR("Failed to load texture [stop_button] from memory!");
+			return false;
+		}
 		if (!assetManager.AddTextureFromMemory("music_icon", music_icon, sizeof(music_icon) / sizeof(music_icon[0])))
 		{
 			ENGINE_ERROR("Failed to load texture [music_icon] from memory!");
@@ -384,6 +404,10 @@ namespace ENGINE_EDITOR {
 		}
 		assetManager.GetTexture("play_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
+		assetManager.GetTexture("translate_button")->SetIsEditorTexture(true);
+		assetManager.GetTexture("rotate_button")->SetIsEditorTexture(true);
+		assetManager.GetTexture("scale_button")->SetIsEditorTexture(true);
+		assetManager.GetTexture("none_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("music_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("scene_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("model_icon")->SetIsEditorTexture(true);
