@@ -16,6 +16,8 @@ namespace ENGINE_EDITOR
 		void LoadScnne();
 		void RenderScene();
 		void LoadNewScene();
+	protected:
+		virtual void DrawToolbar() override;
 	public:
 		SceneDisplay();
 		~SceneDisplay() = default;

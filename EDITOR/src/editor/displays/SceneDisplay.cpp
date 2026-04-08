@@ -10,6 +10,7 @@
 #include "Rendering/Core/Camera3D.h"
 #include "Physics/RP3D_Wrappers.h"
 #include "Physics/ContactListener.h"
+#include "../utilities/ImGuiUtils.h"
 #include "../utilities/editor_utilities.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
@@ -111,6 +112,40 @@ namespace ENGINE_EDITOR {
 		// TODO
 	}
 
+	void SceneDisplay::DrawToolbar()
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+
+		auto pTranslateTexture = assetManager.GetTexture("translate_button");
+		auto pRotateTexture = assetManager.GetTexture("rotate_button");
+		auto pScaleTexture = assetManager.GetTexture("scale_button");
+		auto pNoneTexture = assetManager.GetTexture("none_button");
+		assert(pTranslateTexture && pRotateTexture && pScaleTexture && pNoneTexture);
+
+		ImGui::Separator();
+
+		auto translateTextureID = (ImTextureID)(intptr_t)pTranslateTexture->GetID();
+		ImGui::ImageButton("##translateButton", translateTextureID, TOOL_BUTTON_SIZE);
+
+		ImGui::SameLine();
+
+		auto rotateTextureID = (ImTextureID)(intptr_t)pRotateTexture->GetID();
+		ImGui::ImageButton("##rotateButton", rotateTextureID, TOOL_BUTTON_SIZE);
+
+		ImGui::SameLine();
+
+		auto scaleTextureID = (ImTextureID)(intptr_t)pScaleTexture->GetID();
+		ImGui::ImageButton("##scaleButton", scaleTextureID, TOOL_BUTTON_SIZE);
+
+		ImGui::SameLine();
+
+		auto noneTextureID = (ImTextureID)(intptr_t)pNoneTexture->GetID();
+		ImGui::ImageButton("##noneButton", noneTextureID, TOOL_BUTTON_SIZE);
+
+		ImGui::Separator();
+	}
+
 	SceneDisplay::SceneDisplay() :m_pSceneCam{ std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 20.0f, -20.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -45.0f) }
 	{
 	}
@@ -122,7 +157,10 @@ namespace ENGINE_EDITOR {
 			ImGui::End();
 			return;
 		}
+
+		DrawToolbar();
 		RenderScene();
+		
 		if (ImGui::BeginChild("##SceneChild", ImVec2{ 0,0 }, false, ImGuiWindowFlags_NoScrollWithMouse))
 		{
 			auto& mainRegistry = MAIN_REGISTRY();
@@ -173,6 +211,7 @@ namespace ENGINE_EDITOR {
 
 			ImGui::EndChild();
 		}
+		
 		ImGui::End();
 	}
 
