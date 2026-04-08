@@ -17,6 +17,7 @@
 #include <Rendering/Core/Camera3D.h>
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
+#include "../utilities/ImGuiUtils.h"
 #include "Core/ECS/Components/TransformComponent.h"
 #include "Core/ECS/Components/PhysicsComponent.h"
 #include "Core/ECS/Components/Identification.h"
@@ -132,6 +133,54 @@ namespace ENGINE_EDITOR
 		//}
 	}
 
+	void GameDisplay::DrawToolbar()
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+
+		auto pPlayTexture = assetManager.GetTexture("play_button");
+		auto pStopTexture = assetManager.GetTexture("stop_button");
+		assert(pPlayTexture && pStopTexture);
+
+		ImGui::Separator();
+
+		// play button
+		auto playTextureID = (ImTextureID)(intptr_t)pPlayTexture->GetID();
+		if (m_bPlayGame)
+		{
+			ImGui::ActiveImageButton("##playButton", playTextureID);
+		}
+		else
+		{
+			if (ImGui::ImageButton("##playButton", playTextureID, TOOL_BUTTON_SIZE) && SCENE_MANAGER().GetCurrentScene())
+			{
+				PlayGame();
+			}
+		}
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+			ImGui::SetTooltip("Play Game");
+
+		ImGui::SameLine();
+
+		// stop button
+		auto stopTextureID = (ImTextureID)(intptr_t)pStopTexture->GetID();
+		if (!m_bPlayGame)
+		{
+			ImGui::ActiveImageButton("##stopButton", stopTextureID);
+		}
+		else
+		{
+			if (ImGui::ImageButton("##stopButton", stopTextureID, TOOL_BUTTON_SIZE) && SCENE_MANAGER().GetCurrentScene())
+			{
+				StopGame();
+			}
+		}
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+			ImGui::SetTooltip("Stop Game");
+
+		ImGui::Separator();
+	}
+
 	void GameDisplay::Draw()
 	{
 		static bool pOpen{ true };
@@ -141,55 +190,8 @@ namespace ENGINE_EDITOR
 			return;
 		}
 
-		auto& mainRegistry = MAIN_REGISTRY();
-		auto& assetManager = mainRegistry.GetAssetManager();
-
-		auto pPlayTexture = assetManager.GetTexture("play_button");
-		auto pStopTexture = assetManager.GetTexture("stop_button");
-
-		if (m_bPlayGame)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
-		}
-		if (ImGui::ImageButton(
-			"play",
-			ImTextureID{ pPlayTexture->GetID() },
-			ImVec2{ (float)pPlayTexture->GetWidth() * 0.25f, (float)pPlayTexture->GetHeight() * 0.25f, })
-			&& SCENE_MANAGER().GetCurrentScene())
-		{
-			PlayGame();
-		}
-		if (ImGui::GetColorStackSize() > 0)
-			ImGui::PopStyleColor(ImGui::GetColorStackSize());
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-			ImGui::SetTooltip("Play Game");
-
-		ImGui::SameLine();
-
-		if (!m_bPlayGame)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.9f, 0.0f, 0.3f));
-		}
-
+		DrawToolbar();
 		RenderGame();
-
-		if (ImGui::ImageButton(
-			"stop",
-			ImTextureID{ pStopTexture->GetID() },
-			ImVec2{ (float)pStopTexture->GetWidth() * 0.25f, (float)pStopTexture->GetHeight() * 0.25f, })
-			&& SCENE_MANAGER().GetCurrentScene())
-		{
-			StopGame();
-		}
-		if (ImGui::GetColorStackSize() > 0)
-			ImGui::PopStyleColor(ImGui::GetColorStackSize());
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-			ImGui::SetTooltip("Stop Game");
-
 
 		if (ImGui::BeginChild("##GameChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
 		{

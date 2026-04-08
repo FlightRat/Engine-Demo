@@ -12,6 +12,8 @@ namespace ENGINE_EDITOR
 		void PlayGame();
 		void StopGame();
 		void RenderGame();
+	protected:
+		virtual void DrawToolbar() override;
 	public:
 		GameDisplay();
 		~GameDisplay() = default;
