@@ -4,8 +4,8 @@ namespace SCION_EDITOR {
 	enum class EGizmoType
 	{
 		TRANSLATE = 0,
-		SCALE,
 		ROTATE,
+		SCALE,
 
 		NO_GIZMO
 	};

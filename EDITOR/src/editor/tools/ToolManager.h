@@ -3,31 +3,33 @@
 
 namespace ENGINE_RENDERING { class Camera3D; }
 namespace ENGINE_EDITOR {
-	//class AbstractTool;
-	//class Gizmo;
-	//class SceneObject;
-	//enum class EGizmoType;
+	// class AbstractTool;
+	// class TileTool;
+	class Gizmo;
+	// class SceneObject;
+	// enum class EToolType;
+	enum class EGizmoType;
 
 	class ToolManager {
 	private:
-		//std::map<EGizmoType, std::unique_ptr<Gizmo>> m_mapGizom;
-		//EGizmoType m_eActiveGizmoType;
+		// std::map<EToolType, std::unique_ptr<TileTool>> m_mapTools;
+		std::map<EGizmoType, std::unique_ptr<Gizmo>> m_mapGizmos;
+
+		// EToolType m_eActiveToolType;
+		EGizmoType m_eActiveGizmoType;
 
 	public:
 		ToolManager();
 		~ToolManager() = default;
 		
-		//void Update();
+		void Update();
 
-		//bool SetupTools(SceneObject* pSceneObject, ENGINE_RENDERING::Camera3D* pCamera);
+		Gizmo* GetActiveGizmo();
+		void SetGizmoActivate(EGizmoType eGizmoType);
+		inline EGizmoType GetActiveGizmoType() const { return m_eActiveGizmoType; }
 
-		//void SetGizmoActive(EGizmoType eGizmoType);
-		//Gizmo* GetActiveGizmo();
-		//inline EGizmoType GetActiveGizmoType() const { return m_eActiveGizmoType; }
+		void SetSelectedEntity(entt::entity entity);
 
-		//AbstractTool* GetActiveToolFromAbstract();
-
-		//void SetSelectedEntity(entt::entity entity);
 	};
 }
 
