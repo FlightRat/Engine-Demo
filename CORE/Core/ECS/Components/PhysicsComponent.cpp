@@ -109,6 +109,12 @@ namespace ENGINE_CORE::ECS {
 		{
 			m_pCollider = ENGINE_PHYSICS::MakeSharedCollider(m_pRigidBody, m_pCollisionShape);
 			m_pCollider->setIsTrigger(m_pAttribute.c_Trigger);
+			// 注意 绑在刚体上的data没有实时更新，所以现在拿contactEntities时最好用id实例化entity来使用
+			//if (m_pUserData)
+			//{
+			//	m_pUserData->userData.bTrigger = m_pAttribute.c_Trigger;
+			//	// 如果 objectData 还有其他字段也要同步的话一并处理
+			//}
 			Material& c_material = m_pCollider->getMaterial();
 			c_material.setBounciness(m_pAttribute.c_Bounciness);
 			c_material.setFrictionCoefficient(m_pAttribute.c_FrictionCoefficient);
@@ -269,6 +275,29 @@ namespace ENGINE_CORE::ECS {
 			},
 			"user_data",&PhysicsComponent::GetUserData
 		);
+	}
+
+	std::string PhysicsAttributes::BodyTypeToString(reactphysics3d::BodyType type)
+	{
+		switch (type)
+		{
+		case BodyType::STATIC:    return "static";
+		case BodyType::KINEMATIC: return "kinematic";
+		case BodyType::DYNAMIC:   return "dynamic";
+		default:
+			ENGINE_ERROR("Unknown BodyType, defaulting to static");
+			return "static";
+		}
+	}
+
+	reactphysics3d::BodyType PhysicsAttributes::StringToBodyType(const std::string& str)
+	{
+		if (str == "static")    return BodyType::STATIC;
+		if (str == "kinematic") return BodyType::KINEMATIC;
+		if (str == "dynamic")   return BodyType::DYNAMIC;
+
+		ENGINE_ERROR("Unknown BodyType string [{}], defaulting to STATIC", str);
+		return BodyType::STATIC;
 	}
 }
 

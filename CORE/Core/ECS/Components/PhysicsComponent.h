@@ -13,6 +13,9 @@ namespace ENGINE_CORE::ECS {
 
 	struct PhysicsAttributes
 	{
+		static std::string BodyTypeToString(reactphysics3d::BodyType type);			// String ¡ú BodyType
+		static reactphysics3d::BodyType StringToBodyType(const std::string& str);	// String ¡ú BodyType
+
 		glm::vec3 position{ 0.0f };
 		glm::vec3 rotation{ 0.0f };
 		glm::vec3 scale{ 1.0f };
@@ -74,7 +77,10 @@ namespace ENGINE_CORE::ECS {
 		void SetDebug(const bool debug) { m_pRigidBody->setIsDebugEnabled(debug); }
 
 		rp3d::RigidBody* GetRigidBody() { return m_pRigidBody.get(); }
-		PhysicsAttributes& GetAttr() { return m_pAttribute; }
+
+		inline void SetAttr(const PhysicsAttributes physicsAttr) { m_pAttribute = physicsAttr; }
+		inline PhysicsAttributes& GetAttr() { return m_pAttribute; }
+		inline const PhysicsAttributes& GetAttr() const { return m_pAttribute; }
 
 		ENGINE_PHYSICS::UserData* GetUserData(){ return m_pUserData.get(); }
 
