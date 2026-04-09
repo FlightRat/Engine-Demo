@@ -272,7 +272,9 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_sphere_model)));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
+			Shader_Color->SetUniformMat3("normalMatrix", normalMatrix);
 			Shader_Color->SetUniformVec3("color", glm::vec3(1.0f));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere[0].Draw();
@@ -310,6 +312,7 @@ namespace ENGINE_CORE::Systems {
 			}
 
 			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
@@ -321,6 +324,7 @@ namespace ENGINE_CORE::Systems {
 
 				Shader_BlinnPhong->Enable();	// NOTE: now the shader is fixed
 				Shader_BlinnPhong->SetUniformMat4("model", model);
+				Shader_BlinnPhong->SetUniformMat3("normalMatrix", normalMatrix);
 				Shader_BlinnPhong->SetUniformVec3("viewPos", camera->GetPosition());
 				Shader_BlinnPhong->SetUniformBool("bug", textureBug);
 				Shader_BlinnPhong->SetUniformBool("flipUV", meshR.flipUV);
@@ -428,6 +432,7 @@ namespace ENGINE_CORE::Systems {
 			}
 
 			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
@@ -439,6 +444,7 @@ namespace ENGINE_CORE::Systems {
 
 				Shader_Color->Enable();	// NOTE: now the shader is fixed
 				Shader_Color->SetUniformMat4("model", model);
+				Shader_Color->SetUniformMat3("normalMatrix", normalMatrix);
 				Shader_Color->SetUniformVec3("color", glm::vec3(1.0f, 1.0f, 0.0f));
 				Shader_Color->SetUniformBool("outline", true);
 
@@ -587,6 +593,7 @@ namespace ENGINE_CORE::Systems {
 			}
 
 			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
@@ -597,6 +604,7 @@ namespace ENGINE_CORE::Systems {
 				std::string shaderName = cur_material.shadingModel;
 
 				Shader_Gbuffer->SetUniformMat4("model", model);
+				Shader_Gbuffer->SetUniformMat3("normalMatrix", normalMatrix);
 				Shader_Gbuffer->SetUniformBool("bug", textureBug);
 				Shader_Gbuffer->SetUniformBool("flipUV", meshR.flipUV);
 				Shader_Gbuffer->SetUniformBool("useTexture", cur_material.m_useTexture);
@@ -818,7 +826,9 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_sphere_model)));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
+			Shader_Color->SetUniformMat3("normalMatrix", normalMatrix);
 			Shader_Color->SetUniformVec3("color", glm::vec3(1.0f));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere->Draw();
@@ -832,7 +842,9 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
 			light_sphere_model = glm::translate(light_sphere_model, pos);
 			light_sphere_model = glm::scale(light_sphere_model, glm::vec3(0.25));
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_sphere_model)));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
+			Shader_Color->SetUniformMat3("normalMatrix", normalMatrix);
 			Shader_Color->SetUniformVec3("color", glm::vec3(1.0,1.0,0.0));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere->Draw();
