@@ -277,7 +277,7 @@ EnvirDefs =
 	cube_2 = 
 	{
 		tag = "cube_2",
-		group = "trigger",
+		group = "Envir",
 		components = 
 		{
 			Transform = {
@@ -316,7 +316,7 @@ EnvirDefs =
 	cube_3 = 
 	{
 		tag = "cube_3",
-		group = "moveable",
+		group = "Envir",
 		components = 
 		{
 			Transform = {
