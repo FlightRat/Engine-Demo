@@ -145,8 +145,6 @@
     <ClCompile Include="src\editor\displays\SceneHierarchyDisplay.cpp" />
     <ClCompile Include="src\editor\scene\SceneManager.cpp" />
     <ClCompile Include="src\editor\scene\SceneObject.cpp" />
-    <ClCompile Include="src\editor\tools\AbstractTool.cpp" />
-    <ClCompile Include="src\editor\tools\ToolManager.cpp" />
     <ClCompile Include="src\editor\utilities\ComponentDrawer.cpp" />
     <ClCompile Include="src\editor\utilities\ImGuiUtils.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -286,9 +284,7 @@
     <ClInclude Include="src\editor\displays\SceneHierarchyDisplay.h" />
     <ClInclude Include="src\editor\scene\SceneManager.h" />
     <ClInclude Include="src\editor\scene\SceneObject.h" />
-    <ClInclude Include="src\editor\tools\AbstractTool.h" />
-    <ClInclude Include="src\editor\tools\ToolAccessories.h" />
-    <ClInclude Include="src\editor\tools\ToolManager.h" />
+    <ClInclude Include="src\editor\tools\ToolContext.h" />
     <ClInclude Include="src\editor\utilities\ComponentDrawer.h" />
     <ClInclude Include="src\editor\utilities\editor_textures.h" />
     <ClInclude Include="src\editor\utilities\editor_utilities.h" />

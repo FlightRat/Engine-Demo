@@ -39,12 +39,6 @@
     <ClCompile Include="src\editor\scene\SceneManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editor\tools\AbstractTool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\editor\tools\ToolManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\editor\displays\MenuDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -251,15 +245,6 @@
     <ClInclude Include="src\editor\scene\SceneManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\editor\tools\AbstractTool.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\editor\tools\ToolAccessories.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\editor\tools\ToolManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\editor\displays\MenuDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -273,6 +258,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\editor\utilities\fonts\IconsFontAwesome5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editor\tools\ToolContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
