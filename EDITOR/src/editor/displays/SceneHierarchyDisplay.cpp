@@ -1,4 +1,5 @@
 #include "SceneHierarchyDisplay.h"
+#include "../tools/ToolContext.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
 #include "../utilities/ComponentDrawer.h"
@@ -65,6 +66,7 @@ namespace ENGINE_EDITOR {
 
 			// B. 更新内部指针
 			m_pSelectedEntity = std::make_shared<ENGINE_CORE::ECS::Entity>(SCENE_MANAGER().GetCurrentScene()->GetRegistry(), entity.GetEntity());
+			TOOL_CTX().selectedEntity = m_pSelectedEntity;
 
 			// C. 将当前物体的 selected 标志设为 true
 			auto& newId = entity.GetComponent<ENGINE_CORE::ECS::Identification>();
@@ -309,6 +311,7 @@ namespace ENGINE_EDITOR {
 					oldId.selected = false;
 				}
 				m_pSelectedEntity.reset();
+				TOOL_CTX().selectedEntity.reset();
 			}
 		}
 
@@ -317,6 +320,7 @@ namespace ENGINE_EDITOR {
 		{
 			delete_entity(m_pSelectedEntity);
 			m_pSelectedEntity.reset();
+			TOOL_CTX().selectedEntity.reset();
 			m_bDeleteGameObject = false;
 		}
 
