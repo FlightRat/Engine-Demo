@@ -15,6 +15,7 @@ out VS_OUT {
 } vs_out;
 
 uniform mat4 model;
+uniform mat3 normalMatrix;
 layout (std140) uniform Matrices
 {
     mat4 view;
@@ -28,7 +29,7 @@ void main()
     vs_out.Normal    = normalize(mat3(transpose(inverse(model))) * aNormal);
     vs_out.TexCoord  = aTexCoord;
 
-    mat3 normalMatrix = transpose(inverse(mat3(model)));
+    // mat3 normalMatrix = transpose(inverse(mat3(model)));
     vec3 T = normalize(normalMatrix * aTangent);
     vec3 B = normalize(normalMatrix * aBitangent);
     vec3 N = normalize(normalMatrix * aNormal);
