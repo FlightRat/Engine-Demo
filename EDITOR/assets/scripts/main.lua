@@ -28,7 +28,7 @@ Cube_Trigger = LoadEntity(EnvirDefs["cube_2"])
 
 cyborg = LoadEntity(ModelDefs["cyborg"])
 nanosuit = LoadEntity(ModelDefs["nanosuit"])
-owl = LoadEntity(ModelDefs["owl"])
+--owl = LoadEntity(ModelDefs["owl"])
 --backpack = LoadEntity(ModelDefs["backpack"])
 
 DisplayPBR()
