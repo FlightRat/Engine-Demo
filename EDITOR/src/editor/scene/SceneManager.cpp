@@ -2,7 +2,6 @@
 #include "Logger/Logger.h"
 #include "SceneObject.h"
 #include "UTILITIES/EngineUtilities.h"
-#include "../EDITOR/src/editor/tools/ToolManager.h"
 
 namespace ENGINE_EDITOR {
 	SceneManager& SceneManager::GetInstance()
@@ -70,12 +69,5 @@ namespace ENGINE_EDITOR {
 		return ENGINE_UTIL::GetKeys(m_mapScene);
 	}
 
-	ToolManager& SceneManager::GetToolManager()
-	{
-		if (!m_pToolManager)
-			m_pToolManager = std::make_unique<ToolManager>();
-		assert(m_pToolManager && "Tool manager must be valid!");
-		return *m_pToolManager;
-	}
 }
 
