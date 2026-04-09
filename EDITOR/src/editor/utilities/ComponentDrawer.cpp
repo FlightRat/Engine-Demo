@@ -26,15 +26,14 @@ namespace ENGINE_EDITOR {
 		if (ImGui::TreeNodeEx((void*)typeid(TransformComponents).hash_code(), flags, "Transform"))
 		{
 			ImGui::DrawVec3Control("Position", transform.position);
-
-			glm::vec3 euler = glm::degrees(glm::eulerAngles(transform.rotation_quat));
+			
+			glm::vec3 euler = transform.rotation_eular;
 			glm::vec3 oldEuler = euler;
-
 			ImGui::DrawVec3Control("Rotation", euler);
-
 			if (euler != oldEuler) {
-				transform.rotation_quat = glm::quat(glm::radians(euler));
-				transform.rotation_eular = glm::radians(euler);
+				
+				transform.rotation_eular = euler;
+				transform.rotation_quat = glm::quat(glm::radians(euler)); // 欧拉角→弧度→四元数
 			}
 
 			ImGui::DrawVec3Control("Scale", transform.scale, 1.0f);
