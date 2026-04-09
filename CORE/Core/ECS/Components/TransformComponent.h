@@ -9,8 +9,8 @@ namespace ENGINE_CORE::ECS {
 	{
 		glm::vec3 position{ glm::vec3{0.0f} };
 		glm::vec3 scale{ glm::vec3{1.f} };
-		glm::vec3 rotation_eular{ glm::vec3{0.0f} };
-		glm::quat rotation_quat{ glm::quat{1.0f, 0.0f, 0.0f, 0.0f} };
+		glm::vec3 rotation_eular{ glm::vec3{0.0f} };					// 仅供 UI 显示的缓存（弧度）
+		glm::quat rotation_quat{ glm::quat{1.0f, 0.0f, 0.0f, 0.0f} };	// 真正参与运算的旋转
 		static void CreateLuaTransformBind(sol::state& lua);
 	};
 }
