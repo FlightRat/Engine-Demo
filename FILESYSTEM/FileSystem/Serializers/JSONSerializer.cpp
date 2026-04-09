@@ -2,7 +2,7 @@
 #include "Logger/Logger.h"
 #include<format>
 
-constexpr int MAX_DECIMAL_PLACES = 3;
+constexpr int MAX_DECIMAL_PLACES = 10;
 
 namespace ENGINE_FileSystem {
 	// RAII（资源获取即初始化）原则：在构造时准备好所有资源（打开文件、分配内存），在析构时释放资源（关闭文件、释放内存）。
