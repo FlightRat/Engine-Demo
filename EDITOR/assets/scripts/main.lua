@@ -31,7 +31,7 @@ nanosuit = LoadEntity(ModelDefs["nanosuit"])
 --owl = LoadEntity(ModelDefs["owl"])
 --backpack = LoadEntity(ModelDefs["backpack"])
 
-DisplayPBR()
+--DisplayPBR()
 DisplayPBR_tex()
 
 point_light_1 = LoadEntity(LightDefs["point_light_1"])
