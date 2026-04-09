@@ -14,7 +14,7 @@
 #include "../utilities/editor_utilities.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
-#include "../tools/ToolManager.h"
+#include "../tools/ToolContext.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
 #include "Windowing/Inputs/Keyboard.h"
@@ -125,23 +125,72 @@ namespace ENGINE_EDITOR {
 
 		ImGui::Separator();
 
+		auto& selected_gizmo = TOOL_CTX().gizmoOp;
+
 		auto translateTextureID = (ImTextureID)(intptr_t)pTranslateTexture->GetID();
-		ImGui::ImageButton("##translateButton", translateTextureID, TOOL_BUTTON_SIZE);
+		if (selected_gizmo == EGizmoType::TRANSLATE)
+		{
+			ImGui::ActiveImageButton("##translateButton", translateTextureID);
+		}
+		else
+		{
+			if (ImGui::ImageButton("##translateButton", translateTextureID, TOOL_BUTTON_SIZE))
+			{
+				selected_gizmo = EGizmoType::TRANSLATE;
+			}
+		}
 
 		ImGui::SameLine();
 
 		auto rotateTextureID = (ImTextureID)(intptr_t)pRotateTexture->GetID();
-		ImGui::ImageButton("##rotateButton", rotateTextureID, TOOL_BUTTON_SIZE);
+		if (selected_gizmo == EGizmoType::ROTATE)
+		{
+			ImGui::ActiveImageButton("##rotateButton", rotateTextureID);
+		}
+		else
+		{
+			if (ImGui::ImageButton("##rotateButton", rotateTextureID, TOOL_BUTTON_SIZE))
+			{
+				selected_gizmo = EGizmoType::ROTATE;
+			}
+		}
 
 		ImGui::SameLine();
 
 		auto scaleTextureID = (ImTextureID)(intptr_t)pScaleTexture->GetID();
-		ImGui::ImageButton("##scaleButton", scaleTextureID, TOOL_BUTTON_SIZE);
+		if (selected_gizmo == EGizmoType::SCALE)
+		{
+			ImGui::ActiveImageButton("##scaleButton", scaleTextureID);
+		}
+		else
+		{
+			if (ImGui::ImageButton("##scaleButton", scaleTextureID, TOOL_BUTTON_SIZE))
+			{
+				selected_gizmo = EGizmoType::SCALE;
+			}
+		}
 
 		ImGui::SameLine();
 
 		auto noneTextureID = (ImTextureID)(intptr_t)pNoneTexture->GetID();
-		ImGui::ImageButton("##noneButton", noneTextureID, TOOL_BUTTON_SIZE);
+		if (selected_gizmo == EGizmoType::NO_GIZMO)
+		{
+			ImGui::ActiveImageButton("##noneButton", noneTextureID);
+		}
+		else
+		{
+			if (ImGui::ImageButton("##noneButton", noneTextureID, TOOL_BUTTON_SIZE))
+			{
+				selected_gizmo = EGizmoType::NO_GIZMO;
+			}
+		}
+
+		ImGui::SameLine();
+		ImGui::SetWindowFontScale(1.5f);
+		ImGui::Checkbox("##World", &TOOL_CTX().useWorldSpace);
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+			ImGui::SetTooltip("Use world space gizmo?");
+		ImGui::SetWindowFontScale(1.0f);
 
 		ImGui::Separator();
 	}
@@ -179,6 +228,7 @@ namespace ENGINE_EDITOR {
 			ImGui::SetCursorPos(ImVec2{ x,y });
 
 			ImGui::Image((ImTextureID)fb->GetTextureID(), imageSize, ImVec2{ 0.f,1.f }, ImVec2{ 1.f,0.f });
+			ImGui::DrawGizmo(m_pSceneCam);
 
 			/*
 			* TODO: 
