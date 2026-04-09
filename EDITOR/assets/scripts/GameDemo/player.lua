@@ -20,10 +20,9 @@ function Player:Update(dt)
 	local touching_trigger = false
 	local player_data = physics:user_data():get_user_data()
 	for k,v in pairs(player_data.contactEntities) do
-		--print("player is contacting "..v.tag)
-		if(v.group == "trigger") then
-			touching_trigger=true
-		end
+		local other = Entity(v.entityID)
+		local other_physics = other:get_component(Physics)
+		touching_trigger = other_physics.attributes.trigger
 	end
 	if touching_trigger then
 		mesh_render:set_color(vec4(1.0,0.0,0.0,1.0))
