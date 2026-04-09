@@ -33,6 +33,7 @@
 #include<Physics/ContactListener.h>
 #include<imgui.h>
 #include<imgui_internal.h>
+#include<ImGuizmo.h>
 #include<backends/imgui_impl_sdl2.h>
 #include<backends/imgui_impl_opengl3.h>
 #include"editor/displays/IDisplay.h"
@@ -930,6 +931,7 @@ namespace ENGINE_EDITOR {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void Application::EndImGui()
