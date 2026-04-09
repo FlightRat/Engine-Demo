@@ -1,8 +1,9 @@
 #pragma once
+#include <memory>
+#include <string>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <glm/glm.hpp>
-#include <string>
 
 constexpr ImVec4 LABEL_RED = ImVec4{ 0.92f, 0.18f, 0.05f, 1.0f };
 constexpr ImVec4 LABEL_GREEN = ImVec4{ 0.05f, 0.93f, 0.25f, 1.f };
@@ -21,6 +22,8 @@ ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaBar | ImGuiColorEdit
 
 constexpr ImGuiTableFlags IMGUI_NORMAL_TABLE_FLAGS =
 ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY;
+
+namespace ENGINE_RENDERING { class Camera3D; }
 
 namespace ImGui {
 	void ColoredLabel(const std::string& label, const ImVec2& size = ImVec2{ 32.f, 32.f }, const ImVec4& color = ImVec4{ 1.f, 1.f, 1.f, 1.f });
@@ -45,4 +48,6 @@ namespace ImGui {
 	/*Displays a disabled image button with optional tooltip.*/
 	void DisabledImageButton(const char* buttonId, ImTextureID textureID, ImVec2 size = TOOL_BUTTON_SIZE,
 		const std::string& disabledMsg = "");
+
+	void DrawGizmo(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera);
 }

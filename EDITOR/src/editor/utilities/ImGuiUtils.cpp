@@ -1,4 +1,11 @@
 #include "ImGuiUtils.h"
+#include <ImGuizmo.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include "../tools/ToolContext.h"
+#include "Core/ECS/Components/TransformComponent.h"
+#include "Rendering/Core/Camera3D.h"
 
 namespace ImGui {
     void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth)
@@ -92,6 +99,84 @@ namespace ImGui {
             ImGui::SetItemTooltip(disabledMsg.c_str());
 
         ImGui::EndDisabled();
+    }
+
+    void DrawGizmo(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
+    {
+        auto& toolCTX = TOOL_CTX();
+        if (!toolCTX.selectedEntity || toolCTX.gizmoOp == ENGINE_EDITOR::EGizmoType::NO_GIZMO)
+            return;
+
+        auto& entity = *toolCTX.selectedEntity;
+        if (!entity.GetRegistry().valid(entity.GetEntity()))
+            return;
+
+        if (!entity.HasComponent<ENGINE_CORE::ECS::TransformComponent>())
+            return;
+
+        auto& transform = entity.GetComponent<ENGINE_CORE::ECS::TransformComponent>();
+
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        ImVec2 windowSize = ImGui::GetWindowSize();
+
+        // 指定imguizmo绘制区域
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::SetDrawlist();
+        ImGuizmo::SetRect(windowPos.x, windowPos.y, windowSize.x, windowSize.y);
+
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, transform.position);
+        modelMatrix = modelMatrix * glm::toMat4(transform.rotation_quat); // 四元数→旋转矩阵
+        modelMatrix = glm::scale(modelMatrix, transform.scale);
+
+        float aspectRatio = windowSize.x / windowSize.y;
+        glm::mat4 viewMatrix = camera->GetViewMatrix();
+        glm::mat4 projMatrix = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
+
+        ImGuizmo::OPERATION imguizmoOp;
+        switch (toolCTX.gizmoOp)
+        {
+        case ENGINE_EDITOR::EGizmoType::TRANSLATE:
+            imguizmoOp = ImGuizmo::TRANSLATE;
+            break;
+        case ENGINE_EDITOR::EGizmoType::ROTATE:
+            imguizmoOp = ImGuizmo::ROTATE;
+            break;
+        case ENGINE_EDITOR::EGizmoType::SCALE:
+            imguizmoOp = ImGuizmo::SCALE;
+            break;
+        case ENGINE_EDITOR::EGizmoType::NO_GIZMO:
+            return;
+        }
+
+        ImGuizmo::MODE imguizmoMode = toolCTX.useWorldSpace ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+
+        bool manipulated = ImGuizmo::Manipulate(
+            glm::value_ptr(viewMatrix),
+            glm::value_ptr(projMatrix),
+            imguizmoOp,
+            imguizmoMode,
+            glm::value_ptr(modelMatrix),
+            nullptr,
+            nullptr
+        );
+
+        if (manipulated)
+        {
+            glm::vec3 newPosition;
+            glm::quat newRotationQuat;
+            glm::vec3 newScale;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            
+            glm::decompose(modelMatrix, newScale, newRotationQuat, newPosition, skew, perspective);
+
+            transform.position = newPosition;
+            transform.rotation_quat = newRotationQuat;
+            transform.rotation_eular = glm::degrees(glm::eulerAngles(transform.rotation_quat)); // 四元数→弧度→欧拉角
+            transform.scale = newScale;
+
+        }
     }
 
 	void ColoredLabel(const std::string& label, const ImVec2& size, const ImVec4& color)
