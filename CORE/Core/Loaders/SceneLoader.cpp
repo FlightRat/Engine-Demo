@@ -4,10 +4,13 @@
 #include "../ECS/Registry.h"
 #include "../ECS/Entity.h"
 #include "../ECS/Components/ComponentSerializer.h"
+#include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
 #include "../ECS/Components/MeshFilter.h"
 #include "../ECS/Components/MeshRender.h"
 #include "../ECS/Components/Identification.h"
+#include "../ECS/Components/PhysicsComponent.h"
+#include "../ECS/Components/LightComponent.h"
 #include <rapidjson/error/en.h>
 #include <filesystem>
 
@@ -37,21 +40,43 @@ namespace ENGINE_CORE::Loaders {
 
 		pSerializer->StartDocument();
 		pSerializer->StartNewArray("Scene");
-		// TODO：细化序列化条件判断
-		auto view = registry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
-		for (auto [entity, transform, meshF, meshR, id] : view.each())
+		// 遍历所有实体（不限定组件组合）
+		auto& enttRegistry = registry.GetRegistry();
+		auto allEntities = enttRegistry.view<entt::entity>(entt::exclude<ENGINE_CORE::ECS::ScriptComponent>);
+
+		for (auto entity : allEntities)
 		{
-			auto e = ENGINE_CORE::ECS::Entity(registry, entity);
-			pSerializer->StartNewObject();
-
+			pSerializer->StartNewObject("");  // 每个实体是数组中的一个对象
 			pSerializer->StartNewObject("Components");
-			SERIALIZE_COMPONENT(*pSerializer, transform);
-			SERIALIZE_COMPONENT(*pSerializer, meshF);
-			SERIALIZE_COMPONENT(*pSerializer, meshR);
-			SERIALIZE_COMPONENT(*pSerializer, id);
-			pSerializer->EndObject();
 
-			pSerializer->EndObject();
+			// --- Identification（几乎每个实体都有，优先写）---
+			if (auto* id = enttRegistry.try_get<Identification>(entity))
+				SERIALIZE_COMPONENT(*pSerializer, *id);
+
+			// --- TransformComponent ---
+			if (auto* transform = enttRegistry.try_get<TransformComponent>(entity))
+				SERIALIZE_COMPONENT(*pSerializer, *transform);
+
+			// --- MeshFilter ---
+			if (auto* meshFilter = enttRegistry.try_get<MeshFilter>(entity))
+				SERIALIZE_COMPONENT(*pSerializer, *meshFilter);
+
+			// --- MeshRender ---
+			if (auto* meshRender = enttRegistry.try_get<MeshRender>(entity))
+				SERIALIZE_COMPONENT(*pSerializer, *meshRender);
+
+			// --- PhysicsComponent ---
+			if (auto* physics = enttRegistry.try_get<PhysicsComponent>(entity))
+				SERIALIZE_COMPONENT(*pSerializer, *physics);
+
+			// --- LightComponent ---
+			if (auto* light = enttRegistry.try_get<LightComponent>(entity))
+				SERIALIZE_COMPONENT(*pSerializer, *light);
+
+			// 后续新增组件在这里加一行即可，不影响其他逻辑
+
+			pSerializer->EndObject();  // 结束 Components
+			pSerializer->EndObject();  // 结束实体对象
 		}
 		pSerializer->EndArray();
 
@@ -103,19 +128,48 @@ namespace ENGINE_CORE::Loaders {
 			ENGINE_CORE::ECS::Entity newObj{ registry, jsonID["name"].GetString(), jsonID["group"].GetString() };
 
 			//transform
-			const auto& jsonTransform = components["transform"];
-			auto& transform = newObj.AddComponent<TransformComponent>();
-			DESERIALIZE_COMPONENT(jsonTransform, transform);
+			if (components.HasMember("transform"))
+			{
+				auto& transform = newObj.AddComponent<TransformComponent>();
+				DESERIALIZE_COMPONENT(components["transform"], transform);
+			}
 
 			//mesh filter
-			const auto& jsonMeshFilter = components["meshFilter"];
-			auto& meshFilter = newObj.AddComponent<MeshFilter>();
-			DESERIALIZE_COMPONENT(jsonMeshFilter, meshFilter);
+			if (components.HasMember("meshFilter"))
+			{
+				auto& meshFilter = newObj.AddComponent<MeshFilter>();
+				DESERIALIZE_COMPONENT(components["meshFilter"], meshFilter);
+			}
 
 			//mesh render
-			const auto& jsonMeshRender = components["meshRender"];
-			auto& meshRender = newObj.AddComponent<MeshRender>();
-			DESERIALIZE_COMPONENT(jsonMeshRender, meshRender);
+			if (components.HasMember("meshRender"))
+			{
+				auto& meshRender = newObj.AddComponent<MeshRender>();
+				DESERIALIZE_COMPONENT(components["meshRender"], meshRender);
+			}
+
+			//physics
+			if (components.HasMember("physics"))
+			{
+				auto& common = registry.GetRegistry().ctx().get<std::shared_ptr<PhysicsCommon>>();
+				auto& world = registry.GetRegistry().ctx().get<std::shared_ptr<PhysicsWorld>>();
+				if (!common || !world)
+					return false;
+
+				auto& physics = newObj.AddComponent<PhysicsComponent>();
+				DESERIALIZE_COMPONENT(components["physics"], physics);
+				physics.GetAttr().objectData.entityID = static_cast<int32_t>(newObj.GetEntity());
+				physics.Init(common, world);
+				physics.initialized = true;
+			}
+
+			//light
+			if (components.HasMember("light"))
+			{
+				auto& light = newObj.AddComponent<LightComponent>();
+				DESERIALIZE_COMPONENT(components["light"], light);
+			}
+
 		}
 		sceneFile.close();
 		return true;
