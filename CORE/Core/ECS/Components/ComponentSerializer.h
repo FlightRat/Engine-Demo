@@ -6,6 +6,7 @@
 #include "Identification.h"
 #include "ScriptComponent.h"
 #include "Identification.h"
+#include "LightComponent.h"
 #include "rapidjson/document.h"
 
 namespace ENGINE_FileSystem {
@@ -29,18 +30,26 @@ namespace ENGINE_CORE::ECS {
 
 
 	private:
+		// meshRender material serializer/deserializer
+		static void SerializeMaterial(ENGINE_FileSystem::JSONSerializer& serializer, const ENGINE_CORE::ECS::Material& material);
+		static void SerializePhysicsAttr(ENGINE_FileSystem::JSONSerializer& serializer, const ENGINE_CORE::ECS::PhysicsAttributes& attributes);
+		static ENGINE_CORE::ECS::Material DeserializeMaterial(const rapidjson::Value& matValue);
+		static ENGINE_CORE::ECS::PhysicsAttributes DeserializePhysicsAttr(const rapidjson::Value& attrValue);
+
 		// JSON serializer
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const TransformComponent& transform);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const PhysicsComponent& physics);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshFilter& meshFilter);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const MeshRender& meshRender);
 		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const Identification& id);
+		static void SerializeComponent(ENGINE_FileSystem::JSONSerializer& serializer, const LightComponent& light);
 
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, TransformComponent& transform);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, PhysicsComponent& physics);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, MeshFilter& meshFilter);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, MeshRender& meshRender);
 		static void DeserializeComponent(const rapidjson::Value& jsonValue, Identification& id);
+		static void DeserializeComponent(const rapidjson::Value& jsonValue, LightComponent& light);
 
 	};
 }
