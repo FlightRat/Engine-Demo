@@ -63,36 +63,57 @@ namespace ENGINE_RENDERING {
 
     void Mesh::SetupMesh()
     {
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        glGenBuffers(1, &EBO);
+        // 1. 初始化对象内存空间（DSA第一步）
+        glCreateVertexArrays(1, &VAO);
+        glCreateBuffers(1, &VBO);
+        glCreateBuffers(1, &EBO);
 
-        glBindVertexArray(VAO);
+        // 2. 显存分配与数据上传 —— 彻底抛弃 glBufferData
+        // 使用 glNamedBufferStorage 进行【不可变存储 (Immutable Storage)】
+        // 这告诉显卡驱动：这块内存的大小未来绝对不会发生变化，请做最极致的底层寻址优化！
+        const GLsizeiptr vboSize = vertices.size() * sizeof(Vertex);
+        // 最后的参数 0 表示我们不需要 CPU 端动态更新修改权限 (对应原先的 GL_STATIC_DRAW)
+        // 如果你要做动态骨骼网格体(CPU蒙皮)，这里可以用 GL_DYNAMIC_STORAGE_BIT
+        glNamedBufferStorage(VBO, vboSize, vertices.data(), 0);
 
-        // glNamedBufferStorage(vbo, size, data, flags); 允许在不绑buffer的情况下传数据
+        const GLsizeiptr eboSize = indices.size() * sizeof(unsigned int);
+        glNamedBufferStorage(EBO, eboSize, indices.data(), 0);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+        // 3. 配置 VAO —— 格式(Format)与绑定(Binding)解耦
+        const GLuint bindingIndex = 0; // 我们所有的顶点数据打包在一个VBO里，所以统一使用 0 号绑定槽
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        // 3.1 挂载 VBO 和 EBO 到 VAO
+        // (VAO的ID, 绑定槽索引, VBO的ID, 内存起始偏移, Stride跨步大小)
+        glVertexArrayVertexBuffer(VAO, bindingIndex, VBO, 0, sizeof(Vertex));
+        // 直接把 EBO 贴到 VAO 上
+        glVertexArrayElementBuffer(VAO, EBO);
 
-        // 顶点位置
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        // 法线
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-        // UV
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
-        // Tangent
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
-        // Bitangent
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
+        // 4. 配置顶点属性 (格式定义 + 连接绑定槽)
+        // --- Location 0: 顶点位置 (Position) ---
+        glEnableVertexArrayAttrib(VAO, 0);
+        // 定义格式: VAO, 属性位置, 数据数量(3), 类型(float), 是否归一化, 相对于 struct 起点的偏移量
+        glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
+        // 链接映射: 告诉 0 号属性，去 bindingIndex (即0号槽) 拿数据
+        glVertexArrayAttribBinding(VAO, 0, bindingIndex);
 
-        glBindVertexArray(0);
+        // --- Location 1: 法线 (Normal) ---
+        glEnableVertexArrayAttrib(VAO, 1);
+        glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, Normal));
+        glVertexArrayAttribBinding(VAO, 1, bindingIndex);
+
+        // --- Location 2: UV (TexCoords) ---
+        glEnableVertexArrayAttrib(VAO, 2);
+        glVertexArrayAttribFormat(VAO, 2, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, TexCoords));
+        glVertexArrayAttribBinding(VAO, 2, bindingIndex);
+
+        // --- Location 3: 切线 (Tangent) ---
+        glEnableVertexArrayAttrib(VAO, 3);
+        glVertexArrayAttribFormat(VAO, 3, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, Tangent));
+        glVertexArrayAttribBinding(VAO, 3, bindingIndex);
+
+        // --- Location 4: 副切线 (Bitangent) ---
+        glEnableVertexArrayAttrib(VAO, 4);
+        glVertexArrayAttribFormat(VAO, 4, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, Bitangent));
+        glVertexArrayAttribBinding(VAO, 4, bindingIndex);
     }
 }
