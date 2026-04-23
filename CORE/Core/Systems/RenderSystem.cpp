@@ -701,7 +701,7 @@ namespace ENGINE_CORE::Systems {
 
 		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
-		Shader_Lighting->SetUniformBool("use_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_2));
+		Shader_Lighting->SetUniformBool("diable_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_2));
 		Shader_Lighting->SetUniformBool("debug_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_3));
 
 		// set direction light shadowMap

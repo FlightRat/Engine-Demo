@@ -19,7 +19,7 @@ in vec2 TexCoord;
 
 uniform vec3 viewPos;
 uniform float far_plane;
-uniform bool use_SSAO;
+uniform bool diable_SSAO;
 uniform bool debug_SSAO;
 
 layout(binding = 0) uniform sampler2D gPosition;
@@ -70,7 +70,7 @@ void main()
 
     // SSAO
     float ssaoFactor = 1.0;
-    if (use_SSAO){
+    if (!diable_SSAO){
         ssaoFactor = texture(ssao, TexCoord).r;
         ssaoFactor = pow(ssaoFactor, 2.0);  // 让暗部更暗
     }
