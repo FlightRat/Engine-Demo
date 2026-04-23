@@ -4,17 +4,17 @@ layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
 layout (location = 3) out vec3 gMRA;
 
+layout(binding = 0) uniform sampler2D albedoMap; 
+layout(binding = 1) uniform sampler2D normalMap; 
+layout(binding = 2) uniform sampler2D metallicMap; 
+layout(binding = 3) uniform sampler2D roughnessMap; 
+layout(binding = 4) uniform sampler2D aoMap; 
+
 struct Material{
     vec4 color;
     float metallic;
     float roughness;
     float ao;
-
-    sampler2D albedoMap;
-    sampler2D normalMap;
-    sampler2D metallicMap;
-    sampler2D roughnessMap;
-    sampler2D aoMap;
 
     bool useAlbedo;
     bool useNormal;
@@ -47,7 +47,7 @@ void main()
     // gNormal
     gNormal = normalize(fs_in.Normal);
     if(useTexture && material.useNormal){
-        gNormal = texture(material.normalMap, uv).rgb;
+        gNormal = texture(normalMap, uv).rgb;
         gNormal = normalize(gNormal * 2.0 - 1.0);
         gNormal = normalize(fs_in.TBN * gNormal);
     }
@@ -66,19 +66,19 @@ void main()
     else{
         gAlbedo = material.color.rgb;
         if(useTexture && material.useAlbedo){
-            gAlbedo = pow(texture(material.albedoMap, uv).rgb, vec3(2.2));
+            gAlbedo = pow(texture(albedoMap, uv).rgb, vec3(2.2));
             }
     }
 
     // metallic + roughness + ao
     gMRA = vec3(material.metallic, material.roughness, material.ao);
     if(useTexture&& material.useMetallic){
-        gMRA.x = texture(material.metallicMap, uv).r;
+        gMRA.x = texture(metallicMap, uv).r;
     }
     if(useTexture&& material.useRoughness){
-        gMRA.y = texture(material.roughnessMap, uv).r;
+        gMRA.y = texture(roughnessMap, uv).r;
     }
     if(useTexture&& material.useAo){
-        gMRA.z = texture(material.aoMap, uv).r;
+        gMRA.z = texture(aoMap, uv).r;
     }
 }

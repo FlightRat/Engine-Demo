@@ -333,9 +333,7 @@ namespace ENGINE_CORE::Systems {
 
 				Shader_BlinnPhong->SetUniformFloat("far_plane", 100.0f);
 
-				glActiveTexture(GL_TEXTURE10);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
-				Shader_BlinnPhong->SetUniformInt("skybox", 10);
+				glBindTextureUnit(10, skybox_texture->GetID());
 
 				// set direction light shadowMap
 				for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
@@ -345,9 +343,7 @@ namespace ENGINE_CORE::Systems {
 					if (it != map_FBO.end())
 					{
 						int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
-						glActiveTexture(GL_TEXTURE0 + texUnit);
-						glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
-						Shader_BlinnPhong->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
+						glBindTextureUnit(texUnit, it->second->GetTextureID());
 					}
 				}
 
@@ -360,9 +356,7 @@ namespace ENGINE_CORE::Systems {
 					if (it != map_FBO.end())
 					{
 						int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
-						glActiveTexture(GL_TEXTURE0 + texUnit);
-						glBindTexture(GL_TEXTURE_CUBE_MAP, it->second->GetTextureID());
-						Shader_BlinnPhong->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
+						glBindTextureUnit(texUnit, it->second->GetTextureID());
 					}
 				}
 
@@ -378,12 +372,8 @@ namespace ENGINE_CORE::Systems {
 						Shader_BlinnPhong->SetUniformBool(slot.shaderFlag, hasTexture);
 
 						if (hasTexture) {
-							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // 按索引自动分配纹理单元
 							auto tex = assetManager.GetTexture(it->second);
-							if (tex) {
-								glBindTexture(GL_TEXTURE_2D, tex->GetID());
-								Shader_BlinnPhong->SetUniformInt(slot.shaderSampler, (int)slot_index);
-							}
+							glBindTextureUnit(slot_index, tex->GetID());
 						}
 					}
 				}
@@ -395,13 +385,11 @@ namespace ENGINE_CORE::Systems {
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 		glDepthFunc(GL_LEQUAL);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture->GetID());
 		Shader_Skybox->Enable();
 		Shader_Skybox->SetUniformMat4("model", glm::mat4(1.0f));
 		Shader_Skybox->SetUniformMat4("view", glm::mat4(glm::mat3(viewMatrix)));	//移除观察矩阵中的位移
 		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
-		Shader_Skybox->SetUniformInt("skybox", 0);
+		glBindTextureUnit(GL_TEXTURE0, skybox_texture->GetID());
 		const std::vector<Mesh>& skybox = assetManager.GetModel("skybox")->GetMeshes();
 		skybox[0].Draw();
 		glDepthFunc(GL_LESS);
@@ -618,19 +606,12 @@ namespace ENGINE_CORE::Systems {
 					const auto& slots = TextureRegistry::GetSlots();
 					for (size_t slot_index = 0; slot_index < slots.size(); ++slot_index) {
 						const auto& slot = slots[slot_index];
-
 						auto it = cur_material.m_textures.find(slot.key);
 						bool hasTexture = (it != cur_material.m_textures.end() && !it->second.empty());
-
 						Shader_Gbuffer->SetUniformBool(slot.shaderFlag, hasTexture);
-
 						if (hasTexture) {
-							glActiveTexture(GL_TEXTURE0 + (GLenum)slot_index); // 按索引自动分配纹理单元
 							auto tex = assetManager.GetTexture(it->second);
-							if (tex) {
-								glBindTexture(GL_TEXTURE_2D, tex->GetID());
-								Shader_Gbuffer->SetUniformInt(slot.shaderSampler, (int)slot_index);
-							}
+							glBindTextureUnit(slot_index, tex->GetID());
 						}
 					}
 				}
@@ -654,19 +635,9 @@ namespace ENGINE_CORE::Systems {
 
 		Shader_SSAO->Enable();
 		Shader_SSAO->SetUniformVec2("screenSize", glm::vec2(intermediateGB->Width(), intermediateGB->Height()));
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(0));
-		Shader_SSAO->SetUniformInt("gPosition", 0);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(1));
-		Shader_SSAO->SetUniformInt("gNormal", 1);
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, noise_texture->GetID());
-		Shader_SSAO->SetUniformInt("texNoise", 2);
-
+		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
+		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
+		glBindTextureUnit(2, noise_texture->GetID());
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
 		quad[0].Draw();
 	}
@@ -685,9 +656,7 @@ namespace ENGINE_CORE::Systems {
 
 		Shader_SSAOBlur->Enable();
 		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, ssaoFB->GetTextureID(0));
-		Shader_SSAOBlur->SetUniformInt("ssaoInput", 0);
+		glBindTextureUnit(0, ssaoFB->GetTextureID(0));
 
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
 		quad[0].Draw();
@@ -721,35 +690,14 @@ namespace ENGINE_CORE::Systems {
 		Shader_Lighting->SetUniformFloat("far_plane", 100.0f);
 		Shader_Lighting->SetUniformVec3("viewPos", camera->GetPosition());
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(0));
-		Shader_Lighting->SetUniformInt("gPosition", 0);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(1));
-		Shader_Lighting->SetUniformInt("gNormal", 1);
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(2));
-		Shader_Lighting->SetUniformInt("gAlbedo", 2);
-
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, intermediateGB->GetTextureID(3));
-		Shader_Lighting->SetUniformInt("gMRA", 3);
-
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, ssaoBlurFB->GetTextureID(0));
-		Shader_Lighting->SetUniformInt("ssao", 4);
-
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(1));
-		Shader_Lighting->SetUniformInt("irradianceMap", 5);
-		glActiveTexture(GL_TEXTURE6);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(2));
-		Shader_Lighting->SetUniformInt("prefilterMap", 6);
-		glActiveTexture(GL_TEXTURE7);
-		glBindTexture(GL_TEXTURE_2D, ibl_fb->GetTextureID(3));
-		Shader_Lighting->SetUniformInt("brdfLUT", 7);
+		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
+		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
+		glBindTextureUnit(2, intermediateGB->GetTextureID(2));
+		glBindTextureUnit(3, intermediateGB->GetTextureID(3));
+		glBindTextureUnit(4, ssaoBlurFB->GetTextureID(0));
+		glBindTextureUnit(5, ibl_fb->GetTextureID(1));
+		glBindTextureUnit(6, ibl_fb->GetTextureID(2));
+		glBindTextureUnit(7, ibl_fb->GetTextureID(3));
 
 		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
@@ -764,9 +712,7 @@ namespace ENGINE_CORE::Systems {
 			if (it != map_FBO.end())
 			{
 				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
-				glActiveTexture(GL_TEXTURE0 + texUnit);
-				glBindTexture(GL_TEXTURE_2D, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
+				glBindTextureUnit(texUnit, it->second->GetTextureID());
 			}
 		}
 
@@ -779,8 +725,7 @@ namespace ENGINE_CORE::Systems {
 			if (it != map_FBO.end())
 			{
 				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
-				glActiveTexture(GL_TEXTURE0 + texUnit);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, it->second->GetTextureID());
+				glBindTextureUnit(texUnit, it->second->GetTextureID());
 				Shader_Lighting->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
 			}
 		}
@@ -899,14 +844,12 @@ namespace ENGINE_CORE::Systems {
 
 		// draw skybox
 		glDepthFunc(GL_LEQUAL);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture_id);
 		glm::mat4 viewMatrix = camera->GetViewMatrix();
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
 		Shader_Skybox->Enable();
 		Shader_Skybox->SetUniformMat4("view", viewMatrix);
 		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
-		Shader_Skybox->SetUniformInt("environmentMap", 0);
+		glBindTextureUnit(0, skybox_texture_id);
 		cube->Draw();
 		glDepthFunc(GL_LESS);
 

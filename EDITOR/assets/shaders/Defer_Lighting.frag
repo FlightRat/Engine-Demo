@@ -22,17 +22,16 @@ uniform float far_plane;
 uniform bool use_SSAO;
 uniform bool debug_SSAO;
 
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gAlbedo;
-uniform sampler2D gMRA;
-uniform sampler2D ssao;
-
-uniform samplerCube irradianceMap;
-uniform samplerCube prefilterMap;
-uniform sampler2D brdfLUT;
-uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
-uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
+layout(binding = 0) uniform sampler2D gPosition;
+layout(binding = 1) uniform sampler2D gNormal;
+layout(binding = 2) uniform sampler2D gAlbedo;
+layout(binding = 3) uniform sampler2D gMRA;
+layout(binding = 4) uniform sampler2D ssao; 
+layout(binding = 5) uniform samplerCube irradianceMap; 
+layout(binding = 6) uniform samplerCube prefilterMap; 
+layout(binding = 7) uniform sampler2D brdfLUT; 
+layout(binding = 11) uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
+layout(binding = 15) uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
 
 layout (std140) uniform DirLights {
     DirLight dir_lights[NR_DIR_LIGHTS];

@@ -3,7 +3,8 @@ in vec2 TexCoord;
 
 out float FragColor;
 
-uniform sampler2D ssaoInput;
+layout(binding = 0) uniform sampler2D ssaoInput; 
+
 const int blurSize = 4; // use size of noise texture (4x4)
 
 void main() 

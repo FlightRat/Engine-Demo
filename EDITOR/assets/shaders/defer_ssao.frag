@@ -2,9 +2,9 @@
 out float FragColor;
 in vec2 TexCoord;
 
-uniform sampler2D gPosition;    // 世界空间位置（从 GBuffer）
-uniform sampler2D gNormal;      // 世界空间法线（从 GBuffer）
-uniform sampler2D texNoise;     // 噪声纹理
+layout(binding = 0) uniform sampler2D gPosition; 
+layout(binding = 1) uniform sampler2D gNormal; 
+layout(binding = 2) uniform sampler2D texNoise;
 uniform vec2 screenSize;        // 屏幕大小
 
 int kernelSize = 64;

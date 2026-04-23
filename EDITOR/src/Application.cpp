@@ -625,8 +625,9 @@ namespace ENGINE_EDITOR {
 		ibl_proj_shader->Enable();
 		ibl_proj_shader->SetUniformInt("equirectangularMap", 0);
 		ibl_proj_shader->SetUniformMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, hdr_texture->GetID());
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, hdr_texture->GetID());
+		glBindTextureUnit(0, hdr_texture->GetID());
 		glViewport(0, 0, 512, 512);
 		for (unsigned int i = 0; i < 6; i++)
 		{
@@ -643,8 +644,9 @@ namespace ENGINE_EDITOR {
 		ibl_conv_shader->Enable();
 		ibl_conv_shader->SetUniformInt("environmentMap", 0);
 		ibl_conv_shader->SetUniformMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		glBindTextureUnit(0, ibl_fb->GetTextureID(0));
 		glViewport(0, 0, 32, 32);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
 		for (unsigned int i = 0; i < 6; i++)
@@ -660,8 +662,9 @@ namespace ENGINE_EDITOR {
 		ibl_prefilter_shader->Enable();
 		ibl_prefilter_shader->SetUniformInt("environmentMap", 0);
 		ibl_prefilter_shader->SetUniformMat4("projection", captureProjection);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, ibl_fb->GetTextureID(0));
+		glBindTextureUnit(0, ibl_fb->GetTextureID(0));
 		unsigned int maxMipLevels = 5;
 		for (unsigned int mip = 0; mip < maxMipLevels; mip++)
 		{
