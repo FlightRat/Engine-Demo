@@ -850,24 +850,10 @@ namespace ENGINE_CORE::Systems {
 			sphere->Draw();
 		}
 
-		// draw skybox
-		glDepthFunc(GL_LEQUAL);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture_id);
-		glm::mat4 viewMatrix = camera->GetViewMatrix();
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
-		Shader_Skybox->Enable();
-		Shader_Skybox->SetUniformMat4("view", viewMatrix);
-		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
-		Shader_Skybox->SetUniformInt("environmentMap", 0);
-		cube->Draw();
-		glDepthFunc(GL_LESS);
-
 		// 模板测试
 		glEnable(GL_STENCIL_TEST);					// 开启模板测试
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);		// 当目标像素的模板值不等于1时，通过测试
 		glStencilMask(0x00);						// 禁止写入模板值
-		glDepthMask(GL_FALSE);						//禁止深度写入
 		Shader_Color->Enable();
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
@@ -909,8 +895,20 @@ namespace ENGINE_CORE::Systems {
 		}
 		glStencilMask(0xFF);						// 允许写入模板值
 		glStencilFunc(GL_ALWAYS, 0, 0xFF);			// 总是通过模板测试，且ref为0
-		glDepthMask(GL_TRUE);						// 恢复深度写入
 		glDisable(GL_STENCIL_TEST);					// 关闭模板测试
+
+		// draw skybox
+		glDepthFunc(GL_LEQUAL);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox_texture_id);
+		glm::mat4 viewMatrix = camera->GetViewMatrix();
+		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		Shader_Skybox->Enable();
+		Shader_Skybox->SetUniformMat4("view", viewMatrix);
+		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
+		Shader_Skybox->SetUniformInt("environmentMap", 0);
+		cube->Draw();
+		glDepthFunc(GL_LESS);
 
 		// 绘制物理调试线框
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
