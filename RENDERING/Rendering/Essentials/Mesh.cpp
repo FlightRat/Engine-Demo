@@ -68,6 +68,9 @@ namespace ENGINE_RENDERING {
         glGenBuffers(1, &EBO);
 
         glBindVertexArray(VAO);
+
+        // glNamedBufferStorage(vbo, size, data, flags); 允许在不绑buffer的情况下传数据
+
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
