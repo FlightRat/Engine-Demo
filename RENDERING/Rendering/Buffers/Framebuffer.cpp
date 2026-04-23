@@ -61,91 +61,97 @@ namespace ENGINE_RENDERING {
 		return true;
 	}
 
-	bool Framebuffer::Initialize()
-	{
-		if (m_pTextures.empty() || !m_pTextures[0]) return false;
+    bool Framebuffer::Initialize()
+    {
+        if (m_pTextures.empty() || !m_pTextures[0]) return false;
 
-		// create framebuffer
-		glGenFramebuffers(1, &m_FboID);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FboID);
+        // 1. 直接创建 FBO (对象内存分配)
+        // 告别 glGenFramebuffers，直接完成内存注册
+        glCreateFramebuffers(1, &m_FboID);
 
-		switch (m_Type)
-		{
-		case ENGINE_RENDERING::BufferType::FRAMEBUFFER:
-		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pTextures[0]->GetID(), 0);
-			glGenRenderbuffers(1, &m_RboID);
-			glBindRenderbuffer(GL_RENDERBUFFER, m_RboID);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Width, m_Height);
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
-			break;
-		}
-		case ENGINE_RENDERING::BufferType::SHADOWMAP:
-		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_pTextures[0]->GetID(), 0);
-			glReadBuffer(GL_NONE);
-			glDrawBuffer(GL_NONE);
-			break;
-		}
-		case ENGINE_RENDERING::BufferType::SHADOWCUBEMAP:
-		{
-			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_pTextures[0]->GetID(), 0);
-			glReadBuffer(GL_NONE);
-			glDrawBuffer(GL_NONE);
-			break;
-		}
-		case ENGINE_RENDERING::BufferType::GBUFFER:
-		{
-			// color attachments
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pTextures[0]->GetID(), 0);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_pTextures[1]->GetID(), 0);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, m_pTextures[2]->GetID(), 0);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, m_pTextures[3]->GetID(), 0);
+        switch (m_Type)
+        {
+        case ENGINE_RENDERING::BufferType::FRAMEBUFFER:
+        {
+            // 直接将纹理 ID 挂载到 FBO ID 上
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
 
-			// attach：attachments仅在本作用域内有效
-			unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-			glDrawBuffers(4, attachments);
+            // DSA 方式创建和配置 Renderbuffer (无需 bind)
+            glCreateRenderbuffers(1, &m_RboID);
+            glNamedRenderbufferStorage(m_RboID, GL_DEPTH24_STENCIL8, m_Width, m_Height);
 
-			// RBO
-			glGenRenderbuffers(1, &m_RboID);
-			glBindRenderbuffer(GL_RENDERBUFFER, m_RboID);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_Width, m_Height);
-			glBindRenderbuffer(GL_RENDERBUFFER, 0);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
-			break;
-		}
-		case ENGINE_RENDERING::BufferType::SSAO:
-		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pTextures[0]->GetID(), 0);
-			break;
-		}
-		case ENGINE_RENDERING::BufferType::IBL:
-		{
-			glGenRenderbuffers(1, &m_RboID);
-			glBindRenderbuffer(GL_RENDERBUFFER, m_RboID);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, m_Width, m_Height);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
-			break;
-		}
-		default:
-			break;
-		}
+            // 将 RBO 挂载到 FBO
+            glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::SHADOWMAP:
+        {
+            glNamedFramebufferTexture(m_FboID, GL_DEPTH_ATTACHMENT, m_pTextures[0]->GetID(), 0);
+            // 显式告知 GPU：此 FBO 不进行颜色写入/读取 (仅深度)
+            glNamedFramebufferReadBuffer(m_FboID, GL_NONE);
+            glNamedFramebufferDrawBuffer(m_FboID, GL_NONE);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::SHADOWCUBEMAP:
+        {
+            // DSA 中的 glNamedFramebufferTexture 同样支持 Cubemap/Layered 附着
+            glNamedFramebufferTexture(m_FboID, GL_DEPTH_ATTACHMENT, m_pTextures[0]->GetID(), 0);
+            glNamedFramebufferReadBuffer(m_FboID, GL_NONE);
+            glNamedFramebufferDrawBuffer(m_FboID, GL_NONE);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::GBUFFER:
+        {
+            // 组装 G-Buffer 的高光/法线/反照率等多颜色附件
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT1, m_pTextures[1]->GetID(), 0);
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT2, m_pTextures[2]->GetID(), 0);
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT3, m_pTextures[3]->GetID(), 0);
 
-		// check complete
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			assert(false && "Failed to create an OpenGL framebuffer!");
-		
-			std::string error = std::to_string(glGetError());
-			ENGINE_ERROR("Failed to create an OpenGL framebuffer!");
-			return false;
-		}
-		// unbind
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
-		return true;
-	}
+            // 声明 MRT (Multi-Render Targets) 布局
+            unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+            glNamedFramebufferDrawBuffers(m_FboID, 4, attachments);
+
+            // G-Buffer 同样需要深度模板缓冲进行几何剔除等操作
+            glCreateRenderbuffers(1, &m_RboID);
+            glNamedRenderbufferStorage(m_RboID, GL_DEPTH24_STENCIL8, m_Width, m_Height);
+            glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::SSAO:
+        {
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::IBL:
+        {
+            // IBL (通常用于捕获环境光积分或卷积，仅需深度)
+            glCreateRenderbuffers(1, &m_RboID);
+            glNamedRenderbufferStorage(m_RboID, GL_DEPTH_COMPONENT24, m_Width, m_Height);
+            glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
+            break;
+        }
+        default:
+            break;
+        }
+
+        // 2. 检查 FBO 状态，同样无需 Bind
+        if (glCheckNamedFramebufferStatus(m_FboID, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            // 记录错误日志
+            std::string error = std::to_string(glGetError());
+            ENGINE_ERROR("Failed to create an OpenGL framebuffer! Error Code: {0}", error);
+            // 清理失败的资源，避免内存泄漏
+            glDeleteFramebuffers(1, &m_FboID);
+            m_FboID = 0;
+            return false;
+        }
+
+        // 注意：不再需要 glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        // 因为这期间我们从未在全局状态中绑定过任何东西！
+
+        return true;
+    }
 
 	void Framebuffer::Bind()
 	{
