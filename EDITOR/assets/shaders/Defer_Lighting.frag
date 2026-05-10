@@ -202,7 +202,7 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
     float currentDepth = length(fragToLight);
     
     vec3 lightDir = normalize(-fragToLight);
-    float bias = max(0.15 * (1.0 - dot(normal, lightDir)), 0.05);
+    float bias = 0.15;
     
     float shadow = 0.0;
     int samples = 20;
