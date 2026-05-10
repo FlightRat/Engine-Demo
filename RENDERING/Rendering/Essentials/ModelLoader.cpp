@@ -127,7 +127,7 @@ namespace ENGINE_RENDERING {
                 16, 17, 18, 16, 18, 19,
 
                 // Bottom (-Y): p4-p5-p1-p0 顺序
-                21, 20, 23, 21, 23, 22 // 调整为逆时针
+                20, 21, 22, 20, 22, 23
             };
 
             index_data.assign(indices, indices + sizeof(indices) / sizeof(unsigned int));
