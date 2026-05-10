@@ -160,7 +160,7 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
 
 // 法线分布函数 (GGX/Trowbridge-Reitz)
 float DistributionGGX(vec3 N, vec3 H, float roughness) {    
-    float a  = roughness * roughness; 
+    float a  = roughness * roughness;
     float a2 = a * a;
     float NdotH  = max(dot(N, H), 0.0);
     float NdotH2 = NdotH * NdotH;
@@ -200,36 +200,28 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
     vec3 fragToLight = fragPos - lightPos;
     float currentDepth = length(fragToLight);
     
-    // 1. 计算光照方向向量
+    // 1. 光照方向向量
     vec3 lightDir = normalize(lightPos - fragPos);
 
-    // 2. 动态 Bias (Slope-scaled)
-    // 防止直射面偏移过大，斜射面偏移过小
+    // 2. Slope-scaled————光线越与表面垂直，偏移越低
     float bias = max(0.1 * (1.0 - dot(normal, lightDir)), 0.01); 
 
-    // 3. 改进的 Normal Offset
-    // 偏移量应相对微小，主要用于微调采样向量
+    // 3. Normal Offset————根据法线偏移片段世界坐标
     float normalOffsetScale = 0.02; 
-    vec3 offsetPos = fragPos + normal * normalOffsetScale;
-    vec3 samplingVector = offsetPos - lightPos;
+    vec3 offsetPos = fragPos + normal * normalOffsetScale;  // 偏移后坐标
+    vec3 samplingVector = offsetPos - lightPos;             // 光源指向片段的采样向量
 
-    // 4. 软阴影采样逻辑 (PCF)
+    // 4. PCF
     float shadow = 0.0;
     int samples = 20;
     float viewDistance = length(viewPos - fragPos);
-    // 调整半径缩放，使其更自然
-    float diskRadius = (1.0 + (viewDistance / far_plane)) / 50.0;
-
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 50.0;   // 调整半径缩放
     for (int i = 0; i < samples; ++i) {
-        // 使用偏移后的向量采样，但注意 currentDepth 也要与之对应
-        float closestDepth = texture(shadowCubeMap, samplingVector + sampleOffsetDirections[i] * diskRadius).r;
+        float closestDepth = texture(shadowCubeMap, samplingVector + sampleOffsetDirections[i] * diskRadius).r; // 0~1
         closestDepth *= far_plane; // 还原到世界空间距离
-        
-        // 比较：注意 currentDepth 是偏移后的深度，所以 bias 可以适当减小
-        if (currentDepth - bias > closestDepth)
+        if (currentDepth > closestDepth + bias)
             shadow += 1.0;
     }
-    
     return shadow / float(samples);
 }
 
@@ -240,7 +232,7 @@ float ShadowCalculation_dir(sampler2D shadowMap, mat4 lightSpaceMatrix, vec3 fra
      float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
 
      // normal offsetPos
-     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+     vec2 texelSize = 1.0 / textureSize(shadowMap, 0); // 像素占用纹理越大，像素越小
      float normalOffsetScale = clamp(1.0 - dot(normal, lightDir), 0.0, 1.0);
      vec3 normalOffset = normal * (texelSize.x * 2.0 * normalOffsetScale);
 
