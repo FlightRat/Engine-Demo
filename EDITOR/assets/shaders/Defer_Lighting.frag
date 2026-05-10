@@ -5,7 +5,7 @@
 struct DirLight {
     vec4 color;
     vec4 direction;
-    mat4 lightSpaceMatrices;
+    mat4 lightSpaceMatrix;
 };
 
 struct PointLight {
@@ -53,7 +53,7 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 
-float ShadowCalculation_dir(sampler2D shadowMap, vec4 fragPosLightSpace, vec3 normal, vec3 lightDir);
+float ShadowCalculation_dir(sampler2D shadowMap, mat4 lightSpaceMatrix, vec3 fragPos, vec3 normal, vec3 lightDir);
 float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fragPos, vec3 normal);
 
 // ==================== 主函数 ====================
@@ -94,9 +94,8 @@ void main()
     // ============================================================
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
         if (dir_lights[i].direction.w < 0.5) continue;
-        vec4 fragPosLightSpace = dir_lights[i].lightSpaceMatrices * vec4(FragPos, 1.0);             // 计算该片元在光源空间中的位置
         vec3 lightDir = normalize(-vec3(dir_lights[i].direction));                                  // 方向光的光照方向（注意 direction 存储的是"从光源出发的方向"，需要取反）
-        float shadow = ShadowCalculation_dir(shadowMaps[i], fragPosLightSpace, Normal, lightDir);   // 阴影计算          
+        float shadow = ShadowCalculation_dir(shadowMaps[i], dir_lights[i].lightSpaceMatrix, FragPos, Normal, lightDir);   // 阴影计算          
         Lo += CalcDirLight(FragPos, dir_lights[i], ViewDir, Normal, Albedo, MRA, shadow);           // 累加直接光照
     }
 
@@ -201,50 +200,67 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
     vec3 fragToLight = fragPos - lightPos;
     float currentDepth = length(fragToLight);
     
-    vec3 lightDir = normalize(-fragToLight);
-    float bias = 0.15;
-    
+    // 1. 计算光照方向向量
+    vec3 lightDir = normalize(lightPos - fragPos);
+
+    // 2. 动态 Bias (Slope-scaled)
+    // 防止直射面偏移过大，斜射面偏移过小
+    float bias = max(0.1 * (1.0 - dot(normal, lightDir)), 0.01); 
+
+    // 3. 改进的 Normal Offset
+    // 偏移量应相对微小，主要用于微调采样向量
+    float normalOffsetScale = 0.02; 
+    vec3 offsetPos = fragPos + normal * normalOffsetScale;
+    vec3 samplingVector = offsetPos - lightPos;
+
+    // 4. 软阴影采样逻辑 (PCF)
     float shadow = 0.0;
     int samples = 20;
     float viewDistance = length(viewPos - fragPos);
-    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;  
+    // 调整半径缩放，使其更自然
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 50.0;
 
     for (int i = 0; i < samples; ++i) {
-        float closestDepth = texture(shadowCubeMap, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
-        closestDepth *= far_plane;
+        // 使用偏移后的向量采样，但注意 currentDepth 也要与之对应
+        float closestDepth = texture(shadowCubeMap, samplingVector + sampleOffsetDirections[i] * diskRadius).r;
+        closestDepth *= far_plane; // 还原到世界空间距离
+        
+        // 比较：注意 currentDepth 是偏移后的深度，所以 bias 可以适当减小
         if (currentDepth - bias > closestDepth)
             shadow += 1.0;
     }
-    shadow /= float(samples);  
     
-    return shadow;
+    return shadow / float(samples);
 }
 
 // 方向光阴影（标准 Shadow Map，PCF 3x3 软阴影）
-float ShadowCalculation_dir(sampler2D shadowMap, vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
-    // 透视除法（方向光用正交投影，w通常为1.0，但保险起见仍做除法）
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // 从 [-1,1] NDC 变换到 [0,1] 纹理坐标
-    projCoords = projCoords * 0.5 + 0.5;
-
-    // 超出阴影贴图范围，不产生阴影
-    if (projCoords.z > 1.0) return 0.0;
-
-    float currentDepth = projCoords.z;
+float ShadowCalculation_dir(sampler2D shadowMap, mat4 lightSpaceMatrix, vec3 fragPos, vec3 normal, vec3 lightDir) {
     
-    // 自适应偏移：表面越接近与光线平行，偏移越大，防止阴影痤疮(Shadow Acne)
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    // slope-scaled bias 当光线与表面垂直时，bias很小，bias随着倾斜增大，平行时最大
+     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
 
-    // PCF 3x3 软阴影
-    float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+     // normal offsetPos
+     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+     float normalOffsetScale = clamp(1.0 - dot(normal, lightDir), 0.0, 1.0);
+     vec3 normalOffset = normal * (texelSize.x * 2.0 * normalOffsetScale);
+
+     // 把片段世界坐标朝着法线移动，再转光源坐标系拿到真实深度
+     vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos+normalOffset, 1.0);
+     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+     projCoords = projCoords * 0.5 + 0.5;
+     if(projCoords.z > 1.0) return 0.0;
+     float currentDepth = projCoords.z;
+
+     float shadow = 0.0;
+     // PCF 3x3
     for (int x = -1; x <= 1; ++x) {
         for (int y = -1; y <= 1; ++y) {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += (currentDepth - bias > pcfDepth) ? 1.0 : 0.0;
+            shadow += (currentDepth > pcfDepth + bias) ? 1.0 : 0.0;
         }
     }
-    return shadow / 9.0;
+
+    return shadow/9.0;
 }
 
 
