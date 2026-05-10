@@ -122,7 +122,8 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to loadGL --> GLAD");
 			return false;
 		}
-
+		
+		glEnable(GL_CULL_FACE);glFrontFace(GL_CCW);glCullFace(GL_BACK);	// ±³ÃæÌÞ³ý
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_BLEND);

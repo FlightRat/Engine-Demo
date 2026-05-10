@@ -482,7 +482,9 @@ namespace ENGINE_CORE::Systems {
 	{
 		Prepare_Pass(camera, runtimeRegistry);
 
+		//glCullFace(GL_FRONT);		// 解决闪烁，但导致漏光
 		Shadow_Pass(runtimeRegistry);
+		//glCullFace(GL_BACK);
 
 		// 几何pass
 		intermediateGB->Bind();
@@ -843,6 +845,7 @@ namespace ENGINE_CORE::Systems {
 		glDisable(GL_STENCIL_TEST);					// 关闭模板测试
 
 		// draw skybox
+		glDisable(GL_CULL_FACE);
 		glDepthFunc(GL_LEQUAL);
 		glm::mat4 viewMatrix = camera->GetViewMatrix();
 		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
@@ -852,6 +855,7 @@ namespace ENGINE_CORE::Systems {
 		glBindTextureUnit(0, skybox_texture_id);
 		cube->Draw();
 		glDepthFunc(GL_LESS);
+		glEnable(GL_CULL_FACE);
 
 		// 绘制物理调试线框
 		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
