@@ -305,16 +305,12 @@ vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, ve
 
 // 点光源 PBR 直接光照
 vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow) { 
-    vec3 lightPos   = vec3(pointLight.position); 
-    vec3 lightColor = vec3(pointLight.color); 
     float metallic  = mra.x; 
     float roughness = mra.y; 
-
-    // ---------- 光照方向与半角向量 ----------
+    vec3 lightPos   = vec3(pointLight.position); 
+    vec3 lightColor = vec3(pointLight.color); 
     vec3 lightDir   = normalize(lightPos - fragPos); 
     vec3 halfVector = normalize(viewDir + lightDir); 
-
-    // ---------- 距离衰减 ----------
     float distance    = length(lightPos - fragPos); 
     float attenuation = 1.0 / (pointLight.attenuation.x 
                               + pointLight.attenuation.y * distance 
