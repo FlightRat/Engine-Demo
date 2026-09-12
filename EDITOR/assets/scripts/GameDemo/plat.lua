@@ -5,7 +5,7 @@ function Plat:Create(def)
 	local this = 
 	{
 		m_EntityID = -1,
-		m_speed = 5,
+		m_speed = 2.5,
 	}
 	this.m_EntityID = LoadEntity(def)
 	local entity = Entity(this.m_EntityID)

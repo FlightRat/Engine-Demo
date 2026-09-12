@@ -33,22 +33,22 @@ function Player:Update(dt)
 	-- keyboard control
 	--NOTE: if want to move with "linear_velocity", need to keep a "forward", rotate it with QE, and multiply it with speed
 	if Keyboard.pressed(KEY_W) then
-		physics:linear_impulse(vec3(0.0, 0.0, 100.0))
+		physics:linear_impulse(vec3(0.0, 0.0, 50.0))
 	end
 	if Keyboard.pressed(KEY_A) then
-		physics:linear_impulse(vec3(100.0, 0.0, 0.0))
+		physics:linear_impulse(vec3(50.0, 0.0, 0.0))
 	end
 	if Keyboard.pressed(KEY_D) then
-		physics:linear_impulse(vec3(-100.0, 0.0, 0.0))
+		physics:linear_impulse(vec3(-50.0, 0.0, 0.0))
 	end
 	if Keyboard.pressed(KEY_S) then
-		physics:linear_impulse(vec3(0.0, 0.0, -100.0))
+		physics:linear_impulse(vec3(0.0, 0.0, -50.0))
 	end
 	if Keyboard.pressed(KEY_Q) then
-		physics:angular_impulse(vec3(0.0, 100.0, 0.0))
+		physics:angular_impulse(vec3(0.0, 50.0, 0.0))
 	end
 	if Keyboard.pressed(KEY_E) then
-		physics:angular_impulse(vec3(0.0,-100.0, 0.0))
+		physics:angular_impulse(vec3(0.0,-50.0, 0.0))
 	end
 	if Keyboard.just_pressed(KEY_SPACE) then
 		SoundFx.play("jump")
@@ -64,11 +64,15 @@ function Player:shot()
 	local player = Entity(self.m_EntityID)
 	local transform = player:get_component(Transform)
 
+	local start_dir = vec3(transform.forward)
+	local old_pos = vec3(transform.position)
+	local new_pos = old_pos + 0.75 * start_dir
+
 	local bullet = Bullet:Create(
 		{
 			def = "normal_shot",
-			dir = vec3(transform.forward),	-- pass as independent copy
-			position = vec3(transform.position),
+			dir = start_dir,
+			position = new_pos,
 			rotation = vec3(transform.rotation_eular),
 			speed = 1000,
 			life_time = 1000
