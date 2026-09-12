@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Shared x64 settings. Keep Debug/Release CRT and optimization separate. -->
+  <PropertyGroup>
+    <EngineRoot>$(MSBuildThisFileDirectory)</EngineRoot>
+    <SolutionDir Condition="'$(SolutionDir)'=='' Or '$(SolutionDir)'=='*Undefined*'">$(EngineRoot)</SolutionDir>
+    <EngineReleaseLibDir>$(EngineRoot)Dependencies\Release\lib\</EngineReleaseLibDir>
+    <EngineReleaseBinDir>$(EngineRoot)Dependencies\Release\bin\</EngineReleaseBinDir>
+    <LocalDebuggerWorkingDirectory>$(EngineRoot)EDITOR\</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <EngineAssimpLibrary>assimp-vc143-mtd.lib</EngineAssimpLibrary>
+    <EngineAssimpDll>$(EngineRoot)Dependencies\Assimp\lib\assimp-vc143-mtd.dll</EngineAssimpDll>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <EngineAssimpLibrary>assimp-vc143-mt.lib</EngineAssimpLibrary>
+    <EngineAssimpDll>$(EngineReleaseBinDir)assimp-vc143-mt.dll</EngineAssimpDll>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <!-- /LIBPATH takes priority over the legacy VC++ LibraryPath entries. -->
+      <AdditionalLibraryDirectories>$(EngineReleaseLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(MSBuildProjectName)'=='EDITOR'">
+    <Link>
+      <AdditionalDependencies>SDL2.lib;SDL2_mixer.lib;opengl32.lib;lua53.lib;reactphysics3d.lib;comdlg32.lib;ole32.lib;user32.lib;shell32.lib;$(EngineAssimpLibrary);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>
+

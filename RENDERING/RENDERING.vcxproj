@@ -69,13 +69,11 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <Import Project="..\Engine.Build.props" Condition="'$(Platform)'=='x64'" />
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\Assimp\include;$(SolutionDir).\Dependencies\STB;$(IncludePath)</IncludePath>
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\Assimp\include;$(SolutionDir).\Dependencies\STB;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir).\Dependencies\Assimp\lib;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\SOIL\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -109,15 +107,11 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -127,7 +121,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

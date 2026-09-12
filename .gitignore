@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Vendored Release dependencies are source-controlled inputs, not build outputs.
+!/Dependencies/Release/
+!/Dependencies/Release/lib/
+!/Dependencies/Release/bin/
+!/Dependencies/Release/licenses/
+!/Dependencies/Release/lib/*.lib
+!/Dependencies/Release/bin/*.dll
+!/Dependencies/Release/README.md
+!/Dependencies/Release/licenses/**
