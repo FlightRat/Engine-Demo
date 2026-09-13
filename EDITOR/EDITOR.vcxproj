@@ -74,7 +74,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir).\SOUNDS;$(SolutionDir).\PHYSICS;$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(SolutionDir).\ImGui\src;$(SolutionDir).\FILESYSTEM;$(SolutionDir).\Dependencies\Assimp\include;$(SolutionDir).\Dependencies\STB;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\LUA\lib;$(SolutionDir).\Dependencies\SDL\lib;$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(SolutionDir).\Dependencies\Assimp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(EngineLuaLibDir);$(SolutionDir).\Dependencies\SDL\lib;$(EnginePhysicsLibDir);$(EngineAssimpLibDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

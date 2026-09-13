@@ -4,6 +4,7 @@
 #include<glad/glad.h>
 #include<random>
 #include<iostream>
+#include<cstdlib>
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include<Logger/Logger.h>
@@ -417,6 +418,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
 		assetManager.GetTexture("HDR")->SetIsEditorTexture(true);
 		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
+
+		return true;
 
 	}
 
@@ -995,12 +998,12 @@ namespace ENGINE_EDITOR {
 
 	}
 
-	void Application::Run()
+	int Application::Run()
 	{
 		if (!Initialize())
 		{
 			ENGINE_ERROR("Initialization failed!");
-			return;
+			return EXIT_FAILURE;
 		}
 
 		while (m_bIsRunning)
@@ -1010,5 +1013,6 @@ namespace ENGINE_EDITOR {
 			Render();
 		}
 		CleanUp();
+		return EXIT_SUCCESS;
 	}
 }

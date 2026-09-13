@@ -183,7 +183,7 @@ Logger 支持 Windows 控制台颜色、内存日志和 source_location，Lua �
 
 | 位置或机制 | 代码层面的发现与影响 |
 | --- | --- |
-| Application::LoadEditorTextures | 成功路径缺少 `return true`，返回值不可靠 |
+| Application::LoadEditorTextures | 已补齐成功路径 `return true`；启动时根据 EXE 定位仓库资源 |
 | Geometry / Lighting / SSAO sampler（复核更正） | 当前 GLSL 已通过 `layout(binding=...)` 显式映射纹理单元，与 C++ 的 `glBindTextureUnit` 配合；不应继续将缺少 sampler 绑定列为当前故障 |
 | SSAO 开关（复核更正） | 当前 C++ 与 Lighting shader 均使用 `diable_SSAO`；拼写虽不规范，但接口一致，旧版名称不一致的结论不再适用于当前代码 |
 | Texture 生命周期 | Texture 未实现对应的 `glDeleteTextures` 释放；shared_ptr 销毁 CPU 对象不能释放 GPU texture，视口重建可能持续泄漏 |

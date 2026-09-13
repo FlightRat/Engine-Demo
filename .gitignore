@@ -362,12 +362,18 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Vendored Release dependencies are source-controlled inputs, not build outputs.
-!/Dependencies/Release/
-!/Dependencies/Release/lib/
-!/Dependencies/Release/bin/
-!/Dependencies/Release/licenses/
-!/Dependencies/Release/lib/*.lib
-!/Dependencies/Release/bin/*.dll
-!/Dependencies/Release/README.md
-!/Dependencies/Release/licenses/**
+# Vendored Debug/Release libraries are source-controlled build inputs.
+!/Dependencies/Assimp/Debug/
+!/Dependencies/Assimp/Release/
+!/Dependencies/LUA/Debug/
+!/Dependencies/LUA/Release/
+!/Dependencies/ReactPhysics3D/Debug/
+!/Dependencies/ReactPhysics3D/Release/
+!/Dependencies/*/Debug/lib/
+!/Dependencies/*/Release/lib/
+!/Dependencies/*/Debug/bin/
+!/Dependencies/*/Release/bin/
+!/Dependencies/*/Debug/lib/*.lib
+!/Dependencies/*/Release/lib/*.lib
+!/Dependencies/*/Debug/bin/*.dll
+!/Dependencies/*/Release/bin/*.dll

@@ -73,7 +73,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <IncludePath>$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(SolutionDir).\LOGGER\Logger;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\ReactPhysics3D\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(EnginePhysicsLibDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

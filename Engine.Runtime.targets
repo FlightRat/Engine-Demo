@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="CheckReleaseDependencies" BeforeTargets="PrepareForBuild" Condition="'$(Configuration)'=='Release'">
-    <Error Condition="!Exists('$(EngineReleaseLibDir)reactphysics3d.lib') Or !Exists('$(EngineReleaseLibDir)lua53.lib') Or !Exists('$(EngineReleaseLibDir)assimp-vc143-mt.lib') Or !Exists('$(EngineAssimpDll)')"
-           Text="Bundled Release dependencies are missing from Dependencies\Release. Restore the repository's lib and bin files; a complete checkout builds directly without rebuilding third-party libraries. See BUILDING.md." />
+  <Target Name="CheckBundledDependencies" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(EnginePhysicsLibDir)reactphysics3d.lib') Or !Exists('$(EngineLuaLibDir)lua53.lib') Or !Exists('$(EngineAssimpLibDir)$(EngineAssimpLibrary)') Or !Exists('$(EngineAssimpDll)')"
+           Text="Bundled $(Configuration) dependencies are missing. Restore the $(Configuration)\lib and bin files under Dependencies\Assimp, LUA and ReactPhysics3D. A complete checkout builds directly; see BUILDING.md." />
   </Target>
   <Target Name="CopyEditorRuntime" AfterTargets="Build">
     <ItemGroup>

@@ -35,6 +35,6 @@ namespace ENGINE_EDITOR{
 		static Application& GetInstance();
 		~Application();
 
-		void Run();
+		int Run();
 	};
 }

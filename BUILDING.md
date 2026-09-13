@@ -1,83 +1,80 @@
-# 构建 Engine-Demo（Visual Studio 2022 / x64）
+# 构建与运行 Engine-Demo
 
-本工程当前使用 Windows、Visual Studio 2022 v143、Windows SDK 和 C++20。以下步骤针对 x64；目录内第三方二进制不是一套完整的 Win32 依赖，不能切换到 x86 后直接使用。
+项目使用 Windows、Visual Studio 2022 v143、Windows SDK 和 C++20，目前支持 x64。安装 VS 的“使用 C++ 的桌面开发”组件后，克隆完整仓库即可构建。Debug 和 Release 所需的预编译依赖随仓库提供，无需安装 CMake、下载源码或运行依赖重建脚本。
 
-**Debug 和 Release 所需的预编译库都随仓库提供。克隆完整仓库后，直接在 VS 中生成即可，无需先编译第三方库，也不需要为普通构建安装 CMake。**
+## Visual Studio
 
-## 在 Visual Studio 中操作
+1. 打开根目录的 `The 2D Engine.sln`，将 EDITOR 设为启动项目。
+2. 选择 Debug/x64 或 Release/x64，生成解决方案。
+3. 使用 F5 / Ctrl+F5，或直接双击 `x64/Debug/EDITOR.exe`、`x64/Release/EDITOR.exe`。
 
-1. 打开根目录的 The 2D Engine.sln。
-2. 将 EDITOR 设为启动项目。
-3. 工具栏选择 Release、x64，生成解决方案。
-4. 使用 F5 或 Ctrl+F5 启动。共享属性已将调试工作目录设为 EDITOR，供相对 assets 路径使用。
+启动时根据 EXE 的实际位置向上查找同时包含解决方案和 `EDITOR/assets` 的仓库目录，再将工作目录统一设置为 `EDITOR`。因此从其他工作目录启动也可使用同一份 shader、Lua、模型、音频与 ImGui 配置。资源仍只保留在 `EDITOR/assets`，不复制到输出目录。
 
-Release 输出为 x64/Release/EDITOR.exe，Debug 输出为 x64/Debug/EDITOR.exe。构建后自动将对应的 Assimp DLL、SDL2.dll、SDL2_mixer.dll 和可选音频解码 DLL 复制到输出目录。
+EXE 必须留在完整仓库内；这不是可以单独搬走 EXE 的资源发布包。资源目录无法定位或初始化失败会显示错误对话框并返回非零退出码。正常退出返回 0；Release 正常启动仍隐藏控制台。
 
-不要将运行工作目录误设为输出目录：资产仍位于 EDITOR/assets。本次没有制作包含全部资产的发布包。
+## 预编译依赖
 
-## 本次修复的配置
+头文件在各库的 `include` 中共用，二进制按配置分开：
 
-| 配置项 | 处理 |
-| --- | --- |
-| 包含目录与库目录 | 各项目原先只写在 Debug 的目录改为两种 x64 配置共用，保留每个项目自己的依赖范围 |
-| C++ 标准 | Engine.Build.props 统一 C++20 |
-| 项目类型 | PHYSICS、SOUNDS、ImGui、FILESYSTEM 的 Release 改为静态库；EDITOR 保持应用程序 |
-| 运行库与优化 | Debug 使用 /MDd；Release 使用 /MD 和 /O2，保留各自的 _DEBUG/NDEBUG |
-| 第三方链接 | 集中在 EDITOR 的最终链接阶段；避免将同一组外部库重复打入多个引擎静态库 |
-| Release 依赖 | 在 Dependencies/Release/lib 与 bin 单独保存，优先于原有 Debug 库目录 |
-| SOIL | 移除 CORE 对旧 SOIL 工程的引用及相关无用包含目录；现有纹理实现使用 stb_image |
-| DLL 与工作目录 | Engine.Runtime.targets 自动复制运行 DLL；Engine.Build.props 设置编辑器工作目录 |
+```text
+Dependencies/
+  Assimp/
+    include/
+    Debug/lib/、Debug/bin/
+    Release/lib/、Release/bin/
+  LUA/
+    include/
+    Debug/lib/
+    Release/lib/
+  ReactPhysics3D/
+    include/
+    Debug/lib/
+    Release/lib/
+    lib/cmake/ReactPhysics3D/
+```
 
-这里只共享与配置无关的设置，没有把整个 Debug 配置复制成 Release，也没有关闭运行库一致性检查或强制混用 Debug/Release C++ 库。
+各库目录的 README 和 LICENSE 记录版本及许可。SDL2、SDL2_mixer 继续共用原有二进制，纯头文件依赖结构不变。ReactPhysics3D 的 CMake 导入元数据同步指向上述目录，仅供已有导入用途，不是 VS 构建步骤。
 
-## Release 第三方依赖
+`Engine.Build.props` 按配置选择库目录和 Assimp 文件名，设置 C++20、Debug `/MDd`、Release `/MD` 与 `/O2`。`Engine.Runtime.targets` 检查预编译依赖，并将匹配的 Assimp DLL、SDL2 DLL 和可选音频 DLL 复制到输出目录。文件缺失时应恢复完整仓库文件。
 
-原目录只有 Debug 版 ReactPhysics3D、Debug 版 Assimp，以及使用 /MT 的 Lua 静态库。因此单独补目录仍不足以构建正确的 /MD Release。
-
-本次按对应版本重新编译：
-
-| 依赖 | 源版本 | Release 产物 |
-| --- | --- | --- |
-| ReactPhysics3D | 0.10.2；官方 tag 对应 cd958bbc0c6e84a869388cba6613f10cc645b3cb | reactphysics3d.lib，/MD |
-| Assimp | 现有头文件标记的提交 553fbc1fdb9bf1d3e1b7a2382e4727bd71a4aee3 | assimp-vc143-mt.lib / .dll，动态 CRT |
-| Lua | 5.3.5，官方源码归档并校验 SHA-256 | lua53.lib，/MD |
-
-ReactPhysics3D 预编译库所用源码的全部 .h 文件已与工程自带头文件逐一校验一致。原有 Debug 依赖文件没有被替换。
-
-## 换电脑
-
-安装 VS 2022 的“使用 C++ 的桌面开发”（包括 v143 和 Windows SDK），克隆仓库，按上面的 Visual Studio 步骤选择 Debug/x64 或 Release/x64 生成即可。
-
-Dependencies/Release 下的三个 .lib 和一个 .dll 是随仓库保存的构建输入，已经通过 .gitignore 例外规则允许纳入版本控制。out、x64 和各项目生成目录继续被忽略。
-
-如果缺少 Release 库，EDITOR 构建会提示恢复仓库内的预编译文件；不会把手工构建依赖作为普通用户的必需步骤，也不会回退链接 Debug 物理库。
+Git 忽略规则允许上述 Debug/Release `.lib` 和 `.dll` 随仓库提交；`x64`、项目中间产物及个人 VS 设置继续忽略。不提供依赖重建脚本。
 
 ## 命令行构建
 
-在 Developer PowerShell for VS 2022 中进入项目根目录：
+在 Developer PowerShell for VS 2022 的仓库根目录执行：
 
-~~~powershell
-MSBuild.exe 'The 2D Engine.sln' /t:Build /p:Configuration=Release /p:Platform=x64 /m:2
+```powershell
 MSBuild.exe 'The 2D Engine.sln' /t:Build /p:Configuration=Debug /p:Platform=x64 /m:2
-~~~
+MSBuild.exe 'The 2D Engine.sln' /t:Build /p:Configuration=Release /p:Platform=x64 /m:2
+```
 
-本机 MSBuild 路径为 D:/VisualStudio/2022/MSBuild/Current/Bin/MSBuild.exe。
+## out 清理与验证记录
 
-## 2026-09-12 验证记录
+此前的 `out` 约 490 MiB，保存依赖源码、依赖构建缓存、工程配置备份、临时脚本和日志。它不是工程构建或运行的输入，本次清理整个目录。普通构建不重新创建它。
 
-- Release x64：完整解决方案 Build 成功，生成 x64/Release/EDITOR.exe。
-- 二进制依赖检查：Release 编辑器链接 assimp-vc143-mt.dll 和 Release CRT；Assimp Release DLL 未依赖带 D 后缀的 Debug CRT。
-- Debug x64：完整解决方案回归 Build 成功，生成 x64/Debug/EDITOR.exe；保留原有 Debug 依赖，未改变其版本。
-- 本次以构建与二进制依赖验证为范围，未启动图形界面测试各个场景。
+此前两种配置虽能编译，但直接启动日志均显示窗口创建后找不到 `assets/shaders/forward_BlinnPhong`，因而退出；仅设置 VS 工作目录没有覆盖直接启动。本次修复启动定位，并补齐 `LoadEditorTextures()` 成功返回值。
 
-源码仍存在既有编译告警，例如 Application::LoadEditorTextures 和 AssetManager::GetAssetKeyName 部分控制路径缺少返回值。它们没有阻止链接成功，但需要单独修复和运行验证，尤其不能据此认为优化后的运行行为已经全部验证。
+原有 Debug Lua 使用 `/MT`，仍可能产生与 `/MDd` 的 LNK4098 告警；原有物理库没有匹配 PDB。源码也存在其他既有告警，构建成功不表示零告警。
 
-Debug 仍使用原有第三方二进制，存在物理库缺少 PDB，以及旧 Lua /MT 与 /MDd 引起的 LNK4098 运行库告警；本次没有将“构建成功”描述为“零告警”。本轮记录为 Release 80 个警告、0 个错误，Debug 299 个警告、0 个错误；Release 没有 LNK4098。
+2026-09-13 验证结果：
 
-## 以后在属性页中怎样避免同类问题
+| 验证项 | Debug/x64 | Release/x64 |
+| --- | --- | --- |
+| 删除 out 后完整 Rebuild | 通过，298 警告、0 错误 | 通过，215 警告、0 错误 |
+| 独立干净副本 Build | 通过，298 警告、0 错误 | 通过，215 警告、0 错误 |
+| VS 启动 | 通过 VS 的 Start Without Debugging 启动并正常关闭 | 同左 |
+| 输出目录 Shell 启动 | 窗口持续运行，正常退出 0 | 窗口持续运行，正常退出 0 |
+| 从 C:\Windows 启动 | 进入 Demo / Game，Lua 资源加载成功 | 进入 Demo / Game，Lua 资源加载成功 |
+| 独立副本从 C:\Windows 启动 | 窗口持续运行，正常退出 0 | 窗口持续运行，正常退出 0 |
+| 副本中缺失整个 assets | 显示资源目录错误，退出 1 | 显示资源目录错误，退出 1 |
+| 副本中缺失 forward_BlinnPhong.vert | 显示具体 shader 路径错误，退出 1 | 显示具体 shader 路径错误，退出 1 |
 
-新增头文件目录、与配置无关的宏、语言标准时，在属性页上方选择“所有配置”，平台选 x64；共同语言和链接设置也可以编辑 Engine.Build.props。
+Shell 启动使用 Windows ShellExecute（与资源管理器双击 EXE 使用同一启动机制），工作目录设为输出目录。独立副本按 Git 可收录文件创建在仓库外，路径包含空格和中文，不携带 out、旧输出、.vs 或 .vcxproj.user；构建过程中未下载或编译第三方依赖。
 
-运行库、优化、Debug/Release 专用第三方库必须分别设置。Debug 的 /MDd 与 Release 的 /MD，以及 assimp-vc143-mtd 和 assimp-vc143-mt，不能用同一个固定值覆盖。
+Demo 验证包含拖入 scene1、切换 Game 并点击播放，画面显示模型、PBR 材质与阴影；日志确认 main.lua 加载模型、纹理、音乐和音效。本次是启动及 Demo 冒烟验证，未覆盖所有编辑器功能。
 
-VS 的属性是按“项目 × 配置 × 平台”保存的。只在 Debug 下设置一个项目，并不会自动同步到 Release 或其他项目。
+已核对两种 EDITOR.exe 的 DLL 导入及输出 Assimp DLL 哈希，配置匹配；所有八个预编译 .lib/.dll 均可被 Git 收录。工程无旧依赖路径或 out 引用，构建后 out 未重新生成。原有 Debug 依赖仅移动目录，文件内容未改变。ReactPhysics3D 的 Debug/Release CMake 导入路径也已单独配置校验通过；此检查不属于普通构建要求。验证副本和临时测试脚本已清理，构建日志与 Demo 截图保存在被 Git 忽略的 x64/validation。
+
+## 属性页设置建议
+
+新增共用包含目录、语言标准等设置时选择“所有配置 / x64”；运行库、优化和配置专用库应分别设置。属性按“项目 × 配置 × 平台”保存，只修改某项目的 Debug 不会同步到 Release 或其他项目。

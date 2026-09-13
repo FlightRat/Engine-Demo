@@ -73,7 +73,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <IncludePath>$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\Assimp\include;$(SolutionDir).\Dependencies\STB;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir).\Dependencies\Assimp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(EngineAssimpLibDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
