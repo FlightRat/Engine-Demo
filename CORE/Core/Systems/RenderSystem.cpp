@@ -745,6 +745,7 @@ namespace ENGINE_CORE::Systems {
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& dirLightData = lightSystem->GetDirLightData();
+		auto& areaLightData = lightSystem->GetAreaLightData();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		const auto& cube = assetManager.GetModel("cube");
@@ -763,6 +764,31 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
+		auto Shader_AreaLight = assetManager.GetShader("forward_AreaLight");
+		if (Shader_AreaLight->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+
+		// 绘制面光源
+		Shader_AreaLight->Enable();
+		for (int area_light_index = 0; area_light_index < lightSystem->GetActivatedAreaLights(); area_light_index++) {
+			auto area_light = areaLightData[area_light_index];
+			glm::quat orientation = glm::rotation(glm::vec3(0.0f, 1.0f, 0.0f), glm::normalize(glm::vec3(area_light.direction)));
+
+			glm::mat4 light_rect_model = glm::mat4(1.0f);
+			light_rect_model = glm::translate(light_rect_model, glm::vec3(area_light.center_pos));
+			light_rect_model = light_rect_model * glm::mat4_cast(orientation);
+			light_rect_model = glm::scale(light_rect_model, glm::vec3{ area_light.half_width,0.001f,area_light.half_height });
+			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_rect_model)));
+			Shader_AreaLight->SetUniformMat4("model", light_rect_model);
+			Shader_AreaLight->SetUniformMat3("normalMatrix", normalMatrix);
+			Shader_AreaLight->SetUniformVec3("color", glm::vec3(area_light.color));
+			Shader_AreaLight->SetUniformVec3("direction", glm::vec3(area_light.direction));
+			Shader_AreaLight->SetUniformBool("outline", false);
+			cube->Draw();
+		}
 
 		// 绘制点光源
 		Shader_Color->Enable();
@@ -776,7 +802,7 @@ namespace ENGINE_CORE::Systems {
 			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_sphere_model)));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
 			Shader_Color->SetUniformMat3("normalMatrix", normalMatrix);
-			Shader_Color->SetUniformVec3("color", glm::vec3(1.0f));
+			Shader_Color->SetUniformVec3("color", glm::vec3(point_light.color));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere->Draw();
 		}
@@ -792,7 +818,7 @@ namespace ENGINE_CORE::Systems {
 			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_sphere_model)));
 			Shader_Color->SetUniformMat4("model", light_sphere_model);
 			Shader_Color->SetUniformMat3("normalMatrix", normalMatrix);
-			Shader_Color->SetUniformVec3("color", glm::vec3(1.0,1.0,0.0));
+			Shader_Color->SetUniformVec3("color", glm::vec3(dir_light.color));
 			Shader_Color->SetUniformBool("outline", false);
 			sphere->Draw();
 		}
