@@ -109,6 +109,8 @@
     <None Include="assets\shaders\ibl_prefilter.frag" />
     <None Include="assets\shaders\ibl_brdf.vert" />
     <None Include="assets\shaders\ibl_brdf.frag" />
+    <None Include="assets\shaders\forward_AreaLight.vert" />
+    <None Include="assets\shaders\forward_AreaLight.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">

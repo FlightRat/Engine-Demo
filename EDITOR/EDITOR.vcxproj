@@ -198,6 +198,8 @@
     <None Include="assets\shaders\defer_ssao.frag" />
     <None Include="assets\shaders\defer_ssaoBlur.frag" />
     <None Include="assets\shaders\defer_ssaoBlur.vert" />
+    <None Include="assets\shaders\forward_AreaLight.frag" />
+    <None Include="assets\shaders\forward_AreaLight.vert" />
     <None Include="assets\shaders\forward_Color.frag" />
     <None Include="assets\shaders\forward_Color.vert" />
     <None Include="assets\shaders\defer_Gbuffer.frag" />
