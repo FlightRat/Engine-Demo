@@ -7,7 +7,7 @@ ModelDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(10.0, 0.0, -15.0),
+				position = vec3(0.0, 0.0, 0.0),
 				scale = vec3(0.5, 0.5, 0.5),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},
