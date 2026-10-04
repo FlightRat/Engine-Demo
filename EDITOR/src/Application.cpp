@@ -162,7 +162,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// Light System  do this before LoadBuffers!!!
-		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(4, 4);
+		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(4, 4, 4);
 		if (!lightSystem)
 		{
 			ENGINE_ERROR("Failed to create the light system!");
@@ -230,6 +230,13 @@ namespace ENGINE_EDITOR {
 
 		// forward color
 		if (!assetManager.AddShader("forward_Color", "assets/shaders/forward_Color.vert", "assets/shaders/forward_Color.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// forward areaLight
+		if (!assetManager.AddShader("forward_AreaLight", "assets/shaders/forward_AreaLight.vert", "assets/shaders/forward_AreaLight.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
@@ -321,6 +328,7 @@ namespace ENGINE_EDITOR {
 
 		assetManager.GetShader("forward_BlinnPhong")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
+		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Lighting")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_SSAO")->SetIsEditorShader(true);
@@ -529,6 +537,12 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
+		auto forward_AreaLight = assetManager.GetShader("forward_AreaLight");
+		if (forward_AreaLight->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
 		// defer rendering shader
 		auto defer_gbuffer = assetManager.GetShader("defer_Gbuffer");
 		if (defer_gbuffer->ShaderProgramID() == 0)
@@ -559,6 +573,7 @@ namespace ENGINE_EDITOR {
 		// bind uniform block index
 		forward_BlinnPhong->BindUniformBlock("Matrices", 0);
 		forward_Color->BindUniformBlock("Matrices", 0);
+		forward_AreaLight->BindUniformBlock("Matrices", 0);
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
 		defer_SSAO->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
