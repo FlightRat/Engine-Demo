@@ -1,5 +1,24 @@
 LightDefs = 
 {
+	area_light_0 =
+	{
+		tag = "area_light_0",
+		group = "light",
+		components =
+		{
+			Light = {
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
+
+				type = "area_light",
+
+				half_width = 1.0,
+				half_height = 1.0,
+				pos = vec3(0.0, 10.0, 5.0),
+				direction = vec3(0.0, 0.0, -1.0)
+			}
+		}
+	},
 	point_light_0 = 
 	{
 		tag = "point_light_0",
@@ -7,11 +26,12 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(10, 10, 10),
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
 
 				type = "point_light",
 
-				pos = vec3(0.0, 10.0, 5.0),
+				pos = vec3(0.0, 10.0, -5.0),
 				constant = 1.0,
 				linear = 0.5,
 				quadratic = 0.05,
@@ -26,7 +46,8 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(10, 10, 10),
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
 
 				type = "point_light",
 
@@ -45,7 +66,8 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(10, 10, 10),
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
 
 				type = "point_light",
 
@@ -64,7 +86,8 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(10, 10, 10),
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
 
 				type = "point_light",
 
@@ -83,7 +106,8 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(10, 10, 10),
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
 
 				type = "point_light",
 
@@ -102,7 +126,8 @@ LightDefs =
 		components =
 		{
 			Light = {
-				color = vec3(10, 10, 10),
+				color = vec3(1.0, 1.0, 1.0),
+				intensity = 255.0,
 
 				type = "direction_light",
 
