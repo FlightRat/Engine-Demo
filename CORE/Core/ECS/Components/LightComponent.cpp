@@ -10,29 +10,34 @@ namespace ENGINE_CORE::ECS {
 			sol::call_constructor,
 			sol::factories(
 				[](
-					glm::vec3 color, 
-					std::string type,
+					glm::vec3 color, float intensity, std::string type,
 					glm::vec3 pos, float constant, float linear, float quadratic, bool render,
-					glm::vec3 direction)
+					glm::vec3 direction, float half_width, float half_height)
 				{
 					return LightComponent{
 						.color = color,
+						.intensity=intensity,
 						.type = type,
 						.pos = pos,
 						.constant = constant,
 						.linear = linear,
 						.quadratic = quadratic,
 						.render = render,
-						.direction = direction
+						.direction = direction,
+						.half_width = half_width,
+						.half_height = half_height,
 					};
 				}
 			),
 			"color", &LightComponent::color,
+			"intensity",&LightComponent::intensity,
 			"direction", &LightComponent::direction,
 			"position", &LightComponent::pos,
 			"constant", &LightComponent::constant,
 			"linear", &LightComponent::linear,
-			"quadratic", &LightComponent::quadratic
+			"quadratic", &LightComponent::quadratic,
+			"half_width", &LightComponent::half_width,
+			"half_height", &LightComponent::half_height
 		);
 	}
 }
