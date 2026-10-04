@@ -35,13 +35,14 @@ nanosuit = LoadEntity(ModelDefs["nanosuit"])
 --DisplayPBR_tex()
 
 point_light_0 = LoadEntity(LightDefs["point_light_0"])
+area_light_0 = LoadEntity(LightDefs["area_light_0"])
 --point_light_1 = LoadEntity(LightDefs["point_light_1"])
 --point_light_2 = LoadEntity(LightDefs["point_light_2"])
 --point_light_3 = LoadEntity(LightDefs["point_light_3"])
 --point_light_4 = LoadEntity(LightDefs["point_light_4"])
 --direction_light = LoadEntity(LightDefs["direction_light_1"])
 
-local offset = vec3(0.0, 5.0, -10.0)
+--local offset = vec3(0.0, 5.0, -10.0)
 --FollowCam = FollowCamera(Player_Body_Entity, offset)
 
 main = {
