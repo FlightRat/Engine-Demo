@@ -264,6 +264,8 @@ namespace ENGINE_CORE::ECS {
 			.AddKeyValuePair("b", light.color.b)
 			.EndObject()
 
+			.AddKeyValuePair("intensity", light.intensity)
+
 			.AddKeyValuePair("type", light.type)
 
 			//
@@ -283,6 +285,8 @@ namespace ENGINE_CORE::ECS {
 			.AddKeyValuePair("y", light.direction.y)
 			.AddKeyValuePair("z", light.direction.z)
 			.EndObject()
+			.AddKeyValuePair("half_width", light.half_width)
+			.AddKeyValuePair("half_height", light.half_height)
 
 		.EndObject();
 	}
@@ -374,6 +378,11 @@ namespace ENGINE_CORE::ECS {
 			jsonValue["color"]["b"].GetFloat()
 		};
 
+		if (jsonValue.HasMember("intensity") && jsonValue["intensity"].IsNumber())
+		{
+			light.intensity = jsonValue["intensity"].GetFloat();
+		}
+
 		light.type = jsonValue["type"].GetString();
 
 		light.pos = glm::vec3{
@@ -391,5 +400,13 @@ namespace ENGINE_CORE::ECS {
 			jsonValue["direction"]["y"].GetFloat(),
 			jsonValue["direction"]["z"].GetFloat()
 		};
+		if (jsonValue.HasMember("half_width") && jsonValue["half_width"].IsNumber())
+		{
+			light.half_width = jsonValue["half_width"].GetFloat();
+		}
+		if (jsonValue.HasMember("half_height") && jsonValue["half_height"].IsNumber())
+		{
+			light.half_height = jsonValue["half_height"].GetFloat();
+		}
 	}
 }
