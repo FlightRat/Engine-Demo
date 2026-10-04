@@ -360,7 +360,7 @@ namespace ENGINE_EDITOR {
 			ImGui::SetColumnWidth(0, 100.0f);
 
 			ImGui::Text("Type"); ImGui::NextColumn();
-			const char* lightTypes[] = { "point_light", "direction_light" };
+			const char* lightTypes[] = { "point_light", "direction_light", "area_light"};
 			if (ImGui::BeginCombo("##Type", light.type.c_str()))
 			{
 				for (auto type : lightTypes) {
@@ -373,7 +373,13 @@ namespace ENGINE_EDITOR {
 			ImGui::Separator();
 
 			// 2. Colors 
-			ImGui::DrawVec3Control("Color", light.color);
+			ImGui::ColorEdit3(
+				"Base Color",
+				&light.color.x,
+                ImGuiColorEditFlags_DisplayRGB |
+				ImGuiColorEditFlags_Uint8 |
+				ImGuiColorEditFlags_InputRGB);
+			ImGui::DragFloat("Intensity", &light.intensity, 0.1f, 0.0f, 10000.0f, "%.2f");
 
 			ImGui::Separator();
 
@@ -404,6 +410,26 @@ namespace ENGINE_EDITOR {
 			else if (light.type == "direction_light")
 			{
 				ImGui::DrawVec3Control("Direction", light.direction);
+			}
+			else if (light.type == "area_light") {
+				ImGui::DrawVec3Control("Center_Pos", light.pos);
+				ImGui::DrawVec3Control("Direction", light.direction);
+				light.direction = glm::clamp(
+					light.direction,
+					glm::vec3(-1.0f),
+					glm::vec3(1.0f)
+				);
+
+				ImGui::Text("Size");
+				// 使用 Columns 简单对齐参数
+				ImGui::Columns(2, nullptr, false);
+				ImGui::SetColumnWidth(0, 100.0f);
+
+				ImGui::Text("Half_Width"); ImGui::NextColumn();
+				ImGui::DragFloat("##Width", &light.half_width); ImGui::NextColumn();
+
+				ImGui::Text("Half_Height"); ImGui::NextColumn();
+				ImGui::DragFloat("##Height", &light.half_height); ImGui::NextColumn();
 			}
 
 			ImGui::TreePop();
