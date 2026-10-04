@@ -84,14 +84,10 @@ void main()
     vec3 ViewDir = normalize(viewPos - FragPos);
     vec3 ReflectDir = reflect(-ViewDir, Normal); 
 
-    // ============================================================
     // 累加所有直接光照（不含 ambient）
-    // ============================================================
     vec3 Lo = vec3(0.0);
 
-    // ============================================================
     // ---------- 方向光 ----------
-    // ============================================================
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
         if (dir_lights[i].direction.w < 0.5) continue;
         vec3 lightDir = normalize(-vec3(dir_lights[i].direction));                                  // 方向光的光照方向（注意 direction 存储的是"从光源出发的方向"，需要取反）
@@ -99,9 +95,7 @@ void main()
         Lo += CalcDirLight(FragPos, dir_lights[i], ViewDir, Normal, Albedo, MRA, shadow);           // 累加直接光照
     }
 
-    // ============================================================
     // ---------- 点光源 ----------
-    // ============================================================
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0){
             vec3 lightPos = vec3(point_lights[i].position);
@@ -110,9 +104,7 @@ void main()
         }
     }
 
-    // ============================================================
     // ---------- 环境光 ----------
-    // ============================================================
     vec3 F0 = mix(vec3(0.04), Albedo, metallic);
     // 使用带粗糙度的菲涅尔近似，使粗糙表面环境高光更柔和
     vec3 F = fresnelSchlickRoughness(max(dot(Normal, ViewDir), 0.0), F0, roughness);
@@ -132,9 +124,7 @@ void main()
     // 最终环境光 = (漫反射 + 高光) * AO * SSAO
     vec3 ambient = (kD_ambient * ambientDiffuse + ambientSpecular) * ao * ssaoFactor;
 
-    // ============================================================
     // 最终合成
-    // ============================================================
     vec3 result = ambient + Lo;
 
     // Reinhard Tone Mapping
@@ -258,7 +248,8 @@ float ShadowCalculation_dir(sampler2D shadowMap, mat4 lightSpaceMatrix, vec3 fra
 
 //  方向光 PBR 直接光照
 vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow){
-    vec3 lightColor = vec3(dirLight.color);
+    vec3 lightColor = clamp(dirLight.color.rgb, vec3(0.0), vec3(1.0));
+    float lightIntensity = max(dirLight.color.a, 0.0);
     float metallic  = mra.x;
     float roughness = mra.y;
     // mra.z (ao) 在 ambient 中处理，直接光照不用
@@ -269,7 +260,7 @@ vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, ve
     vec3 halfVector = normalize(viewDir + lightDir);
 
     // ---------- 入射辐射度（方向光无衰减） ----------
-    vec3 radiance = lightColor;
+    vec3 radiance = lightColor * lightIntensity;
 
     // ---------- 菲涅尔项 ----------
     vec3 F0 = vec3(0.04);
@@ -308,16 +299,18 @@ vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 norm
     float metallic  = mra.x; 
     float roughness = mra.y; 
     vec3 lightPos   = vec3(pointLight.position); 
-    vec3 lightColor = vec3(pointLight.color); 
+    vec3 lightColor = clamp(pointLight.color.rgb, vec3(0.0), vec3(1.0));
+    float lightIntensity = max(pointLight.color.a, 0.0);
     vec3 lightDir   = normalize(lightPos - fragPos); 
     vec3 halfVector = normalize(viewDir + lightDir); 
     float distance    = length(lightPos - fragPos); 
-    float attenuation = 1.0 / (pointLight.attenuation.x 
-                              + pointLight.attenuation.y * distance 
-                              + pointLight.attenuation.z * distance * distance); 
+    float attenuationDenominator = pointLight.attenuation.x
+                                 + pointLight.attenuation.y * distance
+                                 + pointLight.attenuation.z * distance * distance;
+    float attenuation = 1.0 / max(attenuationDenominator, 0.0001);
 
     // 入射辐射度
-    vec3 radiance = lightColor * attenuation; 
+    vec3 radiance = lightColor * lightIntensity * attenuation;
 
     // ---------- 菲涅尔项 ----------
     vec3 F0 = vec3(0.04); 
