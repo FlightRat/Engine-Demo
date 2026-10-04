@@ -237,8 +237,8 @@ namespace ENGINE_RENDERING
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glTextureStorage2D(id, 1, GL_DEPTH_COMPONENT24, width, height);
 
-        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
@@ -256,8 +256,8 @@ namespace ENGINE_RENDERING
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
         glTextureStorage2D(id, 1, GL_DEPTH_COMPONENT24, width, height);
 
-        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTextureParameteri(id, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
