@@ -1,6 +1,7 @@
 ﻿#version 450 core
 #define NR_DIR_LIGHTS   4
 #define NR_POINT_LIGHTS 4
+#define NR_AREA_LIGHTS  4
 
 struct DirLight {
     vec4 color;
@@ -12,6 +13,14 @@ struct PointLight {
     vec4 color;
     vec4 position;
     vec4 attenuation;
+};
+struct AreaLight {
+	vec4 color;
+	vec4 center_pos;
+	vec4 direction;
+	vec4 half_width;
+	vec4 half_height;
+	mat4 lightSpaceMatrix;
 };
 
 out vec4 FragColor;
@@ -32,12 +41,16 @@ layout(binding = 6) uniform samplerCube prefilterMap;
 layout(binding = 7) uniform sampler2D brdfLUT; 
 layout(binding = 11) uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
 layout(binding = 15) uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
+layout(binding = 19) uniform sampler2D areaShadowMap[NR_AREA_LIGHTS];
 
 layout (std140) uniform DirLights {
     DirLight dir_lights[NR_DIR_LIGHTS];
 };
 layout (std140) uniform PointLights {
     PointLight point_lights[NR_POINT_LIGHTS];
+};
+layout (std140) uniform AreaLights {
+    AreaLight area_lights[NR_AREA_LIGHTS];
 };
 
 const float PI = 3.14159265359;
@@ -50,11 +63,13 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
 // 直接光照计算（不含 ambient，只返回 Lo）
-vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
-vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
+vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
+vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
+vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 
-float ShadowCalculation_dir(sampler2D shadowMap, mat4 lightSpaceMatrix, vec3 fragPos, vec3 normal, vec3 lightDir);
-float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fragPos, vec3 normal);
+float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos, vec3 normal);
+float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal);
+float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, vec3 fragPos, vec3 normal);
 
 // ==================== 主函数 ====================
 void main()
@@ -90,18 +105,23 @@ void main()
     // ---------- 方向光 ----------
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
         if (dir_lights[i].direction.w < 0.5) continue;
-        vec3 lightDir = normalize(-vec3(dir_lights[i].direction));                                  // 方向光的光照方向（注意 direction 存储的是"从光源出发的方向"，需要取反）
-        float shadow = ShadowCalculation_dir(shadowMaps[i], dir_lights[i].lightSpaceMatrix, FragPos, Normal, lightDir);   // 阴影计算          
-        Lo += CalcDirLight(FragPos, dir_lights[i], ViewDir, Normal, Albedo, MRA, shadow);           // 累加直接光照
+        float shadow = ShadowCalculation_dir(dir_lights[i], shadowMaps[i], FragPos, Normal);       
+        Lo += CalcDirLight(dir_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
     // ---------- 点光源 ----------
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0){
-            vec3 lightPos = vec3(point_lights[i].position);
-            float shadow = ShadowCalculation_point(shadowCubeMap[i], lightPos, FragPos, Normal);
-            Lo += CalcPointLight(FragPos, point_lights[i], ViewDir, Normal, Albedo, MRA, shadow);
+            float shadow = ShadowCalculation_point(point_lights[i], shadowCubeMap[i], FragPos, Normal);
+            Lo += CalcPointLight(point_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
         }
+    }
+
+    // ---------- 面光源 ----------
+    for (int i = 0; i < NR_AREA_LIGHTS; i++) {
+        if (area_lights[i].direction.w < 0.5) continue;
+        float shadow = ShadowCalculation_area(area_lights[i], areaShadowMap[i], FragPos, Normal);       
+        Lo += CalcAreaLight(area_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
     // ---------- 环境光 ----------
@@ -185,21 +205,58 @@ vec3 sampleOffsetDirections[20] = vec3[](
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
+// 方向光阴影（标准 Shadow Map，PCF 3x3 软阴影）
+float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos, vec3 normal) {
+    vec3 N = normalize(normal);
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    // 光源方向
+    vec3 lightDir = normalize(-vec3(dirLight.direction));
+    // 光源矩阵
+    mat4 lightSpaceMatrix = dirLight.lightSpaceMatrix;
+
+    // Slope-scaled bias————光线越与表面垂直，偏移越低
+    float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
+    float bias = max(0.01 * (1.0 - NdotL), 0.001);
+
+    // normal bias————把片段世界坐标朝着法线移动，再转光源坐标系
+    vec3 normalOffset = normalize(normal) * 0.02;
+    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos+normalOffset, 1.0);
+
+    // 拿到真实深度
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    if (any(lessThan(projCoords, vec3(0.0))) || any(greaterThan(projCoords, vec3(1.0)))) return 0.0;
+    float currentDepth = projCoords.z;
+
+    // PCF 9x9
+    float shadow = 0.0;
+    for (int x = -1; x <= 1; ++x) {
+        for (int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += (currentDepth > pcfDepth + bias) ? 1.0 : 0.0;
+        }
+    }
+    return shadow/9.0;
+}
+
 // 点光源阴影（Omnidirectional Shadow Map，PCF软阴影）
-float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fragPos, vec3 normal) {
+float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal) {
+    vec3 N = normalize(normal);
+    vec3 lightPos = vec3(pointLight.position);
     vec3 fragToLight = fragPos - lightPos;
-    float currentDepth = length(fragToLight);
     
     // 1. 光照方向向量
     vec3 lightDir = normalize(lightPos - fragPos);
 
-    // 2. Slope-scaled————光线越与表面垂直，偏移越低
-    float bias = max(0.1 * (1.0 - dot(normal, lightDir)), 0.01); 
+    // 2. Slope-scaled bias————光线越与表面垂直，偏移越低
+    float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
+    float bias = max(0.1 * (1.0 - NdotL), 0.01); 
 
     // 3. Normal Offset————根据法线偏移片段世界坐标
     float normalOffsetScale = 0.02; 
-    vec3 offsetPos = fragPos + normal * normalOffsetScale;  // 偏移后坐标
-    vec3 samplingVector = offsetPos - lightPos;             // 光源指向片段的采样向量
+    vec3 offsetPos = fragPos + N * normalOffsetScale;  // 偏移后坐标
+    vec3 samplingVector = offsetPos - lightPos;        // 光源指向片段的采样向量
+    float currentDepth = length(samplingVector);
 
     // 4. PCF
     float shadow = 0.0;
@@ -215,39 +272,45 @@ float ShadowCalculation_point(samplerCube shadowCubeMap, vec3 lightPos, vec3 fra
     return shadow / float(samples);
 }
 
-// 方向光阴影（标准 Shadow Map，PCF 3x3 软阴影）
-float ShadowCalculation_dir(sampler2D shadowMap, mat4 lightSpaceMatrix, vec3 fragPos, vec3 normal, vec3 lightDir) {
-    
-    // slope-scaled bias 当光线与表面垂直时，bias很小，bias随着倾斜增大，平行时最大
-     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+// 面光源阴影
+float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, vec3 fragPos, vec3 normal)
+{
+    vec3 emitDir=normalize(areaLight.direction.xyz);
+    vec3 lightToFrag=fragPos - areaLight.center_pos.xyz;
+    if(dot(lightToFrag,emitDir)<=0.0) return 1.0;
 
-     // normal offsetPos
-     vec2 texelSize = 1.0 / textureSize(shadowMap, 0); // 像素占用纹理越大，像素越小
-     float normalOffsetScale = clamp(1.0 - dot(normal, lightDir), 0.0, 1.0);
-     vec3 normalOffset = normal * (texelSize.x * 2.0 * normalOffsetScale);
+    vec3 N = normalize(normal);
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    vec3 lightDir = normalize(-vec3(areaLight.direction));  // 光源方向
+    mat4 lightSpaceMatrix = areaLight.lightSpaceMatrix;     // 光源矩阵
 
-     // 把片段世界坐标朝着法线移动，再转光源坐标系拿到真实深度
-     vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos+normalOffset, 1.0);
-     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-     projCoords = projCoords * 0.5 + 0.5;
-     if(projCoords.z > 1.0) return 0.0;
-     float currentDepth = projCoords.z;
+    // Slope-scaled bias————光线越与表面垂直，偏移越低
+    float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
+    float bias = max(0.01 * (1.0 - NdotL), 0.001);
 
-     float shadow = 0.0;
-     // PCF 3x3
+    // normal bias————把片段世界坐标朝着法线移动，再转光源坐标系
+    vec3 normalOffset = normalize(normal) * 0.02;
+    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos+normalOffset, 1.0);
+
+    // 拿到真实深度
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    if (any(lessThan(projCoords, vec3(0.0))) || any(greaterThan(projCoords, vec3(1.0)))) return 0.0;
+    float currentDepth = projCoords.z;
+
+    // PCF 9x9
+    float shadow = 0.0;
     for (int x = -1; x <= 1; ++x) {
         for (int y = -1; y <= 1; ++y) {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += (currentDepth > pcfDepth + bias) ? 1.0 : 0.0;
         }
     }
-
     return shadow/9.0;
 }
 
-
 //  方向光 PBR 直接光照
-vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow){
+vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow){
     vec3 lightColor = clamp(dirLight.color.rgb, vec3(0.0), vec3(1.0));
     float lightIntensity = max(dirLight.color.a, 0.0);
     float metallic  = mra.x;
@@ -295,7 +358,7 @@ vec3 CalcDirLight(vec3 fragPos, DirLight dirLight, vec3 viewDir, vec3 normal, ve
 }
 
 // 点光源 PBR 直接光照
-vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow) { 
+vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow) { 
     float metallic  = mra.x; 
     float roughness = mra.y; 
     vec3 lightPos   = vec3(pointLight.position); 
@@ -342,4 +405,52 @@ vec3 CalcPointLight(vec3 fragPos, PointLight pointLight, vec3 viewDir, vec3 norm
     Lo *= (1.0 - shadow);
 
     return Lo; 
+}
+
+// 面光源 PBR 直接光照
+vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow){
+    vec3 lightColor = clamp(areaLight.color.rgb, vec3(0.0), vec3(1.0));
+    float lightIntensity = max(areaLight.color.a, 0.0);
+    float metallic  = mra.x;
+    float roughness = mra.y;
+    // mra.z (ao) 在 ambient 中处理，直接光照不用
+
+    // ---------- 光照方向 ----------
+    // direction 存储的是光源照射方向（从光源指向场景），取反得到片元到光源的方向
+    vec3 lightDir   = normalize(-vec3(areaLight.direction));
+    vec3 halfVector = normalize(viewDir + lightDir);
+
+    // ---------- 入射辐射度（方向光无衰减） ----------
+    vec3 radiance = lightColor * lightIntensity;
+
+    // ---------- 菲涅尔项 ----------
+    vec3 F0 = vec3(0.04);
+    F0      = mix(F0, albedo, metallic);
+    vec3 F  = fresnelSchlick(max(dot(halfVector, viewDir), 0.0), F0);
+
+    // ---------- 法线分布函数 ----------
+    float NDF = DistributionGGX(normal, halfVector, roughness);
+
+    // ---------- 几何遮蔽函数 ----------
+    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
+
+    // ---------- Cook-Torrance BRDF 高光项 ----------
+    vec3  numerator   = NDF * G * F;
+    float denominator = 4.0 * max(dot(normal, viewDir), 0.0)
+                            * max(dot(normal, lightDir), 0.0) + 0.0001;
+    vec3 specular = numerator / denominator;
+
+    // ---------- 能量守恒 ----------
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;  // 金属无漫反射
+
+    // ---------- 出射辐射度 ----------
+    float NdotL = max(dot(normal, lightDir), 0.0);
+    vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL;
+
+    // ---------- 阴影衰减 ----------
+    Lo *= (1.0 - shadow);
+
+    return Lo;
 }
