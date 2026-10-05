@@ -516,12 +516,21 @@ namespace ENGINE_EDITOR {
 				ENGINE_RENDERING::BufferType::SHADOWCUBEMAP, 
 				2048, 2048, false);
 		}
+		// shadowmap for area light
+		for (int i = 0; i < lightSystem->GetMaxAreaLights(); i++)
+		{
+			bufferManager.AddFrameBuffer(
+				"area_shadowmap_" + std::to_string(i),
+				ENGINE_RENDERING::BufferType::SHADOWMAP,
+				2048, 2048, false);
+		}
 
 		// uniform buffer
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
-		bufferManager.AddUniformBuffer("SSAO_samples", 64 * sizeof(glm::vec4), 3);
+		bufferManager.AddUniformBuffer("AreaLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::AreaLight), 3);
+		bufferManager.AddUniformBuffer("SSAO_samples", 64 * sizeof(glm::vec4), 4);
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// forward rendering shader
@@ -571,17 +580,18 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 		// bind uniform block index
-		forward_BlinnPhong->BindUniformBlock("Matrices", 0);
 		forward_Color->BindUniformBlock("Matrices", 0);
 		forward_AreaLight->BindUniformBlock("Matrices", 0);
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
 		defer_SSAO->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
+		forward_BlinnPhong->BindUniformBlock("Matrices", 0);
 		forward_BlinnPhong->BindUniformBlock("DirLights", 1);
-		defer_lighting->BindUniformBlock("DirLights", 1);
 		forward_BlinnPhong->BindUniformBlock("PointLights", 2);
+		defer_lighting->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("PointLights", 2);
-		defer_SSAO->BindUniformBlock("SSAO_samples", 3);
+		defer_lighting->BindUniformBlock("AreaLights", 3);
+		defer_SSAO->BindUniformBlock("SSAO_samples", 4);
 
 		// uniform block -- ssao samoles (it never update, so set it here)
 		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0);
