@@ -12,10 +12,10 @@ LightDefs =
 
 				type = "area_light",
 
-				half_width = 1.0,
-				half_height = 1.0,
-				pos = vec3(0.0, 10.0, 5.0),
-				direction = vec3(0.0, 0.0, -1.0)
+				half_width = 0.25,
+				half_height = 0.25,
+				pos = vec3(0.0, 10.0, 2.5),
+				direction = vec3(0.0, -1.0, -1.0)
 			}
 		}
 	},
