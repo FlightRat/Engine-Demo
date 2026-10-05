@@ -21,6 +21,7 @@ struct AreaLight {
 	vec4 half_width;
 	vec4 half_height;
 	mat4 lightSpaceMatrix;
+    vec4 shadowParams;
 };
 
 out vec4 FragColor;
@@ -54,6 +55,8 @@ layout (std140) uniform AreaLights {
 };
 
 const float PI = 3.14159265359;
+const int BLOCKER_SEARCH_KERNEL_RADIUS = 4;
+const int PCF_KERNEL_RADIUS = 4;
 
 // ==================== 函数前向声明 ====================
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
@@ -61,12 +64,17 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 float DistributionGGX(vec3 N, vec3 H, float roughness);
 float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
-
+// PCSS
+float DepthToDistance(float depth, float nearPlane, float farPlane);
+bool FindAverageBlockerDepth(sampler2D shadowMap, vec2 uv, float receiverZ, float nearPlane, float farPlane, float bias, vec2 searchRadiusUV, out float avgBlockerZ);
+vec2 ComputeBlockerSearchRadiusUV(AreaLight areaLight, float receiverZ);
+vec2 ComputePenumbraRadiusUV(AreaLight areaLight, float receiverZ, float avgBlockerZ);
+float FilterAreaShadowPCF(sampler2D shadowMap, vec2 uv, float receiverZ, float nearPlane, float farPlane, float bias, vec2 filterRadiusUV);
 // 直接光照计算（不含 ambient，只返回 Lo）
 vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
-
+// 阴影系数计算
 float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos, vec3 normal);
 float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal);
 float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, vec3 fragPos, vec3 normal);
@@ -120,7 +128,7 @@ void main()
     // ---------- 面光源 ----------
     for (int i = 0; i < NR_AREA_LIGHTS; i++) {
         if (area_lights[i].direction.w < 0.5) continue;
-        float shadow = ShadowCalculation_area(area_lights[i], areaShadowMap[i], FragPos, Normal);       
+        float shadow = ShadowCalculation_area(area_lights[i], areaShadowMap[i], FragPos, Normal);
         Lo += CalcAreaLight(area_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
@@ -205,6 +213,76 @@ vec3 sampleOffsetDirections[20] = vec3[](
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
+float DepthToDistance(float depth, float nearPlane, float farPlane){
+    return nearPlane*farPlane/(farPlane-depth*(farPlane-nearPlane));
+}
+
+vec2 ComputeBlockerSearchRadiusUV(AreaLight areaLight, float receiverZ)
+{
+    float nearPlane = areaLight.shadowParams.x;
+    vec2 nearHalfSize = areaLight.shadowParams.zw;
+    vec2 lightHalfSize = vec2(areaLight.half_width.w, areaLight.half_height.w);
+    float depthFactor = max(receiverZ - nearPlane, 0.0) / max(receiverZ, 1e-4);
+    vec2 nearPlaneSearchOffset = lightHalfSize * depthFactor;
+    vec2 searchRadiusUV = nearPlaneSearchOffset / max(2.0 * nearHalfSize, vec2(1e-4));
+    return searchRadiusUV;
+}
+
+bool FindAverageBlockerDepth(sampler2D shadowMap, vec2 uv, float receiverZ, float nearPlane, float farPlane, float bias, vec2 searchRadiusUV, out float avgBlockerZ){
+    float blockerDepthSum = 0.0;
+    // 既用于求平均，也用于识别“没有找到 blocker”的情况。
+    int blockerCount = 0;
+    for (int x = -BLOCKER_SEARCH_KERNEL_RADIUS; x <= BLOCKER_SEARCH_KERNEL_RADIUS; ++x) {
+        for (int y = -BLOCKER_SEARCH_KERNEL_RADIUS; y <= BLOCKER_SEARCH_KERNEL_RADIUS; ++y) {
+            vec2 normalizedOffset = vec2(x, y) / float(BLOCKER_SEARCH_KERNEL_RADIUS);
+            vec2 sampleUV = uv + normalizedOffset * searchRadiusUV;
+            if (any(lessThan(sampleUV, vec2(0.0))) || any(greaterThanEqual(sampleUV, vec2(1.0)))) continue;
+            float d = textureLod(shadowMap, sampleUV, 0.0).r;
+            float sampleZ = DepthToDistance(d, nearPlane, farPlane);
+            if (receiverZ > sampleZ + bias) {
+                blockerDepthSum += sampleZ;
+                blockerCount++;
+            }
+        }
+    }
+
+    if (blockerCount == 0) {
+        avgBlockerZ = 0.0;
+        return false;
+    }
+
+    avgBlockerZ = blockerDepthSum / float(blockerCount);
+    return true;
+}
+
+vec2 ComputePenumbraRadiusUV(AreaLight areaLight, float receiverZ, float avgBlockerZ)
+{
+    float nearPlane = areaLight.shadowParams.x;
+    vec2 nearHalfSize = areaLight.shadowParams.zw;
+    vec2 lightHalfSize = vec2(areaLight.half_width.w, areaLight.half_height.w);
+    vec2 penumbra = lightHalfSize * max(receiverZ - avgBlockerZ, 0.0) / max(avgBlockerZ, 1e-4);
+    vec2 receiverPlaneSize = 2.0 * nearHalfSize * receiverZ / max(nearPlane, 1e-4);
+    return penumbra / receiverPlaneSize;
+}
+
+float FilterAreaShadowPCF(sampler2D shadowMap,vec2 uv,float receiverZ,float nearPlane,float farPlane,float bias,vec2 filterRadiusUV)
+{
+    float shadow = 0.0;
+    int validFilterCount = 0;   // 越界样本被跳过，因此必须按实际有效样本数归一化。
+    for (int x = -PCF_KERNEL_RADIUS; x <= PCF_KERNEL_RADIUS; ++x) {
+        for (int y = -PCF_KERNEL_RADIUS; y <= PCF_KERNEL_RADIUS; ++y) {
+            vec2 normalizedOffset = vec2(x, y) / float(PCF_KERNEL_RADIUS);
+            vec2 sampleUV = uv + normalizedOffset * filterRadiusUV;
+            if (any(lessThan(sampleUV, vec2(0.0))) || any(greaterThanEqual(sampleUV, vec2(1.0)))) continue;
+            float d = textureLod(shadowMap, sampleUV, 0.0).r;
+            float sampleZ = DepthToDistance(d, nearPlane, farPlane);
+            shadow += receiverZ > sampleZ + bias ? 1.0 : 0.0;
+            validFilterCount++;
+        }
+    }
+    return validFilterCount > 0 ? shadow / float(validFilterCount) : 0.0;
+}
+
 // 方向光阴影（标准 Shadow Map，PCF 3x3 软阴影）
 float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos, vec3 normal) {
     vec3 N = normalize(normal);
@@ -230,13 +308,13 @@ float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos
 
     // PCF 9x9
     float shadow = 0.0;
-    for (int x = -1; x <= 1; ++x) {
-        for (int y = -1; y <= 1; ++y) {
+    for (int x = -4; x <= 4; ++x) {
+        for (int y = -4; y <= 4; ++y) {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += (currentDepth > pcfDepth + bias) ? 1.0 : 0.0;
         }
     }
-    return shadow/9.0;
+    return shadow/81.0;
 }
 
 // 点光源阴影（Omnidirectional Shadow Map，PCF软阴影）
@@ -275,38 +353,38 @@ float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, 
 // 面光源阴影
 float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, vec3 fragPos, vec3 normal)
 {
-    vec3 emitDir=normalize(areaLight.direction.xyz);
+    vec3 F=normalize(areaLight.direction.xyz);
+
+    // 光源背面为阴影
     vec3 lightToFrag=fragPos - areaLight.center_pos.xyz;
-    if(dot(lightToFrag,emitDir)<=0.0) return 1.0;
-
+    if(dot(lightToFrag, F)<=0.0) return 1.0;
+    // 归一化法线
     vec3 N = normalize(normal);
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    vec3 lightDir = normalize(-vec3(areaLight.direction));  // 光源方向
-    mat4 lightSpaceMatrix = areaLight.lightSpaceMatrix;     // 光源矩阵
-
-    // Slope-scaled bias————光线越与表面垂直，偏移越低
-    float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
-    float bias = max(0.01 * (1.0 - NdotL), 0.001);
-
-    // normal bias————把片段世界坐标朝着法线移动，再转光源坐标系
-    vec3 normalOffset = normalize(normal) * 0.02;
-    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos+normalOffset, 1.0);
-
-    // 拿到真实深度
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    if (any(lessThan(projCoords, vec3(0.0))) || any(greaterThan(projCoords, vec3(1.0)))) return 0.0;
-    float currentDepth = projCoords.z;
-
-    // PCF 9x9
-    float shadow = 0.0;
-    for (int x = -1; x <= 1; ++x) {
-        for (int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += (currentDepth > pcfDepth + bias) ? 1.0 : 0.0;
-        }
-    }
-    return shadow/9.0;
+    // 沿法线偏移着色点
+    vec3 offsetPos = fragPos+N*0.02;
+    // 世界坐标系→光源裁剪坐标系
+    vec4 clipPos = areaLight.lightSpaceMatrix * vec4(offsetPos,1.0);
+    if (clipPos.w <= 0.000001) return 0.0;
+    // 透视除法到NDC，然后转为0~1
+    vec3 coords=clipPos.xyz/clipPos.w*0.5+0.5;
+    if (any(lessThan(coords, vec3(0.0))) || any(greaterThanEqual(coords, vec3(1.0)))) return 0.0;
+    // 透视投影远近平面
+    float nearPlane=areaLight.shadowParams.x;
+    float farPlane=areaLight.shadowParams.y;
+    // 着色点在光源视线上的投影距离
+    float receiverZ = dot(offsetPos - areaLight.center_pos.xyz, F);
+    // 坡度偏移
+    vec3 fragToLight=normalize(areaLight.center_pos.xyz-offsetPos);
+    float NdotL=clamp(dot(fragToLight, N),0.0,1.0);
+    float bias = max(0.1 * (1.0 - NdotL), 0.001);
+    // PCSS: 搜索遮挡物平均深度
+    vec2 searchRadiusUV = ComputeBlockerSearchRadiusUV(areaLight, receiverZ);
+    float avgBlockerZ = 0.0;
+    if (!FindAverageBlockerDepth(shadowMap, coords.xy, receiverZ, nearPlane, farPlane, bias, searchRadiusUV, avgBlockerZ))
+        return 0.0;
+    // PCSS: 根据遮挡物与接收面的间距计算可变 PCF 半径
+    vec2 filterRadiusUV = ComputePenumbraRadiusUV(areaLight, receiverZ, avgBlockerZ);
+    return FilterAreaShadowPCF(shadowMap, coords.xy, receiverZ, nearPlane, farPlane, bias, filterRadiusUV);
 }
 
 //  方向光 PBR 直接光照
