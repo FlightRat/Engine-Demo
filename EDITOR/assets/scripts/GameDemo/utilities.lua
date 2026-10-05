@@ -80,7 +80,7 @@ function LoadEntity( def )
 		local light = newEntity:add_component(
 			Light(
 				def.components.Light.color or vec3(1.0, 1.0, 1.0),
-				def.components.Light.intensity or 255.0,
+				def.components.Light.intensity or 10.0,
 
 				def.components.Light.type or "point_light",
 

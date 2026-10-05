@@ -8,7 +8,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "area_light",
 
@@ -27,7 +27,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "point_light",
 
@@ -47,7 +47,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "point_light",
 
@@ -67,7 +67,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "point_light",
 
@@ -87,7 +87,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "point_light",
 
@@ -107,7 +107,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "point_light",
 
@@ -127,7 +127,7 @@ LightDefs =
 		{
 			Light = {
 				color = vec3(1.0, 1.0, 1.0),
-				intensity = 255.0,
+				intensity = 10.0,
 
 				type = "direction_light",
 
