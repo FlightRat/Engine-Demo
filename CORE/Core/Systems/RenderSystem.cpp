@@ -61,6 +61,7 @@ namespace ENGINE_CORE::Systems {
 		const auto& matrixUbo = bufferManager.GetUniformBuffer("matrix");
 		const auto& dirLightsUbo = bufferManager.GetUniformBuffer("DirLights");
 		const auto& pointLightsUbo = bufferManager.GetUniformBuffer("PointLights");
+		const auto& areaLightsUbo = bufferManager.GetUniformBuffer("AreaLights");
 
 		// uniform block -- camera param 
 		auto viewMatrix = camera->GetViewMatrix();
@@ -74,6 +75,7 @@ namespace ENGINE_CORE::Systems {
 		lightSystem->Update(runtimeRegistry);
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& areaLightData = lightSystem->GetAreaLightData();
 
 		// 填充方向光 UBO
 		// 数据已经是固定 MAX_DIR_LIGHTS 大小，直接一次性上传，性能最优
@@ -87,6 +89,13 @@ namespace ENGINE_CORE::Systems {
 		pointLightsUbo->UpdateUniformBuffer(
 			pointLightData.data(),
 			lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight),
+			0
+		);
+
+		// 填充面光源 UBO
+		areaLightsUbo->UpdateUniformBuffer(
+			areaLightData.data(),
+			lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight),
 			0
 		);
 
@@ -113,8 +122,45 @@ namespace ENGINE_CORE::Systems {
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& areaLightData = lightSystem->GetAreaLightData();
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
+
+		// 面光源
+		Shader_ShadowMap->Enable();
+		for (int arealight_index = 0; arealight_index < lightSystem->GetActivatedAreaLights(); arealight_index++)
+		{
+			const auto& shadowMap = bufferManager.GetFrameBuffer("area_shadowmap_" + std::to_string(arealight_index));
+			shadowMap->Bind();
+
+			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+			glClearColor(0.f, 0.f, 0.f, 1.f);
+			glClear(GL_DEPTH_BUFFER_BIT);
+
+			auto areaLight = areaLightData[arealight_index];
+			Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", areaLight.lightSpaceMatrix);
+
+			// render scene
+			auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+			for (auto [entity, transform, meshF, meshR, id] : view.each())
+			{
+				if (!meshR.shouldRender)
+					continue;
+
+				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+				Shader_ShadowMap->SetUniformMat4("model", model);
+				auto pModel = assetManager.GetModel(meshF.mesh);
+				if (!pModel)
+				{
+					pModel = assetManager.GetModel("cube");
+				}
+				const std::vector<Mesh>& meshes = pModel->GetMeshes();
+				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
+					meshes[meshIdx].Draw();
+			}
+
+			shadowMap->Unbind();
+		}
 
 		// 方向光
 		Shader_ShadowMap->Enable();
@@ -673,6 +719,7 @@ namespace ENGINE_CORE::Systems {
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
+		auto& areaLightData = lightSystem->GetAreaLightData();
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
 		const auto& ibl_fb = bufferManager.GetFrameBuffer("IBL");
@@ -715,6 +762,7 @@ namespace ENGINE_CORE::Systems {
 			{
 				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
 				glBindTextureUnit(texUnit, it->second->GetTextureID());
+				Shader_Lighting->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
 			}
 		}
 
@@ -729,6 +777,20 @@ namespace ENGINE_CORE::Systems {
 				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
 				glBindTextureUnit(texUnit, it->second->GetTextureID());
 				Shader_Lighting->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
+			}
+		}
+
+		// set area light shadowmap
+		int areaShadowMapBaseUnit = 11 + lightSystem->GetMaxDirLights() + lightSystem->GetMaxAreaLights();
+		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
+		{
+			std::string key = "area_shadowmap_" + std::to_string(area_light_index);
+			auto it = map_FBO.find(key);
+			if (it != map_FBO.end())
+			{
+				int texUnit = areaShadowMapBaseUnit + area_light_index;
+				glBindTextureUnit(texUnit, it->second->GetTextureID());
+				Shader_Lighting->SetUniformInt("areaShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
 			}
 		}
 
@@ -780,7 +842,7 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_rect_model = glm::mat4(1.0f);
 			light_rect_model = glm::translate(light_rect_model, glm::vec3(area_light.center_pos));
 			light_rect_model = light_rect_model * glm::mat4_cast(orientation);
-			light_rect_model = glm::scale(light_rect_model, glm::vec3{ area_light.half_width,0.001f,area_light.half_height });
+			light_rect_model = glm::scale(light_rect_model, glm::vec3{ area_light.half_width.x,0.001f,area_light.half_height.x });
 			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_rect_model)));
 			Shader_AreaLight->SetUniformMat4("model", light_rect_model);
 			Shader_AreaLight->SetUniformMat3("normalMatrix", normalMatrix);
