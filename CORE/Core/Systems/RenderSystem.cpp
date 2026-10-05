@@ -781,7 +781,7 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// set area light shadowmap
-		int areaShadowMapBaseUnit = 11 + lightSystem->GetMaxDirLights() + lightSystem->GetMaxAreaLights();
+		int areaShadowMapBaseUnit = 11 + lightSystem->GetMaxDirLights() + lightSystem->GetMaxPointLights();
 		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
 		{
 			std::string key = "area_shadowmap_" + std::to_string(area_light_index);

@@ -529,7 +529,7 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
-		bufferManager.AddUniformBuffer("AreaLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::AreaLight), 3);
+		bufferManager.AddUniformBuffer("AreaLights", lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight), 3);
 		bufferManager.AddUniformBuffer("SSAO_samples", 64 * sizeof(glm::vec4), 4);
 
 		auto& assetManager = mainRegistry.GetAssetManager();
