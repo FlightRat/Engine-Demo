@@ -35,9 +35,10 @@ namespace ENGINE_CORE::Systems {
                 if (ACTIVATED_DIR_LIGHTS < MAX_DIR_LIGHTS)
                 {
                     // calculate lightSpaceMatrix
-                    glm::vec3 dirLightPos = glm::vec3(0.0f) - (light.direction * 10.0f);
+                    glm::vec3 normalizedDirection = glm::normalize(light.direction);
+                    glm::vec3 dirLightPos = glm::vec3(0.0f) - (normalizedDirection * 10.0f);
                     float near_plane = 0.1f, far_plane = 50.0f;
-                    glm::vec3 upVector = glm::abs(light.direction.y) > 0.99f
+                    glm::vec3 upVector = glm::abs(normalizedDirection.y) > 0.99f
                         ? glm::vec3(0.0f, 0.0f, 1.0f)
                         : glm::vec3(0.0f, 1.0f, 0.0f);
                     glm::mat4 lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
@@ -61,22 +62,24 @@ namespace ENGINE_CORE::Systems {
                 if (ACTIVATED_AREA_LIGHTS < MAX_AREA_LIGHTS)
                 {
                     // calculate lightSpaceMatrix
-                    glm::vec3 dirLightPos = glm::vec3(0.0f) - (light.direction * 10.0f);
+                    glm::vec3 normalizedDirection = glm::normalize(light.direction);
+                    glm::vec3 areaLightPos = light.pos;
+                    glm::vec3 targetPos = light.pos + (normalizedDirection * 10.0f);
                     float near_plane = 0.1f, far_plane = 50.0f;
-                    glm::vec3 upVector = glm::abs(light.direction.y) > 0.99f
+                    glm::vec3 upVector = glm::abs(normalizedDirection.y) > 0.99f
                         ? glm::vec3(0.0f, 0.0f, 1.0f)
                         : glm::vec3(0.0f, 1.0f, 0.0f);
-                    glm::mat4 lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
+                    glm::mat4 lightViewMatrix = glm::lookAt(areaLightPos, targetPos, upVector);
                     glm::mat4 lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
                     glm::mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
 
                     // 直接写入对应槽位，而不是 push_back
                     m_AreaLightData[ACTIVATED_AREA_LIGHTS] = ENGINE_RENDERING::AreaLight{
-                        .half_width = light.half_width,
-                        .half_height = light.half_height,
                         .color = glm::vec4(light.color, light.intensity),
                         .center_pos = glm::vec4(light.pos, 1.0f),
                         .direction = glm::vec4(light.direction, 1.0f),
+                        .half_width = glm::vec4(light.half_width),
+                        .half_height = glm::vec4(light.half_height),
                         .lightSpaceMatrix = lightSpaceMatrix
                     };
                     ACTIVATED_AREA_LIGHTS++;
