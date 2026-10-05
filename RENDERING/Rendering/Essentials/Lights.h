@@ -22,5 +22,6 @@ namespace ENGINE_RENDERING {
 		glm::vec4 half_width{ 0.0f };
 		glm::vec4 half_height{ 0.0f };
 		glm::mat4 lightSpaceMatrix{ 0.0f };
+		glm::vec4 shadowParams{ 0.0f }; // 进平面N  远平面F  进平面半宽  进平面半高
 	};
 }
