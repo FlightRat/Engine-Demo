@@ -61,26 +61,30 @@ namespace ENGINE_CORE::Systems {
             else if (light.type == "area_light") {
                 if (ACTIVATED_AREA_LIGHTS < MAX_AREA_LIGHTS)
                 {
+                    if (glm::dot(light.direction, light.direction) < 1e-8f) {
+                        continue;
+                    }
                     // calculate lightSpaceMatrix
                     glm::vec3 normalizedDirection = glm::normalize(light.direction);
-                    glm::vec3 areaLightPos = light.pos;
-                    glm::vec3 targetPos = light.pos + (normalizedDirection * 10.0f);
-                    float near_plane = 0.1f, far_plane = 50.0f;
-                    glm::vec3 upVector = glm::abs(normalizedDirection.y) > 0.99f
-                        ? glm::vec3(0.0f, 0.0f, 1.0f)
-                        : glm::vec3(0.0f, 1.0f, 0.0f);
-                    glm::mat4 lightViewMatrix = glm::lookAt(areaLightPos, targetPos, upVector);
-                    glm::mat4 lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+                    glm::vec3 upVector = glm::abs(normalizedDirection.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+                    glm::vec3 rightVector = glm::normalize(glm::cross(normalizedDirection, upVector));
+                    upVector = glm::cross(rightVector, normalizedDirection);
+                    float near_plane = 2.0f, far_plane = 20.0f, fovY = glm::radians(90.0f), aspect = 1.0f;
+                    float nearHalfHeight = near_plane * glm::tan(fovY * 0.5f);  // 透视投影进平面半高
+                    float nearHalfWidth = nearHalfHeight * aspect;  // 透视投影进平面半宽
+                    glm::mat4 lightViewMatrix = glm::lookAtRH(light.pos, light.pos+normalizedDirection, upVector);
+                    glm::mat4 lightProjectionMatrix = glm::perspectiveRH_NO(fovY, aspect, near_plane, far_plane);
                     glm::mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
 
                     // 直接写入对应槽位，而不是 push_back
                     m_AreaLightData[ACTIVATED_AREA_LIGHTS] = ENGINE_RENDERING::AreaLight{
                         .color = glm::vec4(light.color, light.intensity),
                         .center_pos = glm::vec4(light.pos, 1.0f),
-                        .direction = glm::vec4(light.direction, 1.0f),
-                        .half_width = glm::vec4(light.half_width),
-                        .half_height = glm::vec4(light.half_height),
-                        .lightSpaceMatrix = lightSpaceMatrix
+                        .direction = glm::vec4(normalizedDirection, 1.0f),
+                        .half_width = glm::vec4(rightVector,light.half_width),
+                        .half_height = glm::vec4(upVector,light.half_height),
+                        .lightSpaceMatrix = lightSpaceMatrix,
+                        .shadowParams = glm::vec4(near_plane,far_plane,nearHalfWidth,nearHalfHeight)
                     };
                     ACTIVATED_AREA_LIGHTS++;
                 }
