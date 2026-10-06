@@ -70,8 +70,8 @@ namespace ENGINE_CORE::Systems {
                     glm::vec3 rightVector = glm::normalize(glm::cross(normalizedDirection, upVector));
                     upVector = glm::cross(rightVector, normalizedDirection);
                     float near_plane = 2.0f, far_plane = 100.0f, fovY = glm::radians(90.0f), aspect = 1.0f;
-                    float nearHalfHeight = near_plane * glm::tan(fovY * 0.5f);  // 透视投影进平面半高
-                    float nearHalfWidth = nearHalfHeight * aspect;  // 透视投影进平面半宽
+                    float nearHalfHeight = near_plane * glm::tan(fovY * 0.5f);  // 透视投影近平面半高
+                    float nearHalfWidth = nearHalfHeight * aspect;              // 透视投影近平面半宽
                     glm::mat4 lightViewMatrix = glm::lookAtRH(light.pos, light.pos+normalizedDirection, upVector);
                     glm::mat4 lightProjectionMatrix = glm::perspectiveRH_NO(fovY, aspect, near_plane, far_plane);
                     glm::mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
