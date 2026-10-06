@@ -426,10 +426,12 @@ namespace ENGINE_EDITOR {
 				ImGui::SetColumnWidth(0, 100.0f);
 
 				ImGui::Text("Half_Width"); ImGui::NextColumn();
-				ImGui::DragFloat("##Width", &light.half_width); ImGui::NextColumn();
+				ImGui::DragFloat("##Width", &light.half_width, 0.01f, 0.001f, 4.999f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::NextColumn();
 
 				ImGui::Text("Half_Height"); ImGui::NextColumn();
-				ImGui::DragFloat("##Height", &light.half_height); ImGui::NextColumn();
+				ImGui::DragFloat("##Height", &light.half_height, 0.01f, 0.001f, 4.999f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::NextColumn();
 			}
 
 			ImGui::TreePop();
