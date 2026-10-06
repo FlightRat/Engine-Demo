@@ -15,7 +15,7 @@ LightDefs =
 				half_width = 0.25,
 				half_height = 0.25,
 				pos = vec3(0.0, 10.0, 2.5),
-				direction = vec3(0.0, -1.0, -1.0)
+				rotation = vec3(45.0, 0.0, 0.0)
 			}
 		}
 	},

@@ -93,7 +93,8 @@ function LoadEntity( def )
 				def.components.Light.direction or vec3(0.0, -1.0, 0.0),
 
 				def.components.Light.half_width or 0.0,
-				def.components.Light.half_height or 0.0
+				def.components.Light.half_height or 0.0,
+				def.components.Light.rotation or vec3(0.0, 0.0, 0.0)
 			)
 		)
 	end

@@ -1,6 +1,7 @@
 #pragma once
 #include<glm/glm.hpp>
 #include<sol/sol.hpp>
+#include<glm/gtc/quaternion.hpp>
 
 namespace ENGINE_CORE::ECS {
 	struct LightComponent 
@@ -16,12 +17,14 @@ namespace ENGINE_CORE::ECS {
 		float quadratic = 0.032;
 		bool render = false;
 
-		// for directionLight & areaLight
+		// for directionLight
 		glm::vec3 direction = glm::vec3(-0.2f, -1.0f, -0.3f);
 
 		// for areaLight
 		float half_width{ 0.0f };
 		float half_height{ 0.0f };
+		glm::vec3 rotation_eular{ 0.0f }; // degrees, editable rotation
+		glm::quat rotation_quat{ 1.0f, 0.0f, 0.0f, 0.0f }; // derived from Euler angles
 
 		static void CreateLuaLightBind(sol::state& lua);
 	};

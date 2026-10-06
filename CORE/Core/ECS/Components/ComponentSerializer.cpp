@@ -278,8 +278,11 @@ namespace ENGINE_CORE::ECS {
 			.AddKeyValuePair("linear", light.linear)
 			.AddKeyValuePair("quadratic", light.quadratic)
 			.AddKeyValuePair("render", light.render)
-
-			//
+			.StartNewObject("rotation_eular")
+			.AddKeyValuePair("x", light.rotation_eular.x)
+			.AddKeyValuePair("y", light.rotation_eular.y)
+			.AddKeyValuePair("z", light.rotation_eular.z)
+			.EndObject()
 			.StartNewObject("direction")
 			.AddKeyValuePair("x", light.direction.x)
 			.AddKeyValuePair("y", light.direction.y)
@@ -400,13 +403,14 @@ namespace ENGINE_CORE::ECS {
 			jsonValue["direction"]["y"].GetFloat(),
 			jsonValue["direction"]["z"].GetFloat()
 		};
-		if (jsonValue.HasMember("half_width") && jsonValue["half_width"].IsNumber())
-		{
-			light.half_width = jsonValue["half_width"].GetFloat();
-		}
-		if (jsonValue.HasMember("half_height") && jsonValue["half_height"].IsNumber())
-		{
-			light.half_height = jsonValue["half_height"].GetFloat();
-		}
+
+		light.rotation_eular = glm::vec3{
+			jsonValue["rotation_eular"]["x"].GetFloat(),
+			jsonValue["rotation_eular"]["y"].GetFloat(),
+			jsonValue["rotation_eular"]["z"].GetFloat()
+		};
+		light.rotation_quat = glm::quat(glm::radians(light.rotation_eular));
+		light.half_width = jsonValue["half_width"].GetFloat();
+		light.half_height = jsonValue["half_height"].GetFloat();
 	}
 }

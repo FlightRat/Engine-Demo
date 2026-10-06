@@ -413,14 +413,14 @@ namespace ENGINE_EDITOR {
 			}
 			else if (light.type == "area_light") {
 				ImGui::DrawVec3Control("Center_Pos", light.pos);
-				ImGui::DrawVec3Control("Direction", light.direction);
-				light.direction = glm::clamp(
-					light.direction,
-					glm::vec3(-1.0f),
-					glm::vec3(1.0f)
-				);
+				glm::vec3 euler = light.rotation_eular;
+				glm::vec3 oldEuler = euler;
+				ImGui::DrawVec3Control("Rotation", euler);
+				if (euler != oldEuler) {
+					light.rotation_eular = euler;
+					light.rotation_quat = glm::quat(glm::radians(light.rotation_eular));
+				}
 
-				ImGui::Text("Size");
 				// 使用 Columns 简单对齐参数
 				ImGui::Columns(2, nullptr, false);
 				ImGui::SetColumnWidth(0, 100.0f);

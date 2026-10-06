@@ -12,7 +12,7 @@ namespace ENGINE_CORE::ECS {
 				[](
 					glm::vec3 color, float intensity, std::string type,
 					glm::vec3 pos, float constant, float linear, float quadratic, bool render,
-					glm::vec3 direction, float half_width, float half_height)
+					glm::vec3 direction, float half_width, float half_height, glm::vec3 rotation)
 				{
 					return LightComponent{
 						.color = color,
@@ -26,12 +26,16 @@ namespace ENGINE_CORE::ECS {
 						.direction = direction,
 						.half_width = half_width,
 						.half_height = half_height,
+						.rotation_eular = rotation,
+						.rotation_quat = glm::quat(glm::radians(rotation))
 					};
 				}
 			),
 			"color", &LightComponent::color,
 			"intensity",&LightComponent::intensity,
 			"direction", &LightComponent::direction,
+			"rotation_eular", &LightComponent::rotation_eular,
+			"rotation_quat", &LightComponent::rotation_quat,
 			"position", &LightComponent::pos,
 			"constant", &LightComponent::constant,
 			"linear", &LightComponent::linear,

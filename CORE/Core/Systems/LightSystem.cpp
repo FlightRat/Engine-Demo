@@ -61,14 +61,10 @@ namespace ENGINE_CORE::Systems {
             else if (light.type == "area_light") {
                 if (ACTIVATED_AREA_LIGHTS < MAX_AREA_LIGHTS)
                 {
-                    if (glm::dot(light.direction, light.direction) < 1e-8f) {
-                        continue;
-                    }
-                    // calculate lightSpaceMatrix
-                    glm::vec3 normalizedDirection = glm::normalize(light.direction);
-                    glm::vec3 upVector = glm::abs(normalizedDirection.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-                    glm::vec3 rightVector = glm::normalize(glm::cross(normalizedDirection, upVector));
-                    upVector = glm::cross(rightVector, normalizedDirection);
+                    light.rotation_quat = glm::quat(glm::radians(light.rotation_eular));
+                    glm::vec3 normalizedDirection = light.rotation_quat * glm::vec3(0.0f, -1.0f, 0.0f);
+                    glm::vec3 rightVector = light.rotation_quat * glm::vec3(-1.0f, 0.0f, 0.0f);
+                    glm::vec3 upVector = light.rotation_quat * glm::vec3(0.0f, 0.0f, 1.0f);
                     float near_plane = 2.0f, far_plane = 100.0f, fovY = glm::radians(90.0f), aspect = 1.0f;
                     float nearHalfHeight = near_plane * glm::tan(fovY * 0.5f);  // 透视投影近平面半高
                     float nearHalfWidth = nearHalfHeight * aspect;              // 透视投影近平面半宽
