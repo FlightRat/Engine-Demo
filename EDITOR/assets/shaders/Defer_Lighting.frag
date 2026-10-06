@@ -131,7 +131,6 @@ void main()
     float receiverNormalLength = dot(receiverNormal, receiverNormal);
     if(receiverNormalLength > 1e-12)receiverNormal *= inversesqrt(receiverNormalLength);
     else receiverNormal=Normal; 
-    receiverNormal=Normal;
     if (dot(receiverNormal, Normal) < 0.0) receiverNormal = -receiverNormal;
 
     // SSAO
