@@ -55,9 +55,41 @@ layout (std140) uniform AreaLights {
 };
 
 const float PI = 3.14159265359;
-const int BLOCKER_SEARCH_KERNEL_RADIUS = 4;
-const int PCF_KERNEL_RADIUS = 4;
-
+const int PCSS_POISSON_SAMPLE_COUNT = 32;
+const vec2 PCSS_POISSON_SAMPLES[PCSS_POISSON_SAMPLE_COUNT] = vec2[](
+    vec2(-0.149526,  0.359701),
+    vec2( 0.986664, -0.996068),
+    vec2(-0.922278, -0.990225),
+    vec2( 0.997021,  0.982214),
+    vec2( 0.027819, -0.649155),
+    vec2(-0.998254,  0.938730),
+    vec2( 0.802187, -0.014030),
+    vec2(-0.995388, -0.041308),
+    vec2( 0.228153,  0.998907),
+    vec2(-0.568586, -0.490378),
+    vec2(-0.383064,  0.925000),
+    vec2( 0.444705,  0.464125),
+    vec2( 0.604381, -0.540442),
+    vec2( 0.213788, -0.111529),
+    vec2(-0.720852,  0.461645),
+    vec2(-0.383883, -0.971204),
+    vec2( 0.925918,  0.502835),
+    vec2( 0.462445, -0.998728),
+    vec2(-0.493441,  0.007651),
+    vec2(-0.999795, -0.484943),
+    vec2( 0.993740, -0.429842),
+    vec2(-0.168694, -0.286180),
+    vec2( 0.606570,  0.878681),
+    vec2( 0.101144,  0.633689),
+    vec2( 0.010122, -0.994586),
+    vec2( 0.484304,  0.112859),
+    vec2(-0.092252,  0.037104),
+    vec2(-0.407757,  0.588829),
+    vec2( 0.287081, -0.427186),
+    vec2( 0.540960, -0.212704),
+    vec2( 0.173981,  0.237580),
+    vec2(-0.707220,  0.792787)
+);
 // ==================== 函数前向声明 ====================
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
@@ -230,27 +262,18 @@ vec2 ComputeBlockerSearchRadiusUV(AreaLight areaLight, float receiverZ)
 
 bool FindAverageBlockerDepth(sampler2D shadowMap, vec2 uv, float receiverZ, float nearPlane, float farPlane, float bias, vec2 searchRadiusUV, out float avgBlockerZ){
     float blockerDepthSum = 0.0;
-    // 既用于求平均，也用于识别“没有找到 blocker”的情况。
     int blockerCount = 0;
-    for (int x = -BLOCKER_SEARCH_KERNEL_RADIUS; x <= BLOCKER_SEARCH_KERNEL_RADIUS; ++x) {
-        for (int y = -BLOCKER_SEARCH_KERNEL_RADIUS; y <= BLOCKER_SEARCH_KERNEL_RADIUS; ++y) {
-            vec2 normalizedOffset = vec2(x, y) / float(BLOCKER_SEARCH_KERNEL_RADIUS);
-            vec2 sampleUV = uv + normalizedOffset * searchRadiusUV;
-            if (any(lessThan(sampleUV, vec2(0.0))) || any(greaterThanEqual(sampleUV, vec2(1.0)))) continue;
-            float d = textureLod(shadowMap, sampleUV, 0.0).r;
-            float sampleZ = DepthToDistance(d, nearPlane, farPlane);
-            if (receiverZ > sampleZ + bias) {
-                blockerDepthSum += sampleZ;
-                blockerCount++;
-            }
+    for (int i = 0; i < PCSS_POISSON_SAMPLE_COUNT; ++i) {
+        vec2 sampleUV = uv + PCSS_POISSON_SAMPLES[i] * searchRadiusUV;
+        if (any(lessThan(sampleUV, vec2(0.0))) || any(greaterThanEqual(sampleUV, vec2(1.0)))) continue;
+        float d = textureLod(shadowMap, sampleUV, 0.0).r;
+        float sampleZ = DepthToDistance(d, nearPlane, farPlane);
+        if (receiverZ > sampleZ + bias) {
+            blockerDepthSum += sampleZ;
+            blockerCount++;
         }
     }
-
-    if (blockerCount == 0) {
-        avgBlockerZ = 0.0;
-        return false;
-    }
-
+    if (blockerCount == 0) { avgBlockerZ = 0.0; return false;}
     avgBlockerZ = blockerDepthSum / float(blockerCount);
     return true;
 }
@@ -268,17 +291,14 @@ vec2 ComputePenumbraRadiusUV(AreaLight areaLight, float receiverZ, float avgBloc
 float FilterAreaShadowPCF(sampler2D shadowMap,vec2 uv,float receiverZ,float nearPlane,float farPlane,float bias,vec2 filterRadiusUV)
 {
     float shadow = 0.0;
-    int validFilterCount = 0;   // 越界样本被跳过，因此必须按实际有效样本数归一化。
-    for (int x = -PCF_KERNEL_RADIUS; x <= PCF_KERNEL_RADIUS; ++x) {
-        for (int y = -PCF_KERNEL_RADIUS; y <= PCF_KERNEL_RADIUS; ++y) {
-            vec2 normalizedOffset = vec2(x, y) / float(PCF_KERNEL_RADIUS);
-            vec2 sampleUV = uv + normalizedOffset * filterRadiusUV;
-            if (any(lessThan(sampleUV, vec2(0.0))) || any(greaterThanEqual(sampleUV, vec2(1.0)))) continue;
-            float d = textureLod(shadowMap, sampleUV, 0.0).r;
-            float sampleZ = DepthToDistance(d, nearPlane, farPlane);
-            shadow += receiverZ > sampleZ + bias ? 1.0 : 0.0;
-            validFilterCount++;
-        }
+    int validFilterCount = 0;
+    for(int i=0;i<PCSS_POISSON_SAMPLE_COUNT;i++){
+        vec2 sampleUV = uv + PCSS_POISSON_SAMPLES[i] * filterRadiusUV;
+        if (any(lessThan(sampleUV, vec2(0.0))) || any(greaterThanEqual(sampleUV, vec2(1.0)))) continue;
+        float d = textureLod(shadowMap, sampleUV, 0.0).r;
+        float sampleZ = DepthToDistance(d, nearPlane, farPlane);
+        shadow += receiverZ > sampleZ + bias ? 1.0 : 0.0;
+        validFilterCount++;
     }
     return validFilterCount > 0 ? shadow / float(validFilterCount) : 0.0;
 }
