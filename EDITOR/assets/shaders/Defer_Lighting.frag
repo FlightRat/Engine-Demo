@@ -18,8 +18,8 @@ struct AreaLight {
 	vec4 color;
 	vec4 center_pos;
 	vec4 direction;
-	vec4 half_width;
-	vec4 half_height;
+	vec4 rightVector_halfWidth;
+	vec4 upVector_halfHeight;
 	mat4 lightSpaceMatrix;
     vec4 shadowParams;
 };
@@ -264,7 +264,7 @@ vec2 ComputeBlockerSearchRadiusUV(AreaLight areaLight, float receiverZ)
 {
     float nearPlane = areaLight.shadowParams.x;
     vec2 nearHalfSize = areaLight.shadowParams.zw;
-    vec2 lightHalfSize = vec2(areaLight.half_width.w, areaLight.half_height.w);
+    vec2 lightHalfSize = vec2(areaLight.rightVector_halfWidth.w, areaLight.upVector_halfHeight.w);
     float depthFactor = max(receiverZ - nearPlane, 0.0) / max(receiverZ, 1e-4);
     vec2 nearPlaneSearchOffset = lightHalfSize * depthFactor;
     vec2 searchRadiusUV = nearPlaneSearchOffset / max(2.0 * nearHalfSize, vec2(1e-4));
@@ -278,7 +278,7 @@ vec2 ComputeReceiverDepthGradient(AreaLight areaLight, vec3 receiverPos, vec3 re
     vec3 N = receiverNormal;
     float planeDistance = dot(N, receiverPos-areaLight.center_pos.xyz);
     if(abs(planeDistance) < 1e-5) return vec2(0.0);
-    vec2 normalXY=vec2(dot(N,areaLight.half_width.xyz), dot(N,areaLight.half_height.xyz));
+    vec2 normalXY=vec2(dot(N,areaLight.rightVector_halfWidth.xyz), dot(N,areaLight.upVector_halfHeight.xyz));
     vec2 nearHalfSize=areaLight.shadowParams.zw;
     return -2.0 * farPlane * nearHalfSize * normalXY / ((farPlane - nearPlane) * planeDistance);
 }
@@ -321,7 +321,7 @@ vec2 ComputePenumbraRadiusUV(AreaLight areaLight, float receiverZ, float avgBloc
 {
     float nearPlane = areaLight.shadowParams.x;
     vec2 nearHalfSize = areaLight.shadowParams.zw;
-    vec2 lightHalfSize = vec2(areaLight.half_width.w, areaLight.half_height.w);
+    vec2 lightHalfSize = vec2(areaLight.rightVector_halfWidth.w, areaLight.upVector_halfHeight.w);
     vec2 penumbra = lightHalfSize * max(receiverZ - avgBlockerZ, 0.0) / max(avgBlockerZ, 1e-4);
     vec2 receiverPlaneSize = 2.0 * nearHalfSize * receiverZ / max(nearPlane, 1e-4);
     return penumbra / receiverPlaneSize;

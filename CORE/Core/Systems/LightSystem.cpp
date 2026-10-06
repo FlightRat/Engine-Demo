@@ -81,8 +81,8 @@ namespace ENGINE_CORE::Systems {
                         .color = glm::vec4(light.color, light.intensity),
                         .center_pos = glm::vec4(light.pos, 1.0f),
                         .direction = glm::vec4(normalizedDirection, 1.0f),
-                        .half_width = glm::vec4(rightVector,light.half_width),
-                        .half_height = glm::vec4(upVector,light.half_height),
+                        .rightVector_halfWidth = glm::vec4(rightVector,light.half_width),
+                        .upVector_halfHeight = glm::vec4(upVector,light.half_height),
                         .lightSpaceMatrix = lightSpaceMatrix,
                         .shadowParams = glm::vec4(near_plane,far_plane,nearHalfWidth,nearHalfHeight)
                     };

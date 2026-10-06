@@ -838,8 +838,8 @@ namespace ENGINE_CORE::Systems {
 		for (int area_light_index = 0; area_light_index < lightSystem->GetActivatedAreaLights(); area_light_index++) {
 			auto area_light = areaLightData[area_light_index];
 
-			glm::vec3 U = glm::vec3(area_light.half_width);
-			glm::vec3 V = glm::vec3(area_light.half_height);
+			glm::vec3 U = glm::vec3(area_light.rightVector_halfWidth);
+			glm::vec3 V = glm::vec3(area_light.upVector_halfHeight);
 			glm::vec3 F = glm::vec3(area_light.direction);
 			glm::mat4 orientation(1.0f);
 			orientation[0] = glm::vec4(U, 0.0f);
@@ -849,7 +849,7 @@ namespace ENGINE_CORE::Systems {
 			glm::mat4 light_rect_model = glm::mat4(1.0f);
 			light_rect_model = glm::translate(light_rect_model, glm::vec3(area_light.center_pos));
 			light_rect_model = light_rect_model * orientation;
-			light_rect_model = glm::scale(light_rect_model, glm::vec3(area_light.half_width.w, 0.001f, area_light.half_height.w));
+			light_rect_model = glm::scale(light_rect_model, glm::vec3(area_light.rightVector_halfWidth.w, 0.001f, area_light.upVector_halfHeight.w));
 			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(light_rect_model)));
 			Shader_AreaLight->SetUniformMat4("model", light_rect_model);
 			Shader_AreaLight->SetUniformMat3("normalMatrix", normalMatrix);
