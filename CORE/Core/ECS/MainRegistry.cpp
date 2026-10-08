@@ -32,6 +32,12 @@ namespace ENGINE_CORE::ECS {
 		return true;
 	}
 
+	void MainRegistry::CleanUp()
+	{
+		m_pMainRegistry.reset();
+		m_bInitialized = false;
+	}
+
 	ENGINE_CORE::BUFFERS::BufferManager& MainRegistry::GetBufferManager()
 	{
 		assert(m_bInitialized && "Main Registry must be initialized before use.");

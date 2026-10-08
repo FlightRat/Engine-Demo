@@ -850,6 +850,22 @@ namespace ENGINE_EDITOR {
 
 	void Application::CleanUp()
 	{
+		// 后面的 GPU 资源释放需要当前 OpenGL 上下文。
+		SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext());
+
+		// 先释放场景中的实体、脚本、物理对象等。
+		SCENE_MANAGER().CleanUp();
+		// 再释放编辑器对象和共享的模型、纹理、Shader、缓冲。
+		MAIN_REGISTRY().CleanUp();
+
+		// 此时窗口和 GL context 仍然有效。
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplSDL2_Shutdown();
+		ImGui::DestroyContext();
+
+		// 触发 Window 析构，再由 WindowPtr 销毁 SDL_Window。
+		m_pWindow.reset();
+
 		SDL_Quit();
 	}
 

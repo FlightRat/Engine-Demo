@@ -34,6 +34,8 @@ namespace ENGINE_CORE::ECS {
 			return m_pMainRegistry->GetContext<TContext>();
 		}
 
+		void CleanUp();
+
 		ENGINE_CORE::BUFFERS::BufferManager& GetBufferManager();
 		ENGINE_CORE::RESOURCES::AssetManager& GetAssetManager();
 		ENGINE_SOUNDS::MusicPlayer& GetMusicPlayer();

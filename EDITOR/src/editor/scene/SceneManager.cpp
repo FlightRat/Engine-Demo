@@ -69,5 +69,10 @@ namespace ENGINE_EDITOR {
 		return ENGINE_UTIL::GetKeys(m_mapScene);
 	}
 
+	void SceneManager::CleanUp()
+	{
+		m_mapScene.clear();
+		m_sCurrentScene.clear();
+	}
 }
 

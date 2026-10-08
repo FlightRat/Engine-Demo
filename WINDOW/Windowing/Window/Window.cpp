@@ -35,6 +35,8 @@ namespace ENGINE_WINDOWING
 
 	Window::~Window()
 	{
+		SDL_GL_DeleteContext(m_GLContext);
+		m_GLContext = nullptr;
 	}
 
 	void Window::SetWindowName(const std::string& name)

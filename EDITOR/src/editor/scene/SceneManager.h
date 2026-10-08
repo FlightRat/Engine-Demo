@@ -25,6 +25,7 @@ namespace ENGINE_EDITOR {
 
 		bool AddScene(const std::string& sSceneName);
 		bool DeleteScene(const std::string& sceneName);
+		void CleanUp();
 		bool ChangeSceneName(const std::string& sOldName, const std::string& sNewName);
 		bool CheckHasScene(const std::string& sceneName);
 		std::shared_ptr<ENGINE_EDITOR::SceneObject> GetScene(const std::string& sSceneName);

@@ -19,6 +19,9 @@ namespace ENGINE_RENDERING {
 		bool m_bEditorTexture;
 	public:
 		Texture();
+		Texture(const Texture& tex) = delete;
+		Texture& operator=(const Texture& tex) = delete;
+		~Texture() { Destory(); };
 		Texture(GLuint id, int width, int height, TextureType type = TextureType::PIXEL, const std::string& texturePath = "");
 
 		inline const bool IsEditorTexture() const { return m_bEditorTexture; }
@@ -30,5 +33,7 @@ namespace ENGINE_RENDERING {
 
 		void Bind();
 		void Unbind();
+
+		void Destory();
 	};
 }
