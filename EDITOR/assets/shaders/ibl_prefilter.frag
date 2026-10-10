@@ -35,7 +35,7 @@ vec2 Hammersley(uint i, uint N){
 	return vec2(float(i)/float(N), RadicalInverse_VdC(i));
 }
 
-// 
+// GGX重要性采样
 vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness){
 	float a = roughness*roughness;
 	
@@ -62,7 +62,7 @@ void main()
 {		
     vec3 N = normalize(WorldPos);
     
-    // make the simplifying assumption that V equals R equals the normal 
+    // 假设：法线N=反射向量R=视线V
     vec3 R = N;
     vec3 V = R;
 
@@ -72,15 +72,17 @@ void main()
     
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
     {
-        // generates a sample vector that's biased towards the preferred alignment direction (importance sampling).
+        // 利用Hammersley低差异序列均匀采样二位单位正方形
         vec2 Xi = Hammersley(i, SAMPLE_COUNT);
+        // 采样遵循GGX分布的三维半程向量，粗糙度越小，H 越集中在法线 N 附近
         vec3 H = ImportanceSampleGGX(Xi, N, roughness);
+        // 利用V和H反推光线L
         vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
         float NdotL = max(dot(N, L), 0.0);
         if(NdotL > 0.0)
         {
-            // sample from the environment's mip level based on roughness/pdf
+            // GGX法线分布，微表面法线在 H 方向附近的分布密度
             float D   = DistributionGGX(N, H, roughness);
             float NdotH = max(dot(N, H), 0.0);
             float HdotV = max(dot(H, V), 0.0);

@@ -81,8 +81,7 @@ vec2 IntegrateBRDF(float NdotV, float roughness)
     const uint SAMPLE_COUNT = 1024u;
     for(uint i = 0u; i < SAMPLE_COUNT; ++i)
     {
-        // generates a sample vector that's biased towards the
-        // preferred alignment direction (importance sampling).
+        // 根据粗糙度采样 H 并推算 L
         vec2 Xi = Hammersley(i, SAMPLE_COUNT);
         vec3 H = ImportanceSampleGGX(Xi, N, roughness);
         vec3 L = normalize(2.0 * dot(V, H) * H - V);
@@ -93,6 +92,7 @@ vec2 IntegrateBRDF(float NdotV, float roughness)
 
         if(NdotL > 0.0)
         {
+            // 几何遮挡G
             float G = GeometrySmith(N, V, L, roughness);
             float G_Vis = (G * VdotH) / (NdotH * NdotV);
             float Fc = pow(1.0 - VdotH, 5.0);
