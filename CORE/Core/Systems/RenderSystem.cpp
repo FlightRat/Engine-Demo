@@ -842,6 +842,12 @@ namespace ENGINE_CORE::Systems {
 				int texUnit = areaShadowMapBaseUnit + area_light_index;
 				glBindTextureUnit(texUnit, it->second->GetTextureID());
 				Shader_Lighting->SetUniformInt("areaShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
+
+				const auto& vssm = bufferManager.GetFrameBuffer("area_vssm_" + std::to_string(area_light_index));
+				int momentUnit = areaShadowMapBaseUnit + lightSystem->GetMaxAreaLights() + area_light_index;
+				int coverageUnit = momentUnit + lightSystem->GetMaxAreaLights();
+				glBindTextureUnit(momentUnit, vssm->GetTextureID(0));	// depth SAT
+				glBindTextureUnit(coverageUnit, vssm->GetTextureID(1));	// count SAT
 			}
 		}
 
