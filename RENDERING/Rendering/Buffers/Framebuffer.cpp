@@ -57,6 +57,10 @@ namespace ENGINE_RENDERING {
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::PREFILTERMAP, 128, 128));
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::BRDFLUT, 512, 512));
 			break;
+        case BufferType::VSSM:
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::VSSM_MOMENTS, m_Width, m_Height));
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::VSSM_COUNT, m_Width, m_Height));
+            break;
 		}
 		return true;
 	}
@@ -131,6 +135,14 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
             break;
         }
+        case ENGINE_RENDERING::BufferType::VSSM:
+        {
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT1, m_pTextures[1]->GetID(), 0);
+            const GLenum attachments[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1 };
+            glNamedFramebufferDrawBuffers(m_FboID, 2, attachments);
+            break;
+        }
         default:
             break;
         }
@@ -169,6 +181,7 @@ namespace ENGINE_RENDERING {
 
 	void Framebuffer::Resize(int width, int height)
 	{
+        if (m_Type == BufferType::VSSM) return;
 		m_Width = width;
 		m_Height = height;
 		m_bShouldResize = true;

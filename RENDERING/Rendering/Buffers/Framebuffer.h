@@ -12,7 +12,8 @@ namespace ENGINE_RENDERING {
         SHADOWCUBEMAP,  // 点光源阴影：1 Depth Texture (Cube)
         GBUFFER,        // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
         SSAO,           // SSAO: 1 Color
-        IBL
+        IBL,            // IBL: ENVCUBEMAP + IRRADIANCEMAP + PREFILTERMAP + BRDFLUT
+        VSSM            // VSSM：MOMENTS + COUNT
     };
 
     class Framebuffer {
