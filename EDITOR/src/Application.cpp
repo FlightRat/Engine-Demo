@@ -520,7 +520,7 @@ namespace ENGINE_EDITOR {
 		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
 		{
 			bufferManager.AddFrameBuffer(
-				"shadow_map_" + std::to_string(i), 
+				"dirLight_ShadowMap_" + std::to_string(i),
 				ENGINE_RENDERING::BufferType::SHADOWMAP, 
 				2048, 2048, false);
 		}
@@ -528,7 +528,7 @@ namespace ENGINE_EDITOR {
 		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
 		{
 			bufferManager.AddFrameBuffer(
-				"shadow_cubemap_" + std::to_string(i), 
+				"pointLight_ShadowMap_" + std::to_string(i),
 				ENGINE_RENDERING::BufferType::SHADOWCUBEMAP, 
 				2048, 2048, false);
 		}
@@ -536,16 +536,16 @@ namespace ENGINE_EDITOR {
 		for (int i = 0; i < lightSystem->GetMaxAreaLights(); i++)
 		{
 			bufferManager.AddFrameBuffer(
-				"area_shadowmap_" + std::to_string(i),
+				"areaLight_ShadowMap_" + std::to_string(i),
 				ENGINE_RENDERING::BufferType::SHADOWMAP,
 				2048, 2048, false);
 		}
 		// vssm
-		bufferManager.AddFrameBuffer("area_vssm_scratch", ENGINE_RENDERING::BufferType::VSSM, 2048, 2048, false);
+		bufferManager.AddFrameBuffer("areaLight_VSSM_scratch", ENGINE_RENDERING::BufferType::VSSM, 2048, 2048, false);
 		for(int i=0;i<lightSystem->GetMaxAreaLights();i++)
 		{
 			bufferManager.AddFrameBuffer(
-				"area_vssm_" + std::to_string(i),
+				"areaLight_VSSM_" + std::to_string(i),
 				ENGINE_RENDERING::BufferType::VSSM,
 				2048, 2048, false);
 		}

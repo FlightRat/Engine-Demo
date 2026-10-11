@@ -40,9 +40,9 @@ layout(binding = 4) uniform sampler2D ssao;
 layout(binding = 5) uniform samplerCube irradianceMap; 
 layout(binding = 6) uniform samplerCube prefilterMap; 
 layout(binding = 7) uniform sampler2D brdfLUT; 
-layout(binding = 11) uniform sampler2D shadowMaps[NR_DIR_LIGHTS];
-layout(binding = 15) uniform samplerCube shadowCubeMap[NR_POINT_LIGHTS];
-layout(binding = 19) uniform sampler2D areaShadowMap[NR_AREA_LIGHTS];
+layout(binding = 11) uniform sampler2D dirLight_ShadowMap[NR_DIR_LIGHTS];
+layout(binding = 15) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
+layout(binding = 19) uniform sampler2D areaLight_ShadowMap[NR_AREA_LIGHTS];
 layout(binding = 23) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
 layout(binding = 27) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
 
@@ -130,14 +130,14 @@ void main()
     // ---------- 方向光 ----------
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
         if (dir_lights[i].direction.w < 0.5) continue;
-        float shadow = ShadowCalculation_dir(dir_lights[i], shadowMaps[i], FragPos, Normal);       
+        float shadow = ShadowCalculation_dir(dir_lights[i], dirLight_ShadowMap[i], FragPos, Normal);
         Lo += CalcDirLight(dir_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
     // ---------- 点光源 ----------
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0){
-            float shadow = ShadowCalculation_point(point_lights[i], shadowCubeMap[i], FragPos, Normal);
+            float shadow = ShadowCalculation_point(point_lights[i], pointLight_ShadowMap[i], FragPos, Normal);
             Lo += CalcPointLight(point_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
         }
     }
@@ -145,7 +145,7 @@ void main()
     // ---------- 面光源 ----------
     for (int i = 0; i < NR_AREA_LIGHTS; i++) {
         if (area_lights[i].direction.w < 0.5) continue;
-        float shadow = ShadowCalculation_area(area_lights[i],areaShadowMap[i],areaMomentSAT[i],areaCoverageSAT[i],FragPos,receiverNormal);
+        float shadow = ShadowCalculation_area(area_lights[i],areaLight_ShadowMap[i],areaMomentSAT[i],areaCoverageSAT[i],FragPos,receiverNormal);
         Lo += CalcAreaLight(area_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 

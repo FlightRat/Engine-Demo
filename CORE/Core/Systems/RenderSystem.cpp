@@ -144,7 +144,7 @@ namespace ENGINE_CORE::Systems {
 		Shader_ShadowMap->Enable();
 		for (int index = 0; index < lightSystem->GetActivatedAreaLights(); index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("area_shadowmap_" + std::to_string(index));
+			const auto& shadowMap = bufferManager.GetFrameBuffer("areaLight_ShadowMap_" + std::to_string(index));
 			shadowMap->Bind();
 
 			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
@@ -180,7 +180,7 @@ namespace ENGINE_CORE::Systems {
 		Shader_ShadowMap->Enable();
 		for (int index = 0; index < lightSystem->GetActivatedDirLights(); index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(index));
+			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_ShadowMap_" + std::to_string(index));
 			shadowMap->Bind();
 
 			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
@@ -218,7 +218,7 @@ namespace ENGINE_CORE::Systems {
 		Shader_ShadowCubemap->Enable();
 		for (int index = 0; index < lightSystem->GetActivatedPointLights(); index++)
 		{
-			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(index));
+			const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(index));
 			shadowCubemap->Bind();
 
 			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
@@ -266,14 +266,14 @@ namespace ENGINE_CORE::Systems {
 			shadowCubemap->Unbind();
 			// shadowCubemap->CheckResize(); no need
 		}
-	
+
 		// VSSM
-		const auto& scratch = bufferManager.GetFrameBuffer("area_vssm_scratch"); // 乒乓缓冲
+		const auto& scratch = bufferManager.GetFrameBuffer("areaLight_VSSM_scratch"); // 乒乓缓冲
 		for (int index = 0; index < lightSystem->GetActivatedAreaLights(); index++)
 		{
 			const auto& areaLight = areaLightData[index];
-			const auto shadowMap = bufferManager.GetFrameBuffer("area_shadowmap_" + std::to_string(index));
-			const auto vssm = bufferManager.GetFrameBuffer("area_vssm_" + std::to_string(index)); // 0号纹理是深度和深度平方SAT，1号纹理是覆盖SAT
+			const auto shadowMap = bufferManager.GetFrameBuffer("areaLight_ShadowMap_" + std::to_string(index));
+			const auto vssm = bufferManager.GetFrameBuffer("areaLight_VSSM_" + std::to_string(index)); // 0号纹理是深度和深度平方SAT，1号纹理是覆盖SAT
 			vssm->Bind();
 			glViewport(0, 0, vssm->Width(), vssm->Height());
 			// 根据shadowMap，算出每个像素的moment和是否有效
@@ -286,7 +286,7 @@ namespace ENGINE_CORE::Systems {
 			auto target = scratch;
 			Shader_sat->Enable();
 			//先横向累加，在竖向累加
-			for (int axis = 0; axis < 2; axis++) 
+			for (int axis = 0; axis < 2; axis++)
 			{
 				Shader_sat->SetUniformInt("axis", axis);
 				const int size = axis == 0 ? vssm->Width() : vssm->Height();
@@ -435,7 +435,7 @@ namespace ENGINE_CORE::Systems {
 				// set direction light shadowMap
 				for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 				{
-					std::string key = "shadow_map_" + std::to_string(dir_light_index);
+					std::string key = "dirLight_ShadowMap_" + std::to_string(dir_light_index);
 					auto it = map_FBO.find(key);
 					if (it != map_FBO.end())
 					{
@@ -448,7 +448,7 @@ namespace ENGINE_CORE::Systems {
 				int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 15
 				for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 				{
-					std::string key = "shadow_cubemap_" + std::to_string(point_light_index);
+					std::string key = "pointLight_ShadowMap_" + std::to_string(point_light_index);
 					auto it = map_FBO.find(key);
 					if (it != map_FBO.end())
 					{
@@ -572,7 +572,7 @@ namespace ENGINE_CORE::Systems {
 
 	void RenderSystem::DeferredRenderPipeline(
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, 
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
@@ -754,7 +754,7 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		Shader_SSAOBlur->Enable();
-		
+
 		glBindTextureUnit(0, ssaoFB->GetTextureID(0));
 
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
@@ -762,7 +762,7 @@ namespace ENGINE_CORE::Systems {
 	}
 
 	void RenderSystem::Lighting_Pass(
-		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, 
+		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -807,13 +807,13 @@ namespace ENGINE_CORE::Systems {
 		// set direction light shadowMap
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 		{
-			std::string key = "shadow_map_" + std::to_string(dir_light_index);
+			std::string key = "dirLight_ShadowMap_" + std::to_string(dir_light_index);
 			auto it = map_FBO.find(key);
 			if (it != map_FBO.end())
 			{
 				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
 				glBindTextureUnit(texUnit, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("shadowMaps[" + std::to_string(dir_light_index) + "]", texUnit);
+				Shader_Lighting->SetUniformInt("dirLight_ShadowMap[" + std::to_string(dir_light_index) + "]", texUnit);
 			}
 		}
 
@@ -821,13 +821,13 @@ namespace ENGINE_CORE::Systems {
 		int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 15
 		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 		{
-			std::string key = "shadow_cubemap_" + std::to_string(point_light_index);
+			std::string key = "pointLight_ShadowMap_" + std::to_string(point_light_index);
 			auto it = map_FBO.find(key);
 			if (it != map_FBO.end())
 			{
 				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
 				glBindTextureUnit(texUnit, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("shadowCubeMap[" + std::to_string(point_light_index) + "]", texUnit);
+				Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);
 			}
 		}
 
@@ -835,15 +835,15 @@ namespace ENGINE_CORE::Systems {
 		int areaShadowMapBaseUnit = 11 + lightSystem->GetMaxDirLights() + lightSystem->GetMaxPointLights();
 		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
 		{
-			std::string key = "area_shadowmap_" + std::to_string(area_light_index);
+			std::string key = "areaLight_ShadowMap_" + std::to_string(area_light_index);
 			auto it = map_FBO.find(key);
 			if (it != map_FBO.end())
 			{
 				int texUnit = areaShadowMapBaseUnit + area_light_index;
 				glBindTextureUnit(texUnit, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("areaShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
+				Shader_Lighting->SetUniformInt("areaLight_ShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
 
-				const auto& vssm = bufferManager.GetFrameBuffer("area_vssm_" + std::to_string(area_light_index));
+				const auto& vssm = bufferManager.GetFrameBuffer("areaLight_VSSM_" + std::to_string(area_light_index));
 				int momentUnit = areaShadowMapBaseUnit + lightSystem->GetMaxAreaLights() + area_light_index;
 				int coverageUnit = momentUnit + lightSystem->GetMaxAreaLights();
 				glBindTextureUnit(momentUnit, vssm->GetTextureID(0));	// depth SAT
@@ -932,7 +932,7 @@ namespace ENGINE_CORE::Systems {
 			Shader_Color->SetUniformBool("outline", false);
 			sphere->Draw();
 		}
-		
+
 		// 绘制方向光
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetActivatedDirLights(); dir_light_index++)
 		{
