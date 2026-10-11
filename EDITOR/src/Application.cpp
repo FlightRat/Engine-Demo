@@ -270,6 +270,20 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// VSSM moments
+		if (!assetManager.AddShader("vssm_moments", "assets/shaders/Defer_Lighting.vert", "assets/shaders/vssm_moments.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
+		// VSSM sat
+		if (!assetManager.AddShader("vssm_sat", "assets/shaders/Defer_Lighting.vert", "assets/shaders/vssm_sat.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add vssm_sat shader!");
+			return false;
+		}
+
 		// defer Gbuffer
 		if (!assetManager.AddShader("defer_Gbuffer", "assets/shaders/defer_Gbuffer.vert", "assets/shaders/defer_Gbuffer.frag", ""))
 		{
@@ -335,6 +349,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("defer_SSAOBlur")->SetIsEditorShader(true);
 		assetManager.GetShader("shadow_Map")->SetIsEditorShader(true);
 		assetManager.GetShader("shadow_Cubemap")->SetIsEditorShader(true);
+		assetManager.GetShader("vssm_moments")->SetIsEditorShader(true);
+		assetManager.GetShader("vssm_sat")->SetIsEditorShader(true);
 		assetManager.GetShader("skybox")->SetIsEditorShader(true);
 		assetManager.GetShader("physics_Debug")->SetIsEditorShader(true);
 		assetManager.GetShader("ibl_proj")->SetIsEditorShader(true);
