@@ -774,7 +774,6 @@ namespace ENGINE_CORE::Systems {
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
 		const auto& ibl_fb = bufferManager.GetFrameBuffer("IBL");
-		const auto& map_FBO = bufferManager.GetAllFBO();
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// const auto env_cubemap_id = assetManager.GetTexture("skybox")->GetID();
@@ -807,50 +806,36 @@ namespace ENGINE_CORE::Systems {
 		// set direction light shadowMap
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 		{
-			std::string key = "dirLight_ShadowMap_" + std::to_string(dir_light_index);
-			auto it = map_FBO.find(key);
-			if (it != map_FBO.end())
-			{
-				int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
-				glBindTextureUnit(texUnit, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("dirLight_ShadowMap[" + std::to_string(dir_light_index) + "]", texUnit);
-			}
+			int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
+			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_ShadowMap_" + std::to_string(dir_light_index));
+			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
+			Shader_Lighting->SetUniformInt("dirLight_ShadowMap[" + std::to_string(dir_light_index) + "]", texUnit);
 		}
 
 		// set point light shadowCubemap
 		int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 15
 		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 		{
-			std::string key = "pointLight_ShadowMap_" + std::to_string(point_light_index);
-			auto it = map_FBO.find(key);
-			if (it != map_FBO.end())
-			{
-				int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
-				glBindTextureUnit(texUnit, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);
-			}
+			int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
+			const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(point_light_index));
+			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
+			Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);
 		}
 
 		// set area light shadowmap
 		int areaShadowMapBaseUnit = 11 + lightSystem->GetMaxDirLights() + lightSystem->GetMaxPointLights();
 		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
 		{
-			std::string key = "areaLight_ShadowMap_" + std::to_string(area_light_index);
-			auto it = map_FBO.find(key);
-			if (it != map_FBO.end())
-			{
-				int texUnit = areaShadowMapBaseUnit + area_light_index;
-				glBindTextureUnit(texUnit, it->second->GetTextureID());
-				Shader_Lighting->SetUniformInt("areaLight_ShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
-
-				const auto& vssm = bufferManager.GetFrameBuffer("areaLight_VSSM_" + std::to_string(area_light_index));
-				int momentUnit = areaShadowMapBaseUnit + lightSystem->GetMaxAreaLights() + area_light_index;
-				int coverageUnit = momentUnit + lightSystem->GetMaxAreaLights();
-				glBindTextureUnit(momentUnit, vssm->GetTextureID(0));	// depth SAT
-				glBindTextureUnit(coverageUnit, vssm->GetTextureID(1));	// count SAT
-			}
+			int texUnit = areaShadowMapBaseUnit + area_light_index;
+			int momentUnit = areaShadowMapBaseUnit + lightSystem->GetMaxAreaLights() + area_light_index;
+			int coverageUnit = momentUnit + lightSystem->GetMaxAreaLights();
+			const auto& shadowMap = bufferManager.GetFrameBuffer("areaLight_ShadowMap_" + std::to_string(area_light_index));
+			const auto& vssm = bufferManager.GetFrameBuffer("areaLight_VSSM_" + std::to_string(area_light_index));
+			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
+			glBindTextureUnit(momentUnit, vssm->GetTextureID(0));	// depth SAT
+			glBindTextureUnit(coverageUnit, vssm->GetTextureID(1));	// count SAT
+			Shader_Lighting->SetUniformInt("areaLight_ShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
 		}
-
 		glDisable(GL_DEPTH_TEST);
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
 		quad[0].Draw();
