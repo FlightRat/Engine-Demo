@@ -52,6 +52,72 @@ namespace ENGINE_CORE::Systems {
 		return model;
 	}
 
+	void RenderSystem::DeferredRenderPipeline(
+		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
+	{
+		Prepare_Pass(camera, runtimeRegistry);
+
+		//glCullFace(GL_FRONT);		// 解决闪烁，但导致漏光
+		Shadow_Pass(runtimeRegistry);
+		//glCullFace(GL_BACK);
+
+		// 几何pass
+		intermediateGB->Bind();
+		glDisable(GL_BLEND);					// 关闭混合
+		glEnable(GL_STENCIL_TEST);				// 开启模板测试
+		// glCullFace(GL_BACK);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// 保证 Position 为 0
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
+		Geometry_Pass(camera, runtimeRegistry);
+		intermediateGB->Unbind();
+
+		// ssao pass
+		ssaoFB->Bind();
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(0, 0, ssaoFB->Width(), ssaoFB->Height());
+		SSAO_Pass(camera, runtimeRegistry, intermediateGB);
+		ssaoFB->Unbind();
+
+		// ssao模糊pass
+		ssaoBlurFB->Bind();
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(0, 0, ssaoBlurFB->Width(), ssaoBlurFB->Height());
+		SSAOBlur_Pass(camera, runtimeRegistry, ssaoFB);
+		ssaoBlurFB->Unbind();
+
+		// 光照pass
+		finalOutputFB->Bind();
+		glDisable(GL_STENCIL_TEST);				// 光照计算不需要模板
+		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		Lighting_Pass(camera, runtimeRegistry, intermediateGB, ssaoBlurFB);
+		finalOutputFB->Unbind();
+
+		// 后处理pass（点光源+模板测试+天空盒）
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetFboID());
+		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(),
+			0, 0, finalOutputFB->Width(), finalOutputFB->Height(),
+			GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		finalOutputFB->Bind();
+		Postprocess_Pass(camera, runtimeRegistry);
+		finalOutputFB->Unbind();
+
+		intermediateGB->CheckResize();
+		ssaoFB->CheckResize();
+		ssaoBlurFB->CheckResize();
+		finalOutputFB->CheckResize();
+	}
+
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -303,72 +369,6 @@ namespace ENGINE_CORE::Systems {
 			}
 			vssm->Unbind();
 		}
-	}
-
-	void RenderSystem::DeferredRenderPipeline(
-		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
-	{
-		Prepare_Pass(camera, runtimeRegistry);
-
-		//glCullFace(GL_FRONT);		// 解决闪烁，但导致漏光
-		Shadow_Pass(runtimeRegistry);
-		//glCullFace(GL_BACK);
-
-		// 几何pass
-		intermediateGB->Bind();
-		glDisable(GL_BLEND);					// 关闭混合
-		glEnable(GL_STENCIL_TEST);				// 开启模板测试
-		// glCullFace(GL_BACK);
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// 保证 Position 为 0
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
-		Geometry_Pass(camera, runtimeRegistry);
-		intermediateGB->Unbind();
-
-		// ssao pass
-		ssaoFB->Bind();
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, ssaoFB->Width(), ssaoFB->Height());
-		SSAO_Pass(camera, runtimeRegistry, intermediateGB);
-		ssaoFB->Unbind();
-
-		// ssao模糊pass
-		ssaoBlurFB->Bind();
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, ssaoBlurFB->Width(), ssaoBlurFB->Height());
-		SSAOBlur_Pass(camera, runtimeRegistry, ssaoFB);
-		ssaoBlurFB->Unbind();
-
-		// 光照pass
-		finalOutputFB->Bind();
-		glDisable(GL_STENCIL_TEST);				// 光照计算不需要模板
-		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
-		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		Lighting_Pass(camera, runtimeRegistry, intermediateGB, ssaoBlurFB);
-		finalOutputFB->Unbind();
-
-		// 后处理pass（点光源+模板测试+天空盒）
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetFboID());
-		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(),
-			0, 0, finalOutputFB->Width(), finalOutputFB->Height(),
-			GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		finalOutputFB->Bind();
-		Postprocess_Pass(camera, runtimeRegistry);
-		finalOutputFB->Unbind();
-
-		intermediateGB->CheckResize();
-		ssaoFB->CheckResize();
-		ssaoBlurFB->CheckResize();
-		finalOutputFB->CheckResize();
 	}
 
 	void RenderSystem::Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
