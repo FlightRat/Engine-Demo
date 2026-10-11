@@ -266,6 +266,43 @@ namespace ENGINE_CORE::Systems {
 			shadowCubemap->Unbind();
 			// shadowCubemap->CheckResize(); no need
 		}
+	
+		// VSSM
+		const auto& scratch = bufferManager.GetFrameBuffer("area_vssm_scratch"); // 乒乓缓冲
+		for (int index = 0; index < lightSystem->GetActivatedAreaLights(); index++)
+		{
+			const auto& areaLight = areaLightData[index];
+			const auto shadowMap = bufferManager.GetFrameBuffer("area_shadowmap_" + std::to_string(index));
+			const auto vssm = bufferManager.GetFrameBuffer("area_vssm_" + std::to_string(index)); // 0号纹理是深度和深度平方SAT，1号纹理是覆盖SAT
+			vssm->Bind();
+			glViewport(0, 0, vssm->Width(), vssm->Height());
+			// 根据shadowMap，算出每个像素的moment和是否有效
+			Shader_moment->Enable();
+			Shader_moment->SetUniformVec2("nearFar", areaLight.shadowParams.x, areaLight.shadowParams.y);
+			glBindTextureUnit(0, shadowMap->GetTextureID());
+			quad[0].Draw();
+			// moment转sat
+			auto source = vssm;
+			auto target = scratch;
+			Shader_sat->Enable();
+			//先横向累加，在竖向累加
+			for (int axis = 0; axis < 2; axis++) 
+			{
+				Shader_sat->SetUniformInt("axis", axis);
+				const int size = axis == 0 ? vssm->Width() : vssm->Height();
+				// Hillis–Steele 扫描
+				for (int stride = 1; stride < size; stride *= 2)
+				{
+					target->Bind();
+					glBindTextureUnit(0, source->GetTextureID(0));
+					glBindTextureUnit(1, source->GetTextureID(1));
+					Shader_sat->SetUniformInt("stride", stride);
+					quad[0].Draw();
+					std::swap(source, target);
+				}
+			}
+			vssm->Unbind();
+		}
 	}
 
 	void RenderSystem::ForwardRenderPipeline(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
