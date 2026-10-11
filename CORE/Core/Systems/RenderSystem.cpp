@@ -1,14 +1,15 @@
 ﻿#include "RenderSystem.h"
-#include<glm/glm.hpp>
+#include <utility>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include<glm/gtx/quaternion.hpp>
-#include<glm/gtc/quaternion.hpp>
-#include<Rendering/Core/Camera3D.h>
-#include<Rendering/Essentials/Shader.h>
-#include<Rendering/Essentials/Lights.h>
-#include<Rendering/Essentials/TextureCommon.h>
-#include<Logger/Logger.h>
-#include<../CORE/Core/ECS/MainRegistry.h>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <Rendering/Core/Camera3D.h>
+#include <Rendering/Essentials/Shader.h>
+#include <Rendering/Essentials/Lights.h>
+#include <Rendering/Essentials/TextureCommon.h>
+#include <Logger/Logger.h>
+#include "../CORE/Core/ECS/MainRegistry.h"
 #include "../CORE/Core/Systems/LightSystem.h"
 #include "../ECS/Entity.h"
 #include "../Buffers/BufferManager.h"
