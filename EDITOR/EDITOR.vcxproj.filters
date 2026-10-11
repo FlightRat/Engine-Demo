@@ -111,6 +111,8 @@
     <None Include="assets\shaders\ibl_brdf.frag" />
     <None Include="assets\shaders\forward_AreaLight.vert" />
     <None Include="assets\shaders\forward_AreaLight.frag" />
+    <None Include="assets\shaders\vssm_moments.frag" />
+    <None Include="assets\shaders\vssm_sat.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
