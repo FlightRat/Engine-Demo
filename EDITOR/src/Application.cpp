@@ -540,6 +540,15 @@ namespace ENGINE_EDITOR {
 				ENGINE_RENDERING::BufferType::SHADOWMAP,
 				2048, 2048, false);
 		}
+		// vssm
+		bufferManager.AddFrameBuffer("area_vssm_scratch", ENGINE_RENDERING::BufferType::VSSM, 2048, 2048, false);
+		for(int i=0;i<lightSystem->GetMaxAreaLights();i++)
+		{
+			bufferManager.AddFrameBuffer(
+				"area_vssm_" + std::to_string(i),
+				ENGINE_RENDERING::BufferType::VSSM,
+				2048, 2048, false);
+		}
 
 		// uniform buffer
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
