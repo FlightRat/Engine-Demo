@@ -23,11 +23,6 @@ namespace ENGINE_CORE::Systems {
 		RenderSystem();
 		~RenderSystem() = default;
 
-		void ForwardRenderPipeline(
-			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
-			ENGINE_CORE::ECS::Registry& runtimeRegistry,
-			std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB
-		);
 		void DeferredRenderPipeline(
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
 			ENGINE_CORE::ECS::Registry& runtimeRegistry,
@@ -39,9 +34,6 @@ namespace ENGINE_CORE::Systems {
 	private:
 		void Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry);
-
-		void Forward_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-
 		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
 		void SSAOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB);
