@@ -119,6 +119,19 @@ namespace ENGINE_CORE::Systems {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return;
 		}
+		auto Shader_moment = assetManager.GetShader("vssm_moments");
+		if (Shader_moment->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		auto Shader_sat = assetManager.GetShader("vssm_sat");
+		if (Shader_sat->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return;
+		}
+		const auto& quad = assetManager.GetModel("quad")->GetMeshes();
 
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
