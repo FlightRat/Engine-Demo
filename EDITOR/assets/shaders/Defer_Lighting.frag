@@ -413,8 +413,7 @@ float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, 
 }
 
 // 面光源阴影
-float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal)
-{
+float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal){
     vec3 F = normalize(areaLight.direction.xyz);
     ivec2 size = textureSize(shadowMap, 0);
 
