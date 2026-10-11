@@ -265,6 +265,18 @@ namespace ENGINE_RENDERING
         return true;
     }
 
+    bool TextureLoader::LoadVSSMTexture(GLuint& id, int& width, int& height, GLenum format)
+    {
+        glCreateTextures(GL_TEXTURE_2D, 1, &id);
+        glTextureStorage2D(id, 1, format, width, height);
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        return true;
+    }
+
     // -----------------------------
     // GBuffer
     // -----------------------------
@@ -566,6 +578,13 @@ namespace ENGINE_RENDERING
 
         case Texture::TextureType::BRDFLUT:
             if (!LoadBRDFLUT(id, width, height)) return nullptr;
+            break;
+        case Texture::TextureType::VSSM_MOMENTS:
+            // 4通道moments，用xy两个通道表示深度的低32位和高32位，用zw两个通道表示深度平方的低32位和高32位
+            if (!LoadVSSMTexture(id, width, height, GL_RGBA32UI)) return nullptr;
+            break;
+        case Texture::TextureType::VSSM_COUNT:
+            if (!LoadVSSMTexture(id, width, height, GL_R32UI)) return nullptr;
             break;
 
         default:
