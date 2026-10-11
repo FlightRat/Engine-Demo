@@ -129,16 +129,16 @@ namespace ENGINE_CORE::Systems {
 
 		// 面光源
 		Shader_ShadowMap->Enable();
-		for (int arealight_index = 0; arealight_index < lightSystem->GetActivatedAreaLights(); arealight_index++)
+		for (int index = 0; index < lightSystem->GetActivatedAreaLights(); index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("area_shadowmap_" + std::to_string(arealight_index));
+			const auto& shadowMap = bufferManager.GetFrameBuffer("area_shadowmap_" + std::to_string(index));
 			shadowMap->Bind();
 
 			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
 			glClearColor(0.f, 0.f, 0.f, 1.f);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			auto areaLight = areaLightData[arealight_index];
+			const auto& areaLight = areaLightData[index];
 			Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", areaLight.lightSpaceMatrix);
 
 			// render scene
@@ -165,16 +165,16 @@ namespace ENGINE_CORE::Systems {
 
 		// 方向光
 		Shader_ShadowMap->Enable();
-		for (int dirlight_index = 0; dirlight_index < lightSystem->GetActivatedDirLights(); dirlight_index++)
+		for (int index = 0; index < lightSystem->GetActivatedDirLights(); index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(dirlight_index));
+			const auto& shadowMap = bufferManager.GetFrameBuffer("shadow_map_" + std::to_string(index));
 			shadowMap->Bind();
 
 			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
 			glClearColor(0.f, 0.f, 0.f, 1.f);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			auto dirLight = dirLightData[dirlight_index];
+			const auto& dirLight = dirLightData[index];
 			Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", dirLight.lightSpaceMatrix);
 
 			// render scene
@@ -203,16 +203,16 @@ namespace ENGINE_CORE::Systems {
 
 		// 点光源
 		Shader_ShadowCubemap->Enable();
-		for (int pointlight_index = 0; pointlight_index < lightSystem->GetActivatedPointLights(); pointlight_index++)
+		for (int index = 0; index < lightSystem->GetActivatedPointLights(); index++)
 		{
-			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(pointlight_index));
+			const auto& shadowCubemap = bufferManager.GetFrameBuffer("shadow_cubemap_" + std::to_string(index));
 			shadowCubemap->Bind();
 
 			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
 			glClearColor(0.f, 0.f, 0.f, 1.f);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			auto& point_light = pointLightData[pointlight_index];
+			const auto& point_light = pointLightData[index];
 			glm::vec3 point_light_pos = glm::vec3(point_light.position);
 
 			// light space matrix
