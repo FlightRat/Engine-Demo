@@ -3,6 +3,7 @@
 #include <glm/glm.hpp> 
 #include <vector>
 #include "Rendering/Essentials/Lights.h"
+#include "Rendering/Core/Camera3D.h"
 
 namespace ENGINE_CORE::Systems {
 	class LightSystem
@@ -18,14 +19,13 @@ namespace ENGINE_CORE::Systems {
 		std::vector<ENGINE_RENDERING::PointLight> m_PointLightData;
 		std::vector<ENGINE_RENDERING::AreaLight> m_AreaLightData;
 
-		// 存储每个方向光的 lightSpaceMatrix，供 Shadow Pass 和 Forward Pass 共用
-		// std::vector<glm::mat4> m_DirLightSpaceMatrices;
-
 	public:
 		LightSystem(int max_dir_light, int max_point_light, int max_area_light);
 		~LightSystem() = default;
 
-		void Update(ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void Update(ENGINE_CORE::ECS::Registry& runtimeRegistry, const ENGINE_RENDERING::Camera3D& camera);
+
+		void PrepareDirLightCSM(const ENGINE_RENDERING::Camera3D& camera, ENGINE_RENDERING::DirLight& dirLight);
 
 		inline const int GetMaxDirLights() const{ return MAX_DIR_LIGHTS; }
 		inline const int GetMaxPointLights() const { return MAX_POINT_LIGHTS; }
