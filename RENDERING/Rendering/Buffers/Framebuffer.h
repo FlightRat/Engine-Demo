@@ -10,6 +10,7 @@ namespace ENGINE_RENDERING {
         FRAMEBUFFER,    // 普通场景渲染：1 Color + 1 Depth RBO
         SHADOWMAP,      // 方向光阴影：1 Depth Texture (2D)
         SHADOWCUBEMAP,  // 点光源阴影：1 Depth Texture (Cube)
+        SHADOWCASCADE,  // 级联阴影: depth texture array
         GBUFFER,        // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
         SSAO,           // SSAO: 1 Color
         IBL,            // IBL: ENVCUBEMAP + IRRADIANCEMAP + PREFILTERMAP + BRDFLUT
@@ -36,6 +37,7 @@ namespace ENGINE_RENDERING {
         Framebuffer(BufferType type, int width, int height, bool bUseRbo = true);
         ~Framebuffer();
 
+        bool SetDepthLayer(int layer);
         void Bind();
         void Unbind();
         void Resize(int width, int height);
@@ -46,6 +48,6 @@ namespace ENGINE_RENDERING {
         inline GLuint GetFboID() const { return m_FboID; }
         inline GLuint GetRboID() const { return m_RboID; }
         inline BufferType GetType() const { return m_Type; }
-        inline GLuint GetTextureID(size_t index = 0) const { return (index < m_pTextures.size()) ? m_pTextures[index]->GetID() : 0; }
+        inline GLuint GetTextureID(size_t index = 0) const { return (index < m_pTextures.size() && m_pTextures[index]) ? m_pTextures[index]->GetID() : 0; }
     };
 }
