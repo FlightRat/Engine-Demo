@@ -1,4 +1,5 @@
 #include "TextureLoader.h"
+#include "Lights.h"
 #include <algorithm>
 #include <random>
 #include <filesystem>
@@ -245,6 +246,22 @@ namespace ENGINE_RENDERING
         const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
         glTextureParameterfv(id, GL_TEXTURE_BORDER_COLOR, borderColor);
 
+        return true;
+    }
+
+    // -----------------------------
+    // Directional Cascades
+    // -----------------------------
+    bool TextureLoader::LoadShadowCascadeTexture(GLuint& id, int& width, int& height)
+    {
+        glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &id);
+        glTextureStorage3D(id, 1, GL_DEPTH_COMPONENT24, width, height, DIR_CASCADE_COUNT);
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glTextureParameterfv(id, GL_TEXTURE_BORDER_COLOR, borderColor);
         return true;
     }
 
@@ -554,6 +571,10 @@ namespace ENGINE_RENDERING
 
         case Texture::TextureType::SHADOWCUBEMAP:
             if (!LoadShadowCubemapTexture(id, width, height)) return nullptr;
+            break;
+
+        case Texture::TextureType::SHADOWCASCADE:
+            if (!LoadShadowCascadeTexture(id, width, height)) return nullptr;
             break;
 
         case Texture::TextureType::GBUFFER:
