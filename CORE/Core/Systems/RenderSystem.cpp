@@ -133,13 +133,13 @@ namespace ENGINE_CORE::Systems {
 		// uniform block -- camera param 
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		glm::mat4 PerspectiveMatrix = camera->GetProjectionMatrix();
 		// uniform block -- view/projction matrix
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(viewMatrix), sizeof(viewMatrix), 0);
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(PerspectiveMatrix), sizeof(PerspectiveMatrix), sizeof(glm::mat4));
 
 		// uniform block -- lighting param
-		lightSystem->Update(runtimeRegistry);
+		lightSystem->Update(runtimeRegistry, *camera);
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& areaLightData = lightSystem->GetAreaLightData();
@@ -246,38 +246,36 @@ namespace ENGINE_CORE::Systems {
 		Shader_ShadowMap->Enable();
 		for (int index = 0; index < lightSystem->GetActivatedDirLights(); index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_ShadowMap_" + std::to_string(index));
-			shadowMap->Bind();
-
-			glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
-			glClearColor(0.f, 0.f, 0.f, 1.f);
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			const auto& dirLight = dirLightData[index];
-			Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", dirLight.lightSpaceMatrix);
-
-			// render scene
-			auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
-			for (auto [entity, transform, meshF, meshR, id] : view.each())
+			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_CSM_" + std::to_string(index));
+			int layerCount = DIR_CASCADE_COUNT;
+			for (int layer = 0; layer < layerCount; layer++)
 			{
-				if (!meshR.shouldRender)
-					continue;
+				shadowMap->SetDepthLayer(layer);
+				shadowMap->Bind();
+				glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+				glClear(GL_DEPTH_BUFFER_BIT);
+				Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", dirLightData[index].lightSpaceMatrices[layer]);
 
-				glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
-				Shader_ShadowMap->SetUniformMat4("model", model);
-				auto pModel = assetManager.GetModel(meshF.mesh);
-				if (!pModel)
+				// render scene
+				auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
+				for (auto [entity, transform, meshF, meshR, id] : view.each())
 				{
-					pModel = assetManager.GetModel("cube");
+					if (!meshR.shouldRender)
+						continue;
+
+					glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
+					Shader_ShadowMap->SetUniformMat4("model", model);
+					auto pModel = assetManager.GetModel(meshF.mesh);
+					if (!pModel)
+					{
+						pModel = assetManager.GetModel("cube");
+					}
+					const std::vector<Mesh>& meshes = pModel->GetMeshes();
+					for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
+						meshes[meshIdx].Draw();
 				}
-				const std::vector<Mesh>& meshes = pModel->GetMeshes();
-				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
-					meshes[meshIdx].Draw();
+				shadowMap->Unbind();
 			}
-
-			shadowMap->Unbind();
-			// shadowMap->CheckResize(); // no need
-
 		}
 
 		// 点光源
@@ -538,38 +536,40 @@ namespace ENGINE_CORE::Systems {
 		Shader_Lighting->SetUniformBool("diable_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_2));
 		Shader_Lighting->SetUniformBool("debug_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_3));
 
-		// set direction light shadowMap
+		// 纹理单元
+		int dirShadowBaseUnit = 8;
+		int areaMomentBaseUnit = dirShadowBaseUnit + lightSystem->GetMaxDirLights();
+		int areaCoverageBaseUnit = areaMomentBaseUnit + lightSystem->GetMaxAreaLights();
+		int pointShadowBaseUnit = areaCoverageBaseUnit + lightSystem->GetMaxAreaLights();
+
+		// set directional light CSM
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 		{
-			int texUnit = 11 + dir_light_index; // 纹理单元 11
-			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_ShadowMap_" + std::to_string(dir_light_index));
+			int texUnit = dirShadowBaseUnit + dir_light_index;
+			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_CSM_" + std::to_string(dir_light_index));
 			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
-			Shader_Lighting->SetUniformInt("dirLight_ShadowMap[" + std::to_string(dir_light_index) + "]", texUnit);
+			Shader_Lighting->SetUniformInt("dirLight_CSM[" + std::to_string(dir_light_index) + "]", texUnit);
 		}
 
 		// set point light shadowCubemap
-		int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 12
 		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 		{
-			int texUnit = cubeMapBaseUnit + point_light_index; // 12, 13, 14, 15, 16
+			int texUnit = pointShadowBaseUnit + point_light_index;
 			const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(point_light_index));
 			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
 			Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);
 		}
 
-		// set area light shadowmap
-		int areaShadowMapBaseUnit = 11 + lightSystem->GetMaxDirLights() + lightSystem->GetMaxPointLights();
+		// set area light VSSM
 		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
 		{
-			int texUnit = areaShadowMapBaseUnit + area_light_index;
-			int momentUnit = areaShadowMapBaseUnit + lightSystem->GetMaxAreaLights() + area_light_index;
-			int coverageUnit = momentUnit + lightSystem->GetMaxAreaLights();
-			const auto& shadowMap = bufferManager.GetFrameBuffer("areaLight_ShadowMap_" + std::to_string(area_light_index));
+			int momentUnit = areaMomentBaseUnit + area_light_index;
+			int coverageUnit = areaCoverageBaseUnit + area_light_index;
 			const auto& vssm = bufferManager.GetFrameBuffer("areaLight_VSSM_" + std::to_string(area_light_index));
-			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
 			glBindTextureUnit(momentUnit, vssm->GetTextureID(0));	// depth SAT
 			glBindTextureUnit(coverageUnit, vssm->GetTextureID(1));	// count SAT
-			Shader_Lighting->SetUniformInt("areaLight_ShadowMap[" + std::to_string(area_light_index) + "]", texUnit);
+			Shader_Lighting->SetUniformInt("areaMomentSAT[" + std::to_string(area_light_index) + "]", momentUnit);
+			Shader_Lighting->SetUniformInt("areaCoverageSAT[" + std::to_string(area_light_index) + "]", coverageUnit);
 		}
 		glDisable(GL_DEPTH_TEST);
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
@@ -720,7 +720,7 @@ namespace ENGINE_CORE::Systems {
 		glDisable(GL_CULL_FACE);
 		glDepthFunc(GL_LEQUAL);
 		glm::mat4 viewMatrix = camera->GetViewMatrix();
-		glm::mat4 PerspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)camera->GetWidth() / (float)camera->GetHeight(), 0.1f, 100.0f);
+		glm::mat4 PerspectiveMatrix = camera->GetProjectionMatrix();
 		Shader_Skybox->Enable();
 		Shader_Skybox->SetUniformMat4("view", viewMatrix);
 		Shader_Skybox->SetUniformMat4("projection", PerspectiveMatrix);
