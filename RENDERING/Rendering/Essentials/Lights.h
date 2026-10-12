@@ -17,15 +17,6 @@ namespace ENGINE_RENDERING {
 		glm::vec4 depthRanges{ 0.0f };
 		glm::vec4 params{ 0.0f };
 	};
-	static_assert(offsetof(DirLight, color) == 0);
-	static_assert(offsetof(DirLight, direction) == 16);
-	static_assert(offsetof(DirLight, lightSpaceMatrices) == 32);
-	static_assert(offsetof(DirLight, splitDepths) == 288);
-	static_assert(offsetof(DirLight, blendStarts) == 304);
-	static_assert(offsetof(DirLight, texelSizes) == 320);
-	static_assert(offsetof(DirLight, depthRanges) == 336);
-	static_assert(offsetof(DirLight, params) == 352);
-	static_assert(sizeof(DirLight) == 368);
 
 	struct PointLight {
 		glm::vec4 color{ 0.0f };

@@ -211,7 +211,6 @@ namespace ENGINE_RENDERING {
 
 	void Framebuffer::Resize(int width, int height)
 	{
-        if (m_Type == BufferType::VSSM || m_Type == BufferType::SHADOWCASCADE) return;
 		m_Width = width;
 		m_Height = height;
 		m_bShouldResize = true;
@@ -219,13 +218,6 @@ namespace ENGINE_RENDERING {
 
 	void Framebuffer::CheckResize() {
 		if (!m_bShouldResize) return;
-
-		// 关键：阴影贴图通常不随窗口缩放，可以在这里加个过滤
-		if (m_Type == BufferType::SHADOWMAP || m_Type == BufferType::SHADOWCUBEMAP || m_Type == BufferType::SHADOWCASCADE) {
-			m_bShouldResize = false;
-			return;
-		}
-
 		CleanUp();        // 销毁旧的 FBO/RBO/Textures
 		CreateTextures(); // 重新按 m_Type 创建正确格式的纹理
 		Initialize();     // 重新绑定
