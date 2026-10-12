@@ -21,6 +21,8 @@ namespace ENGINE_RENDERING {
 	class Camera3D
 	{
 	public:
+		float NearPlane = { 0.1f };
+		float FarPlane = { 100.0f };
 		int Width = {600};
 		int Height = { 600 };
 		// camera Attributes
@@ -54,7 +56,11 @@ namespace ENGINE_RENDERING {
 		inline void SetPosition(glm::vec3 newPosition) { Position = newPosition; }
 		inline void SetZoom(float newZoom) { Zoom = newZoom; }
 
-		glm::mat4 GetViewMatrix();
+		inline float GetNearPlane() const { return NearPlane; }
+		inline float GetFarPlane() const { return FarPlane; }
+
+		glm::mat4 GetProjectionMatrix() const;
+		glm::mat4 GetViewMatrix() const;
 
 		void ProcessKeyboard(Camera_Movement direction);
 		void ProcessKeyboard(Camera_Movement direction,double dt);

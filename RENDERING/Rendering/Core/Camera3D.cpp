@@ -24,7 +24,13 @@ namespace ENGINE_RENDERING {
 		//TODO: reset the camera attribute
 	}
 
-	glm::mat4 Camera3D::GetViewMatrix()
+	glm::mat4 Camera3D::GetProjectionMatrix() const
+	{
+		if (Width <= 0 || Height <= 0) return glm::mat4(1.0f);
+		return glm::perspectiveRH_NO(glm::radians(Zoom), (float)Width / (float)Height, GetNearPlane(), GetFarPlane());
+	}
+
+	glm::mat4 Camera3D::GetViewMatrix() const
 	{
 		return glm::lookAt(Position, Position + Front, Up);
 	}
