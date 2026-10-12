@@ -372,7 +372,7 @@ float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int lay
     float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
     float worldTexel = dirLight.texelSizes[layer];
     // Slope-scaled bias————光线越与表面垂直，偏移越低
-    float bias = worldTexel * max(4.0 * (1.0 - NdotL), 1.0) / dirLight.depthRanges[layer];
+    float bias = worldTexel * max(10.0 * (1.0 - NdotL), 1.0) / dirLight.depthRanges[layer];
     vec3 normalOffset = N * worldTexel * 2.0 * (1.0 - NdotL);
     vec4 clipPos = dirLight.lightSpaceMatrices[layer] * vec4(fragPos + normalOffset, 1.0);
     vec3 coords = clipPos.xyz / clipPos.w * 0.5 + 0.5;
