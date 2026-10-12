@@ -120,46 +120,46 @@ namespace ENGINE_CORE::Systems {
             for (int row = 0; row < 4; row++)
                 if (!std::isfinite(inverseView[column][row])) return;
 
+        // 光源view矩阵
         glm::vec3 lightDirection = glm::normalize(direction);
         glm::vec3 upVector = glm::abs(lightDirection.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
-        // 仅使用旋转建立光源视图，使 texel 网格固定在世界空间。
         glm::mat4 lightView = glm::lookAtRH(glm::vec3(0.0f), lightDirection, upVector);
+        // 遍历视锥层级
         float previousSplit = nearPlane;
         for (int index = 0; index < ENGINE_RENDERING::DIR_CASCADE_COUNT; index++)
         {
+            // 均匀划分+对数划分
             float fraction = (float)(index + 1) / (float)ENGINE_RENDERING::DIR_CASCADE_COUNT;
             float logarithmic = nearPlane * glm::pow(farPlane / nearPlane, fraction);
             float uniform = nearPlane + (farPlane - nearPlane) * fraction;
             float split = index == ENGINE_RENDERING::DIR_CASCADE_COUNT - 1 ? farPlane : glm::mix(uniform, logarithmic, 0.5f);
+            // 当前层级末端深度
             dirLight.splitDepths[index] = split;
+            // 当前层级末端交汇区域的头部
             dirLight.blendStarts[index] = split - (split - previousSplit) * 0.1f;
-
-            // 下一级级联包含上一级的完整混合区域。
+            // 近处划分平面
             float sliceNear = index == 0 ? nearPlane : dirLight.blendStarts[index - 1];
+            // 当前层级中间深度
             float centerDepth = (sliceNear + split) * 0.5f;
+            // 当前层级视锥轴上的中间点
             glm::vec3 centerView(0.0f, 0.0f, -centerDepth);
-            float radius = 0.0f;
-            for (float depth : { sliceNear, split })
-            {
-                glm::vec3 corner(depth * tanHalfFov * aspect, depth * tanHalfFov, -depth);
-                radius = (glm::max)(radius, glm::length(corner - centerView));
-            }
-            // 在相机空间计算半径，避免相机旋转改变级联范围。
-            radius = glm::ceil(radius * 16.0f) / 16.0f;
-            // 三个 texel 为 PCF、中心对齐和接收面法线偏移留出空间。
-            float halfExtent = radius / (1.0f - 6.0f / (float)2048);
-            float texelSize = 2.0f * halfExtent / (float)2048;
+            // 根据包围当前层级视锥的球半径，算出包围矩形大小
+            glm::vec3 farCorner(split * tanHalfFov * aspect, split * tanHalfFov, -split);
+            float radius = glm::length(farCorner - centerView);
+            radius = glm::ceil(radius * 16.0f) / 16.0f; // 把半径向上取整到 1/16 = 0.0625 的整数倍，让阴影投影尺寸不容易因小幅数值变化而改变
+            float halfExtent = radius / (1.0f - 6.0f / (float)2048);    // 半径转矩形大小
+            //光源视角下的层级中心点
             glm::vec3 centerLight = glm::vec3(lightView * inverseView * glm::vec4(centerView, 1.0f));
+            float texelSize = 2.0f * halfExtent / (float)2048;
             float centerX = glm::round(centerLight.x / texelSize) * texelSize;
             float centerY = glm::round(centerLight.y / texelSize) * texelSize;
-
-            // 右手系光源视图沿 -Z 观察；上游投射物沿 +Z 延伸。
+            // 当前层级的光源正交投影矩阵
             float minZ = centerLight.z - radius - 1.0f;
             float maxZ = centerLight.z + radius + ENGINE_RENDERING::DIR_CASTER_DISTANCE + 1.0f;
             glm::mat4 lightProjection = glm::orthoRH_NO(
-                centerX - halfExtent, centerX + halfExtent,
-                centerY - halfExtent, centerY + halfExtent, 
-                -maxZ, -minZ);
+                centerX - halfExtent, centerX + halfExtent,     // 左右
+                centerY - halfExtent, centerY + halfExtent,     // 下上
+                -maxZ, -minZ);                                  // 进原
             dirLight.lightSpaceMatrices[index] = lightProjection * lightView;
             dirLight.texelSizes[index] = texelSize;
             dirLight.depthRanges[index] = maxZ - minZ;
