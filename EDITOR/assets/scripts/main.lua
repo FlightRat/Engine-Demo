@@ -20,6 +20,10 @@ LoadAssets()
 --Cube_Phys = LoadEntity(EnvirDefs["cube_1"])
 --Platform_Phys = LoadEntity(EnvirDefs["platform1"])
 Ground = LoadEntity(EnvirDefs["ground"])
+TallCubes = {}
+for index = 0, 9 do
+	TallCubes[index + 1] = LoadEntity(EnvirDefs["tall_cube_" .. index])
+end
 --Wall_1 = LoadEntity(EnvirDefs["wall1"])
 --Wall_2 = LoadEntity(EnvirDefs["wall2"])
 --Wall_3 = LoadEntity(EnvirDefs["wall3"])
@@ -27,7 +31,7 @@ Ground = LoadEntity(EnvirDefs["ground"])
 --Cube_Trigger = LoadEntity(EnvirDefs["cube_2"])
 
 --cyborg = LoadEntity(ModelDefs["cyborg"])
-nanosuit = LoadEntity(ModelDefs["nanosuit"])
+--nanosuit = LoadEntity(ModelDefs["nanosuit"])
 --owl = LoadEntity(ModelDefs["owl"])
 --backpack = LoadEntity(ModelDefs["backpack"])
 
