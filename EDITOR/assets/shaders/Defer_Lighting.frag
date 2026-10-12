@@ -143,7 +143,7 @@ void main()
 
     // ---------- 方向光 ----------
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
-        if (dir_lights[i].direction.w < 0.5) continue;
+        if (dir_lights[i].params.z < 0.5) continue;
         float shadow = ShadowCalculation_DIR(dir_lights[i], dirLight_CSM[i], FragPos, receiverNormal);
         Lo += CalcDirLight(dir_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
