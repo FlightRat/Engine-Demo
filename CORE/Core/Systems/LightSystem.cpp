@@ -1,7 +1,7 @@
 ﻿#include "LightSystem.h"
 #include "Logger/Logger.h"
 #include "../ECS/Components/LightComponent.h"
-#include<glm/glm.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace ENGINE_CORE::Systems {
