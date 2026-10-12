@@ -541,17 +541,17 @@ namespace ENGINE_CORE::Systems {
 		// set direction light shadowMap
 		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
 		{
-			int texUnit = 11 + dir_light_index; // 纹理单元 11, 12, 13, 14
+			int texUnit = 11 + dir_light_index; // 纹理单元 11
 			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_ShadowMap_" + std::to_string(dir_light_index));
 			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
 			Shader_Lighting->SetUniformInt("dirLight_ShadowMap[" + std::to_string(dir_light_index) + "]", texUnit);
 		}
 
 		// set point light shadowCubemap
-		int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 15
+		int cubeMapBaseUnit = 11 + lightSystem->GetMaxDirLights(); // = 12
 		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
 		{
-			int texUnit = cubeMapBaseUnit + point_light_index; // 15, 16, 17, 18
+			int texUnit = cubeMapBaseUnit + point_light_index; // 12, 13, 14, 15, 16
 			const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(point_light_index));
 			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
 			Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);

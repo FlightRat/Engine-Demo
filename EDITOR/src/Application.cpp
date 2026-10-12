@@ -162,7 +162,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// Light System  do this before LoadBuffers!!!
-		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(4, 4, 4);
+		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(1, 5, 1);
 		if (!lightSystem)
 		{
 			ENGINE_ERROR("Failed to create the light system!");

@@ -1,7 +1,7 @@
 ﻿#version 450 core
-#define NR_DIR_LIGHTS   4
-#define NR_POINT_LIGHTS 4
-#define NR_AREA_LIGHTS  4
+#define NR_DIR_LIGHTS   1
+#define NR_POINT_LIGHTS 5
+#define NR_AREA_LIGHTS  1
 
 struct DirLight {
     vec4 color;
@@ -41,10 +41,10 @@ layout(binding = 5) uniform samplerCube irradianceMap;
 layout(binding = 6) uniform samplerCube prefilterMap; 
 layout(binding = 7) uniform sampler2D brdfLUT; 
 layout(binding = 11) uniform sampler2D dirLight_ShadowMap[NR_DIR_LIGHTS];
-layout(binding = 15) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
-layout(binding = 19) uniform sampler2D areaLight_ShadowMap[NR_AREA_LIGHTS];
-layout(binding = 23) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
-layout(binding = 27) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
+layout(binding = 12) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
+layout(binding = 17) uniform sampler2D areaLight_ShadowMap[NR_AREA_LIGHTS];
+layout(binding = 18) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
+layout(binding = 19) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
 
 layout (std140) uniform DirLights {
     DirLight dir_lights[NR_DIR_LIGHTS];
