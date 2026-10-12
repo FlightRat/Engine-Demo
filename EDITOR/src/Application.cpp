@@ -221,13 +221,6 @@ namespace ENGINE_EDITOR {
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& assetManager = mainRegistry.GetAssetManager();
 
-		// forward BlinnPhong
-		if (!assetManager.AddShader("forward_BlinnPhong", "assets/shaders/forward_BlinnPhong.vert", "assets/shaders/forward_BlinnPhong.frag", ""))
-		{
-			ENGINE_ERROR("Failed to create and add the shader!");
-			return false;
-		}
-
 		// forward color
 		if (!assetManager.AddShader("forward_Color", "assets/shaders/forward_Color.vert", "assets/shaders/forward_Color.frag", ""))
 		{
@@ -340,7 +333,6 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		assetManager.GetShader("forward_BlinnPhong")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
@@ -516,12 +508,12 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddFrameBuffer("SCENE_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
 		bufferManager.AddFrameBuffer("IBL", ENGINE_RENDERING::BufferType::IBL, 512, 512, true);
 		
-		// shadowmap for direction light
+		// CSM for directional light
 		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
 		{
 			bufferManager.AddFrameBuffer(
-				"dirLight_ShadowMap_" + std::to_string(i),
-				ENGINE_RENDERING::BufferType::SHADOWMAP, 
+				"dirLight_CSM_" + std::to_string(i), 
+				ENGINE_RENDERING::BufferType::SHADOWCASCADE, 
 				2048, 2048, false);
 		}
 		// shadowcubemap for point light
@@ -559,12 +551,6 @@ namespace ENGINE_EDITOR {
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// forward rendering shader
-		auto forward_BlinnPhong = assetManager.GetShader("forward_BlinnPhong");
-		if (forward_BlinnPhong->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return false;
-		}
 		auto forward_Color = assetManager.GetShader("forward_Color");
 		if (forward_Color->ShaderProgramID() == 0)
 		{
@@ -610,9 +596,7 @@ namespace ENGINE_EDITOR {
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
 		defer_SSAO->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
-		forward_BlinnPhong->BindUniformBlock("Matrices", 0);
-		forward_BlinnPhong->BindUniformBlock("DirLights", 1);
-		forward_BlinnPhong->BindUniformBlock("PointLights", 2);
+		defer_lighting->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("PointLights", 2);
 		defer_lighting->BindUniformBlock("AreaLights", 3);
