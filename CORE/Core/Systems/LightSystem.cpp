@@ -3,6 +3,9 @@
 #include "../ECS/Components/LightComponent.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
+#include <initializer_list>
 
 namespace ENGINE_CORE::Systems {
     LightSystem::LightSystem(int max_dir_light, int max_point_light, int max_area_light) :
@@ -15,7 +18,7 @@ namespace ENGINE_CORE::Systems {
     }
 
     //LightSystem::Update()
-    void LightSystem::Update(ENGINE_CORE::ECS::Registry& runtimeRegistry)
+    void LightSystem::Update(ENGINE_CORE::ECS::Registry& runtimeRegistry, const ENGINE_RENDERING::Camera3D& camera)
     {
         ACTIVATED_DIR_LIGHTS = 0;
         ACTIVATED_POINT_LIGHTS = 0;
@@ -106,6 +109,7 @@ namespace ENGINE_CORE::Systems {
                 {
                     ENGINE_WARN("Too many point lights! The limit is [{0}].", MAX_POINT_LIGHTS);
                 }
+            }
             }
         }
     }
