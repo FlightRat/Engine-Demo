@@ -37,24 +37,13 @@ namespace ENGINE_CORE::Systems {
             {
                 if (ACTIVATED_DIR_LIGHTS < MAX_DIR_LIGHTS)
                 {
-                    // calculate lightSpaceMatrix
-                    glm::vec3 normalizedDirection = glm::normalize(light.direction);
-                    glm::vec3 dirLightPos = glm::vec3(0.0f) - (normalizedDirection * 10.0f);
-                    float near_plane = 0.1f, far_plane = 50.0f;
-                    glm::vec3 upVector = glm::abs(normalizedDirection.y) > 0.99f
-                        ? glm::vec3(0.0f, 0.0f, 1.0f)
-                        : glm::vec3(0.0f, 1.0f, 0.0f);
-                    glm::mat4 lightViewMatrix = glm::lookAt(dirLightPos, glm::vec3(0.0f), upVector);
-                    glm::mat4 lightProjectionMatrix = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
-                    glm::mat4 lightSpaceMatrix = lightProjectionMatrix * lightViewMatrix;
-
-                    // 直接写入对应槽位，而不是 push_back
                     m_DirLightData[ACTIVATED_DIR_LIGHTS] = ENGINE_RENDERING::DirLight{
                         .color = glm::vec4(light.color, light.intensity),
-                        .direction = glm::vec4(light.direction, 1.0f), // w=1.0 → 激活标志
-                        .lightSpaceMatrix = lightSpaceMatrix
+                        .direction = glm::vec4(light.direction, 1.0f)
                     };
-                    ACTIVATED_DIR_LIGHTS++;
+                    PrepareDirLightCSM(camera, m_DirLightData[ACTIVATED_DIR_LIGHTS]);
+                    if (m_DirLightData[ACTIVATED_DIR_LIGHTS].params.z > 0.5f)
+                        ACTIVATED_DIR_LIGHTS++;
                 }
                 else
                 {
@@ -110,8 +99,73 @@ namespace ENGINE_CORE::Systems {
                     ENGINE_WARN("Too many point lights! The limit is [{0}].", MAX_POINT_LIGHTS);
                 }
             }
-            }
         }
+    }
+    void LightSystem::PrepareDirLightCSM(const ENGINE_RENDERING::Camera3D& camera, ENGINE_RENDERING::DirLight& dirLight)
+    {
+        const glm::vec3& direction = glm::vec3(dirLight.direction);
+        const float lengthSquared = glm::dot(direction, direction);
+        const float nearPlane = camera.GetNearPlane();
+        const float farPlane = camera.GetFarPlane();
+        if (!std::isfinite(lengthSquared) || lengthSquared <= 1e-12f ||
+            camera.GetWidth() <= 0 || camera.GetHeight() <= 0 ||
+            !std::isfinite(nearPlane) || !std::isfinite(farPlane) || nearPlane <= 0.0f || farPlane <= nearPlane ||
+            !std::isfinite(camera.Zoom) || camera.Zoom <= 0.0f || camera.Zoom >= 179.0f)
+            return;
+
+        const float aspect = (float)camera.GetWidth() / (float)camera.GetHeight();
+        const float tanHalfFov = glm::tan(glm::radians(camera.Zoom) * 0.5f);
+        const glm::mat4 inverseView = glm::inverse(camera.GetViewMatrix());
+        for (int column = 0; column < 4; column++)
+            for (int row = 0; row < 4; row++)
+                if (!std::isfinite(inverseView[column][row])) return;
+
+        glm::vec3 lightDirection = glm::normalize(direction);
+        glm::vec3 upVector = glm::abs(lightDirection.y) > 0.99f ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+        // 仅使用旋转建立光源视图，使 texel 网格固定在世界空间。
+        glm::mat4 lightView = glm::lookAtRH(glm::vec3(0.0f), lightDirection, upVector);
+        float previousSplit = nearPlane;
+        for (int index = 0; index < ENGINE_RENDERING::DIR_CASCADE_COUNT; index++)
+        {
+            float fraction = (float)(index + 1) / (float)ENGINE_RENDERING::DIR_CASCADE_COUNT;
+            float logarithmic = nearPlane * glm::pow(farPlane / nearPlane, fraction);
+            float uniform = nearPlane + (farPlane - nearPlane) * fraction;
+            float split = index == ENGINE_RENDERING::DIR_CASCADE_COUNT - 1 ? farPlane : glm::mix(uniform, logarithmic, 0.5f);
+            dirLight.splitDepths[index] = split;
+            dirLight.blendStarts[index] = split - (split - previousSplit) * 0.1f;
+
+            // 下一级级联包含上一级的完整混合区域。
+            float sliceNear = index == 0 ? nearPlane : dirLight.blendStarts[index - 1];
+            float centerDepth = (sliceNear + split) * 0.5f;
+            glm::vec3 centerView(0.0f, 0.0f, -centerDepth);
+            float radius = 0.0f;
+            for (float depth : { sliceNear, split })
+            {
+                glm::vec3 corner(depth * tanHalfFov * aspect, depth * tanHalfFov, -depth);
+                radius = (glm::max)(radius, glm::length(corner - centerView));
+            }
+            // 在相机空间计算半径，避免相机旋转改变级联范围。
+            radius = glm::ceil(radius * 16.0f) / 16.0f;
+            // 三个 texel 为 PCF、中心对齐和接收面法线偏移留出空间。
+            float halfExtent = radius / (1.0f - 6.0f / (float)2048);
+            float texelSize = 2.0f * halfExtent / (float)2048;
+            glm::vec3 centerLight = glm::vec3(lightView * inverseView * glm::vec4(centerView, 1.0f));
+            float centerX = glm::round(centerLight.x / texelSize) * texelSize;
+            float centerY = glm::round(centerLight.y / texelSize) * texelSize;
+
+            // 右手系光源视图沿 -Z 观察；上游投射物沿 +Z 延伸。
+            float minZ = centerLight.z - radius - 1.0f;
+            float maxZ = centerLight.z + radius + ENGINE_RENDERING::DIR_CASTER_DISTANCE + 1.0f;
+            glm::mat4 lightProjection = glm::orthoRH_NO(
+                centerX - halfExtent, centerX + halfExtent,
+                centerY - halfExtent, centerY + halfExtent, 
+                -maxZ, -minZ);
+            dirLight.lightSpaceMatrices[index] = lightProjection * lightView;
+            dirLight.texelSizes[index] = texelSize;
+            dirLight.depthRanges[index] = maxZ - minZ;
+            previousSplit = split;
+        }
+        dirLight.params = glm::vec4(nearPlane, farPlane, 1.0f, 0.0f);
     }
 }
 
