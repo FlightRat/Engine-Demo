@@ -1,6 +1,7 @@
 #include "Framebuffer.h"
 #include "Logger/Logger.h"
 #include "../Essentials/TextureLoader.h"
+#include "../Essentials/Lights.h"
 
 namespace ENGINE_RENDERING {
 	Framebuffer::Framebuffer(BufferType type, int width, int height, bool bUseRbo)
@@ -40,6 +41,10 @@ namespace ENGINE_RENDERING {
 		case BufferType::SHADOWCUBEMAP:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SHADOWCUBEMAP, m_Width, m_Height));
 			break;
+
+        case BufferType::SHADOWCASCADE:
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SHADOWCASCADE, m_Width, m_Height));
+            break;
 
 		case BufferType::GBUFFER:
 			// 严格遵循 GBuffer 的协议：0:Pos, 1:Norm, 2:Albedo, 3:metallic + roughness + ao
@@ -100,6 +105,13 @@ namespace ENGINE_RENDERING {
         {
             // DSA 中的 glNamedFramebufferTexture 同样支持 Cubemap/Layered 附着
             glNamedFramebufferTexture(m_FboID, GL_DEPTH_ATTACHMENT, m_pTextures[0]->GetID(), 0);
+            glNamedFramebufferReadBuffer(m_FboID, GL_NONE);
+            glNamedFramebufferDrawBuffer(m_FboID, GL_NONE);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::SHADOWCASCADE:
+        {
+            glNamedFramebufferTextureLayer(m_FboID, GL_DEPTH_ATTACHMENT, m_pTextures[0]->GetID(), 0, 0);
             glNamedFramebufferReadBuffer(m_FboID, GL_NONE);
             glNamedFramebufferDrawBuffer(m_FboID, GL_NONE);
             break;
@@ -165,6 +177,24 @@ namespace ENGINE_RENDERING {
         return true;
     }
 
+	bool Framebuffer::SetDepthLayer(int layer)
+	{
+		if (m_Type != BufferType::SHADOWCASCADE || m_FboID == 0 ||
+			m_pTextures.empty() || !m_pTextures[0] || layer < 0 || layer >= DIR_CASCADE_COUNT)
+		{
+			ENGINE_ERROR("Invalid directional cascade layer: {0}", layer);
+			return false;
+		}
+        // 把纹理数组的指定层附加到 FBO 的深度附件
+		glNamedFramebufferTextureLayer(m_FboID, GL_DEPTH_ATTACHMENT, GetTextureID(), 0, layer);
+		if (glCheckNamedFramebufferStatus(m_FboID, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			ENGINE_ERROR("Incomplete directional cascade framebuffer at layer: {0}", layer);
+			return false;
+		}
+		return true;
+	}
+
 	void Framebuffer::Bind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FboID);
@@ -181,7 +211,7 @@ namespace ENGINE_RENDERING {
 
 	void Framebuffer::Resize(int width, int height)
 	{
-        if (m_Type == BufferType::VSSM) return;
+        if (m_Type == BufferType::VSSM || m_Type == BufferType::SHADOWCASCADE) return;
 		m_Width = width;
 		m_Height = height;
 		m_bShouldResize = true;
@@ -191,7 +221,7 @@ namespace ENGINE_RENDERING {
 		if (!m_bShouldResize) return;
 
 		// 关键：阴影贴图通常不随窗口缩放，可以在这里加个过滤
-		if (m_Type == BufferType::SHADOWMAP || m_Type == BufferType::SHADOWCUBEMAP) {
+		if (m_Type == BufferType::SHADOWMAP || m_Type == BufferType::SHADOWCUBEMAP || m_Type == BufferType::SHADOWCASCADE) {
 			m_bShouldResize = false;
 			return;
 		}
