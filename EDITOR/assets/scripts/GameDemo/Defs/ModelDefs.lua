@@ -7,9 +7,9 @@ ModelDefs =
 		components = 
 		{
 			Transform = {
-				position = vec3(0.0, 0.0, 0.0),
+				position = vec3(0.0, 0.0, -20.0),
 				scale = vec3(0.5, 0.5, 0.5),
-				rotation = vec3(0.0, 180.0, 0.0)
+				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
 				type = "nanosuit"

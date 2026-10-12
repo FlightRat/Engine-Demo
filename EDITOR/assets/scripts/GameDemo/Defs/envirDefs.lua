@@ -12,7 +12,7 @@ EnvirDefs.ground = {
 	components = {
 		Transform = {
 			position = vec3(0.0, 0.0, 0.0),
-			scale = vec3(2.0, 1.0, 2.0),
+			scale = vec3(50.0, 1.0, 50.0),
 			rotation = vec3(0.0, 0.0, 0.0)
 		},
 		MeshFilter = {

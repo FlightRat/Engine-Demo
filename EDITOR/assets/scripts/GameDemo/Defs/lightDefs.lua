@@ -14,7 +14,7 @@ LightDefs =
 
 				half_width = 0.25,
 				half_height = 0.25,
-				pos = vec3(0.0, 10.0, 2.5),
+				pos = vec3(0.0, 10.0, -15.0),
 				rotation = vec3(45.0, 0.0, 0.0)
 			}
 		}
@@ -119,9 +119,9 @@ LightDefs =
 			}
 		}
 	},
-	direction_light_1 = 
+	direction_light_0 = 
 	{
-		tag = "direction_light_1",
+		tag = "direction_light_0",
 		group = "light",
 		components =
 		{
@@ -131,7 +131,7 @@ LightDefs =
 
 				type = "direction_light",
 
-				direction = vec3(0, -1.0, 0)
+				direction = vec3(0.5, -2.0, 2.5)
 			}
 		}
 	}
