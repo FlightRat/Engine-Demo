@@ -4,7 +4,6 @@
 
 namespace ENGINE_RENDERING {
 	constexpr int DIR_CASCADE_COUNT = 4;
-	constexpr int DIR_SHADOW_SIZE = 2048;
 	constexpr float DIR_CASTER_DISTANCE = 100.0f;
 
 	struct DirLight {
