@@ -74,8 +74,6 @@
     <None Include="assets\scripts\GameDemo\platform.lua" />
     <None Include="assets\scripts\GameDemo\plat.lua" />
     <None Include="assets\scripts\GameDemo\Defs\lightDefs.lua" />
-    <None Include="assets\shaders\forward_BlinnPhong.vert" />
-    <None Include="assets\shaders\forward_BlinnPhong.frag" />
     <None Include="assimp-vc143-mtd.dll" />
     <None Include="assets\scripts\GameDemo\Defs\ModelDefs.lua" />
     <None Include="assets\models\backpack\backpack.mtl" />
