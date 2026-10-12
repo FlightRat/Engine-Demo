@@ -2,11 +2,17 @@
 #define NR_DIR_LIGHTS   1
 #define NR_POINT_LIGHTS 5
 #define NR_AREA_LIGHTS  1
+#define DIR_CASCADE_COUNT 4
 
 struct DirLight {
     vec4 color;
     vec4 direction;
-    mat4 lightSpaceMatrix;
+    mat4 lightSpaceMatrices[DIR_CASCADE_COUNT];
+    vec4 splitDepths;
+    vec4 blendStarts;
+    vec4 texelSizes;
+    vec4 depthRanges;
+    vec4 params;
 };
 
 struct PointLight {
@@ -40,11 +46,15 @@ layout(binding = 4) uniform sampler2D ssao;
 layout(binding = 5) uniform samplerCube irradianceMap; 
 layout(binding = 6) uniform samplerCube prefilterMap; 
 layout(binding = 7) uniform sampler2D brdfLUT; 
-layout(binding = 11) uniform sampler2D dirLight_ShadowMap[NR_DIR_LIGHTS];
-layout(binding = 12) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
-layout(binding = 17) uniform sampler2D areaLight_ShadowMap[NR_AREA_LIGHTS];
-layout(binding = 18) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
-layout(binding = 19) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
+layout(binding = 8) uniform sampler2DArray dirLight_CSM[NR_DIR_LIGHTS];
+layout(binding = 9) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
+layout(binding = 10) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
+layout(binding = 11) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
+
+layout (std140) uniform Matrices {
+    mat4 view;
+    mat4 projection;
+};
 
 layout (std140) uniform DirLights {
     DirLight dir_lights[NR_DIR_LIGHTS];
@@ -75,17 +85,21 @@ vec2 ComputePenumbraRadiusUV(AreaLight areaLight, float receiverZ, float avgBloc
 uvec2 SubtractMomentSum(uvec2 a, uvec2 b);
 uvec4 ReadVSSMPrefix(usampler2D table, ivec2 pixel);
 ivec4 VSSMRectangle(vec2 uv, vec2 radius, ivec2 size);
-vec3 VSSMRegionMoments(sampler2D shadowMap, usampler2D momentSAT, usampler2D coverageSAT, ivec4 rect, float nearPlane, float farPlane);
+vec3 VSSMRegionMoments(usampler2D momentSAT, usampler2D coverageSAT, ivec4 rect);
 float VSSMReceiverDepth(AreaLight areaLight, vec3 coords, vec2 depthGradient, float bias, ivec4 rect, ivec2 size);
 float VSSMVisibility(vec3 moments, float receiverQ, int area);
+// CSM
+int SelectCascade(DirLight dirLight, float viewDepth);
+float CascadeBlend(DirLight dirLight, int layer, float viewDepth);
+float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int layer, vec3 fragPos, vec3 normal);
+// 阴影系数计算
+float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, vec3 fragPos, vec3 normal);
+float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal);
+float ShadowCalculation_area(AreaLight areaLight, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal);
 // 直接光照计算（不含 ambient，只返回 Lo）
 vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
-// 阴影系数计算
-float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos, vec3 normal);
-float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal);
-float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal);
 
 // ==================== 主函数 ====================
 void main()
@@ -130,7 +144,7 @@ void main()
     // ---------- 方向光 ----------
     for (int i = 0; i < NR_DIR_LIGHTS; i++) {
         if (dir_lights[i].direction.w < 0.5) continue;
-        float shadow = ShadowCalculation_dir(dir_lights[i], dirLight_ShadowMap[i], FragPos, Normal);
+        float shadow = ShadowCalculation_DIR(dir_lights[i], dirLight_CSM[i], FragPos, receiverNormal);
         Lo += CalcDirLight(dir_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
@@ -145,7 +159,7 @@ void main()
     // ---------- 面光源 ----------
     for (int i = 0; i < NR_AREA_LIGHTS; i++) {
         if (area_lights[i].direction.w < 0.5) continue;
-        float shadow = ShadowCalculation_area(area_lights[i],areaLight_ShadowMap[i],areaMomentSAT[i],areaCoverageSAT[i],FragPos,receiverNormal);
+        float shadow = ShadowCalculation_area(area_lights[i], areaMomentSAT[i], areaCoverageSAT[i], FragPos,receiverNormal);
         Lo += CalcAreaLight(area_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
@@ -292,16 +306,7 @@ ivec4 VSSMRectangle(vec2 uv, vec2 radius, ivec2 size){
 }
 
 // 返回：有效纹素的 E[q]、E[q²]、有效纹素数量。
-vec3 VSSMRegionMoments(sampler2D shadowMap, usampler2D momentSAT, usampler2D coverageSAT, ivec4 rect, float nearPlane, float farPlane){
-    ivec2 extent = rect.zw - rect.xy;
-    // 单纹素直接使用原始深度，避免矩量化误差。
-    if(extent.x==1 && extent.y==1){
-        float texelDepth = texelFetch(shadowMap, rect.xy, 0).r;
-        if(texelDepth>=1.0) return vec3(0.0);
-        float q = clamp((DepthToDistance(texelDepth, nearPlane, farPlane) - nearPlane) / (farPlane-nearPlane), 0.0, 1.0);
-        return vec3(q, q*q, 1.0);
-    }
-
+vec3 VSSMRegionMoments(usampler2D momentSAT, usampler2D coverageSAT, ivec4 rect){
     ivec2 a = rect.xy - 1;                      // 左下
     ivec2 b = ivec2(rect.z - 1, rect.y - 1);    // 右下
     ivec2 c = ivec2(rect.x - 1, rect.w - 1);    // 左上
@@ -345,38 +350,55 @@ float VSSMVisibility(vec3 moments, float receiverQ, int area){
     return variance/(variance+delta*delta);
 }
 
-// 方向光阴影（标准 Shadow Map，PCF 3x3 软阴影）
-float ShadowCalculation_dir(DirLight dirLight, sampler2D shadowMap, vec3 fragPos, vec3 normal) {
+// 选择级联阴影层级
+int SelectCascade(DirLight dirLight, float viewDepth) {
+    if (isnan(viewDepth) || isinf(viewDepth) || viewDepth < dirLight.params.x || viewDepth > dirLight.params.y)
+        return -1;
+    for (int layer = 0; layer < DIR_CASCADE_COUNT; layer++)
+        if (viewDepth <= dirLight.splitDepths[layer]) return layer;
+    return -1;
+}
+
+// 级联边界混合系数
+float CascadeBlend(DirLight dirLight, int layer, float viewDepth) {
+    if (layer >= DIR_CASCADE_COUNT - 1) return 0.0;
+    return smoothstep(dirLight.blendStarts[layer], dirLight.splitDepths[layer], viewDepth);
+}
+
+// 采样级联阴影
+float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int layer, vec3 fragPos, vec3 normal) {
     vec3 N = normalize(normal);
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    // 光源方向
     vec3 lightDir = normalize(-vec3(dirLight.direction));
-    // 光源矩阵
-    mat4 lightSpaceMatrix = dirLight.lightSpaceMatrix;
-
-    // Slope-scaled bias————光线越与表面垂直，偏移越低
     float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
-    float bias = max(0.01 * (1.0 - NdotL), 0.001);
-
-    // normal bias————把片段世界坐标朝着法线移动，再转光源坐标系
-    vec3 normalOffset = normalize(normal) * 0.02;
-    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(fragPos+normalOffset, 1.0);
-
-    // 拿到真实深度
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    if (any(lessThan(projCoords, vec3(0.0))) || any(greaterThan(projCoords, vec3(1.0)))) return 0.0;
-    float currentDepth = projCoords.z;
-
-    // PCF 9x9
+    float worldTexel = dirLight.texelSizes[layer];
+    // Slope-scaled bias————光线越与表面垂直，偏移越低
+    float bias = worldTexel * max(4.0 * (1.0 - NdotL), 1.0) / dirLight.depthRanges[layer];
+    vec3 normalOffset = N * worldTexel * 2.0 * (1.0 - NdotL);
+    vec4 clipPos = dirLight.lightSpaceMatrices[layer] * vec4(fragPos + normalOffset, 1.0);
+    vec3 coords = clipPos.xyz / clipPos.w * 0.5 + 0.5;
+    if (any(isnan(coords)) || any(isinf(coords)) || any(lessThan(coords, vec3(0.0))) || any(greaterThan(coords, vec3(1.0)))) return 0.0;
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMapCascaded, 0).xy);
     float shadow = 0.0;
-    for (int x = -4; x <= 4; ++x) {
-        for (int y = -4; y <= 4; ++y) {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += (currentDepth > pcfDepth + bias) ? 1.0 : 0.0;
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            float depth = texture(shadowMapCascaded, vec3(coords.xy + vec2(x, y) * texelSize, float(layer))).r;
+            shadow += coords.z > depth + bias ? 1.0 : 0.0;
         }
     }
-    return shadow/81.0;
+    return shadow / 9.0;
+}
+
+// 方向光阴影
+float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, vec3 fragPos, vec3 normal) {
+    if (dirLight.params.z < 0.5) return 0.0;
+    float viewDepth = -(view * vec4(fragPos, 1.0)).z;
+    int layer = SelectCascade(dirLight, viewDepth);
+    if (layer < 0) return 0.0;
+    float shadow = SampleCascade(dirLight, shadowMapCascaded, layer, fragPos, normal);
+    float blend = CascadeBlend(dirLight, layer, viewDepth);
+    if (blend > 0.0 && layer < DIR_CASCADE_COUNT - 1)
+        shadow = mix(shadow, SampleCascade(dirLight, shadowMapCascaded, layer + 1, fragPos, normal), blend);
+    return shadow;
 }
 
 // 点光源阴影（Omnidirectional Shadow Map，PCF软阴影）
@@ -413,9 +435,9 @@ float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, 
 }
 
 // 面光源阴影
-float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal){
+float ShadowCalculation_area(AreaLight areaLight, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal){
     vec3 F = normalize(areaLight.direction.xyz);
-    ivec2 size = textureSize(shadowMap, 0);
+    ivec2 size = textureSize(momentSAT, 0);
 
     // 光源背面为阴影
     vec3 lightToFrag = fragPos - areaLight.center_pos.xyz;
@@ -457,7 +479,7 @@ float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, usampler2
             ivec4 rect = ivec4(searchRect.xy + extent * cell / divisions, searchRect.xy + extent * (cell + 1) / divisions);
             ivec2 cellSize = rect.zw - rect.xy;
             // 分块区域内的E[q], E[q²], 有效数量
-            vec3 moments = VSSMRegionMoments(shadowMap, momentSAT, coverageSAT, rect, nearPlane, farPlane);
+            vec3 moments = VSSMRegionMoments(momentSAT, coverageSAT, rect);
             // 接收面在分块中心处的投影深度（用于处理平面倾斜的情况）
             float receiverQ = VSSMReceiverDepth(areaLight, coords, depthGradient, bias, rect, size);
             // 切比雪夫估计区域内的可见比例
@@ -493,7 +515,7 @@ float ShadowCalculation_area(AreaLight areaLight, sampler2D shadowMap, usampler2
             ivec2 cellSize = rect.zw - rect.xy;
             int area = cellSize.x * cellSize.y;
             // 分块区域内的E[q], E[q²], 有效数量
-            vec3 moments = VSSMRegionMoments(shadowMap, momentSAT, coverageSAT, rect, nearPlane, farPlane);
+            vec3 moments = VSSMRegionMoments(momentSAT, coverageSAT, rect);
             // 接收面在分块中心处的投影深度（用于处理平面倾斜的情况）
             float receiverQ = VSSMReceiverDepth(areaLight, coords, depthGradient, bias, rect, size);
             // 切比雪夫估计区域内的可见比例
