@@ -4,53 +4,243 @@
 	capsule 默认半径1，半高1（总高4）
 ]]--
 
-EnvirDefs = {}
-
-EnvirDefs.ground = {
-	tag = "ground",
-	group = "Envir",
-	components = {
-		Transform = {
-			position = vec3(0.0, 0.0, 0.0),
-			scale = vec3(2.0, 1.0, 2.0),
-			rotation = vec3(0.0, 0.0, 0.0)
-		},
-		MeshFilter = {
-			type = "plane"
-		},
-		MeshRender = {
-			material = {
-				{
-					shadingModel = "PBR",
-					color = vec4(1.0, 1.0, 1.0, 1.0),
-					metallic = 1.0,
-					roughness = 1.0,
-					ao = 1.0,
-					useTex = false,
-					albedoMap = "",
-					normalMap = "",
-					metallicMap = "",
-					roughnessMap = "",
-					aoMap = ""
+EnvirDefs = 
+{
+	pbr_ball = 
+	{
+		tag = "pbr_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 0.0, 0.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(0.5, 0.0, 0.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false
+					}
 				}
 			}
-		},
-		Physics = {
-			type = BodyType.Static,
-			shape = "box",
-			box_halfExtents = vec3(20.0, 0.0005, 20.0)
 		}
-	}
-}
-
-local function makeTallCube(index)
-	return {
-		tag = "tall_cube_" .. index,
+	},
+	rust_ball = {
+		tag = "rust_ball",
 		group = "Envir",
-		components = {
+		components = 
+		{
 			Transform = {
-				position = vec3((index - 4.5) * 3.0, 2.5, 0.0),
-				scale = vec3(1.0, 5.0, 1.0),
+				position = vec3(-5.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "rusted_iron_albedo",
+						normalMap = "rusted_iron_normal",
+						metallicMap = "rusted_iron_metallic",
+						roughnessMap = "rusted_iron_roughness",
+						aoMap = "rusted_iron_ao"
+					}
+				}
+			}
+		}
+	},
+	gold_ball = {
+		tag = "gold_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-3.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "gold_albedo",
+						normalMap = "gold_normal",
+						metallicMap = "gold_metallic",
+						roughnessMap = "gold_roughness",
+						aoMap = "gold_ao"
+					}
+				}
+			}
+		}
+	},
+	grass_ball = {
+		tag = "grass_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-1.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "grass_albedo",
+						normalMap = "grass_normal",
+						metallicMap = "grass_metallic",
+						roughnessMap = "grass_roughness",
+						aoMap = "grass_ao"
+					}
+				}
+			}
+		}
+	},
+	plastic_ball = {
+		tag = "plastic_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(1.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "plastic_albedo",
+						normalMap = "plastic_normal",
+						metallicMap = "plastic_metallic",
+						roughnessMap = "plastic_roughness",
+						aoMap = "plastic_ao"
+					}
+				}
+			}
+		}
+	},
+	wall_ball = {
+		tag = "wall_ball",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(3.0, 2.0, -10.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "wall_albedo",
+						normalMap = "wall_normal",
+						metallicMap = "wall_metallic",
+						roughnessMap = "wall_roughness",
+						aoMap = "wall_ao"
+					}
+				}
+			}
+		}
+	},
+	ball_1 = 
+	{
+		tag = "ball_1",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(5.0, 1.0, 5.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "sphere"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "wall_albedo",
+						normalMap = "wall_normal",
+						metallicMap = "wall_metallic",
+						roughnessMap = "wall_roughness",
+						aoMap = "wall_ao"
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Dynamic,
+				shape = "sphere",
+				sphere_radius = 1.0
+			}
+		}
+	},
+	cube_1 = 
+	{
+		tag = "cube_1",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-5.0, 1.0, 5.0),
+				scale = vec3(1.0, 1.0, 1.0),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
@@ -60,16 +250,16 @@ local function makeTallCube(index)
 				material = {
 					{
 						shadingModel = "PBR",
-						color = vec4(0.5, 0.5, 0.5, 1.0),
-						metallic = 0.0,
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
 						roughness = 1.0,
-						ao = 1.0,
-						useTex = false,
-						albedoMap = "",
-						normalMap = "",
-						metallicMap = "",
-						roughnessMap = "",
-						aoMap = ""
+						ao =1.0,
+						useTex = true,
+						albedoMap = "rusted_iron_albedo",
+						normalMap = "rusted_iron_normal",
+						metallicMap = "rusted_iron_metallic",
+						roughnessMap = "rusted_iron_roughness",
+						aoMap = "rusted_iron_ao"
 					}
 				}
 			},
@@ -80,14 +270,349 @@ local function makeTallCube(index)
 				mass = 5.0,
 				linear_damping = 2.0,
 				angular_damping = 2.0
+				--box_halfExtents = vec3(1.0, 1.0, 1.0}
+			}
+		}
+	},
+	cube_2 = 
+	{
+		tag = "cube_2",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-10.0, 1.0, 5.0),
+				scale = vec3(0.5, 0.5, 0.5),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(0.0, 0.8, 0.0, 1.0),
+						metallic = 0.5,
+						roughness = 0.5,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				b_Trigger = true,
+				box_halfExtents = vec3(0.5, 0.5, 0.5)
+			}
+		}
+	},
+	cube_3 = 
+	{
+		tag = "cube_3",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-5.0, 6.0, 5.0),
+				scale = vec3(1.0, 1.0, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			}
+		}
+	},
+	platform1 = 
+	{
+		tag = "platform_1",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0, 2, 5),
+				scale = vec3(2.0, 0.5, 2.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = true,
+						albedoMap = "gold_albedo",
+						normalMap = "gold_normal",
+						metallicMap = "gold_metallic",
+						roughnessMap = "gold_roughness",
+						aoMap = "gold_ao"
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(2.0, 0.5, 2.0)
+			}
+		}
+	},
+	platform2 = 
+	{
+		tag = "platform_2",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(10.0, 1, 0),
+				scale = vec3(2.0, 0.25, 2.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(0.0, 0.0, 0.8, 1.0),
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Kinematic,
+				shape = "box",
+				box_halfExtents = vec3(2.0, 0.25, 2.0)
+			}
+		}
+	},
+	ground = 
+	{
+		tag = "ground",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0, 0, 0),
+				scale = vec3(2.0, 1.0, 2.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "plane"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 1.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(20.0, 0.0005, 20.0)
+			}
+		}
+	},
+	wall1 = 
+	{
+		tag = "wall1",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(21.0, 2.5, 0),
+				scale = vec3(1.0, 2.5, 20.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(1.0, 2.5, 20.0)
+			}
+		}
+	},
+	wall2 = 
+	{
+		tag = "wall2",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(-21.0, 2.5, 0),
+				scale = vec3(1.0, 2.5, 20.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(1.0, 2.5, 20.0)
+			}
+		}
+	},
+	wall3 = 
+	{
+		tag = "wall3",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 2.5, 21.0),
+				scale = vec3(20.0, 2.5, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(20.0, 2.5, 1.0)
+			}
+		}
+	},
+	wall4 = 
+	{
+		tag = "wall4",
+		group = "Envir",
+		components = 
+		{
+			Transform = {
+				position = vec3(0.0, 2.5, -21.0),
+				scale = vec3(20.0, 2.5, 1.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 1.0, 1.0, 1.0),
+						metallic = 0.0,
+						roughness = 1.0,
+						ao =1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
+				}
+			},
+			Physics = {
+				type = BodyType.Static,
+				shape = "box",
+				box_halfExtents = vec3(20.0, 2.5, 1.0)
 			}
 		}
 	}
-end
-
-for index = 0, 9 do
-	EnvirDefs["tall_cube_" .. index] = makeTallCube(index)
-end
+}
 
 function DisplayPBR()
 	local nrRows = 7
