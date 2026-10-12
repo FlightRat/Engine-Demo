@@ -177,22 +177,16 @@ namespace ENGINE_RENDERING {
         return true;
     }
 
-	bool Framebuffer::SetDepthLayer(int layer)
+	void Framebuffer::SetDepthLayer(int layer)
 	{
 		if (m_Type != BufferType::SHADOWCASCADE || m_FboID == 0 ||
 			m_pTextures.empty() || !m_pTextures[0] || layer < 0 || layer >= DIR_CASCADE_COUNT)
 		{
 			ENGINE_ERROR("Invalid directional cascade layer: {0}", layer);
-			return false;
+			return;
 		}
         // 把纹理数组的指定层附加到 FBO 的深度附件
 		glNamedFramebufferTextureLayer(m_FboID, GL_DEPTH_ATTACHMENT, GetTextureID(), 0, layer);
-		if (glCheckNamedFramebufferStatus(m_FboID, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			ENGINE_ERROR("Incomplete directional cascade framebuffer at layer: {0}", layer);
-			return false;
-		}
-		return true;
 	}
 
 	void Framebuffer::Bind()

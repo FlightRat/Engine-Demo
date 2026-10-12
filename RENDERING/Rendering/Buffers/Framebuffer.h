@@ -37,7 +37,7 @@ namespace ENGINE_RENDERING {
         Framebuffer(BufferType type, int width, int height, bool bUseRbo = true);
         ~Framebuffer();
 
-        bool SetDepthLayer(int layer);
+        void SetDepthLayer(int layer); // for csm
         void Bind();
         void Unbind();
         void Resize(int width, int height);
