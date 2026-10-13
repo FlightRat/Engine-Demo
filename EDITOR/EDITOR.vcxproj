@@ -226,6 +226,8 @@
     <None Include="assets\shaders\test.vert" />
     <None Include="assets\shaders\vssm_moments.frag" />
     <None Include="assets\shaders\vssm_sat.frag" />
+    <None Include="assets\shaders\fxaa.frag" />
+    <None Include="assets\shaders\fxaa-license.txt" />
     <None Include="assimp-vc143-mtd.dll" />
     <None Include="imgui.ini" />
     <None Include="SDL2.dll" />
