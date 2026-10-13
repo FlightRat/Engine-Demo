@@ -118,19 +118,6 @@ namespace ENGINE_EDITOR
 		camera->SetHeight(fb->Height());
 
 		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ssao, ssaoBlur, fb);
-
-		// code for test
-		//auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
-		//auto& keyboard = inputManager.GetKeyBoard();
-		//auto& mouse = inputManager.GetMouse();
-		//if (keyboard.IsKeyPressed(ENGINE_KEY_1))
-		//{
-		//	renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, fb);
-		//}
-		//else
-		//{
-		//	renderSystem->ForwardRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
-		//}
 	}
 
 	void GameDisplay::DrawToolbar()
