@@ -48,10 +48,10 @@ namespace ENGINE_RENDERING {
 
 		case BufferType::GBUFFER:
 			// 严格遵循 GBuffer 的协议：0:Pos, 1:Norm, 2:Albedo, 3:metallic + roughness + ao
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::GBUFFER, m_Width, m_Height, false));
+			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA32F)); // Position
+			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Normal
+			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Albedo
+			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Metallic + roughness + AO
 			break;
 		case BufferType::SSAO:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SSAO, m_Width, m_Height, false));

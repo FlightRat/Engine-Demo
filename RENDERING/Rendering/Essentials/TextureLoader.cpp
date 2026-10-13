@@ -297,10 +297,10 @@ namespace ENGINE_RENDERING
     // -----------------------------
     // GBuffer
     // -----------------------------
-    bool TextureLoader::LoadGbufferTexture(GLuint& id, int& width, int& height)
+    bool TextureLoader::LoadGbufferTexture(GLuint& id, int& width, int& height, GLenum internalFormat)
     {
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
-        glTextureStorage2D(id, 1, GL_RGBA16F, width, height);
+        glTextureStorage2D(id, 1, internalFormat, width, height);
 
         glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -578,7 +578,7 @@ namespace ENGINE_RENDERING
             break;
 
         case Texture::TextureType::GBUFFER:
-            if (!LoadGbufferTexture(id, width, height)) return nullptr;
+            if (!LoadGbufferTexture(id, width, height, GL_RGBA16F)) return nullptr;
             break;
 
         case Texture::TextureType::SSAO:
@@ -614,6 +614,13 @@ namespace ENGINE_RENDERING
         }
 
         return std::make_shared<Texture>(id, width, height, type);
+    }
+
+    std::shared_ptr<Texture> TextureLoader::CreateGbuffer(int width, int height, GLenum internalFormat)
+    {
+        GLuint id = 0;
+        if (!LoadGbufferTexture(id, width, height, internalFormat)) return nullptr;
+        return std::make_shared<Texture>(id, width, height, Texture::TextureType::GBUFFER);
     }
 
     // -----------------------------

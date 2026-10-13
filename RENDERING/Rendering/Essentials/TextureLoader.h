@@ -13,7 +13,7 @@ namespace ENGINE_RENDERING {
 		static bool LoadShadowCubemapTexture(GLuint& id, int& width, int& height);
 		static bool LoadShadowCascadeTexture(GLuint& id, int& width, int& height);
 		static bool LoadVSSMTexture(GLuint& id, int& width, int& height, GLenum format);
-		static bool LoadGbufferTexture(GLuint& id, int& width, int& height);
+		static bool LoadGbufferTexture(GLuint& id, int& width, int& height, GLenum internalFormat);
 		static bool LoadSSAOTexture(GLuint& id, int& width, int& height);
 		static bool LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended = false);
 		static bool LoadEnvCubeMapTexture(GLuint& id, int& width, int& height);
@@ -27,6 +27,7 @@ namespace ENGINE_RENDERING {
 		TextureLoader() = delete;
 		static std::shared_ptr<Texture> Create(Texture::TextureType type, const std::string& texturePath);
 		static std::shared_ptr<Texture> Create(Texture::TextureType type, int width, int height, const bool multiSample=false);
+		static std::shared_ptr<Texture> CreateGbuffer(int width, int height, GLenum internalFormat = GL_RGBA16F);
 		static std::shared_ptr<Texture> CreateSkybox(Texture::TextureType type, const std::string& texturePath);
 		static std::shared_ptr<Texture> CreateHDR(const std::string& texturePath);
 		static std::shared_ptr<Texture> CreateNoise();
