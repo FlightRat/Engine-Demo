@@ -61,7 +61,7 @@ namespace ENGINE_CORE::Systems {
 	{
 		Prepare_Pass(camera, runtimeRegistry);
 
-		//glCullFace(GL_FRONT);		// 解决闪烁，但导致漏光
+		//glCullFace(GL_FRONT);		// 解决acne，但导致漏光
 		Shadow_Pass(runtimeRegistry);
 		//glCullFace(GL_BACK);
 
