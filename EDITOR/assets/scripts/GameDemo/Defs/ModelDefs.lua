@@ -1,84 +1,68 @@
+local sponzaMaterials = {}
+
+for i = 1, 746 do
+    sponzaMaterials[i] = {
+        shadingModel = "PBR",
+        color = vec4(0.7, 0.7, 0.7, 1.0),
+        metallic = 0.0,
+        roughness = 0.8,
+        ao = 1.0,
+        useTex = false
+    }
+end
+
 ModelDefs = 
 {
-	nanosuit = 
+	teapot = 
 	{
-		tag = "nanosuit",
+		tag = "teapot",
 		group = "Models",
 		components = 
 		{
 			Transform = {
-				position = vec3(0.0, 0.0, -20.0),
+				position = vec3(0.0, 0.0, 0.0),
 				scale = vec3(0.5, 0.5, 0.5),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
-				type = "nanosuit"
+				type = "teapot"
 			},
 			MeshRender = {
 				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(1.0, 0.5, 0.0, 1.0),
+						metallic = 0.0,
+						roughness = 1.0,
+						ao = 1.0,
+						useTex = false,
+						albedoMap = "",
+						normalMap = "",
+						metallicMap = "",
+						roughnessMap = "",
+						aoMap = ""
+					}
 				}
 			}
 		}
 	},
-	backpack = 
+	sponza = 
 	{
-		tag = "backpack",
+		tag = "sponza",
 		group = "Models",
 		components = 
 		{
 			Transform = {
-				position = vec3(2.0, 2.0, -15.0),
+				position = vec3(0.0, 0.0, 0.0),
 				scale = vec3(1.0, 1.0, 1.0),
 				rotation = vec3(0.0, 0.0, 0.0)
 			},
 			MeshFilter = {
-				type = "backpack"
+				type = "sponza"
 			},
 			MeshRender = {
-				flip_uv = true,
-				material = {
-				}
+				material = sponzaMaterials
 			}
 		}
 	},
-	cyborg = 
-	{
-		tag = "cyborg",
-		group = "Models",
-		components = 
-		{
-			Transform = {
-				position = vec3(-10, 0.0, -15.0),
-				scale = vec3(2.0, 2.0, 2.0),
-				rotation = vec3(0.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "cyborg"
-			},
-			MeshRender = {
-				material = {
-				}
-			}
-		}
-	},
-	owl = 
-	{
-		tag = "owl",
-		group = "Models",
-		components = 
-		{
-			Transform = {
-				position = vec3(0.0, 5.0, -15.0),
-				scale = vec3(5.0, 5.0, 5.0),
-				rotation = vec3(90.0, 0.0, 0.0)
-			},
-			MeshFilter = {
-				type = "owl"
-			},
-			MeshRender = {
-				material = {
-				}
-			}
-		}
-	}
 }
