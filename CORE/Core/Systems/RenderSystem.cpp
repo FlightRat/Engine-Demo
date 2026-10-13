@@ -243,6 +243,8 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// 方向光
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(1.5f, 2.0f);
 		Shader_ShadowMap->Enable();
 		for (int index = 0; index < lightSystem->GetActivatedDirLights(); index++)
 		{
@@ -277,6 +279,7 @@ namespace ENGINE_CORE::Systems {
 				shadowMap->Unbind();
 			}
 		}
+		glDisable(GL_POLYGON_OFFSET_FILL);
 
 		// 点光源
 		Shader_ShadowCubemap->Enable();
