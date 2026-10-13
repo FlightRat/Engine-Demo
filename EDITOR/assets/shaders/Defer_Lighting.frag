@@ -113,9 +113,14 @@ void main()
     float roughness = MRA.y;
     float ao        = MRA.z;  // 材质贴图中的AO
 
+    // 重建原始法线
     vec3 dPdx = dFdx(FragPos);
     vec3 dPdy = dFdy(FragPos);
-    vec3 receiverNormal = normalize(Normal);
+    vec3 receiverNormal = cross(dPdx, dPdy);
+    float receiverNormalLength = dot(receiverNormal, receiverNormal);
+    if(receiverNormalLength > 1e-12)receiverNormal *= inversesqrt(receiverNormalLength);
+    else receiverNormal=Normal; 
+    if (dot(receiverNormal, Normal) < 0.0) receiverNormal = -receiverNormal;
 
     // SSAO
     float ssaoFactor = 1.0;
