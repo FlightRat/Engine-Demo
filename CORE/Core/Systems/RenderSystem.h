@@ -23,13 +23,14 @@ namespace ENGINE_CORE::Systems {
 		RenderSystem();
 		~RenderSystem() = default;
 
-		void DeferredRenderPipeline(
+        void DeferredRenderPipeline(
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
 			ENGINE_CORE::ECS::Registry& runtimeRegistry,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
-			std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
+            std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB
 		);
 	private:
 		void Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
@@ -41,6 +42,7 @@ namespace ENGINE_CORE::Systems {
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, 
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB);
 		void Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void FXAA_Pass(const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& source, const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& output);
 
 		glm::mat4 CalculateModelMatrix(
 			const ENGINE_CORE::ECS::TransformComponent& transform,

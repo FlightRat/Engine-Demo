@@ -57,9 +57,10 @@ namespace ENGINE_CORE::Systems {
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> finalOutputFB)
-	{
-		Prepare_Pass(camera, runtimeRegistry);
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
+        std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB)
+    {
+        Prepare_Pass(camera, runtimeRegistry);
 
 		//glCullFace(GL_FRONT);		// 解决acne，但导致漏光
 		Shadow_Pass(runtimeRegistry);
@@ -93,29 +94,26 @@ namespace ENGINE_CORE::Systems {
 		ssaoBlurFB->Unbind();
 
 		// 光照pass
-		finalOutputFB->Bind();
+		shadeOutputFB->Bind();
 		glDisable(GL_STENCIL_TEST);				// 光照计算不需要模板
-		glViewport(0, 0, finalOutputFB->Width(), finalOutputFB->Height());
+		glViewport(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB, ssaoBlurFB);
-		finalOutputFB->Unbind();
+		shadeOutputFB->Unbind();
 
 		// 后处理pass（点光源+模板测试+天空盒）
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, finalOutputFB->GetFboID());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, shadeOutputFB->GetFboID());
 		glBlitFramebuffer(0, 0, intermediateGB->Width(), intermediateGB->Height(),
-			0, 0, finalOutputFB->Width(), finalOutputFB->Height(),
+			0, 0, shadeOutputFB->Width(), shadeOutputFB->Height(),
 			GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		finalOutputFB->Bind();
+		shadeOutputFB->Bind();
 		Postprocess_Pass(camera, runtimeRegistry);
-		finalOutputFB->Unbind();
-
-		intermediateGB->CheckResize();
-		ssaoFB->CheckResize();
-		ssaoBlurFB->CheckResize();
-		finalOutputFB->CheckResize();
+		shadeOutputFB->Unbind();
+		// FXAA
+		FXAA_Pass(shadeOutputFB, fxaaOutputFB);
 	}
 
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -767,5 +765,23 @@ namespace ENGINE_CORE::Systems {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 	}
+
+	void RenderSystem::FXAA_Pass(
+		const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& source,
+		const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& output)
+	{
+		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+		auto shader = assetManager.GetShader("fxaa");
+		auto quad = assetManager.GetModel("quad");
+
+		output->Bind();
+		glViewport(0, 0, output->Width(), output->Height());
+		glBindTextureUnit(0, source->GetTextureID());
+		shader->Enable();
+		shader->SetUniformVec2("inverseInputSize", 1.0f / source->Width(), 1.0f / source->Height());
+		quad->GetMeshes()[0].Draw();
+		output->Unbind();
+	}
+
 }
 
