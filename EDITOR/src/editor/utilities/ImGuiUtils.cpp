@@ -116,8 +116,9 @@ namespace ImGui {
 
         auto& transform = entity.GetComponent<ENGINE_CORE::ECS::TransformComponent>();
 
-        ImVec2 windowPos = ImGui::GetWindowPos();
-        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImVec2 windowPos = ImGui::GetItemRectMin();
+        const ImVec2 imageEnd = ImGui::GetItemRectMax();
+        ImVec2 windowSize{imageEnd.x - windowPos.x, imageEnd.y - windowPos.y};
 
         // 指定imguizmo绘制区域
         ImGuizmo::SetOrthographic(false);
@@ -129,9 +130,8 @@ namespace ImGui {
         modelMatrix = modelMatrix * glm::toMat4(transform.rotation_quat); // 四元数→旋转矩阵
         modelMatrix = glm::scale(modelMatrix, transform.scale);
 
-        float aspectRatio = windowSize.x / windowSize.y;
         glm::mat4 viewMatrix = camera->GetViewMatrix();
-        glm::mat4 projMatrix = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
+        glm::mat4 projMatrix = camera->GetProjectionMatrix();
 
         ImGuizmo::OPERATION imguizmoOp;
         switch (toolCTX.gizmoOp)
