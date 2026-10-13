@@ -8,7 +8,7 @@ namespace ENGINE_RENDERING {
 		: m_Type(type), m_Width(width), m_Height(height), m_bUseRbo(bUseRbo) {
 
 		if (!CreateTextures() || !Initialize())
-			ENGINE_ERROR("Failed to initialize Framebuffer of type: {0}", (int)type);
+            ENGINE_ERROR("Failed to initialize Framebuffer of type: {0}", (int)type);
 	}
 
 	Framebuffer::~Framebuffer()
@@ -19,7 +19,7 @@ namespace ENGINE_RENDERING {
 	void Framebuffer::CleanUp() {
 		glDeleteFramebuffers(1, &m_FboID);
 		m_FboID = 0;
-		if (m_bUseRbo) {
+		if (m_RboID != 0) {
 			glDeleteRenderbuffers(1, &m_RboID);
 			m_RboID = 0;
 		}
@@ -67,8 +67,8 @@ namespace ENGINE_RENDERING {
             m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::VSSM_COUNT, m_Width, m_Height));
             break;
 		}
-		return true;
-	}
+        return true;
+    }
 
     bool Framebuffer::Initialize()
     {
@@ -86,11 +86,13 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
 
             // DSA 方式创建和配置 Renderbuffer (无需 bind)
-            glCreateRenderbuffers(1, &m_RboID);
-            glNamedRenderbufferStorage(m_RboID, GL_DEPTH24_STENCIL8, m_Width, m_Height);
+            if (m_bUseRbo) {
+                glCreateRenderbuffers(1, &m_RboID);
+                glNamedRenderbufferStorage(m_RboID, GL_DEPTH24_STENCIL8, m_Width, m_Height);
 
-            // 将 RBO 挂载到 FBO
-            glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
+                // 将 RBO 挂载到 FBO
+                glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
+            }
             break;
         }
         case ENGINE_RENDERING::BufferType::SHADOWMAP:
@@ -160,10 +162,11 @@ namespace ENGINE_RENDERING {
         }
 
         // 2. 检查 FBO 状态，同样无需 Bind
-        if (glCheckNamedFramebufferStatus(m_FboID, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        const GLenum status = glCheckNamedFramebufferStatus(m_FboID, GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE)
         {
             // 记录错误日志
-            std::string error = std::to_string(glGetError());
+            std::string error = std::to_string(status);
             ENGINE_ERROR("Failed to create an OpenGL framebuffer! Error Code: {0}", error);
             // 清理失败的资源，避免内存泄漏
             glDeleteFramebuffers(1, &m_FboID);
@@ -203,19 +206,21 @@ namespace ENGINE_RENDERING {
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	}
 
-	void Framebuffer::Resize(int width, int height)
-	{
-		m_Width = width;
-		m_Height = height;
-		m_bShouldResize = true;
-	}
+    void Framebuffer::Resize(int width, int height)
+    {
+        if (width == m_Width && height == m_Height) return;
+        m_Width = width;
+        m_Height = height;
+        m_bShouldResize = true;
+    }
 
-	void Framebuffer::CheckResize() {
-		if (!m_bShouldResize) return;
-		CleanUp();        // 销毁旧的 FBO/RBO/Textures
-		CreateTextures(); // 重新按 m_Type 创建正确格式的纹理
-		Initialize();     // 重新绑定
+    void Framebuffer::CheckResize()
+    {
+        if (!m_bShouldResize) return;
+        CleanUp();        // 销毁旧的 FBO/RBO/Textures
+        CreateTextures(); // 重新按 m_Type 创建正确格式的纹理
+        Initialize();     // 重新绑定
 
-		m_bShouldResize = false;
-	}
+        m_bShouldResize = false;
+    }
 }
