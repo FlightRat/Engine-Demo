@@ -377,3 +377,6 @@ FodyWeavers.xsd
 !/Dependencies/*/Release/lib/*.lib
 !/Dependencies/*/Debug/bin/*.dll
 !/Dependencies/*/Release/bin/*.dll
+
+# Wavefront OBJ models are source assets, not compiler object files.
+!/EDITOR/assets/models/**/*.obj
