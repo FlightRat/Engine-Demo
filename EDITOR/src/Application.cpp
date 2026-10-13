@@ -332,6 +332,13 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
+		
+		// FXAA shader
+		if (!assetManager.AddShader("fxaa", "assets/shaders/Defer_Lighting.vert", "assets/shaders/fxaa.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
 
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
@@ -349,6 +356,7 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("ibl_conv")->SetIsEditorShader(true);
 		assetManager.GetShader("ibl_prefilter")->SetIsEditorShader(true);
 		assetManager.GetShader("ibl_brdf")->SetIsEditorShader(true);
+		assetManager.GetShader("fxaa")->SetIsEditorShader(true);
 		return true;
 	}
 
@@ -501,6 +509,9 @@ namespace ENGINE_EDITOR {
 		// gbuffer
 		bufferManager.AddFrameBuffer("GAME_GB", ENGINE_RENDERING::BufferType::GBUFFER, 600, 600, true);
 		bufferManager.AddFrameBuffer("SCENE_GB", ENGINE_RENDERING::BufferType::GBUFFER, 600, 600, true);
+		// fxaa buffer
+		bufferManager.AddFrameBuffer("GAME_FXAA", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_FXAA", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, false);
 		// ssao
 		bufferManager.AddFrameBuffer("GAME_SSAO",ENGINE_RENDERING::BufferType::SSAO, 600,600,false);
 		bufferManager.AddFrameBuffer("GAME_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
