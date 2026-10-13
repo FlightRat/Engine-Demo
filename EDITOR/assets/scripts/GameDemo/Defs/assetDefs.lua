@@ -4,19 +4,21 @@ AssetDefs =
 	{
 		--{name="owl", path="assets/models/owl/owl.glb"},
 		--{name="backpack", path="assets/models/backpack/backpack.obj"},
-		{name="nanosuit", path="assets/models/nanosuit/nanosuit.obj"},
-		{name="cyborg", path="assets/models/cyborg/cyborg.obj"}
+		--{name="nanosuit", path="assets/models/nanosuit/nanosuit.obj"},
+		--{name="cyborg", path="assets/models/cyborg/cyborg.obj"},
+		{name="teapot", path="assets/models/teapot/teapot.obj"},
+		{name="sponza", path="assets/models/sponza/sponza.obj"}
 	},
 	textures=
 	{
-		{name="backpack_roughness", path="assets/models/backpack/roughness.jpg", pixel_art=false},
-		{name="backpack_ao", path="assets/models/backpack/ao.jpg", pixel_art=false},
 		{name="dragon_girl", path="assets/textures/dragon_girl.jpg", pixel_art=false},
-		{name="mafuyu", path="assets/textures/mafuyu.png", pixel_art=false},
 		{name="brick", path="assets/textures/brick.png", pixel_art=false},
-		{name="wood", path="assets/textures/wood.png", pixel_art=false},
+		{name="wood", path="assets/textures/wood.png", pixel_art=false}
+		--[[
 		{name="container", path="assets/textures/container.png", pixel_art=false},
 		{name="container_specular", path="assets/textures/container_specular.png", pixel_art=false},
+		{name="backpack_roughness", path="assets/models/backpack/roughness.jpg", pixel_art=false},
+		{name="backpack_ao", path="assets/models/backpack/ao.jpg", pixel_art=false},
 		{name="rust", path="assets/textures/rust.png", pixel_art=false},
 		{name="wall_albedo", path="assets/textures/pbr/wall/albedo.png", pixel_art=false},
 		{name="wall_normal", path="assets/textures/pbr/wall/normal.png", pixel_art=false},
@@ -43,6 +45,7 @@ AssetDefs =
 		{name="grass_metallic", path="assets/textures/pbr/grass/metallic.png", pixel_art=false},
 		{name="grass_roughness", path="assets/textures/pbr/grass/roughness.png", pixel_art=false},
 		{name="grass_ao", path="assets/textures/pbr/grass/ao.png", pixel_art=false}
+		]]
 	},
 	music=
 	{
