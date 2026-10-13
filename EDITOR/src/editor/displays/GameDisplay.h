@@ -1,5 +1,6 @@
 #pragma once
-#include<Core/ECS/Registry.h>
+#include <Core/ECS/Registry.h>
+#include <glad/glad.h>
 #include"IDisplay.h"
 
 namespace ENGINE_EDITOR 
@@ -11,7 +12,7 @@ namespace ENGINE_EDITOR
 	private:
 		void PlayGame();
 		void StopGame();
-		void RenderGame();
+		GLuint RenderGame(int width, int height);
 	protected:
 		virtual void DrawToolbar() override;
 	public:

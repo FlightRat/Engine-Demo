@@ -72,40 +72,30 @@ namespace ENGINE_EDITOR {
 		}
 	}
 
-	void SceneDisplay::RenderScene()
-	{
-		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene) 
-			return;
-		
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-		
-		auto& mainRegistry = MAIN_REGISTRY();
-		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& bufferManager = mainRegistry.GetBufferManager();
-		const auto& fb = bufferManager.GetFrameBuffer("SCENE_FB");
-		const auto& gb = bufferManager.GetFrameBuffer("SCENE_GB");
-		const auto& ssao = bufferManager.GetFrameBuffer("SCENE_SSAO");
-		const auto& ssaoBlur = bufferManager.GetFrameBuffer("SCENE_SSAO_Blur");
-		
-		m_pSceneCam->SetWidth(fb->Width());
-		m_pSceneCam->SetHeight(fb->Height());
-
-		renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, ssao, ssaoBlur, fb);
-
-		// code for test
-		//auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
-		//auto& keyboard = inputManager.GetKeyBoard();
-		//auto& mouse = inputManager.GetMouse();
-		//if (keyboard.IsKeyPressed(ENGINE_KEY_1))
-		//{
-		//	renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, fb);
-		//}
-		//else
-		//{
-		//	renderSystem->ForwardRenderPipeline(m_pSceneCam, runtimeRegistry, fb);
-		//}
-	}
+    GLuint SceneDisplay::RenderScene(int width, int height)
+    {
+        auto scene = SCENE_MANAGER().GetCurrentScene();
+        if (!scene) return 0;
+        auto& runtimeRegistry = scene->GetRegistry();
+        auto& mainRegistry = MAIN_REGISTRY();
+        const auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
+        auto& buffers = mainRegistry.GetBufferManager();
+        const auto fb = buffers.GetFrameBuffer("SCENE_FB");
+        const auto gb = buffers.GetFrameBuffer("SCENE_GB");
+        const auto ssao = buffers.GetFrameBuffer("SCENE_SSAO");
+        const auto blur = buffers.GetFrameBuffer("SCENE_SSAO_Blur");
+        const auto fxaa = buffers.GetFrameBuffer("SCENE_FXAA");
+        // Finish all allocation changes before camera setup or any draw command.
+        for (const auto& target : {fb, gb, ssao, blur, fxaa}) {
+            target->Resize(width, height);
+            target->CheckResize();
+        }
+        if (!renderSystem || !m_pSceneCam) return 0;
+        m_pSceneCam->SetWidth(width);
+        m_pSceneCam->SetHeight(height);
+        renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, ssao, blur, fb, fxaa);
+		return fxaa->GetTextureID();
+    }
 
 	void SceneDisplay::LoadNewScene()
 	{
@@ -208,42 +198,23 @@ namespace ENGINE_EDITOR {
 		}
 
 		DrawToolbar();
-		RenderScene();
 		
 		if (ImGui::BeginChild("##SceneChild", ImVec2{ 0,0 }, false, ImGuiWindowFlags_NoScrollWithMouse))
 		{
-			auto& mainRegistry = MAIN_REGISTRY();
-
-			auto& bufferManager = mainRegistry.GetBufferManager();
-			const auto& fb = bufferManager.GetFrameBuffer("SCENE_FB");
-			const auto& gb = bufferManager.GetFrameBuffer("SCENE_GB");
-			const auto& ssao = bufferManager.GetFrameBuffer("SCENE_SSAO");
-			const auto& ssaoBlur = bufferManager.GetFrameBuffer("SCENE_SSAO_Blur");
-
-			ImVec2 imageSize{ static_cast<float>(fb->Width()),static_cast<float>(fb->Height()) };
-			ImVec2 windowSize{ ImGui::GetWindowSize() };
-
-			float x = (windowSize.x - imageSize.x) * 0.5f;
-			float y = (windowSize.y - imageSize.y) * 0.5f;
-			ImGui::SetCursorPos(ImVec2{ x,y });
-
-			ImGui::Image((ImTextureID)fb->GetTextureID(), imageSize, ImVec2{ 0.f,1.f }, ImVec2{ 1.f,0.f });
-			ImGui::DrawGizmo(m_pSceneCam);
-
-			/*
-			* TODO: 
-			check and change the bool for controling camera, and move "ControlCam" to update
-			refer Ep.66 - Tilemap Editor (Part 6): Finish Tile Tool, Camera Zoom, and More!  --Time 50min
-			*/ 
-			ControlCam();
-
-			// check size
-			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y)) {
-				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				gb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				ssao->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				ssaoBlur->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-			}
+            const ImVec2 available = ImGui::GetContentRegionAvail();
+            const int width = static_cast<int>(available.x);
+            const int height = static_cast<int>(available.y);
+            const GLuint texture = RenderScene(width, height);
+            if (texture != 0) {
+                ImGui::Image((ImTextureID)(intptr_t)texture,
+                    ImVec2{static_cast<float>(width), static_cast<float>(height)},
+                    ImVec2{0.f, 1.f}, ImVec2{1.f, 0.f});
+                ImGui::DrawGizmo(m_pSceneCam);
+                ControlCam();
+            } else {
+                // Keep an item for scene drag-and-drop even before a scene is loaded.
+                ImGui::InvisibleButton("##EmptyScene", available);
+            }
 
 			if (ImGui::BeginDragDropTarget())
 			{
@@ -259,9 +230,8 @@ namespace ENGINE_EDITOR {
 				ImGui::EndDragDropTarget();
 			}
 
-			ImGui::EndChild();
 		}
-		
+        ImGui::EndChild();
 		ImGui::End();
 	}
 

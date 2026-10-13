@@ -98,27 +98,31 @@ namespace ENGINE_EDITOR
 		//mainRegistry.GetSoundFxPlayer().Stop(-1);
 	}
 
-	void GameDisplay::RenderGame()
-	{
-		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene)
-			return;
-
-		auto& mainRegistry = MAIN_REGISTRY();
-		auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
-		auto& bufferManager = mainRegistry.GetBufferManager();
-		const auto& fb = bufferManager.GetFrameBuffer("GAME_FB");
-		const auto& gb = bufferManager.GetFrameBuffer("GAME_GB");
-		const auto& ssao = bufferManager.GetFrameBuffer("GAME_SSAO");
-		const auto& ssaoBlur = bufferManager.GetFrameBuffer("GAME_SSAO_Blur");
-
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-		auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-		camera->SetWidth(fb->Width());
-		camera->SetHeight(fb->Height());
-
-		renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ssao, ssaoBlur, fb);
-	}
+	GLuint GameDisplay::RenderGame(int width, int height)
+    {
+        auto scene = SCENE_MANAGER().GetCurrentScene();
+        if (!scene) return 0;
+        auto& runtimeRegistry = scene->GetRegistry();
+        if (!runtimeRegistry.GetRegistry().ctx().contains<std::shared_ptr<ENGINE_RENDERING::Camera3D>>()) return 0;
+        const auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
+        auto& mainRegistry = MAIN_REGISTRY();
+        const auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
+        auto& buffers = mainRegistry.GetBufferManager();
+        const auto fb = buffers.GetFrameBuffer("GAME_FB");
+        const auto gb = buffers.GetFrameBuffer("GAME_GB");
+        const auto ssao = buffers.GetFrameBuffer("GAME_SSAO");
+        const auto blur = buffers.GetFrameBuffer("GAME_SSAO_Blur");
+        const auto fxaa = buffers.GetFrameBuffer("GAME_FXAA");
+        // Finish all allocation changes before camera setup or any draw command.
+        for (const auto& target : {fb, gb, ssao, blur, fxaa}) {
+            target->Resize(width, height);
+            target->CheckResize();
+        }
+        camera->SetWidth(width);
+        camera->SetHeight(height);
+        renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ssao, blur, fb, fxaa);
+		return fxaa->GetTextureID();
+    }
 
 	void GameDisplay::DrawToolbar()
 	{
@@ -168,50 +172,29 @@ namespace ENGINE_EDITOR
 		ImGui::Separator();
 	}
 
-	void GameDisplay::Draw()
-	{
-		static bool pOpen{ true };
-		if (!ImGui::Begin("Game", &pOpen))
-		{
-			ImGui::End();
-			return;
-		}
+    void GameDisplay::Draw()
+    {
+        static bool open = true;
+        if (!ImGui::Begin("Game", &open)) {
+            ImGui::End();
+            return;
+        }
+        DrawToolbar();
+        if (ImGui::BeginChild("##GameChild", ImVec2{0.f, 0.f}, false, ImGuiWindowFlags_NoScrollWithMouse)) {
+            const ImVec2 available = ImGui::GetContentRegionAvail();
+            const int width = static_cast<int>(available.x);
+            const int height = static_cast<int>(available.y);
+			const GLuint texture = RenderGame(width, height);
+            if (texture != 0) {
+                ImGui::Image((ImTextureID)(intptr_t)texture,
+                    ImVec2{static_cast<float>(width), static_cast<float>(height)},
+                    ImVec2{0.f, 1.f}, ImVec2{1.f, 0.f});
+            }
+        }
+        ImGui::EndChild();
+        ImGui::End();
+    }
 
-		DrawToolbar();
-		RenderGame();
-
-		if (ImGui::BeginChild("##GameChild", ImVec2{ 0.f,0.f }, NULL, ImGuiWindowFlags_NoScrollWithMouse))
-		{
-			auto& mainRegistry = MAIN_REGISTRY();
-
-			auto& bufferManager = mainRegistry.GetBufferManager();
-			const auto& fb = bufferManager.GetFrameBuffer("GAME_FB");
-			const auto& gb = bufferManager.GetFrameBuffer("GAME_GB");
-			const auto& ssao = bufferManager.GetFrameBuffer("GAME_SSAO");
-			const auto& ssaoBlur = bufferManager.GetFrameBuffer("GAME_SSAO_Blur");
-
-			ImGui::SetCursorPos(ImVec2{ 0.f,0.f });
-			ImGui::Image(
-				(ImTextureID)fb->GetTextureID(),
-				ImVec2{
-					static_cast<float>(fb->Width()),
-					static_cast<float>(fb->Height())
-				},
-				ImVec2{ 0.f,1.f }, ImVec2{ 1.f,0.f }
-			);
-			ImGui::EndChild();
-
-			ImVec2 windowSize{ ImGui::GetWindowSize() };
-			if (fb->Width() != static_cast<int>(windowSize.x) || fb->Height() != static_cast<int>(windowSize.y)) {
-				fb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				gb->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				ssao->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-				ssaoBlur->Resize(static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-			}
-		}
-		ImGui::End();
-	}
-	
 	void GameDisplay::Update()
 	{
 		// TODO: if play, update lua

@@ -1,5 +1,6 @@
 #pragma once
-#include<Core/ECS/Registry.h>
+#include <Core/ECS/Registry.h>
+#include <glad/glad.h>
 #include"IDisplay.h"
 
 namespace ENGINE_RENDERING {
@@ -14,7 +15,7 @@ namespace ENGINE_EDITOR
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> m_pSceneCam;	//TODO: unique ptr
 	private:
 		void LoadScnne();
-		void RenderScene();
+		GLuint RenderScene(int width, int height);
 		void LoadNewScene();
 	protected:
 		virtual void DrawToolbar() override;
