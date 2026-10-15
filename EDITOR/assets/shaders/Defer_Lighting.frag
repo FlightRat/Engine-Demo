@@ -71,7 +71,7 @@ const float VSSM_MOMENT_SCALE = 16777215.0;
 const float VSSM_MIN_VARIANCE = 1e-7;
 const float VSSM_BLEED_REDUCTION = 0.2;
 
-// ==================== 函数前向声明 ====================
+// Cook-Torrance BRDF
 vec3 fresnelSchlick(float cosTheta, vec3 F0);
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness);
 float DistributionGGX(vec3 N, vec3 H, float roughness);
