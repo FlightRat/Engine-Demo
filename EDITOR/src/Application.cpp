@@ -291,15 +291,15 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// defer ssao
-		if (!assetManager.AddShader("defer_SSAO", "assets/shaders/defer_ssao.vert", "assets/shaders/defer_ssao.frag", ""))
+		// defer HBAO
+		if (!assetManager.AddShader("defer_HBAO", "assets/shaders/defer_hbao.vert", "assets/shaders/defer_hbao.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
 		}
 
-		// defer ssao blur
-		if (!assetManager.AddShader("defer_SSAOBlur", "assets/shaders/defer_ssaoBlur.vert", "assets/shaders/defer_ssaoBlur.frag", ""))
+		// defer AO blur
+		if (!assetManager.AddShader("defer_AOBlur", "assets/shaders/defer_aoBlur.vert", "assets/shaders/defer_aoBlur.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
 			return false;
@@ -344,8 +344,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Lighting")->SetIsEditorShader(true);
-		assetManager.GetShader("defer_SSAO")->SetIsEditorShader(true);
-		assetManager.GetShader("defer_SSAOBlur")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_HBAO")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_AOBlur")->SetIsEditorShader(true);
 		assetManager.GetShader("shadow_Map")->SetIsEditorShader(true);
 		assetManager.GetShader("shadow_Cubemap")->SetIsEditorShader(true);
 		assetManager.GetShader("vssm_moments")->SetIsEditorShader(true);
@@ -424,9 +424,9 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [HDR] from memory!");
 			return false;
 		}
-		if (!assetManager.AddNoiseTexture("ssaoNoise"))
+		if (!assetManager.AddNoiseTexture("aoNoise"))
 		{
-			ENGINE_ERROR("Failed to load texture [ssaoNoise] from memory!");
+			ENGINE_ERROR("Failed to load texture [aoNoise] from memory!");
 			return false;
 		}
 		assetManager.GetTexture("play_button")->SetIsEditorTexture(true);
@@ -441,7 +441,7 @@ namespace ENGINE_EDITOR {
 		assetManager.GetTexture("shader_icon")->SetIsEditorTexture(true);
 		assetManager.GetTexture("skybox")->SetIsEditorTexture(true);
 		assetManager.GetTexture("HDR")->SetIsEditorTexture(true);
-		assetManager.GetTexture("ssaoNoise")->SetIsEditorTexture(true);
+		assetManager.GetTexture("aoNoise")->SetIsEditorTexture(true);
 
 		return true;
 
@@ -512,11 +512,11 @@ namespace ENGINE_EDITOR {
 		// fxaa buffer
 		bufferManager.AddFrameBuffer("GAME_FXAA", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, false);
 		bufferManager.AddFrameBuffer("SCENE_FXAA", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, false);
-		// ssao
-		bufferManager.AddFrameBuffer("GAME_SSAO",ENGINE_RENDERING::BufferType::SSAO, 600,600,false);
-		bufferManager.AddFrameBuffer("GAME_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
-		bufferManager.AddFrameBuffer("SCENE_SSAO", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
-		bufferManager.AddFrameBuffer("SCENE_SSAO_Blur", ENGINE_RENDERING::BufferType::SSAO, 600, 600, false);
+		// AO
+		bufferManager.AddFrameBuffer("GAME_AO",ENGINE_RENDERING::BufferType::AO, 600,600,false);
+		bufferManager.AddFrameBuffer("GAME_AO_Blur", ENGINE_RENDERING::BufferType::AO, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_AO", ENGINE_RENDERING::BufferType::AO, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_AO_Blur", ENGINE_RENDERING::BufferType::AO, 600, 600, false);
 		bufferManager.AddFrameBuffer("IBL", ENGINE_RENDERING::BufferType::IBL, 512, 512, true);
 		
 		// CSM for directional light
@@ -558,7 +558,6 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
 		bufferManager.AddUniformBuffer("AreaLights", lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight), 3);
-		bufferManager.AddUniformBuffer("SSAO_samples", 64 * sizeof(glm::vec4), 4);
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// forward rendering shader
@@ -594,9 +593,16 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
-		// defer SSAO
-		auto defer_SSAO = assetManager.GetShader("defer_SSAO");
-		if (defer_SSAO->ShaderProgramID() == 0)
+		// defer HBAO
+		auto defer_HBAO = assetManager.GetShader("defer_HBAO");
+		if (defer_HBAO->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		// defer AOBlur
+		auto defer_AOBlur = assetManager.GetShader("defer_AOBlur");
+		if (defer_AOBlur->ShaderProgramID() == 0)
 		{
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
@@ -605,35 +611,13 @@ namespace ENGINE_EDITOR {
 		forward_Color->BindUniformBlock("Matrices", 0);
 		forward_AreaLight->BindUniformBlock("Matrices", 0);
 		defer_gbuffer->BindUniformBlock("Matrices", 0);
-		defer_SSAO->BindUniformBlock("Matrices", 0);
+		defer_HBAO->BindUniformBlock("Matrices", 0);
+		defer_AOBlur->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("PointLights", 2);
 		defer_lighting->BindUniformBlock("AreaLights", 3);
-		defer_SSAO->BindUniformBlock("SSAO_samples", 4);
-
-		// uniform block -- ssao samoles (it never update, so set it here)
-		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0);
-		std::default_random_engine generator;
-		std::vector<glm::vec4> ssaoKernel; // 声明为 vec4 以满足 std140 对齐
-		for (GLuint i = 0; i < 64; ++i)
-		{
-			glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
-			sample = glm::normalize(sample);
-			sample *= randomFloats(generator);
-			GLfloat scale = GLfloat(i) / 64.0;
-			scale = 0.1f + (scale * scale) * (1.0f - 0.1f);
-			sample *= scale;
-			// 放入 vec4，第四个常量 w 设为 0.0f
-			ssaoKernel.push_back(glm::vec4(sample, 0.0f));
-		}
-		const auto& ssaoSamplesUBO = bufferManager.GetUniformBuffer("SSAO_samples");
-		ssaoSamplesUBO->UpdateUniformBuffer(
-			ssaoKernel.data(),
-			64 * sizeof(glm::vec4), // 使用 vec4 的总大小 (1024 字节)
-			0
-		);
 
 		return true;
 	}
