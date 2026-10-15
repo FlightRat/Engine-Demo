@@ -110,17 +110,17 @@ namespace ENGINE_EDITOR
         auto& buffers = mainRegistry.GetBufferManager();
         const auto fb = buffers.GetFrameBuffer("GAME_FB");
         const auto gb = buffers.GetFrameBuffer("GAME_GB");
-        const auto ssao = buffers.GetFrameBuffer("GAME_SSAO");
-        const auto blur = buffers.GetFrameBuffer("GAME_SSAO_Blur");
+        const auto ao = buffers.GetFrameBuffer("GAME_AO");
+        const auto blur = buffers.GetFrameBuffer("GAME_AO_Blur");
         const auto fxaa = buffers.GetFrameBuffer("GAME_FXAA");
         // Finish all allocation changes before camera setup or any draw command.
-        for (const auto& target : {fb, gb, ssao, blur, fxaa}) {
+        for (const auto& target : {fb, gb, ao, blur, fxaa}) {
             target->Resize(width, height);
             target->CheckResize();
         }
         camera->SetWidth(width);
         camera->SetHeight(height);
-        renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ssao, blur, fb, fxaa);
+        renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ao, blur, fb, fxaa);
 		return fxaa->GetTextureID();
     }
 
