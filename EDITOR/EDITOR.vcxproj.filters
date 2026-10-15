@@ -93,10 +93,10 @@
     <None Include="assets\shaders\defer_Gbuffer.frag" />
     <None Include="assets\shaders\defer_Lighting.vert" />
     <None Include="assets\shaders\defer_Lighting.frag" />
-    <None Include="assets\shaders\defer_ssao.vert" />
-    <None Include="assets\shaders\defer_ssao.frag" />
-    <None Include="assets\shaders\defer_ssaoBlur.vert" />
-    <None Include="assets\shaders\defer_ssaoBlur.frag" />
+    <None Include="assets\shaders\defer_hbao.vert" />
+    <None Include="assets\shaders\defer_hbao.frag" />
+    <None Include="assets\shaders\defer_aoBlur.vert" />
+    <None Include="assets\shaders\defer_aoBlur.frag" />
     <None Include="assets\shaders\test.vert" />
     <None Include="assets\shaders\test.frag" />
     <None Include="assets\shaders\ibl_cubemap.vert" />

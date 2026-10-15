@@ -195,9 +195,9 @@
     <None Include="assets\scripts\GameDemo\utilities.lua" />
     <None Include="assets\scripts\GameDemo\Defs\envirDefs.lua" />
     <None Include="assets\scripts\main.lua" />
-    <None Include="assets\shaders\defer_ssao.frag" />
-    <None Include="assets\shaders\defer_ssaoBlur.frag" />
-    <None Include="assets\shaders\defer_ssaoBlur.vert" />
+    <None Include="assets\shaders\defer_hbao.frag" />
+    <None Include="assets\shaders\defer_aoBlur.frag" />
+    <None Include="assets\shaders\defer_aoBlur.vert" />
     <None Include="assets\shaders\forward_AreaLight.frag" />
     <None Include="assets\shaders\forward_AreaLight.vert" />
     <None Include="assets\shaders\forward_Color.frag" />
@@ -221,7 +221,7 @@
     <None Include="assets\shaders\shadow_Map.vert" />
     <None Include="assets\shaders\physics_Debug.frag" />
     <None Include="assets\shaders\physics_Debug.vert" />
-    <None Include="assets\shaders\defer_ssao.vert" />
+    <None Include="assets\shaders\defer_hbao.vert" />
     <None Include="assets\shaders\test.frag" />
     <None Include="assets\shaders\test.vert" />
     <None Include="assets\shaders\vssm_moments.frag" />
