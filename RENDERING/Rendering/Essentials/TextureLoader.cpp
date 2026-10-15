@@ -311,12 +311,12 @@ namespace ENGINE_RENDERING
     }
 
     // -----------------------------
-    // SSAO
+    // AO
     // -----------------------------
-    bool TextureLoader::LoadSSAOTexture(GLuint& id, int& width, int& height)
+    bool TextureLoader::LoadAOTexture(GLuint& id, int& width, int& height)
     {
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
-        glTextureStorage2D(id, 1, GL_R8, width, height);
+        glTextureStorage2D(id, 1, GL_R16F, width, height);
 
         glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -581,8 +581,8 @@ namespace ENGINE_RENDERING
             if (!LoadGbufferTexture(id, width, height, GL_RGBA16F)) return nullptr;
             break;
 
-        case Texture::TextureType::SSAO:
-            if (!LoadSSAOTexture(id, width, height)) return nullptr;
+        case Texture::TextureType::AO:
+            if (!LoadAOTexture(id, width, height)) return nullptr;
             break;
 
         case Texture::TextureType::ENVCUBEMAP:
@@ -664,24 +664,21 @@ namespace ENGINE_RENDERING
     }
 
     // -----------------------------
-    // SSAO Noise
+    // AO Noise
     // -----------------------------
     std::shared_ptr<Texture> TextureLoader::CreateNoise()
     {
         std::uniform_real_distribution<GLfloat> randomFloats(0.0f, 1.0f);
         std::default_random_engine generator;
 
-        std::vector<glm::vec3> ssaoNoise;
-        ssaoNoise.reserve(16);
+        std::vector<glm::vec3> aoNoise;
+        aoNoise.reserve(16);
 
         for (unsigned int i = 0; i < 16; i++)
         {
-            glm::vec3 noise(
-                randomFloats(generator) * 2.0f - 1.0f,
-                randomFloats(generator) * 2.0f - 1.0f,
-                0.0f
-            );
-            ssaoNoise.push_back(noise);
+            float angle = randomFloats(generator) * 2.0f * 3.14159265359f;
+            glm::vec3 noise(std::cos(angle), std::sin(angle), randomFloats(generator));
+            aoNoise.push_back(noise);
         }
 
         GLuint id = 0;
@@ -689,7 +686,7 @@ namespace ENGINE_RENDERING
 
         // 这里更合理的是 RGB16F/RGB32F
         glTextureStorage2D(id, 1, GL_RGB16F, 4, 4);
-        glTextureSubImage2D(id, 0, 0, 0, 4, 4, GL_RGB, GL_FLOAT, ssaoNoise.data());
+        glTextureSubImage2D(id, 0, 0, 0, 4, 4, GL_RGB, GL_FLOAT, aoNoise.data());
 
         glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

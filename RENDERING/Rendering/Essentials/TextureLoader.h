@@ -14,7 +14,7 @@ namespace ENGINE_RENDERING {
 		static bool LoadShadowCascadeTexture(GLuint& id, int& width, int& height);
 		static bool LoadVSSMTexture(GLuint& id, int& width, int& height, GLenum format);
 		static bool LoadGbufferTexture(GLuint& id, int& width, int& height, GLenum internalFormat);
-		static bool LoadSSAOTexture(GLuint& id, int& width, int& height);
+		static bool LoadAOTexture(GLuint& id, int& width, int& height);
 		static bool LoadSkyboxTexture(const std::string filepath, GLuint& id, int& width, int& height, bool blended = false);
 		static bool LoadEnvCubeMapTexture(GLuint& id, int& width, int& height);
 		static bool LoadIrradianceMap(GLuint& id, int& width, int& height);
