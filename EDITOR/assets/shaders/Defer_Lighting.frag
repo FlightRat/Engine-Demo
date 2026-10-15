@@ -35,14 +35,14 @@ in vec2 TexCoord;
 
 uniform vec3 viewPos;
 uniform float far_plane;
-uniform bool diable_SSAO;
-uniform bool debug_SSAO;
+uniform bool disable_AO;
+uniform bool debug_AO;
 
 layout(binding = 0) uniform sampler2D gPosition;
 layout(binding = 1) uniform sampler2D gNormal;
 layout(binding = 2) uniform sampler2D gAlbedo;
 layout(binding = 3) uniform sampler2D gMRA;
-layout(binding = 4) uniform sampler2D ssao; 
+layout(binding = 4) uniform sampler2D screenAO;
 layout(binding = 5) uniform samplerCube irradianceMap; 
 layout(binding = 6) uniform samplerCube prefilterMap; 
 layout(binding = 7) uniform sampler2D brdfLUT; 
@@ -122,18 +122,14 @@ void main()
     else receiverNormal=Normal; 
     if (dot(receiverNormal, Normal) < 0.0) receiverNormal = -receiverNormal;
 
-    // SSAO
-    float ssaoFactor = 1.0;
-    if (!diable_SSAO){
-        ssaoFactor = texture(ssao, TexCoord).r;
-        ssaoFactor = pow(ssaoFactor, 2.0);  // 让暗部更暗
-    }
-    if(debug_SSAO){
-        ssaoFactor = texture(ssao, TexCoord).r;
-        ssaoFactor = pow(ssaoFactor, 2.0);  // 让暗部更暗
-        FragColor = vec4(vec3(ssaoFactor), 1.0);
+    // Screen-space AO: use the same final visibility for lighting and debug.
+    const float aoPower = 1.0;
+    float aoFactor = pow(texture(screenAO, TexCoord).r, aoPower);
+    if (debug_AO){
+        FragColor = vec4(vec3(aoFactor), 1.0);
         return;
     }
+    if (disable_AO) aoFactor = 1.0;
 
     vec3 ViewDir = normalize(viewPos - FragPos);
     vec3 ReflectDir = reflect(-ViewDir, Normal); 
@@ -180,8 +176,8 @@ void main()
     vec2 brdf = texture(brdfLUT, vec2(max(dot(Normal, ViewDir), 0.0), roughness)).rg;
     vec3 ambientSpecular = prefilteredColor * (F * brdf.x + brdf.y);
 
-    // 最终环境光 = (漫反射 + 高光) * AO * SSAO
-    vec3 ambient = (kD_ambient * ambientDiffuse + ambientSpecular) * ao * ssaoFactor;
+    // 最终环境光 = (漫反射 + 高光) * AO * HBAO
+    vec3 ambient = (kD_ambient * ambientDiffuse + ambientSpecular) * ao * aoFactor;
 
     // 最终合成
     vec3 result = ambient + Lo;
