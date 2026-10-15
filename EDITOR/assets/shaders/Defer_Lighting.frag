@@ -194,7 +194,6 @@ void main()
     FragColor = vec4(result, 1.0);
 }
 
-// ==================== BRDF 工具函数 ====================
 
 // 菲涅尔（标准）
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
