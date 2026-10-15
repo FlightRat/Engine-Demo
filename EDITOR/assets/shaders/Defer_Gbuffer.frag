@@ -1,5 +1,5 @@
 #version 450 core
-layout (location = 0) out vec3 gPosition;
+layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
 layout (location = 3) out vec3 gMRA;
@@ -42,7 +42,7 @@ void main()
     if (flipUV) uv.y = 1.0 - uv.y;
 
     // gPosition
-    gPosition = fs_in.FragPos;
+    gPosition = vec4(fs_in.FragPos, 1.0);
 
     // gNormal
     gNormal = normalize(fs_in.Normal);
