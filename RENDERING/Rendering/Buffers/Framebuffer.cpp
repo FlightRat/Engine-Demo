@@ -53,8 +53,8 @@ namespace ENGINE_RENDERING {
 			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Albedo
 			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Metallic + roughness + AO
 			break;
-		case BufferType::SSAO:
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SSAO, m_Width, m_Height, false));
+		case BufferType::AO:
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::AO, m_Width, m_Height, false));
 			break;
 		case BufferType::IBL:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::ENVCUBEMAP, 512, 512));
@@ -136,7 +136,7 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
             break;
         }
-        case ENGINE_RENDERING::BufferType::SSAO:
+        case ENGINE_RENDERING::BufferType::AO:
         {
             glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
             break;

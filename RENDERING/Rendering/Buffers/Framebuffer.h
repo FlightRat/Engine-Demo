@@ -12,7 +12,7 @@ namespace ENGINE_RENDERING {
         SHADOWCUBEMAP,  // 点光源阴影：1 Depth Texture (Cube)
         SHADOWCASCADE,  // 级联阴影: depth texture array
         GBUFFER,        // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
-        SSAO,           // SSAO: 1 Color
+        AO,             // AO: 1 Color
         IBL,            // IBL: ENVCUBEMAP + IRRADIANCEMAP + PREFILTERMAP + BRDFLUT
         VSSM            // VSSM：MOMENTS + COUNT
     };
