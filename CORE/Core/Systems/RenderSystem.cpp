@@ -55,8 +55,8 @@ namespace ENGINE_CORE::Systems {
 	void RenderSystem::DeferredRenderPipeline(
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoBlurFB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
         std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB)
     {
@@ -77,21 +77,32 @@ namespace ENGINE_CORE::Systems {
 		Geometry_Pass(camera, runtimeRegistry);
 		intermediateGB->Unbind();
 
-		// ssao pass
-		ssaoFB->Bind();
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		// HBAO
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_STENCIL_TEST);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		aoFB->Bind();
 		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, ssaoFB->Width(), ssaoFB->Height());
-		SSAO_Pass(camera, runtimeRegistry, intermediateGB);
-		ssaoFB->Unbind();
+		glViewport(0, 0, aoFB->Width(), aoFB->Height());
+		HBAO_Pass(camera, runtimeRegistry, intermediateGB);
+		aoFB->Unbind();
 
-		// ssao模糊pass
-		ssaoBlurFB->Bind();
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		// Cross-bilateral blur: A -> B -> A
+		// 第一轮模糊
+		aoBlurFB->Bind();
 		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, ssaoBlurFB->Width(), ssaoBlurFB->Height());
-		SSAOBlur_Pass(camera, runtimeRegistry, ssaoFB);
-		ssaoBlurFB->Unbind();
+		glViewport(0, 0, aoBlurFB->Width(), aoBlurFB->Height());
+		AOBlur_Pass(aoFB, intermediateGB, glm::vec2(1.0f, 0.0f));
+		aoBlurFB->Unbind();
+		// 第二轮模糊
+		aoFB->Bind();
+		glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(0, 0, aoFB->Width(), aoFB->Height());
+		AOBlur_Pass(aoBlurFB, intermediateGB, glm::vec2(0.0f, 1.0f));
+		aoFB->Unbind();
+		glEnable(GL_DEPTH_TEST);
 
 		// 光照pass
 		shadeOutputFB->Bind();
@@ -99,7 +110,7 @@ namespace ENGINE_CORE::Systems {
 		glViewport(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		Lighting_Pass(camera, runtimeRegistry, intermediateGB, ssaoBlurFB);
+		Lighting_Pass(camera, runtimeRegistry, intermediateGB, aoFB);
 		shadeOutputFB->Unbind();
 
 		// 后处理pass（点光源+模板测试+天空盒）
@@ -453,51 +464,35 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
-	void RenderSystem::SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
+	void RenderSystem::HBAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
 	{
-		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+		auto shader = assetManager.GetShader("defer_HBAO");
+		auto noise = assetManager.GetTexture("aoNoise");
 
-		auto& assetManager = mainRegistry.GetAssetManager();
-		auto Shader_SSAO = assetManager.GetShader("defer_SSAO");
-		if (Shader_SSAO->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-		auto noise_texture = assetManager.GetTexture("ssaoNoise");
-
-		Shader_SSAO->Enable();
-		Shader_SSAO->SetUniformVec2("screenSize", glm::vec2(intermediateGB->Width(), intermediateGB->Height()));
+		shader->Enable();
 		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
-		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
-		glBindTextureUnit(2, noise_texture->GetID());
+		glBindTextureUnit(2, noise->GetID());
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
 		quad[0].Draw();
 	}
 
-	void RenderSystem::SSAOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB)
+	void RenderSystem::AOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Framebuffer> source, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, const glm::vec2& direction)
 	{
-		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+		auto shader = assetManager.GetShader("defer_AOBlur");
 
-		auto& assetManager = mainRegistry.GetAssetManager();
-		auto Shader_SSAOBlur = assetManager.GetShader("defer_SSAOBlur");
-		if (Shader_SSAOBlur->ShaderProgramID() == 0)
-		{
-			ENGINE_ERROR("Shader has not been set correctly!");
-			return;
-		}
-
-		Shader_SSAOBlur->Enable();
-
-		glBindTextureUnit(0, ssaoFB->GetTextureID(0));
-
+		shader->Enable();
+		shader->SetUniformVec2("direction", direction);
+		glBindTextureUnit(0, source->GetTextureID(0));
+		glBindTextureUnit(1, intermediateGB->GetTextureID(0));
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
 		quad[0].Draw();
 	}
 
 	void RenderSystem::Lighting_Pass(
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry,
-		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB)
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoFB)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
@@ -527,15 +522,15 @@ namespace ENGINE_CORE::Systems {
 		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
 		glBindTextureUnit(2, intermediateGB->GetTextureID(2));
 		glBindTextureUnit(3, intermediateGB->GetTextureID(3));
-		glBindTextureUnit(4, ssaoBlurFB->GetTextureID(0));
+		glBindTextureUnit(4, aoFB->GetTextureID(0));
 		glBindTextureUnit(5, ibl_fb->GetTextureID(1));
 		glBindTextureUnit(6, ibl_fb->GetTextureID(2));
 		glBindTextureUnit(7, ibl_fb->GetTextureID(3));
 
 		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
 		auto& keyboard = inputManager.GetKeyBoard();
-		Shader_Lighting->SetUniformBool("diable_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_2));
-		Shader_Lighting->SetUniformBool("debug_SSAO", keyboard.IsKeyPressed(ENGINE_KEY_3));
+		Shader_Lighting->SetUniformBool("disable_AO", keyboard.IsKeyPressed(ENGINE_KEY_2));
+		Shader_Lighting->SetUniformBool("debug_AO", keyboard.IsKeyPressed(ENGINE_KEY_3));
 
 		// 纹理单元
 		int dirShadowBaseUnit = 8;

@@ -27,8 +27,8 @@ namespace ENGINE_CORE::Systems {
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
 			ENGINE_CORE::ECS::Registry& runtimeRegistry,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
-			std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB,
-			std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB,
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoFB,
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoBlurFB,
 			std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
             std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB
 		);
@@ -36,11 +36,11 @@ namespace ENGINE_CORE::Systems {
 		void Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
-		void SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
-		void SSAOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoFB);
+		void HBAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
+		void AOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Framebuffer> source, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, const glm::vec2& direction);
 		void Lighting_Pass(
 			std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, 
-			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssaoBlurFB);
+			std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoFB);
 		void Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void FXAA_Pass(const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& source, const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& output);
 
