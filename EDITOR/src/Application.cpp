@@ -291,6 +291,42 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		if (!assetManager.AddShader("defer_SSRDepth", "assets/shaders/Defer_Lighting.vert", "assets/shaders/defer_ssrDepth.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+		assetManager.GetShader("defer_SSRDepth")->SetIsEditorShader(true);
+        if (!assetManager.AddShader("defer_ssrTemporal", "assets/shaders/Defer_Lighting.vert", "assets/shaders/defer_ssrTemporal.frag", ""))
+        {
+            ENGINE_ERROR("Failed to create and add the shader!");
+            return false;
+        }
+        assetManager.GetShader("defer_ssrTemporal")->SetIsEditorShader(true);
+        if (!assetManager.AddShader("defer_ssrSnapshot", "assets/shaders/Defer_Lighting.vert", "assets/shaders/defer_ssrSnapshot.frag", ""))
+        {
+            ENGINE_ERROR("Failed to create and add the shader!");
+            return false;
+        }
+        assetManager.GetShader("defer_ssrSnapshot")->SetIsEditorShader(true);
+        if (!assetManager.AddShader("defer_ssrFilter", "assets/shaders/Defer_Lighting.vert", "assets/shaders/defer_ssrFilter.frag", ""))
+        {
+            ENGINE_ERROR("Failed to create and add the shader!");
+            return false;
+        }
+        assetManager.GetShader("defer_ssrFilter")->SetIsEditorShader(true);
+		// defer SSR
+		if (!assetManager.AddShader("defer_SSR", "assets/shaders/Defer_Lighting.vert", "assets/shaders/defer_ssr.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+		if (!assetManager.AddShader("defer_SSRComposite", "assets/shaders/Defer_Lighting.vert", "assets/shaders/defer_ssrComposite.frag", ""))
+		{
+			ENGINE_ERROR("Failed to create and add the shader!");
+			return false;
+		}
+
 		// defer HBAO
 		if (!assetManager.AddShader("defer_HBAO", "assets/shaders/defer_hbao.vert", "assets/shaders/defer_hbao.frag", ""))
 		{
@@ -344,6 +380,8 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Lighting")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_SSR")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_SSRComposite")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_HBAO")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_AOBlur")->SetIsEditorShader(true);
 		assetManager.GetShader("shadow_Map")->SetIsEditorShader(true);
@@ -512,6 +550,11 @@ namespace ENGINE_EDITOR {
 		// fxaa buffer
 		bufferManager.AddFrameBuffer("GAME_FXAA", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, false);
 		bufferManager.AddFrameBuffer("SCENE_FXAA", ENGINE_RENDERING::BufferType::FRAMEBUFFER, 600, 600, false);
+		// HDR scene/IBL specular and screen-space reflections
+		bufferManager.AddFrameBuffer("GAME_HDR", ENGINE_RENDERING::BufferType::HDR_LIGHTING, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_HDR", ENGINE_RENDERING::BufferType::HDR_LIGHTING, 600, 600, false);
+		bufferManager.AddFrameBuffer("GAME_SSR", ENGINE_RENDERING::BufferType::SSR, 600, 600, false);
+		bufferManager.AddFrameBuffer("SCENE_SSR", ENGINE_RENDERING::BufferType::SSR, 600, 600, false);
 		// AO
 		bufferManager.AddFrameBuffer("GAME_AO",ENGINE_RENDERING::BufferType::AO, 600,600,false);
 		bufferManager.AddFrameBuffer("GAME_AO_Blur", ENGINE_RENDERING::BufferType::AO, 600, 600, false);
@@ -615,6 +658,7 @@ namespace ENGINE_EDITOR {
 		defer_AOBlur->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("Matrices", 0);
+		assetManager.GetShader("defer_SSR")->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("DirLights", 1);
 		defer_lighting->BindUniformBlock("PointLights", 2);
 		defer_lighting->BindUniformBlock("AreaLights", 3);

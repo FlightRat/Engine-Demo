@@ -52,7 +52,30 @@ namespace ENGINE_RENDERING {
 			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Normal
 			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Albedo
 			m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Metallic + roughness + AO
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F)); // Previous UV/depth/valid
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_R32UI)); // Entity/version
 			break;
+        case BufferType::HDR_LIGHTING:
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::HDR_COLOR, m_Width, m_Height));
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::HDR_COLOR, m_Width, m_Height));
+            break;
+        case BufferType::SSR_HISTORY:
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F));
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA32F));
+            break;
+        case BufferType::SSR_PREVIOUS:
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_R32F));
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F));
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_R32UI));
+            m_pTextures.push_back(TextureLoader::CreateGbuffer(m_Width, m_Height, GL_RGBA16F));
+            break;
+        case BufferType::SSR:
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::HDR_COLOR, m_Width, m_Height));
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::HDR_COLOR, m_Width, m_Height));
+            break;
+        case BufferType::SSR_FILTER:
+            m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::HDR_COLOR, m_Width, m_Height));
+            break;
 		case BufferType::AO:
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::AO, m_Width, m_Height, false));
 			break;
@@ -127,8 +150,10 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT3, m_pTextures[3]->GetID(), 0);
 
             // 声明 MRT (Multi-Render Targets) 布局
-            unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-            glNamedFramebufferDrawBuffers(m_FboID, 4, attachments);
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT4, m_pTextures[4]->GetID(), 0);
+            glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT5, m_pTextures[5]->GetID(), 0);
+            unsigned int attachments[6] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5 };
+            glNamedFramebufferDrawBuffers(m_FboID, 6, attachments);
 
             // G-Buffer 同样需要深度模板缓冲进行几何剔除等操作
             glCreateRenderbuffers(1, &m_RboID);
@@ -136,6 +161,7 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
             break;
         }
+        case ENGINE_RENDERING::BufferType::SSR_FILTER:
         case ENGINE_RENDERING::BufferType::AO:
         {
             glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);
@@ -149,6 +175,16 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferRenderbuffer(m_FboID, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RboID);
             break;
         }
+        case ENGINE_RENDERING::BufferType::SSR_PREVIOUS:
+        {
+            const GLenum attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+            for (int i = 0; i < 4; ++i) glNamedFramebufferTexture(m_FboID, attachments[i], m_pTextures[i]->GetID(), 0);
+            glNamedFramebufferDrawBuffers(m_FboID, 4, attachments);
+            break;
+        }
+        case ENGINE_RENDERING::BufferType::SSR:
+        case ENGINE_RENDERING::BufferType::SSR_HISTORY:
+        case ENGINE_RENDERING::BufferType::HDR_LIGHTING:
         case ENGINE_RENDERING::BufferType::VSSM:
         {
             glNamedFramebufferTexture(m_FboID, GL_COLOR_ATTACHMENT0, m_pTextures[0]->GetID(), 0);

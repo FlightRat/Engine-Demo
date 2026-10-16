@@ -60,6 +60,11 @@ namespace ENGINE_RENDERING {
 		glUniform1i(GetUniformLocation(name), value);
 	}
 
+	void Shader::SetUniformUInt(const std::string& name, unsigned int value)
+	{
+		glUniform1ui(GetUniformLocation(name), value);
+	}
+
 	void Shader::SetUniformFloat(const std::string& name, float value)
 	{
 		glUniform1f(GetUniformLocation(name), value);

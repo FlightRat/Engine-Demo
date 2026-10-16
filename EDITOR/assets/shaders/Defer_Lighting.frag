@@ -30,7 +30,8 @@ struct AreaLight {
     vec4 shadowParams;
 };
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 IBLSpecular;
 in vec2 TexCoord;
 
 uniform vec3 viewPos;
@@ -104,7 +105,11 @@ vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal,
 // ==================== 主函数 ====================
 void main()
 {   
-    vec3 FragPos = texture(gPosition, TexCoord).rgb;
+    FragColor = vec4(0.0);
+    IBLSpecular = vec4(0.0);
+    vec4 position = texture(gPosition, TexCoord);
+    if (position.w == 0.0) return;
+    vec3 FragPos = position.xyz;
     vec3 Normal  = texture(gNormal, TexCoord).rgb;
     vec3 Albedo  = texture(gAlbedo, TexCoord).rgb;
     vec3 MRA     = texture(gMRA, TexCoord).rgb;
@@ -182,12 +187,8 @@ void main()
     // 最终合成
     vec3 result = ambient + Lo;
 
-    // Reinhard Tone Mapping
-    result = result / (result + vec3(1.0));
-    // Gamma Correction
-    result = pow(result, vec3(1.0 / 2.2));
-
     FragColor = vec4(result, 1.0);
+    IBLSpecular = vec4(ambientSpecular, 1.0);
 }
 
 

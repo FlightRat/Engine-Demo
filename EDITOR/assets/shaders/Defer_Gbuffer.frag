@@ -3,6 +3,10 @@ layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
 layout (location = 3) out vec3 gMRA;
+layout (location = 4) out vec4 gMotion;
+layout (location = 5) out uint gObjectID;
+uniform uint objectID;
+uniform bool objectHistoryValid;
 
 layout(binding = 0) uniform sampler2D albedoMap; 
 layout(binding = 1) uniform sampler2D normalMap; 
@@ -28,6 +32,8 @@ in VS_OUT {
     vec3 Normal;
     vec2 TexCoord;
     mat3 TBN;
+    vec4 currentClip;
+    vec4 previousClip;
 } fs_in;
 
 // --- Uniforms ---
@@ -41,6 +47,13 @@ void main()
     vec2 uv = fs_in.TexCoord;
     if (flipUV) uv.y = 1.0 - uv.y;
 
+    gObjectID = objectID;
+    gMotion = vec4(0.0);
+    if (objectHistoryValid && fs_in.previousClip.w > 0.0) {
+        vec2 currentUV = fs_in.currentClip.xy / fs_in.currentClip.w * 0.5 + 0.5;
+        vec2 previousUV = fs_in.previousClip.xy / fs_in.previousClip.w * 0.5 + 0.5;
+        gMotion = vec4(previousUV - currentUV, fs_in.previousClip.w, 1.0);
+    }
     // gPosition
     gPosition = vec4(fs_in.FragPos, 1.0);
 

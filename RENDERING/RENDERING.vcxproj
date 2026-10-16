@@ -165,4 +165,10 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <ClInclude Include="Rendering\Buffers\DepthPyramid.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Rendering\Buffers\DepthPyramid.cpp" />
+  </ItemGroup>
 </Project>

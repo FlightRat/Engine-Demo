@@ -75,7 +75,7 @@ namespace ENGINE_EDITOR {
     GLuint SceneDisplay::RenderScene(int width, int height)
     {
         auto scene = SCENE_MANAGER().GetCurrentScene();
-        if (!scene) return 0;
+        if (!scene) { m_Reflection->Invalidate(); return 0; }
         auto& runtimeRegistry = scene->GetRegistry();
         auto& mainRegistry = MAIN_REGISTRY();
         const auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
@@ -85,15 +85,19 @@ namespace ENGINE_EDITOR {
         const auto ao = buffers.GetFrameBuffer("SCENE_AO");
         const auto blur = buffers.GetFrameBuffer("SCENE_AO_Blur");
         const auto fxaa = buffers.GetFrameBuffer("SCENE_FXAA");
+        const auto hdr = buffers.GetFrameBuffer("SCENE_HDR");
+        const auto ssr = buffers.GetFrameBuffer("SCENE_SSR");
         // Finish all allocation changes before camera setup or any draw command.
-        for (const auto& target : {fb, gb, ao, blur, fxaa}) {
+        for (const auto& target : {fb, gb, ao, blur, fxaa, hdr, ssr}) {
             target->Resize(width, height);
             target->CheckResize();
         }
         if (!renderSystem || !m_pSceneCam) return 0;
         m_pSceneCam->SetWidth(width);
         m_pSceneCam->SetHeight(height);
-        renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, ao, blur, fb, fxaa);
+        m_Reflection->SetScene(scene, scene->CheckPlay());
+        m_Reflection->raw = ssr;
+        renderSystem->DeferredRenderPipeline(m_pSceneCam, runtimeRegistry, gb, ao, blur, hdr, *m_Reflection, fb, fxaa);
 		return fxaa->GetTextureID();
     }
 
@@ -185,14 +189,17 @@ namespace ENGINE_EDITOR {
 		ImGui::Separator();
 	}
 
-	SceneDisplay::SceneDisplay() :m_pSceneCam{ std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 20.0f, -20.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -45.0f) }
+	SceneDisplay::SceneDisplay() :m_Reflection{std::make_unique<ENGINE_CORE::Systems::SSRViewState>()}, m_pSceneCam{ std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 20.0f, -20.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -45.0f) }
 	{
 	}
+
+    SceneDisplay::~SceneDisplay() = default;
 
 	void SceneDisplay::Draw()
 	{
 		if (!ImGui::Begin("Scene"))
 		{
+            m_Reflection->Invalidate();
 			ImGui::End();
 			return;
 		}
@@ -230,7 +237,7 @@ namespace ENGINE_EDITOR {
 				ImGui::EndDragDropTarget();
 			}
 
-		}
+		} else { m_Reflection->Invalidate(); }
         ImGui::EndChild();
 		ImGui::End();
 	}

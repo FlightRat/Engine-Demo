@@ -228,4 +228,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Systems\SSRViewState.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core\Systems\SSRViewState.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core\Systems\RenderSystemSSR.cpp" />
+  </ItemGroup>
 </Project>

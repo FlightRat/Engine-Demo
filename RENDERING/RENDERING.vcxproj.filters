@@ -87,4 +87,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Rendering\Buffers\DepthPyramid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="Rendering\Buffers\DepthPyramid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>

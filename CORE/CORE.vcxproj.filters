@@ -218,4 +218,15 @@
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Systems\SSRViewState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClCompile Include="Core\Systems\SSRViewState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Systems\RenderSystemSSR.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>

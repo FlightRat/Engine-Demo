@@ -12,6 +12,7 @@ namespace ENGINE_RENDERING {
 		VSSM_MOMENTS, VSSM_COUNT,
 		AO,
 		ENVCUBEMAP, IRRADIANCEMAP, PREFILTERMAP, BRDFLUT, 
+		HDR_COLOR,
 		NONE };
 	private:
 		int m_Width, m_Height;

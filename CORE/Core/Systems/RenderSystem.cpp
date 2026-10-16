@@ -57,9 +57,28 @@ namespace ENGINE_CORE::Systems {
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoFB,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoBlurFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> hdrFB,
+		SSRViewState& reflection,
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
         std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB)
     {
+		const auto& ssrFB = reflection.raw;
+		auto& keyboard = INPUT_MANAGER().GetKeyBoard();
+		bool debugAO = keyboard.IsKeyPressed(ENGINE_KEY_3);
+		int aoMode = (keyboard.IsKeyPressed(ENGINE_KEY_2) ? 1 : 0) | (debugAO ? 2 : 0);
+		size_t lightingSignature = 0;
+		auto combineLight = [&](size_t value) { lightingSignature ^= value + 0x9e3779b9 + (lightingSignature << 6) + (lightingSignature >> 2); };
+		for (auto [entity, light] : runtimeRegistry.GetRegistry().view<LightComponent>().each()) {
+			combineLight(static_cast<uint32_t>(entity));
+			combineLight(std::hash<std::string>{}(light.type));
+			for (float value : {light.color.x, light.color.y, light.color.z, light.intensity,
+				 light.pos.x, light.pos.y, light.pos.z, light.direction.x, light.direction.y, light.direction.z,
+				 light.constant, light.linear, light.quadratic, light.half_width, light.half_height,
+				 light.rotation_eular.x, light.rotation_eular.y, light.rotation_eular.z}) combineLight(std::hash<float>{}(value));
+		}
+		if (lightingSignature != reflection.lightingSignature) reflection.Invalidate();
+		reflection.lightingSignature = lightingSignature;
+		reflection.Begin(camera, aoMode);
         Prepare_Pass(camera, runtimeRegistry);
 
 		//glCullFace(GL_FRONT);		// 解决acne，但导致漏光
@@ -72,9 +91,13 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_STENCIL_TEST);				// 开启模板测试
 		// glCullFace(GL_BACK);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// 保证 Position 为 0
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
-		Geometry_Pass(camera, runtimeRegistry);
+		const GLfloat emptyGeometry[] = { 0, 0, 0, 0 };
+		const GLuint emptyEntity[] = { 0xffffffffu, 0, 0, 0 };
+		for (int attachment = 0; attachment < 5; ++attachment) glClearBufferfv(GL_COLOR, attachment, emptyGeometry);
+		glClearBufferuiv(GL_COLOR, 5, emptyEntity);
+		Geometry_Pass(camera, runtimeRegistry, reflection);
 		intermediateGB->Unbind();
 
 		// HBAO
@@ -105,13 +128,32 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_DEPTH_TEST);
 
 		// 光照pass
-		shadeOutputFB->Bind();
-		glDisable(GL_STENCIL_TEST);				// 光照计算不需要模板
-		glViewport(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height());
+		hdrFB->Bind();
+		glDisable(GL_STENCIL_TEST);
+		glViewport(0, 0, hdrFB->Width(), hdrFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
-		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB, aoFB);
+		hdrFB->Unbind();
+
+		// Current-frame SSR, then replace the corresponding IBL specular contribution.
+		glDisable(GL_DEPTH_TEST);
+		SSRDepth_Pass(intermediateGB, reflection.depth);
+		ssrFB->Bind();
+		glViewport(0, 0, ssrFB->Width(), ssrFB->Height());
+		SSR_Pass(camera, intermediateGB, hdrFB, reflection);
+		ssrFB->Unbind();
+		SSRTemporal_Pass(intermediateGB, reflection);
+		SSRSnapshot_Pass(intermediateGB, reflection);
+		SSRSpatial_Pass(intermediateGB, reflection);
+
+		shadeOutputFB->Bind();
+		glViewport(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height());
+		glStencilMask(0xFF);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		SSRComposite_Pass(camera, intermediateGB, aoFB, hdrFB, reflection.raw);
 		shadeOutputFB->Unbind();
+		glEnable(GL_DEPTH_TEST);
 
 		// 后处理pass（点光源+模板测试+天空盒）
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
@@ -125,6 +167,7 @@ namespace ENGINE_CORE::Systems {
 		shadeOutputFB->Unbind();
 		// FXAA
 		FXAA_Pass(shadeOutputFB, fxaaOutputFB);
+		reflection.Finish(!debugAO);
 	}
 
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -381,7 +424,7 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
-	void RenderSystem::Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
+	void RenderSystem::Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, SSRViewState& reflection)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
@@ -395,6 +438,7 @@ namespace ENGINE_CORE::Systems {
 
 		// render object
 		Shader_Gbuffer->Enable();
+		Shader_Gbuffer->SetUniformMat4("previousViewProjection", reflection.previousProjection * reflection.previousView);
 		auto view = runtimeRegistry.GetRegistry().view<TransformComponent, MeshFilter, MeshRender, Identification>();
 		for (auto [entity, transform, meshF, meshR, id] : view.each())
 		{
@@ -426,6 +470,24 @@ namespace ENGINE_CORE::Systems {
 
 			glm::mat4 model = CalculateModelMatrix(transform, id, runtimeRegistry);
 			glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
+			size_t signature = std::hash<std::string>{}(meshF.mesh);
+			auto combine = [&](size_t value) { signature ^= value + 0x9e3779b9 + (signature << 6) + (signature >> 2); };
+			combine(meshR.flipUV);
+			for (const auto& material : meshR.materials) {
+				for (int channel = 0; channel < 4; ++channel) combine(std::hash<float>{}(material.color[channel]));
+				combine(std::hash<float>{}(material.metallic)); combine(std::hash<float>{}(material.roughness));
+				combine(std::hash<float>{}(material.ao)); combine(material.m_useTexture);
+				for (const auto& texture : material.m_textures) {
+					combine(std::hash<std::string>{}(texture.first)); combine(std::hash<std::string>{}(texture.second));
+				}
+			}
+			uint32_t objectID = entt::to_integral(entity);
+			auto previous = reflection.models.find(objectID);
+			bool historyValid = reflection.valid && previous != reflection.models.end() && previous->second.signature == signature;
+			Shader_Gbuffer->SetUniformUInt("objectID", objectID);
+			Shader_Gbuffer->SetUniformBool("objectHistoryValid", historyValid);
+			Shader_Gbuffer->SetUniformMat4("previousModel", historyValid ? previous->second.model : model);
+			reflection.currentModels.emplace(objectID, SSRObjectState{model, signature});
 			for (int mesh_index = 0; mesh_index < meshes.size(); mesh_index++)
 			{
 				ENGINE_CORE::ECS::Material& cur_material = meshR.GetMaterial(mesh_index);
@@ -571,6 +633,66 @@ namespace ENGINE_CORE::Systems {
 		const std::vector<Mesh>& quad = assetManager.GetModel("quad")->GetMeshes();
 		quad[0].Draw();
 		glEnable(GL_DEPTH_TEST);
+	}
+
+	void RenderSystem::SSRDepth_Pass(std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, ENGINE_RENDERING::DepthPyramid& depth)
+	{
+		depth.Resize(intermediateGB->Width(), intermediateGB->Height());
+		auto& assets = MAIN_REGISTRY().GetAssetManager();
+		auto shader = assets.GetShader("defer_SSRDepth");
+		shader->Enable();
+		const auto& quad = assets.GetModel("quad")->GetMeshes();
+		for (int level = 0; level < depth.Levels(); ++level) {
+			depth.BindLevel(level);
+			shader->SetUniformBool("baseLevel", level == 0);
+			shader->SetUniformVec2("outputSize", float(depth.Width(level)), float(depth.Height(level)));
+			glBindTextureUnit(0, level == 0 ? intermediateGB->GetTextureID(0) : depth.ViewID(level - 1));
+			quad[0].Draw();
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	void RenderSystem::SSR_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> hdrFB, SSRViewState& reflection)
+	{
+		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+		auto shader = assetManager.GetShader("defer_SSR");
+		shader->Enable();
+		shader->SetUniformVec2("nearFar", camera->GetNearPlane(), camera->GetFarPlane());
+		shader->SetUniformBool("debug_AO", INPUT_MANAGER().GetKeyBoard().IsKeyPressed(ENGINE_KEY_3));
+		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
+		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
+		glBindTextureUnit(2, intermediateGB->GetTextureID(3));
+		glBindTextureUnit(3, hdrFB->GetTextureID(0));
+		glBindTextureUnit(4, reflection.depth.TextureID());
+		glBindTextureUnit(5, intermediateGB->GetTextureID(2));
+		glBindTextureUnit(6, hdrFB->GetTextureID(1));
+		glBindTextureUnit(7, MAIN_REGISTRY().GetBufferManager().GetFrameBuffer("IBL")->GetTextureID(3));
+		shader->SetUniformVec3("viewPos", camera->GetPosition());
+		shader->SetUniformUInt("sampleIndex", reflection.sampleIndex);
+		glBindTextureUnit(8, MAIN_REGISTRY().GetBufferManager().GetFrameBuffer("IBL")->GetTextureID(0));
+		const auto& quad = assetManager.GetModel("quad")->GetMeshes();
+		quad[0].Draw();
+	}
+
+	void RenderSystem::SSRComposite_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> aoFB,
+		std::shared_ptr<ENGINE_RENDERING::Framebuffer> hdrFB, std::shared_ptr<ENGINE_RENDERING::Framebuffer> ssrFB)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& assetManager = mainRegistry.GetAssetManager();
+		auto shader = assetManager.GetShader("defer_SSRComposite");
+		shader->Enable();
+		auto& keyboard = INPUT_MANAGER().GetKeyBoard();
+		shader->SetUniformBool("disable_AO", keyboard.IsKeyPressed(ENGINE_KEY_2));
+		shader->SetUniformBool("debug_AO", keyboard.IsKeyPressed(ENGINE_KEY_3));
+		glBindTextureUnit(0, hdrFB->GetTextureID(0));
+		glBindTextureUnit(2, ssrFB->GetTextureID());
+		glBindTextureUnit(3, intermediateGB->GetTextureID(0));
+		glBindTextureUnit(6, intermediateGB->GetTextureID(3));
+		glBindTextureUnit(7, aoFB->GetTextureID());
+		const auto& quad = assetManager.GetModel("quad")->GetMeshes();
+		quad[0].Draw();
 	}
 
 	void RenderSystem::Postprocess_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)

@@ -226,6 +226,8 @@
     <None Include="assets\shaders\test.vert" />
     <None Include="assets\shaders\vssm_moments.frag" />
     <None Include="assets\shaders\vssm_sat.frag" />
+    <None Include="assets\shaders\defer_ssr.frag" />
+    <None Include="assets\shaders\defer_ssrComposite.frag" />
     <None Include="assets\shaders\fxaa.frag" />
     <None Include="assets\shaders\fxaa-license.txt" />
     <None Include="assimp-vc143-mtd.dll" />
@@ -308,4 +310,16 @@
   <Import Project="..\Engine.Runtime.targets" Condition="'$(Platform)'=='x64'" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\defer_ssrDepth.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\defer_ssrTemporal.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\defer_ssrSnapshot.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\defer_ssrFilter.frag" />
+  </ItemGroup>
 </Project>

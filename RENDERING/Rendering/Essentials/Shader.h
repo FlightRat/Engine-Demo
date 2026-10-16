@@ -24,6 +24,7 @@ namespace ENGINE_RENDERING {
 
 		// Setters
 		void SetUniformInt(const std::string& name, int value);
+		void SetUniformUInt(const std::string& name, unsigned int value);
 		void SetUniformFloat(const std::string& name, float value);
 		void SetUniformBool(const std::string& name, bool value);
 		// Vec

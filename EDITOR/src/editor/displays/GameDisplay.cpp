@@ -30,9 +30,11 @@ using namespace ENGINE_RENDERING;
 
 namespace ENGINE_EDITOR
 {
-	GameDisplay::GameDisplay() :m_bPlayGame{ false }, m_bSceneLoaded{ false }
+	GameDisplay::GameDisplay() :m_Reflection{std::make_unique<ENGINE_CORE::Systems::SSRViewState>()}, m_bPlayGame{ false }, m_bSceneLoaded{ false }
 	{
 	}
+
+    GameDisplay::~GameDisplay() = default;
 
 	void GameDisplay::PlayGame()
 	{
@@ -101,9 +103,9 @@ namespace ENGINE_EDITOR
 	GLuint GameDisplay::RenderGame(int width, int height)
     {
         auto scene = SCENE_MANAGER().GetCurrentScene();
-        if (!scene) return 0;
+        if (!scene) { m_Reflection->Invalidate(); return 0; }
         auto& runtimeRegistry = scene->GetRegistry();
-        if (!runtimeRegistry.GetRegistry().ctx().contains<std::shared_ptr<ENGINE_RENDERING::Camera3D>>()) return 0;
+        if (!runtimeRegistry.GetRegistry().ctx().contains<std::shared_ptr<ENGINE_RENDERING::Camera3D>>()) { m_Reflection->Invalidate(); return 0; }
         const auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
         auto& mainRegistry = MAIN_REGISTRY();
         const auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
@@ -113,14 +115,18 @@ namespace ENGINE_EDITOR
         const auto ao = buffers.GetFrameBuffer("GAME_AO");
         const auto blur = buffers.GetFrameBuffer("GAME_AO_Blur");
         const auto fxaa = buffers.GetFrameBuffer("GAME_FXAA");
+        const auto hdr = buffers.GetFrameBuffer("GAME_HDR");
+        const auto ssr = buffers.GetFrameBuffer("GAME_SSR");
         // Finish all allocation changes before camera setup or any draw command.
-        for (const auto& target : {fb, gb, ao, blur, fxaa}) {
+        for (const auto& target : {fb, gb, ao, blur, fxaa, hdr, ssr}) {
             target->Resize(width, height);
             target->CheckResize();
         }
         camera->SetWidth(width);
         camera->SetHeight(height);
-        renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ao, blur, fb, fxaa);
+        m_Reflection->SetScene(scene, scene->CheckPlay());
+        m_Reflection->raw = ssr;
+        renderSystem->DeferredRenderPipeline(camera, runtimeRegistry, gb, ao, blur, hdr, *m_Reflection, fb, fxaa);
 		return fxaa->GetTextureID();
     }
 
@@ -176,6 +182,7 @@ namespace ENGINE_EDITOR
     {
         static bool open = true;
         if (!ImGui::Begin("Game", &open)) {
+            m_Reflection->Invalidate();
             ImGui::End();
             return;
         }
@@ -191,6 +198,7 @@ namespace ENGINE_EDITOR
                     ImVec2{0.f, 1.f}, ImVec2{1.f, 0.f});
             }
         }
+        else { m_Reflection->Invalidate(); }
         ImGui::EndChild();
         ImGui::End();
     }

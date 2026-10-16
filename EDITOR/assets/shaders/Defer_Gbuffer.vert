@@ -10,9 +10,13 @@ out VS_OUT {
     vec3 Normal;
     vec2 TexCoord;
     mat3 TBN;
+    vec4 currentClip;
+    vec4 previousClip;
 } vs_out;
 
 uniform mat4 model;
+uniform mat4 previousModel;
+uniform mat4 previousViewProjection;
 uniform mat3 normalMatrix;
 layout (std140) uniform Matrices
 {
@@ -33,5 +37,7 @@ void main()
     vs_out.TexCoord = aTexCoord;
     vs_out.TBN = TBN;
     
-    gl_Position = projection * view * model * vec4(aPosition, 1.0f);
+    vs_out.currentClip = projection * view * model * vec4(aPosition, 1.0f);
+    vs_out.previousClip = previousViewProjection * previousModel * vec4(aPosition, 1.0);
+    gl_Position = vs_out.currentClip;
 }

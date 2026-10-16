@@ -230,6 +230,18 @@ namespace ENGINE_RENDERING
         return true;
     }
 
+    // Linear HDR postprocess targets.
+    bool TextureLoader::LoadHDRColorTexture(GLuint& id, int& width, int& height)
+    {
+        glCreateTextures(GL_TEXTURE_2D, 1, &id);
+        glTextureStorage2D(id, 1, GL_RGBA16F, width, height);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        return true;
+    }
+
     // -----------------------------
     // Shadow Map
     // -----------------------------
@@ -563,6 +575,10 @@ namespace ENGINE_RENDERING
             {
                 if (!LoadFBTexture_singlesample(id, width, height)) return nullptr;
             }
+            break;
+
+        case Texture::TextureType::HDR_COLOR:
+            if (!LoadHDRColorTexture(id, width, height)) return nullptr;
             break;
 
         case Texture::TextureType::SHADOWMAP:

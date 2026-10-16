@@ -14,7 +14,12 @@ namespace ENGINE_RENDERING {
         GBUFFER,        // —”≥Ÿ‰÷»æ£∫Position, Normal, Albedo, Refl + Depth RBO
         AO,             // AO: 1 Color
         IBL,            // IBL: ENVCUBEMAP + IRRADIANCEMAP + PREFILTERMAP + BRDFLUT
-        VSSM            // VSSM£∫MOMENTS + COUNT
+        VSSM,           // VSSM£∫MOMENTS + COUNT
+        HDR_LIGHTING,   // Linear scene + IBL specular
+        SSR,            // Signed correction/sample + hit metadata
+        SSR_HISTORY,
+        SSR_PREVIOUS,
+        SSR_FILTER,
     };
 
     class Framebuffer {
