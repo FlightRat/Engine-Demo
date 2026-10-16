@@ -20,7 +20,6 @@
 #include "../ECS/Components/MeshRender.h"
 #include "../ECS/Components/LightComponent.h"
 #include "../CoreUtilities/CoreEngineData.h"
-#include "../Core/Core/Inputs/InputManager.h"
 
 using namespace ENGINE_CORE::ECS;
 using namespace ENGINE_RENDERING;
@@ -77,7 +76,7 @@ namespace ENGINE_CORE::Systems {
 		Geometry_Pass(camera, runtimeRegistry);
 		intermediateGB->Unbind();
 
-		// HBAO
+		// Screen-space AO
 		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_STENCIL_TEST);
@@ -86,22 +85,31 @@ namespace ENGINE_CORE::Systems {
 		aoFB->Bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 		glViewport(0, 0, aoFB->Width(), aoFB->Height());
-		HBAO_Pass(camera, runtimeRegistry, intermediateGB);
+		if (m_AOMode != AOMode::Disabled)
+		{
+			if (m_AOMode == AOMode::SSAO || m_AOMode == AOMode::SSAODebug)
+				SSAO_Pass(intermediateGB);
+			else
+				HBAO_Pass(camera, runtimeRegistry, intermediateGB);
+		}
 		aoFB->Unbind();
 
-		// Cross-bilateral blur: A -> B -> A
-		// 第一轮模糊
-		aoBlurFB->Bind();
-		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, aoBlurFB->Width(), aoBlurFB->Height());
-		AOBlur_Pass(aoFB, intermediateGB, glm::vec2(1.0f, 0.0f));
-		aoBlurFB->Unbind();
-		// 第二轮模糊
-		aoFB->Bind();
-		glClear(GL_COLOR_BUFFER_BIT);
-		glViewport(0, 0, aoFB->Width(), aoFB->Height());
-		AOBlur_Pass(aoBlurFB, intermediateGB, glm::vec2(0.0f, 1.0f));
-		aoFB->Unbind();
+		if (m_AOMode != AOMode::Disabled)
+		{
+			// Cross-bilateral blur: A -> B -> A
+			// 第一轮模糊
+			aoBlurFB->Bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			glViewport(0, 0, aoBlurFB->Width(), aoBlurFB->Height());
+			AOBlur_Pass(aoFB, intermediateGB, glm::vec2(1.0f, 0.0f));
+			aoBlurFB->Unbind();
+			// 第二轮模糊
+			aoFB->Bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			glViewport(0, 0, aoFB->Width(), aoFB->Height());
+			AOBlur_Pass(aoBlurFB, intermediateGB, glm::vec2(0.0f, 1.0f));
+			aoFB->Unbind();
+		}
 		glEnable(GL_DEPTH_TEST);
 
 		// 光照pass
@@ -112,6 +120,17 @@ namespace ENGINE_CORE::Systems {
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB, aoFB);
 		shadeOutputFB->Unbind();
+
+		// Keep the coefficient view free of forward overlays and FXAA.
+		if (IsAODebug())
+		{
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, shadeOutputFB->GetFboID());
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fxaaOutputFB->GetFboID());
+			glBlitFramebuffer(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height(),
+				0, 0, fxaaOutputFB->Width(), fxaaOutputFB->Height(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			return;
+		}
 
 		// 后处理pass（点光源+模板测试+天空盒）
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediateGB->GetFboID());
@@ -464,6 +483,18 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
+	void RenderSystem::SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
+	{
+		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
+		auto shader = assetManager.GetShader("defer_SSAO");
+		shader->Enable();
+		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
+		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
+		glBindTextureUnit(2, assetManager.GetTexture("aoNoise")->GetID());
+		const auto& quad = assetManager.GetModel("quad")->GetMeshes();
+		quad[0].Draw();
+	}
+
 	void RenderSystem::HBAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
 	{
 		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
@@ -527,10 +558,8 @@ namespace ENGINE_CORE::Systems {
 		glBindTextureUnit(6, ibl_fb->GetTextureID(2));
 		glBindTextureUnit(7, ibl_fb->GetTextureID(3));
 
-		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
-		auto& keyboard = inputManager.GetKeyBoard();
-		Shader_Lighting->SetUniformBool("disable_AO", keyboard.IsKeyPressed(ENGINE_KEY_2));
-		Shader_Lighting->SetUniformBool("debug_AO", keyboard.IsKeyPressed(ENGINE_KEY_3));
+		Shader_Lighting->SetUniformBool("disable_AO", m_AOMode == AOMode::Disabled);
+		Shader_Lighting->SetUniformBool("debug_AO", IsAODebug());
 
 		// 纹理单元
 		int dirShadowBaseUnit = 8;

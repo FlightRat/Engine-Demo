@@ -124,12 +124,11 @@ void main()
 
     // Screen-space AO: use the same final visibility for lighting and debug.
     const float aoPower = 1.0;
-    float aoFactor = pow(texture(screenAO, TexCoord).r, aoPower);
+    float aoFactor = disable_AO ? 1.0 : pow(texture(screenAO, TexCoord).r, aoPower);
     if (debug_AO){
         FragColor = vec4(vec3(aoFactor), 1.0);
         return;
     }
-    if (disable_AO) aoFactor = 1.0;
 
     vec3 ViewDir = normalize(viewPos - FragPos);
     vec3 ReflectDir = reflect(-ViewDir, Normal); 

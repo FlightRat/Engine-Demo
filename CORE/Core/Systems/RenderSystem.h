@@ -17,7 +17,13 @@ namespace ENGINE_RENDERING {
 namespace ENGINE_CORE::Systems {
 	class RenderSystem
 	{
+	public:
+		enum class AOMode { Disabled, SSAO, SSAODebug, HBAO, HBAODebug };
+		void SetAOMode(AOMode mode) { m_AOMode = mode; }
+		AOMode GetAOMode() const { return m_AOMode; }
 	private:
+		AOMode m_AOMode = AOMode::Disabled;
+		bool IsAODebug() const { return m_AOMode == AOMode::SSAODebug || m_AOMode == AOMode::HBAODebug; }
 		GLuint m_DebugVAO, m_DebugVBO;
 	public:
 		RenderSystem();
@@ -36,6 +42,7 @@ namespace ENGINE_CORE::Systems {
 		void Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Shadow_Pass(ENGINE_CORE::ECS::Registry& runtimeRegistry);
 		void Geometry_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry);
+		void SSAO_Pass(std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
 		void HBAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB);
 		void AOBlur_Pass(std::shared_ptr<ENGINE_RENDERING::Framebuffer> source, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB, const glm::vec2& direction);
 		void Lighting_Pass(

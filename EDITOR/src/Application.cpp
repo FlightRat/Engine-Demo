@@ -291,6 +291,13 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		// defer SSAO
+		if (!assetManager.AddShader("defer_SSAO", "assets/shaders/defer_hbao.vert", "assets/shaders/defer_ssao.frag", ""))
+		{
+			ENGINE_ERROR("Failed to load shader [defer_SSAO]!");
+			return false;
+		}
+
 		// defer HBAO
 		if (!assetManager.AddShader("defer_HBAO", "assets/shaders/defer_hbao.vert", "assets/shaders/defer_hbao.frag", ""))
 		{
@@ -344,6 +351,7 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Lighting")->SetIsEditorShader(true);
+		assetManager.GetShader("defer_SSAO")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_HBAO")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_AOBlur")->SetIsEditorShader(true);
 		assetManager.GetShader("shadow_Map")->SetIsEditorShader(true);
@@ -554,6 +562,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// uniform buffer
+		bufferManager.AddUniformBuffer("SSAO_samples", 64 * sizeof(glm::vec4), 4);
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
 		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
@@ -593,6 +602,33 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Shader has not been set correctly!");
 			return false;
 		}
+		// defer SSAO
+		auto defer_SSAO = assetManager.GetShader("defer_SSAO");
+		if (defer_SSAO->ShaderProgramID() == 0)
+		{
+			ENGINE_ERROR("Shader has not been set correctly!");
+			return false;
+		}
+		defer_SSAO->BindUniformBlock("Matrices", 0);
+		defer_SSAO->BindUniformBlock("SSAO_samples", 4);
+
+		// Fixed hemisphere kernel from the SSAO branch, with std140 vec4 alignment.
+		std::uniform_real_distribution<GLfloat> randomFloats(0.0f, 1.0f);
+		std::default_random_engine generator;
+		std::vector<glm::vec4> ssaoKernel;
+		ssaoKernel.reserve(64);
+		for (GLuint i = 0; i < 64; ++i)
+		{
+			glm::vec3 sample(randomFloats(generator) * 2.0f - 1.0f,
+				randomFloats(generator) * 2.0f - 1.0f, randomFloats(generator));
+			sample = glm::normalize(sample) * randomFloats(generator);
+			float scale = float(i) / 64.0f;
+			sample *= 0.1f + scale * scale * 0.9f;
+			ssaoKernel.push_back(glm::vec4(sample, 0.0f));
+		}
+		bufferManager.GetUniformBuffer("SSAO_samples")->UpdateUniformBuffer(
+			ssaoKernel.data(), ssaoKernel.size() * sizeof(glm::vec4), 0);
+
 		// defer HBAO
 		auto defer_HBAO = assetManager.GetShader("defer_HBAO");
 		if (defer_HBAO->ShaderProgramID() == 0)
@@ -777,6 +813,19 @@ namespace ENGINE_EDITOR {
 						physics.SetDebug(engine.RenderCollidersEnabled());
 					}
 					physicsWorld->update(1.0f / 60.0f);
+				}
+				if (!m_Event.key.repeat && !ImGui::GetIO().WantTextInput)
+				{
+					using AOMode = ENGINE_CORE::Systems::RenderSystem::AOMode;
+					const auto& renderSystem = MAIN_REGISTRY().GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
+					switch (m_Event.key.keysym.sym)
+					{
+					case SDLK_0: renderSystem->SetAOMode(AOMode::Disabled); break;
+					case SDLK_2: renderSystem->SetAOMode(AOMode::SSAO); break;
+					case SDLK_3: renderSystem->SetAOMode(AOMode::SSAODebug); break;
+					case SDLK_4: renderSystem->SetAOMode(AOMode::HBAO); break;
+					case SDLK_5: renderSystem->SetAOMode(AOMode::HBAODebug); break;
+					}
 				}
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;

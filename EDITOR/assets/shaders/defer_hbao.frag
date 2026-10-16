@@ -40,6 +40,7 @@ vec3 ContinuousDifference(vec3 forward, vec3 backward){
 
 void main()
 {
+    FragColor = 1.0;
     ivec2 size = textureSize(gPosition, 0);
     ivec2 pixel = ivec2(gl_FragCoord.xy);
 
@@ -113,6 +114,5 @@ void main()
             }
         }
     }
-    FragColor = 1.0;
     FragColor = clamp(1.0 - strength * occlusion / float(directionCount), 0.0, 1.0);
 }
