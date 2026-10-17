@@ -130,14 +130,14 @@ namespace ENGINE_CORE::Systems {
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 
-		// uniform block buffers
 		auto& bufferManager = mainRegistry.GetBufferManager();
+		// uniform block buffers
 		const auto& matrixUbo = bufferManager.GetUniformBuffer("matrix");
-		const auto& dirLightsUbo = bufferManager.GetUniformBuffer("DirLights");
-		const auto& pointLightsUbo = bufferManager.GetUniformBuffer("PointLights");
-		const auto& areaLightsUbo = bufferManager.GetUniformBuffer("AreaLights");
+		// shader storage buffers
+		const auto& dirLightsSSbo = bufferManager.GetShaderStorageBuffer("DirLights");
+		const auto& pointLightsSSbo = bufferManager.GetShaderStorageBuffer("PointLights");
+		const auto& areaLightsSSbo = bufferManager.GetShaderStorageBuffer("AreaLights");
 
 		// uniform block -- camera param 
 		auto viewMatrix = camera->GetViewMatrix();
@@ -147,33 +147,15 @@ namespace ENGINE_CORE::Systems {
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(viewMatrix), sizeof(viewMatrix), 0);
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(PerspectiveMatrix), sizeof(PerspectiveMatrix), sizeof(glm::mat4));
 
-		// uniform block -- lighting param
+		// 更新并填充光源SSBO数据
+		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		lightSystem->Update(runtimeRegistry, *camera);
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& areaLightData = lightSystem->GetAreaLightData();
-
-		// 填充方向光 UBO
-		// 数据已经是固定 MAX_DIR_LIGHTS 大小，直接一次性上传，性能最优
-		dirLightsUbo->UpdateUniformBuffer(
-			dirLightData.data(),// 数据指针
-			lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), // 总大小
-			0                // 偏移量
-		);
-
-		// 填充点光源 UBO
-		pointLightsUbo->UpdateUniformBuffer(
-			pointLightData.data(),
-			lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight),
-			0
-		);
-
-		// 填充面光源 UBO
-		areaLightsUbo->UpdateUniformBuffer(
-			areaLightData.data(),
-			lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight),
-			0
-		);
+		dirLightsSSbo->UpdateShaderStorageBuffer(dirLightData.data(), dirLightData.size() * sizeof(ENGINE_RENDERING::DirLight));
+		pointLightsSSbo->UpdateShaderStorageBuffer(pointLightData.data(), pointLightData.size() * sizeof(ENGINE_RENDERING::PointLight));
+		areaLightsSSbo->UpdateShaderStorageBuffer(areaLightData.data(), areaLightData.size() * sizeof(ENGINE_RENDERING::AreaLight));
 
 	}
 
