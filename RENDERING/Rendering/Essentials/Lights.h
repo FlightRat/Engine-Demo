@@ -3,6 +3,9 @@
 #include <cstddef>
 
 namespace ENGINE_RENDERING {
+	constexpr int MAX_DIR_SHADOWS = 1;
+	constexpr int MAX_POINT_SHADOWS = 5;
+	constexpr int MAX_AREA_SHADOWS = 1;
 	constexpr int DIR_CASCADE_COUNT = 4;
 	constexpr float DIR_CASTER_DISTANCE = 100.0f;
 
