@@ -15,6 +15,7 @@ namespace ENGINE_CORE::ECS {
 		float constant = 1.0;
 		float linear = 0.09;
 		float quadratic = 0.032;
+		float range{ 0.0f };
 		bool render = false;
 
 		// for directionLight

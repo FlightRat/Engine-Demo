@@ -406,6 +406,8 @@ namespace ENGINE_EDITOR {
 				ImGui::Checkbox("##Render", &light.render);
 
 				ImGui::Columns(1);
+
+				ImGui::DragFloat("Range", &light.range, 0.1f, 0.0f, 10000.0f,"%.2f", ImGuiSliderFlags_AlwaysClamp);
 			}
 			else if (light.type == "direction_light")
 			{

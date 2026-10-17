@@ -277,6 +277,7 @@ namespace ENGINE_CORE::ECS {
 			.AddKeyValuePair("constant", light.constant)
 			.AddKeyValuePair("linear", light.linear)
 			.AddKeyValuePair("quadratic", light.quadratic)
+			.AddKeyValuePair("range", light.range)
 			.AddKeyValuePair("render", light.render)
 			.StartNewObject("rotation_eular")
 			.AddKeyValuePair("x", light.rotation_eular.x)
@@ -396,6 +397,7 @@ namespace ENGINE_CORE::ECS {
 		light.constant = jsonValue["constant"].GetFloat();
 		light.linear = jsonValue["linear"].GetFloat();
 		light.quadratic = jsonValue["quadratic"].GetFloat();
+		light.range = jsonValue.HasMember("range") ? jsonValue["range"].GetFloat() : 0.0f;
 		light.render = jsonValue["render"].GetBool();
 
 		light.direction = glm::vec3{

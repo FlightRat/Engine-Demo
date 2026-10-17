@@ -63,8 +63,7 @@ namespace ENGINE_CORE::Systems {
                 m_PointLightData.push_back(ENGINE_RENDERING::PointLight{
                     .color = glm::vec4(light.color, light.intensity),
                     .position = glm::vec4(light.pos, 1.0f),
-                    .attenuation = glm::vec4(
-                        light.constant, light.linear, light.quadratic, 0.0f)
+                    .attenuation = glm::vec4(light.constant,light.linear,light.quadratic,(glm::max)(light.range, 0.0f))
                     });
             }
         }

@@ -11,7 +11,7 @@ namespace ENGINE_CORE::ECS {
 			sol::factories(
 				[](
 					glm::vec3 color, float intensity, std::string type,
-					glm::vec3 pos, float constant, float linear, float quadratic, bool render,
+					glm::vec3 pos, float constant, float linear, float quadratic, float range, bool render,
 					glm::vec3 direction, float half_width, float half_height, glm::vec3 rotation)
 				{
 					return LightComponent{
@@ -22,6 +22,7 @@ namespace ENGINE_CORE::ECS {
 						.constant = constant,
 						.linear = linear,
 						.quadratic = quadratic,
+						.range = range,
 						.render = render,
 						.direction = direction,
 						.half_width = half_width,
@@ -40,6 +41,7 @@ namespace ENGINE_CORE::ECS {
 			"constant", &LightComponent::constant,
 			"linear", &LightComponent::linear,
 			"quadratic", &LightComponent::quadratic,
+			"range", &LightComponent::range,
 			"half_width", &LightComponent::half_width,
 			"half_height", &LightComponent::half_height
 		);

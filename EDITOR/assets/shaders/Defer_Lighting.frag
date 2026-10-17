@@ -587,13 +587,15 @@ vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 norm
     vec3 lightDir   = normalize(lightPos - fragPos); 
     vec3 halfVector = normalize(viewDir + lightDir); 
     float distance    = length(lightPos - fragPos); 
+    float range = pointLight.attenuation.w;
+    float rangeWeight = range>0.0 ? 1.0 - smoothstep(range*0.8, range, distance) : 1.0;
     float attenuationDenominator = pointLight.attenuation.x
                                  + pointLight.attenuation.y * distance
                                  + pointLight.attenuation.z * distance * distance;
     float attenuation = 1.0 / max(attenuationDenominator, 0.0001);
 
     // 入射辐射度
-    vec3 radiance = lightColor * lightIntensity * attenuation;
+    vec3 radiance = lightColor * lightIntensity * attenuation * rangeWeight;
 
     // ---------- 菲涅尔项 ----------
     vec3 F0 = vec3(0.04); 
