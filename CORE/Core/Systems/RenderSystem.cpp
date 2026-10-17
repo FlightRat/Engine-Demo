@@ -1,5 +1,6 @@
 ﻿#include "RenderSystem.h"
 #include <utility>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -499,9 +500,11 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		Shader_Lighting->Enable();
-
 		Shader_Lighting->SetUniformFloat("far_plane", 100.0f);
 		Shader_Lighting->SetUniformVec3("viewPos", camera->GetPosition());
+		Shader_Lighting->SetUniformInt("dirLightCount", lightSystem->GetActivatedDirLights());
+		Shader_Lighting->SetUniformInt("pointLightCount", lightSystem->GetActivatedPointLights());
+		Shader_Lighting->SetUniformInt("areaLightCount", lightSystem->GetActivatedAreaLights());
 
 		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
 		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
@@ -519,12 +522,12 @@ namespace ENGINE_CORE::Systems {
 
 		// 纹理单元
 		int dirShadowBaseUnit = 8;
-		int areaMomentBaseUnit = dirShadowBaseUnit + lightSystem->GetMaxDirLights();
-		int areaCoverageBaseUnit = areaMomentBaseUnit + lightSystem->GetMaxAreaLights();
-		int pointShadowBaseUnit = areaCoverageBaseUnit + lightSystem->GetMaxAreaLights();
+		int areaMomentBaseUnit = dirShadowBaseUnit + ENGINE_RENDERING::MAX_DIR_SHADOWS;
+		int areaCoverageBaseUnit = areaMomentBaseUnit + ENGINE_RENDERING::MAX_AREA_SHADOWS;
+		int pointShadowBaseUnit = areaCoverageBaseUnit + ENGINE_RENDERING::MAX_AREA_SHADOWS;
 
 		// set directional light CSM
-		for (int dir_light_index = 0; dir_light_index < lightSystem->GetMaxDirLights(); dir_light_index++)
+		for (int dir_light_index = 0; dir_light_index < ENGINE_RENDERING::MAX_DIR_SHADOWS; dir_light_index++)
 		{
 			int texUnit = dirShadowBaseUnit + dir_light_index;
 			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_CSM_" + std::to_string(dir_light_index));
@@ -533,7 +536,7 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// set point light shadowCubemap
-		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
+		for (int point_light_index = 0; point_light_index < ENGINE_RENDERING::MAX_POINT_SHADOWS; point_light_index++)
 		{
 			int texUnit = pointShadowBaseUnit + point_light_index;
 			const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(point_light_index));
@@ -542,7 +545,7 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// set area light VSSM
-		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
+		for (int area_light_index = 0; area_light_index < ENGINE_RENDERING::MAX_AREA_SHADOWS; area_light_index++)
 		{
 			int momentUnit = areaMomentBaseUnit + area_light_index;
 			int coverageUnit = areaCoverageBaseUnit + area_light_index;
