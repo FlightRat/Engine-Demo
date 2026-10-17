@@ -194,12 +194,15 @@ namespace ENGINE_CORE::Systems {
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& areaLightData = lightSystem->GetAreaLightData();
+		const int dirShadowCount = (std::min)(lightSystem->GetActivatedDirLights(), ENGINE_RENDERING::MAX_DIR_SHADOWS);
+		const int pointShadowCount = (std::min)(lightSystem->GetActivatedPointLights(), ENGINE_RENDERING::MAX_POINT_SHADOWS);
+		const int areaShadowCount = (std::min)(lightSystem->GetActivatedAreaLights(), ENGINE_RENDERING::MAX_AREA_SHADOWS);
 
 		auto& bufferManager = mainRegistry.GetBufferManager();
 
 		// 面光源
 		Shader_ShadowMap->Enable();
-		for (int index = 0; index < lightSystem->GetActivatedAreaLights(); index++)
+		for (int index = 0; index < areaShadowCount; index++)
 		{
 			const auto& shadowMap = bufferManager.GetFrameBuffer("areaLight_ShadowMap_" + std::to_string(index));
 			shadowMap->Bind();
@@ -237,7 +240,7 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.5f, 2.0f);
 		Shader_ShadowMap->Enable();
-		for (int index = 0; index < lightSystem->GetActivatedDirLights(); index++)
+		for (int index = 0; index <  dirShadowCount; index++)
 		{
 			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_CSM_" + std::to_string(index));
 			int layerCount = DIR_CASCADE_COUNT;
@@ -274,7 +277,7 @@ namespace ENGINE_CORE::Systems {
 
 		// 点光源
 		Shader_ShadowCubemap->Enable();
-		for (int index = 0; index < lightSystem->GetActivatedPointLights(); index++)
+		for (int index = 0; index < pointShadowCount; index++)
 		{
 			const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(index));
 			shadowCubemap->Bind();
@@ -327,7 +330,7 @@ namespace ENGINE_CORE::Systems {
 
 		// VSSM
 		const auto& scratch = bufferManager.GetFrameBuffer("areaLight_VSSM_scratch"); // 乒乓缓冲
-		for (int index = 0; index < lightSystem->GetActivatedAreaLights(); index++)
+		for (int index = 0; index < areaShadowCount; index++)
 		{
 			const auto& areaLight = areaLightData[index];
 			const auto shadowMap = bufferManager.GetFrameBuffer("areaLight_ShadowMap_" + std::to_string(index));
