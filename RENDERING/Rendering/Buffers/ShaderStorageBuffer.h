@@ -14,6 +14,8 @@ namespace ENGINE_RENDERING {
 		ShaderStorageBuffer(const ShaderStorageBuffer&) = delete;
 		ShaderStorageBuffer& operator=(const ShaderStorageBuffer&) = delete;
 
+		void Bind(int bindingPoint) const;
+		void Reserve(GLsizeiptr size);
 		void UpdateShaderStorageBuffer(const void* data, GLsizeiptr size);
 	};
 }

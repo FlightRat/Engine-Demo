@@ -20,6 +20,7 @@ namespace ENGINE_RENDERING {
 		ShaderLoader() = delete;
 		static std::shared_ptr<Shader> Create(const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geometryShaderPath);
 		static std::shared_ptr<Shader> CreateFromMemory(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
+		static std::shared_ptr<Shader> CreateCompute(const std::string& computePath);
 		static bool Destroy(Shader* pShader);
 	};
 }

@@ -248,6 +248,23 @@ namespace ENGINE_CORE::RESOURCES {
 
         return bSuccess;
     }
+    bool AssetManager::AddComputeShader(const std::string& shaderName, const std::string& computePath)
+    {
+        if (m_mapShader.find(shaderName) != m_mapShader.end()) 
+        {
+            ENGINE_ERROR("Failed to add compute shader [{}] -- Already exists!", shaderName);
+            return false;
+        }
+
+        auto shader = ENGINE_RENDERING::ShaderLoader::CreateCompute(computePath);
+        if (!shader) {
+            ENGINE_ERROR("Failed to load compute shader [{}] at [{}]!", shaderName, computePath);
+            return false;
+        }
+
+        m_mapShader.emplace(shaderName, std::move(shader));
+        return true;
+    }
     std::shared_ptr<ENGINE_RENDERING::Shader> AssetManager::GetShader(const std::string& shaderName)
     {
         auto shaderItr = m_mapShader.find(shaderName);

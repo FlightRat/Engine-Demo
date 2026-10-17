@@ -340,6 +340,12 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		if (!assetManager.AddComputeShader("light_Culling", "assets/shaders/light_Culling.comp"))
+		{
+			ENGINE_ERROR("Failed to create and add the light culling shader!");
+			return false;
+		}
+
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
@@ -357,6 +363,7 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("ibl_prefilter")->SetIsEditorShader(true);
 		assetManager.GetShader("ibl_brdf")->SetIsEditorShader(true);
 		assetManager.GetShader("fxaa")->SetIsEditorShader(true);
+		assetManager.GetShader("light_Culling")->SetIsEditorShader(true);
 		return true;
 	}
 

@@ -45,6 +45,7 @@ namespace ENGINE_CORE::RESOURCES {
 
 		bool AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath=std::string());
 		bool AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader, const char* geometryShader=nullptr);
+		bool AddComputeShader(const std::string& shaderName, const std::string& computePath);
 		std::shared_ptr<ENGINE_RENDERING::Shader> GetShader(const std::string& shaderName);
 
 		bool AddMusic(const std::string& musicName, const std::string& musicPath);
