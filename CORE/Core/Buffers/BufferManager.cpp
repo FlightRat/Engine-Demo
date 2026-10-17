@@ -43,6 +43,24 @@ namespace ENGINE_CORE::BUFFERS {
 		return true;
 	}
 
+	bool BufferManager::AddShaderStorageBuffer(const std::string& ssboName, int bindingPoint)
+	{
+		if (m_mapSSBO.find(ssboName) != m_mapSSBO.end()) {
+			ENGINE_ERROR("Failed to add ShaderStorageBuffer [{0}] -- Already exists!", ssboName);
+			return false;
+		}
+
+		auto shaderStorageBuffer = std::make_shared<ENGINE_RENDERING::ShaderStorageBuffer>(bindingPoint);
+		if (!shaderStorageBuffer)
+		{
+			ENGINE_ERROR("Failed to create shaderStorageBuffer [{}]", ssboName);
+			return false;
+		}
+		
+		m_mapSSBO.emplace(ssboName, shaderStorageBuffer);
+		return true;
+	}
+
 	std::shared_ptr<ENGINE_RENDERING::Framebuffer> BufferManager::GetFrameBuffer(const std::string& fboName)
 	{
 		auto framebufferItr = m_mapFBO.find(fboName);
@@ -63,6 +81,16 @@ namespace ENGINE_CORE::BUFFERS {
 			return nullptr;
 		}
 		return uniformbufferItr->second;
+	}
+	
+	std::shared_ptr<ENGINE_RENDERING::ShaderStorageBuffer> BufferManager::GetShaderStorageBuffer(const std::string& ssboName)
+	{
+		auto shaderStorageBufferItr = m_mapSSBO.find(ssboName);
+		if (shaderStorageBufferItr == m_mapSSBO.end()) {
+			ENGINE_ERROR("Failed to get ShaderStorageBuffer [{}] -- Does not exist!", ssboName);
+			return nullptr;
+		}
+		return shaderStorageBufferItr->second;
 	}
 }
 
