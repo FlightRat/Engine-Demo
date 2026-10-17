@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Rendering\Buffers\Framebuffer.h" />
+    <ClInclude Include="Rendering\Buffers\ShaderStorageBuffer.h" />
     <ClInclude Include="Rendering\Buffers\UniformBuffer.h" />
     <ClInclude Include="Rendering\Core\Camera3D.h" />
     <ClInclude Include="Rendering\Essentials\Lights.h" />
@@ -152,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Rendering\Buffers\Framebuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\ShaderStorageBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\UniformBuffer.cpp" />
     <ClCompile Include="Rendering\Core\Camera3D.cpp" />
     <ClCompile Include="Rendering\Essentials\Mesh.cpp" />
