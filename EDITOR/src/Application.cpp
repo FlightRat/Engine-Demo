@@ -162,7 +162,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// Light System  do this before LoadBuffers!!!
-		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(1, 5, 1);
+		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>();
 		if (!lightSystem)
 		{
 			ENGINE_ERROR("Failed to create the light system!");
@@ -520,7 +520,7 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddFrameBuffer("IBL", ENGINE_RENDERING::BufferType::IBL, 512, 512, true);
 		
 		// CSM for directional light
-		for (int i = 0; i < lightSystem->GetMaxDirLights(); i++)
+		for (int i = 0; i < ENGINE_RENDERING::MAX_DIR_SHADOWS; i++)
 		{
 			bufferManager.AddFrameBuffer(
 				"dirLight_CSM_" + std::to_string(i), 
@@ -528,7 +528,7 @@ namespace ENGINE_EDITOR {
 				2048, 2048, false);
 		}
 		// shadowcubemap for point light
-		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
+		for (int i = 0; i < ENGINE_RENDERING::MAX_POINT_SHADOWS; i++)
 		{
 			bufferManager.AddFrameBuffer(
 				"pointLight_ShadowMap_" + std::to_string(i),
@@ -536,7 +536,7 @@ namespace ENGINE_EDITOR {
 				2048, 2048, false);
 		}
 		// shadowmap for area light
-		for (int i = 0; i < lightSystem->GetMaxAreaLights(); i++)
+		for (int i = 0; i < ENGINE_RENDERING::MAX_AREA_SHADOWS; i++)
 		{
 			bufferManager.AddFrameBuffer(
 				"areaLight_ShadowMap_" + std::to_string(i),
@@ -545,7 +545,7 @@ namespace ENGINE_EDITOR {
 		}
 		// vssm
 		bufferManager.AddFrameBuffer("areaLight_VSSM_scratch", ENGINE_RENDERING::BufferType::VSSM, 2048, 2048, false);
-		for(int i=0;i<lightSystem->GetMaxAreaLights();i++)
+		for(int i = 0; i < ENGINE_RENDERING::MAX_AREA_SHADOWS; i++)
 		{
 			bufferManager.AddFrameBuffer(
 				"areaLight_VSSM_" + std::to_string(i),
@@ -555,9 +555,11 @@ namespace ENGINE_EDITOR {
 
 		// uniform buffer
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
-		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
-		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
-		bufferManager.AddUniformBuffer("AreaLights", lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight), 3);
+
+		// ssbo
+		bufferManager.AddShaderStorageBuffer("DirLights", 1);
+		bufferManager.AddShaderStorageBuffer("PointLights", 2);
+		bufferManager.AddShaderStorageBuffer("AreaLights", 3);
 
 		auto& assetManager = mainRegistry.GetAssetManager();
 		// forward rendering shader
@@ -615,9 +617,6 @@ namespace ENGINE_EDITOR {
 		defer_AOBlur->BindUniformBlock("Matrices", 0);
 		physics_Debug->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("Matrices", 0);
-		defer_lighting->BindUniformBlock("DirLights", 1);
-		defer_lighting->BindUniformBlock("PointLights", 2);
-		defer_lighting->BindUniformBlock("AreaLights", 3);
 
 		return true;
 	}
