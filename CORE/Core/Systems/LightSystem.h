@@ -10,7 +10,6 @@ namespace ENGINE_CORE::Systems {
 	{
 	private:
 		const int MAX_DIR_LIGHTS;
-		const int MAX_POINT_LIGHTS;
 		const int MAX_AREA_LIGHTS;
 		int ACTIVATED_DIR_LIGHTS{ 0 };
 		int ACTIVATED_POINT_LIGHTS{ 0 };
@@ -19,8 +18,14 @@ namespace ENGINE_CORE::Systems {
 		std::vector<ENGINE_RENDERING::PointLight> m_PointLightData;
 		std::vector<ENGINE_RENDERING::AreaLight> m_AreaLightData;
 
+		std::vector<entt::entity> m_PointEntities;
+		std::vector<unsigned int> m_GlobalPointIndices, m_LocalPointIndices;
+		ENGINE_CORE::ECS::Registry* m_ShadowRegistry{ nullptr };
+		std::vector<entt::entity> m_ShadowOwners;
+		int m_ShadowedPointLights{ 0 };
+		void AssignPointShadows(ENGINE_CORE::ECS::Registry& registry);
 	public:
-		LightSystem(int max_dir_light, int max_point_light, int max_area_light);
+		LightSystem(int max_dir_light, int max_area_light);
 		~LightSystem() = default;
 
 		void Update(ENGINE_CORE::ECS::Registry& runtimeRegistry, const ENGINE_RENDERING::Camera3D& camera);
@@ -28,7 +33,11 @@ namespace ENGINE_CORE::Systems {
 		void PrepareDirLightCSM(const ENGINE_RENDERING::Camera3D& camera, ENGINE_RENDERING::DirLight& dirLight);
 
 		inline const int GetMaxDirLights() const{ return MAX_DIR_LIGHTS; }
-		inline const int GetMaxPointLights() const { return MAX_POINT_LIGHTS; }
+		int shadowSlotCount{ 8 };
+		int shadowResolution{ 2048 };
+		const std::vector<unsigned int>& GetGlobalPointIndices() const { return m_GlobalPointIndices; }
+		const std::vector<unsigned int>& GetLocalPointIndices() const { return m_LocalPointIndices; }
+		int GetShadowedPointLights() const { return m_ShadowedPointLights; }
 		inline const int GetMaxAreaLights() const { return MAX_AREA_LIGHTS; }
 
 		inline const int GetActivatedDirLights() const { return ACTIVATED_DIR_LIGHTS; }

@@ -27,5 +27,6 @@ namespace ENGINE_EDITOR
 		virtual void Update() override;
 
 		void ControlCam();
+		const auto& GetCamera() const { return m_pSceneCam; }
 	};
 }

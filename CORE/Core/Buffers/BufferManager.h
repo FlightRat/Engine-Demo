@@ -4,6 +4,7 @@
 #include<string>
 #include"Rendering/Buffers/Framebuffer.h"
 #include"Rendering/Buffers/UniformBuffer.h"
+#include "Rendering/Buffers/ShaderStorageBuffer.h"
 
 namespace ENGINE_CORE::BUFFERS {
 	class BufferManager
@@ -13,11 +14,14 @@ namespace ENGINE_CORE::BUFFERS {
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Framebuffer>> m_mapFBO{};
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::UniformBuffer>> m_mapUBO{};
 
+		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::ShaderStorageBuffer>> m_mapSSBO{};
 	public:
 		BufferManager() = default;
 		~BufferManager() = default;
 
 		bool AddFrameBuffer(const std::string& fboNme, ENGINE_RENDERING::BufferType type, int width, int height, bool useRBO);
+		void AddShaderStorageBuffer(const std::string& name);
+		std::shared_ptr<ENGINE_RENDERING::ShaderStorageBuffer> GetShaderStorageBuffer(const std::string& name);
 		bool AddUniformBuffer(const std::string& uboName, size_t size, int bindingPoint);
 
 		inline const std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Framebuffer>>& GetAllFBO() const { return m_mapFBO; }

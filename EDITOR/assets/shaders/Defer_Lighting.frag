@@ -1,6 +1,6 @@
 ﻿#version 450 core
 #define NR_DIR_LIGHTS   1
-#define NR_POINT_LIGHTS 5
+const uint TILE_CAPACITY = 128u;
 #define NR_AREA_LIGHTS  1
 #define DIR_CASCADE_COUNT 4
 
@@ -19,6 +19,7 @@ struct PointLight {
     vec4 color;
     vec4 position;
     vec4 attenuation;
+    ivec4 metadata;
 };
 struct AreaLight {
 	vec4 color;
@@ -34,7 +35,10 @@ out vec4 FragColor;
 in vec2 TexCoord;
 
 uniform vec3 viewPos;
-uniform float far_plane;
+uniform int lightCount;
+uniform int globalLightCount;
+uniform bool useTiledLighting;
+uniform int tileColumns;
 uniform bool disable_AO;
 uniform bool debug_AO;
 
@@ -49,7 +53,7 @@ layout(binding = 7) uniform sampler2D brdfLUT;
 layout(binding = 8) uniform sampler2DArray dirLight_CSM[NR_DIR_LIGHTS];
 layout(binding = 9) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
 layout(binding = 10) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
-layout(binding = 11) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
+layout(binding = 11) uniform samplerCubeArray pointLight_ShadowMap;
 
 layout (std140) uniform Matrices {
     mat4 view;
@@ -59,9 +63,10 @@ layout (std140) uniform Matrices {
 layout (std140) uniform DirLights {
     DirLight dir_lights[NR_DIR_LIGHTS];
 };
-layout (std140) uniform PointLights {
-    PointLight point_lights[NR_POINT_LIGHTS];
-};
+layout(std430, binding = 0) readonly buffer PointLights { PointLight point_lights[]; };
+layout(std430, binding = 1) readonly buffer TileHeaders { uvec2 tileHeaders[]; };
+layout(std430, binding = 2) readonly buffer TileIndices { uint tileIndices[]; };
+layout(std430, binding = 4) readonly buffer GlobalPointIndices { uint globalIndices[]; };
 layout (std140) uniform AreaLights {
     AreaLight area_lights[NR_AREA_LIGHTS];
 };
@@ -94,17 +99,20 @@ float CascadeBlend(DirLight dirLight, int layer, float viewDepth);
 float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int layer, vec3 fragPos, vec3 normal);
 // 阴影系数计算
 float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, vec3 fragPos, vec3 normal);
-float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal);
+float ShadowCalculation_point(PointLight pointLight, samplerCubeArray shadowCubeMap, vec3 fragPos, vec3 normal);
 float ShadowCalculation_area(AreaLight areaLight, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal);
 // 直接光照计算（不含 ambient，只返回 Lo）
 vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 
+vec3 EvaluatePointLight(uint index, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra);
+
 // ==================== 主函数 ====================
 void main()
 {   
-    vec3 FragPos = texture(gPosition, TexCoord).rgb;
+    vec4 positionSample = texture(gPosition, TexCoord);
+    vec3 FragPos = positionSample.rgb;
     vec3 Normal  = texture(gNormal, TexCoord).rgb;
     vec3 Albedo  = texture(gAlbedo, TexCoord).rgb;
     vec3 MRA     = texture(gMRA, TexCoord).rgb;
@@ -121,6 +129,7 @@ void main()
     if(receiverNormalLength > 1e-12)receiverNormal *= inversesqrt(receiverNormalLength);
     else receiverNormal=Normal; 
     if (dot(receiverNormal, Normal) < 0.0) receiverNormal = -receiverNormal;
+    if (positionSample.a < 0.5) { FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
 
     // Screen-space AO: use the same final visibility for lighting and debug.
     const float aoPower = 1.0;
@@ -145,11 +154,15 @@ void main()
     }
 
     // ---------- 点光源 ----------
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0){
-            float shadow = ShadowCalculation_point(point_lights[i], pointLight_ShadowMap[i], FragPos, Normal);
-            Lo += CalcPointLight(point_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
-        }
+    uint tile = uint(gl_FragCoord.y) / 16u * uint(tileColumns) + uint(gl_FragCoord.x) / 16u;
+    if (!useTiledLighting || tileHeaders[tile].y != 0u) {
+        for (uint i = 0u; i < uint(lightCount); ++i)
+            Lo += EvaluatePointLight(i, FragPos, ViewDir, Normal, Albedo, MRA);
+    } else {
+        for (uint i = 0u; i < tileHeaders[tile].x; ++i)
+            Lo += EvaluatePointLight(tileIndices[tile * TILE_CAPACITY + i], FragPos, ViewDir, Normal, Albedo, MRA);
+        for (uint i = 0u; i < uint(globalLightCount); ++i)
+            Lo += EvaluatePointLight(globalIndices[i], FragPos, ViewDir, Normal, Albedo, MRA);
     }
 
     // ---------- 面光源 ----------
@@ -401,7 +414,7 @@ float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded,
 }
 
 // 点光源阴影（Omnidirectional Shadow Map，PCF软阴影）
-float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal) {
+float ShadowCalculation_point(PointLight pointLight, samplerCubeArray shadowCubeMap, vec3 fragPos, vec3 normal) {
     vec3 N = normalize(normal);
     vec3 lightPos = vec3(pointLight.position);
     vec3 fragToLight = fragPos - lightPos;
@@ -418,6 +431,8 @@ float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, 
     vec3 offsetPos = fragPos + N * normalOffsetScale;  // 偏移后坐标
     vec3 samplingVector = offsetPos - lightPos;        // 光源指向片段的采样向量
     float currentDepth = length(samplingVector);
+    float far_plane = pointLight.attenuation.w;
+    if (currentDepth >= far_plane) return 0.0;
 
     // 4. PCF
     float shadow = 0.0;
@@ -425,7 +440,7 @@ float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, 
     float viewDistance = length(viewPos - fragPos);
     float diskRadius = (1.0 + (viewDistance / far_plane)) / 50.0;   // 调整半径缩放
     for (int i = 0; i < samples; ++i) {
-        float closestDepth = texture(shadowCubeMap, samplingVector + sampleOffsetDirections[i] * diskRadius).r; // 0~1
+        float closestDepth = texture(shadowCubeMap, vec4(samplingVector + sampleOffsetDirections[i] * diskRadius, float(pointLight.metadata.x))).r; // 0~1
         closestDepth *= far_plane; // 还原到世界空间距离
         if (currentDepth > closestDepth + bias)
             shadow += 1.0;
@@ -676,4 +691,18 @@ vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal,
     Lo *= (1.0 - shadow);
 
     return Lo;
+}
+
+vec3 EvaluatePointLight(uint index, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra)
+{
+    PointLight light = point_lights[index];
+    if (all(lessThanEqual(light.attenuation.xyz, vec3(0.0)))) return vec3(0.0);
+    vec3 delta = light.position.xyz - fragPos;
+    float distanceSquared = dot(delta, delta);
+    float range = light.position.w;
+    if (range > 0.0 && distanceSquared >= range * range) return vec3(0.0);
+    if (dot(normal, delta) <= 0.0) return vec3(0.0);
+    float weight = range > 0.0 ? 1.0 - smoothstep(0.8 * range, range, sqrt(distanceSquared)) : 1.0;
+    float shadow = light.metadata.x >= 0 ? ShadowCalculation_point(light, pointLight_ShadowMap, fragPos, normal) : 0.0;
+    return weight * CalcPointLight(light, fragPos, viewDir, normal, albedo, mra, shadow);
 }

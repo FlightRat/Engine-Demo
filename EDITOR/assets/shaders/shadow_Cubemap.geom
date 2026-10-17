@@ -3,6 +3,7 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices=18) out;
 
 uniform mat4 shadowMatrices[6];
+uniform int shadowSlot;
 
 out vec4 FragPos; // FragPos from GS (output per emitvertex)
 
@@ -12,7 +13,7 @@ void main()
     {
         for(int i = 0; i < 3; ++i) // for each triangle's vertices
         {
-            gl_Layer = face; // 内置遍历——指定渲染到哪个立方体面.
+            gl_Layer = shadowSlot * 6 + face; // 内置遍历——指定渲染到哪个立方体面.
             FragPos = gl_in[i].gl_Position;
             gl_Position = shadowMatrices[face] * FragPos; // 把物体世界坐标变换到6个面对应的光照空间
             EmitVertex();

@@ -17,12 +17,17 @@ namespace ENGINE_RENDERING {
 		glm::vec4 params{ 0.0f };		// x/y：相机近/远裁剪面；z：CSM 有效标记；w：未使用
 	};
 
-	struct PointLight {
+	struct alignas(16) PointLight {
 		glm::vec4 color{ 0.0f };
 		glm::vec4 position{ 0.0f };
 		glm::vec4 attenuation{ 0.0f };
-		//bool render{ false };
+		glm::ivec4 metadata{ -1, 0, 0, 0 }; // shadow slot, priority, casts shadow, visualization
 	};
+
+	static_assert(sizeof(PointLight) == 64);
+	static_assert(offsetof(PointLight, position) == 16);
+	static_assert(offsetof(PointLight, attenuation) == 32);
+	static_assert(offsetof(PointLight, metadata) == 48);
 
 	struct AreaLight {
 		glm::vec4 color{ 0.0f };

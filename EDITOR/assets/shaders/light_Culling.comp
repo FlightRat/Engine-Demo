@@ -1,0 +1,75 @@
+#version 450 core
+layout(local_size_x = 16, local_size_y = 16) in;
+
+struct PointLight {
+    vec4 color;
+    vec4 position;
+    vec4 attenuation;
+    ivec4 metadata;
+};
+layout(std430, binding = 0) readonly buffer PointLights { PointLight point_lights[]; };
+layout(std430, binding = 1) writeonly buffer TileHeaders { uvec2 tileHeaders[]; };
+layout(std430, binding = 2) writeonly buffer TileIndices { uint tileIndices[]; };
+layout(std430, binding = 3) readonly buffer LocalPointIndices { uint localIndices[]; };
+layout(binding = 0) uniform sampler2D gPosition;
+uniform mat4 view;
+uniform mat4 projection;
+uniform int localLightCount;
+const uint TILE_CAPACITY = 128u;
+
+shared uint minDepth;
+shared uint maxDepth;
+shared uint candidateCount;
+
+bool Intersects(vec4 plane, vec3 center, float radius)
+{
+    return dot(plane, vec4(center, 1.0)) >= -radius * length(plane.xyz);
+}
+
+void main()
+{
+    uint lane = gl_LocalInvocationIndex;
+    if (lane == 0u) {
+        minDepth = floatBitsToUint(3.402823466e+38);
+        maxDepth = 0u;
+        candidateCount = 0u;
+    }
+    barrier();
+    ivec2 size = textureSize(gPosition, 0);
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (all(lessThan(pixel, size))) {
+        vec4 position = texelFetch(gPosition, pixel, 0);
+        if (position.a > 0.5) {
+            float depth = -(view * vec4(position.xyz, 1.0)).z;
+            atomicMin(minDepth, floatBitsToUint(depth));
+            atomicMax(maxDepth, floatBitsToUint(depth));
+        }
+    }
+    barrier();
+
+    uint tile = gl_WorkGroupID.y * gl_NumWorkGroups.x + gl_WorkGroupID.x;
+    if (maxDepth != 0u) {
+        vec2 lower = vec2(gl_WorkGroupID.xy * 16u) / vec2(size) * 2.0 - 1.0;
+        vec2 upper = vec2(min(gl_WorkGroupID.xy * 16u + 16u, uvec2(size))) / vec2(size) * 2.0 - 1.0;
+        mat4 rows = transpose(projection);
+        vec4 left = rows[0] - lower.x * rows[3];
+        vec4 right = upper.x * rows[3] - rows[0];
+        vec4 bottom = rows[1] - lower.y * rows[3];
+        vec4 top = upper.y * rows[3] - rows[1];
+        float nearDepth = uintBitsToFloat(minDepth);
+        float farDepth = uintBitsToFloat(maxDepth);
+        for (uint i = lane; i < uint(localLightCount); i += 256u) {
+            uint index = localIndices[i];
+            PointLight light = point_lights[index];
+            vec3 center = (view * vec4(light.position.xyz, 1.0)).xyz;
+            float radius = light.position.w;
+            if (-center.z + radius < nearDepth || -center.z - radius > farDepth) continue;
+            if (!Intersects(left, center, radius) || !Intersects(right, center, radius) ||
+                !Intersects(bottom, center, radius) || !Intersects(top, center, radius)) continue;
+            uint offset = atomicAdd(candidateCount, 1u);
+            if (offset < TILE_CAPACITY) tileIndices[tile * TILE_CAPACITY + offset] = index;
+        }
+    }
+    barrier();
+    if (lane == 0u) tileHeaders[tile] = uvec2(candidateCount, candidateCount > TILE_CAPACITY ? 1u : 0u);
+}

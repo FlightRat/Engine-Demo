@@ -2,6 +2,16 @@
 #include "Logger/Logger.h"
 
 namespace ENGINE_CORE::BUFFERS {
+	void BufferManager::AddShaderStorageBuffer(const std::string& name)
+	{
+		m_mapSSBO.emplace(name, std::make_shared<ENGINE_RENDERING::ShaderStorageBuffer>());
+	}
+
+	std::shared_ptr<ENGINE_RENDERING::ShaderStorageBuffer> BufferManager::GetShaderStorageBuffer(const std::string& name)
+	{
+		return m_mapSSBO.at(name);
+	}
+
 	bool BufferManager::AddFrameBuffer(
 		const std::string& fboName, 
 		ENGINE_RENDERING::BufferType type, 

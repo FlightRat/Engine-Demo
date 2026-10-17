@@ -43,6 +43,7 @@ namespace ENGINE_CORE::RESOURCES {
 		bool AddNoiseTexture(const std::string& textureName);
 		std::shared_ptr<ENGINE_RENDERING::Texture> GetTexture(const std::string& textureName);
 
+		bool AddComputeShader(const std::string& shaderName, const std::string& path);
 		bool AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath=std::string());
 		bool AddShaderFromMemory(const std::string& shaderName, const char* vertexShader, const char* fragmentShader, const char* geometryShader=nullptr);
 		std::shared_ptr<ENGINE_RENDERING::Shader> GetShader(const std::string& shaderName);

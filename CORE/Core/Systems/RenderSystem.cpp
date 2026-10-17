@@ -1,5 +1,10 @@
 ﻿#include "RenderSystem.h"
 #include <utility>
+#include <chrono>
+#include <cstdint>
+#include <algorithm>
+#include <fstream>
+#include <SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -60,10 +65,30 @@ namespace ENGINE_CORE::Systems {
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
         std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB)
     {
+        auto& view = m_LightViews[intermediateGB.get()];
+        if (!view) {
+            view = std::make_unique<LightViewData>();
+            view->prefix = "LightTiles_" + std::to_string(reinterpret_cast<std::uintptr_t>(intermediateGB.get()));
+            auto& buffers = MAIN_REGISTRY().GetBufferManager();
+            buffers.AddShaderStorageBuffer(view->prefix + "_Headers");
+            buffers.AddShaderStorageBuffer(view->prefix + "_Indices");
+        }
+        view->width = intermediateGB->Width();
+        view->height = intermediateGB->Height();
+        view->view = camera->GetViewMatrix();
+        view->projection = camera->GetProjectionMatrix();
+        if (view->captureGeneration != m_CaptureGeneration) {
+            view->metrics.Start();
+            view->captureGeneration = m_CaptureGeneration;
+        }
+        if (profilingEnabled) view->metrics.BeginFrame(useTiledLighting);
+        auto submitStart = std::chrono::steady_clock::now();
         Prepare_Pass(camera, runtimeRegistry);
 
 		//glCullFace(GL_FRONT);		// 解决acne，但导致漏光
+		if (profilingEnabled) view->metrics.BeginPass(3);
 		Shadow_Pass(runtimeRegistry);
+		if (profilingEnabled) view->metrics.EndPass(3);
 		//glCullFace(GL_BACK);
 
 		// 几何pass
@@ -74,8 +99,18 @@ namespace ENGINE_CORE::Systems {
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// 保证 Position 为 0
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
+		if (profilingEnabled) view->metrics.BeginPass(0);
 		Geometry_Pass(camera, runtimeRegistry);
+		if (profilingEnabled) view->metrics.EndPass(0);
 		intermediateGB->Unbind();
+
+        if (profilingEnabled) view->metrics.BeginPass(1);
+        if (useTiledLighting) LightCulling_Pass(camera, intermediateGB, *view);
+        if (profilingEnabled) view->metrics.EndPass(1);
+        if (useTiledLighting && collectLightStatistics) {
+            auto headers = MAIN_REGISTRY().GetBufferManager().GetShaderStorageBuffer(view->prefix + "_Headers");
+            view->metrics.SampleCandidates(headers->GetID(), static_cast<size_t>((view->width + 15) / 16) * ((view->height + 15) / 16));
+        }
 
 		// HBAO
 		glDisable(GL_BLEND);
@@ -110,7 +145,9 @@ namespace ENGINE_CORE::Systems {
 		glViewport(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		if (profilingEnabled) view->metrics.BeginPass(2);
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB, aoFB);
+		if (profilingEnabled) view->metrics.EndPass(2);
 		shadeOutputFB->Unbind();
 
 		// 后处理pass（点光源+模板测试+天空盒）
@@ -124,7 +161,9 @@ namespace ENGINE_CORE::Systems {
 		Postprocess_Pass(camera, runtimeRegistry);
 		shadeOutputFB->Unbind();
 		// FXAA
-		FXAA_Pass(shadeOutputFB, fxaaOutputFB);
+        FXAA_Pass(shadeOutputFB, fxaaOutputFB);
+        m_CpuMs[2] = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - submitStart).count() - m_CpuMs[0] - m_CpuMs[1];
+        if (profilingEnabled) view->metrics.EndFrame(m_CpuMs);
 	}
 
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -136,10 +175,10 @@ namespace ENGINE_CORE::Systems {
 		auto& bufferManager = mainRegistry.GetBufferManager();
 		const auto& matrixUbo = bufferManager.GetUniformBuffer("matrix");
 		const auto& dirLightsUbo = bufferManager.GetUniformBuffer("DirLights");
-		const auto& pointLightsUbo = bufferManager.GetUniformBuffer("PointLights");
+		const auto& pointLightsSsbo = bufferManager.GetShaderStorageBuffer("PointLights");
 		const auto& areaLightsUbo = bufferManager.GetUniformBuffer("AreaLights");
 
-		// uniform block -- camera param 
+		// uniform block -- camera param
 		auto viewMatrix = camera->GetViewMatrix();
 		glm::mat4 orthoMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 		glm::mat4 PerspectiveMatrix = camera->GetProjectionMatrix();
@@ -148,7 +187,10 @@ namespace ENGINE_CORE::Systems {
 		matrixUbo->UpdateUniformBuffer(glm::value_ptr(PerspectiveMatrix), sizeof(PerspectiveMatrix), sizeof(glm::mat4));
 
 		// uniform block -- lighting param
-		lightSystem->Update(runtimeRegistry, *camera);
+        auto collectStart = std::chrono::steady_clock::now();
+        lightSystem->Update(runtimeRegistry, *camera);
+        m_CpuMs[0] = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - collectStart).count();
+        auto uploadStart = std::chrono::steady_clock::now();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& areaLightData = lightSystem->GetAreaLightData();
@@ -161,12 +203,17 @@ namespace ENGINE_CORE::Systems {
 			0                // 偏移量
 		);
 
-		// 填充点光源 UBO
-		pointLightsUbo->UpdateUniformBuffer(
-			pointLightData.data(),
-			lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight),
-			0
-		);
+		// 点光源及索引 SSBO，仅上传有效数据
+        pointLightsSsbo->Update(pointLightData.data(), pointLightData.size() * sizeof(PointLight));
+        pointLightsSsbo->Bind(0);
+        auto local = bufferManager.GetShaderStorageBuffer("LocalPointIndices");
+        const auto& localData = lightSystem->GetLocalPointIndices();
+        local->Update(localData.data(), localData.size() * sizeof(unsigned int));
+        local->Bind(3);
+        auto global = bufferManager.GetShaderStorageBuffer("GlobalPointIndices");
+        const auto& globalData = lightSystem->GetGlobalPointIndices();
+        global->Update(globalData.data(), globalData.size() * sizeof(unsigned int));
+        global->Bind(4);
 
 		// 填充面光源 UBO
 		areaLightsUbo->UpdateUniformBuffer(
@@ -174,6 +221,9 @@ namespace ENGINE_CORE::Systems {
 			lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight),
 			0
 		);
+
+        m_CpuMs[1] = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - uploadStart).count();
+        m_PointShadows.Resize(lightSystem->GetShadowedPointLights() > 0 ? lightSystem->shadowSlotCount : 0, lightSystem->shadowResolution);
 
 	}
 
@@ -294,19 +344,18 @@ namespace ENGINE_CORE::Systems {
 		Shader_ShadowCubemap->Enable();
 		for (int index = 0; index < lightSystem->GetActivatedPointLights(); index++)
 		{
-			const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(index));
-			shadowCubemap->Bind();
-
-			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
-			glClearColor(0.f, 0.f, 0.f, 1.f);
-			glClear(GL_DEPTH_BUFFER_BIT);
+            int slot = pointLightData[index].metadata.x;
+            if (slot < 0) continue;
+            m_PointShadows.BindSlot(slot);
+            Shader_ShadowCubemap->SetUniformInt("shadowSlot", slot);
 
 			const auto& point_light = pointLightData[index];
 			glm::vec3 point_light_pos = glm::vec3(point_light.position);
 
 			// light space matrix
-			GLfloat aspect = (GLfloat)shadowCubemap->Width() / (GLfloat)shadowCubemap->Height();
-			float near_plane = 0.1f, far_plane = 100.0f;
+			GLfloat aspect = 1.0f;
+			float far_plane = point_light.attenuation.w;
+            float near_plane = (std::min)(0.1f, far_plane * 0.01f);
 			glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane);
 			std::vector<glm::mat4> shadowTransforms;
 			shadowTransforms.push_back(shadowProj * glm::lookAt(point_light_pos, point_light_pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
@@ -339,8 +388,8 @@ namespace ENGINE_CORE::Systems {
 					meshes[meshIdx].Draw();
 			}
 
-			shadowCubemap->Unbind();
-			// shadowCubemap->CheckResize(); no need
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		}
 
 		// VSSM
@@ -515,7 +564,10 @@ namespace ENGINE_CORE::Systems {
 
 		Shader_Lighting->Enable();
 
-		Shader_Lighting->SetUniformFloat("far_plane", 100.0f);
+		Shader_Lighting->SetUniformInt("lightCount", lightSystem->GetActivatedPointLights());
+        Shader_Lighting->SetUniformInt("globalLightCount", static_cast<int>(lightSystem->GetGlobalPointIndices().size()));
+        Shader_Lighting->SetUniformBool("useTiledLighting", useTiledLighting);
+        Shader_Lighting->SetUniformInt("tileColumns", (intermediateGB->Width() + 15) / 16);
 		Shader_Lighting->SetUniformVec3("viewPos", camera->GetPosition());
 
 		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
@@ -548,13 +600,8 @@ namespace ENGINE_CORE::Systems {
 		}
 
 		// set point light shadowCubemap
-		for (int point_light_index = 0; point_light_index < lightSystem->GetMaxPointLights(); point_light_index++)
-		{
-			int texUnit = pointShadowBaseUnit + point_light_index;
-			const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(point_light_index));
-			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
-			Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);
-		}
+        glBindTextureUnit(pointShadowBaseUnit, m_PointShadows.GetTextureID());
+        Shader_Lighting->SetUniformInt("pointLight_ShadowMap", pointShadowBaseUnit);
 
 		// set area light VSSM
 		for (int area_light_index = 0; area_light_index < lightSystem->GetMaxAreaLights(); area_light_index++)
@@ -637,6 +684,7 @@ namespace ENGINE_CORE::Systems {
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
 			auto point_light = pointLightData[point_light_index];
+            if (!showLightVisualizations) continue;
 			// TODO: check point_light.render to decide if render
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
 			light_sphere_model = glm::translate(light_sphere_model, glm::vec3(point_light.position));
@@ -760,6 +808,89 @@ namespace ENGINE_CORE::Systems {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 	}
+
+
+    void RenderSystem::LightCulling_Pass(std::shared_ptr<Camera3D> camera,
+        std::shared_ptr<Framebuffer> gbuffer, LightViewData& data)
+    {
+        auto& buffers = MAIN_REGISTRY().GetBufferManager();
+        auto headers = buffers.GetShaderStorageBuffer(data.prefix + "_Headers");
+        auto indices = buffers.GetShaderStorageBuffer(data.prefix + "_Indices");
+        int columns = (gbuffer->Width() + 15) / 16;
+        int rows = (gbuffer->Height() + 15) / 16;
+        headers->Reserve(static_cast<size_t>(columns) * rows * 8);
+        indices->Reserve(static_cast<size_t>(columns) * rows * 128 * sizeof(unsigned int));
+        headers->Bind(1);
+        indices->Bind(2);
+        auto shader = MAIN_REGISTRY().GetAssetManager().GetShader("light_Culling");
+        auto lights = MAIN_REGISTRY().GetContext<std::shared_ptr<LightSystem>>();
+        shader->Enable();
+        shader->SetUniformMat4("view", camera->GetViewMatrix());
+        shader->SetUniformMat4("projection", camera->GetProjectionMatrix());
+        shader->SetUniformInt("localLightCount", static_cast<int>(lights->GetLocalPointIndices().size()));
+        glBindTextureUnit(0, gbuffer->GetTextureID(0));
+        glDispatchCompute(columns, rows, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    }
+
+    void RenderSystem::StartLightBenchmark()
+    {
+        profilingEnabled = true;
+        ++m_CaptureGeneration;
+        for (auto& [id, view] : m_LightViews) {
+            view->metrics.Start();
+            view->captureGeneration = m_CaptureGeneration;
+        }
+    }
+
+    void RenderSystem::ExportLightBenchmark(const std::string& path) const
+    {
+        auto lights = MAIN_REGISTRY().GetContext<std::shared_ptr<LightSystem>>();
+        std::ofstream out(path);
+        out << "gpu,build,viewport,width,height,vsync,tiled,diagnostics,label,lights,range_config,shadow_slots,shadow_resolution,warmup,target,record,geometry_ms,culling_ms,lighting_ms,shadow_ms,collect_ms,upload_ms,submit_ms,average_candidates,max_candidates,overflow_tiles,view,projection\n";
+        for (const auto& [id, view] : m_LightViews) {
+            auto write = [&](const LightRenderSample& sample, const std::string& record) {
+                out << '\"' << reinterpret_cast<const char*>(glGetString(GL_RENDERER)) << "\",";
+#ifdef _DEBUG
+                out << "Debug,";
+#else
+                out << "Release,";
+#endif
+                out << id << ',' << view->width << ',' << view->height << ',' << SDL_GL_GetSwapInterval() << ','
+                    << useTiledLighting << ',' << collectLightStatistics << ",\"" << benchmarkLabel << "\","
+                    << lights->GetActivatedPointLights() << ",explicit_or_global," << lights->shadowSlotCount << ','
+                    << lights->shadowResolution << ",120,300," << record;
+                for (double value : sample.gpuMs) out << ',' << value;
+                for (double value : sample.cpuMs) out << ',' << value;
+                if (collectLightStatistics && useTiledLighting) out << ',' << sample.averageCandidates << ',' << sample.maxCandidates << ',' << sample.overflowTiles;
+                else out << ",NA,NA,NA";
+                for (const auto& matrix : {view->view, view->projection}) {
+                    out << ",\"";
+                    for (int i = 0; i < 16; ++i) out << glm::value_ptr(matrix)[i] << ';';
+                    out << '\"';
+                }
+                out << '\n';
+            };
+            const auto& samples = view->metrics.Samples();
+            for (size_t i = 0; i < samples.size(); ++i) write(samples[i], std::to_string(i));
+            if (samples.empty()) continue;
+            for (double percentile : {0.5, 0.95}) {
+                LightRenderSample summary;
+                auto quantile = [&](auto get) {
+                    std::vector<double> values;
+                    for (const auto& sample : samples) values.push_back(get(sample));
+                    std::sort(values.begin(), values.end());
+                    return values[static_cast<size_t>(percentile * (values.size() - 1))];
+                };
+                for (int i = 0; i < 4; ++i) summary.gpuMs[i] = quantile([&](const auto& s) { return s.gpuMs[i]; });
+                for (int i = 0; i < 3; ++i) summary.cpuMs[i] = quantile([&](const auto& s) { return s.cpuMs[i]; });
+                summary.averageCandidates = quantile([](const auto& s) { return s.averageCandidates; });
+                summary.maxCandidates = view->metrics.Latest().maxCandidates;
+                summary.overflowTiles = view->metrics.Latest().overflowTiles;
+                write(summary, percentile == 0.5 ? "median" : "p95");
+            }
+        }
+    }
 
 	void RenderSystem::FXAA_Pass(
 		const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& source,

@@ -162,7 +162,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// Light System  do this before LoadBuffers!!!
-		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(1, 5, 1);
+		auto lightSystem = std::make_shared<ENGINE_CORE::Systems::LightSystem>(1, 1);
 		if (!lightSystem)
 		{
 			ENGINE_ERROR("Failed to create the light system!");
@@ -285,6 +285,8 @@ namespace ENGINE_EDITOR {
 		}
 
 		// defer Lighting
+		if (!assetManager.AddComputeShader("light_Culling", "assets/shaders/light_Culling.comp")) return false;
+
 		if (!assetManager.AddShader("defer_Lighting", "assets/shaders/defer_Lighting.vert", "assets/shaders/defer_Lighting.frag", ""))
 		{
 			ENGINE_ERROR("Failed to create and add the shader!");
@@ -527,14 +529,6 @@ namespace ENGINE_EDITOR {
 				ENGINE_RENDERING::BufferType::SHADOWCASCADE, 
 				2048, 2048, false);
 		}
-		// shadowcubemap for point light
-		for (int i = 0; i < lightSystem->GetMaxPointLights(); i++)
-		{
-			bufferManager.AddFrameBuffer(
-				"pointLight_ShadowMap_" + std::to_string(i),
-				ENGINE_RENDERING::BufferType::SHADOWCUBEMAP, 
-				2048, 2048, false);
-		}
 		// shadowmap for area light
 		for (int i = 0; i < lightSystem->GetMaxAreaLights(); i++)
 		{
@@ -556,7 +550,9 @@ namespace ENGINE_EDITOR {
 		// uniform buffer
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
 		bufferManager.AddUniformBuffer("DirLights", lightSystem->GetMaxDirLights() * sizeof(ENGINE_RENDERING::DirLight), 1);
-		bufferManager.AddUniformBuffer("PointLights", lightSystem->GetMaxPointLights() * sizeof(ENGINE_RENDERING::PointLight), 2);
+		bufferManager.AddShaderStorageBuffer("PointLights");
+		bufferManager.AddShaderStorageBuffer("LocalPointIndices");
+		bufferManager.AddShaderStorageBuffer("GlobalPointIndices");
 		bufferManager.AddUniformBuffer("AreaLights", lightSystem->GetMaxAreaLights() * sizeof(ENGINE_RENDERING::AreaLight), 3);
 
 		auto& assetManager = mainRegistry.GetAssetManager();
@@ -616,7 +612,7 @@ namespace ENGINE_EDITOR {
 		physics_Debug->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("Matrices", 0);
 		defer_lighting->BindUniformBlock("DirLights", 1);
-		defer_lighting->BindUniformBlock("PointLights", 2);
+
 		defer_lighting->BindUniformBlock("AreaLights", 3);
 
 		return true;

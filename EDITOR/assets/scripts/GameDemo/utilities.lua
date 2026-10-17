@@ -97,6 +97,9 @@ function LoadEntity( def )
 				def.components.Light.rotation or vec3(0.0, 0.0, 0.0)
 			)
 		)
+		light.range = def.components.Light.range or 0.0
+		light.castsShadow = def.components.Light.castsShadow ~= false
+		light.shadowPriority = def.components.Light.shadowPriority or 0
 	end
 
 	--TODO do the default in C++

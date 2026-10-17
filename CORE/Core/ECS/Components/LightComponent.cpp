@@ -31,6 +31,9 @@ namespace ENGINE_CORE::ECS {
 					};
 				}
 			),
+			"range", &LightComponent::range,
+			"castsShadow", &LightComponent::castsShadow,
+			"shadowPriority", &LightComponent::shadowPriority,
 			"color", &LightComponent::color,
 			"intensity",&LightComponent::intensity,
 			"direction", &LightComponent::direction,

@@ -6,14 +6,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 #include <initializer_list>
+#include <algorithm>
 
 namespace ENGINE_CORE::Systems {
-    LightSystem::LightSystem(int max_dir_light, int max_point_light, int max_area_light) :
-        MAX_POINT_LIGHTS{ max_point_light }, MAX_DIR_LIGHTS{ max_dir_light }, MAX_AREA_LIGHTS{ max_area_light }
+    LightSystem::LightSystem(int max_dir_light, int max_area_light) :
+        MAX_DIR_LIGHTS{ max_dir_light }, MAX_AREA_LIGHTS{ max_area_light }
     {
-        // 构造时就分配好固定大小，后续 assign() 不会重新分配堆内存
+        // 方向光和面光源固定大小，点光源按实际数量增长。
         m_DirLightData.resize(MAX_DIR_LIGHTS);
-        m_PointLightData.resize(MAX_POINT_LIGHTS);
+        m_PointLightData.reserve(128);
         m_AreaLightData.resize(MAX_AREA_LIGHTS);
     }
 
@@ -27,7 +28,10 @@ namespace ENGINE_CORE::Systems {
         // 关键：先用"空/未激活"数据填满整个数组，再按实际灯光覆盖
         // 这样 Shader 里未使用的槽位 direction.w == 0.0，会被 continue 跳过
         m_DirLightData.assign(MAX_DIR_LIGHTS, ENGINE_RENDERING::DirLight{});   // w默认0
-        m_PointLightData.assign(MAX_POINT_LIGHTS, ENGINE_RENDERING::PointLight{});
+        m_PointLightData.clear();
+        m_PointEntities.clear();
+        m_GlobalPointIndices.clear();
+        m_LocalPointIndices.clear();
         m_AreaLightData.assign(MAX_AREA_LIGHTS, ENGINE_RENDERING::AreaLight{});
 
         auto lightView = runtimeRegistry.GetRegistry().view<ENGINE_CORE::ECS::LightComponent>();
@@ -83,24 +87,62 @@ namespace ENGINE_CORE::Systems {
             }
             else if (light.type == "point_light")
             {
-                if (ACTIVATED_POINT_LIGHTS < MAX_POINT_LIGHTS)
-                {
-                    m_PointLightData[ACTIVATED_POINT_LIGHTS] = ENGINE_RENDERING::PointLight{
-
-                        .color = glm::vec4(light.color, light.intensity),
-                        .position = glm::vec4(light.pos, 1.0f),
-                        .attenuation = glm::vec4(light.constant, light.linear, light.quadratic, 0.0f),
-                        //.render = light.render
-                    };
-                    ACTIVATED_POINT_LIGHTS++;
-                }
-                else
-                {
-                    ENGINE_WARN("Too many point lights! The limit is [{0}].", MAX_POINT_LIGHTS);
-                }
+                unsigned int index = static_cast<unsigned int>(m_PointLightData.size());
+                m_PointLightData.push_back(ENGINE_RENDERING::PointLight{
+                    .color = glm::vec4(light.color, light.intensity),
+                    .position = glm::vec4(light.pos, light.range),
+                    .attenuation = glm::vec4(light.constant, light.linear, light.quadratic,
+                        light.range > 0.0f ? light.range : 100.0f),
+                    .metadata = glm::ivec4(-1, light.shadowPriority, light.castsShadow ? 1 : 0, light.render ? 1 : 0)
+                });
+                m_PointEntities.push_back(_);
+                (light.range > 0.0f ? m_LocalPointIndices : m_GlobalPointIndices).push_back(index);
+                ACTIVATED_POINT_LIGHTS++;
             }
         }
+        AssignPointShadows(runtimeRegistry);
     }
+    void LightSystem::AssignPointShadows(ENGINE_CORE::ECS::Registry& registry)
+    {
+        if (m_ShadowRegistry != &registry) {
+            m_ShadowRegistry = &registry;
+            m_ShadowOwners.clear();
+        }
+        auto& owners = m_ShadowOwners;
+        owners.resize(shadowSlotCount, entt::null);
+        m_ShadowedPointLights = 0;
+        if (shadowSlotCount == 0) return;
+        std::vector<unsigned int> candidates;
+        candidates.reserve(m_PointLightData.size());
+        std::vector<unsigned char> retained(m_PointLightData.size(), 0);
+        for (unsigned int i = 0; i < m_PointLightData.size(); ++i) {
+            if (m_PointLightData[i].metadata.z == 0) continue;
+            candidates.push_back(i);
+            retained[i] = std::find(owners.begin(), owners.end(), m_PointEntities[i]) != owners.end();
+        }
+        size_t selectedCount = (std::min)(candidates.size(), static_cast<size_t>(shadowSlotCount));
+        std::partial_sort(candidates.begin(), candidates.begin() + selectedCount, candidates.end(), [&](unsigned int a, unsigned int b) {
+            int pa = m_PointLightData[a].metadata.y, pb = m_PointLightData[b].metadata.y;
+            if (pa != pb) return pa > pb;
+            if (retained[a] != retained[b]) return retained[a] > retained[b];
+            return entt::to_integral(m_PointEntities[a]) < entt::to_integral(m_PointEntities[b]);
+        });
+        candidates.resize(selectedCount);
+        for (auto& owner : owners) {
+            bool selected = std::any_of(candidates.begin(), candidates.end(), [&](unsigned int i) { return m_PointEntities[i] == owner; });
+            if (!selected) owner = entt::null;
+        }
+        for (unsigned int i : candidates) {
+            auto slot = std::find(owners.begin(), owners.end(), m_PointEntities[i]);
+            if (slot == owners.end()) {
+                slot = std::find(owners.begin(), owners.end(), entt::null);
+                *slot = m_PointEntities[i];
+            }
+            m_PointLightData[i].metadata.x = static_cast<int>(slot - owners.begin());
+        }
+        m_ShadowedPointLights = static_cast<int>(candidates.size());
+    }
+
     void LightSystem::PrepareDirLightCSM(const ENGINE_RENDERING::Camera3D& camera, ENGINE_RENDERING::DirLight& dirLight)
     {
         const glm::vec3& direction = glm::vec3(dirLight.direction);

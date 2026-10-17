@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Rendering\Essentials\RenderMetrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Rendering\Essentials\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,6 +45,12 @@
     <ClInclude Include="Rendering\Essentials\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Rendering\Buffers\ShaderStorageBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Buffers\PointShadowArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Rendering\Buffers\UniformBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -56,6 +65,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Rendering\Essentials\RenderMetrics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Rendering\Essentials\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,6 +90,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\Essentials\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Buffers\ShaderStorageBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Buffers\PointShadowArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\Buffers\UniformBuffer.cpp">

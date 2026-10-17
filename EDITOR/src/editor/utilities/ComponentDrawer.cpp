@@ -387,6 +387,9 @@ namespace ENGINE_EDITOR {
 			if (light.type == "point_light")
 			{
 				ImGui::DrawVec3Control("Position", light.pos);
+				ImGui::DragFloat("Range (0 = unlimited)", &light.range, 0.1f, 0.0f, 10000.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::Checkbox("Casts Shadow", &light.castsShadow);
+				ImGui::InputInt("Shadow Priority", &light.shadowPriority);
 
 				ImGui::Text("Attenuation");
 				// 使用 Columns 简单对齐参数

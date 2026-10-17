@@ -26,6 +26,10 @@ namespace ENGINE_CORE::ECS {
 		glm::vec3 rotation_eular{ 0.0f }; // degrees, editable rotation
 		glm::quat rotation_quat{ 1.0f, 0.0f, 0.0f, 0.0f }; // derived from Euler angles
 
+		float range{ 0.0f };
+		bool castsShadow{ true };
+		int shadowPriority{ 0 };
+
 		static void CreateLuaLightBind(sol::state& lua);
 	};
 }

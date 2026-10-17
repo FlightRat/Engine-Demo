@@ -218,6 +218,14 @@ namespace ENGINE_CORE::RESOURCES {
     }
 
     // shader
+    bool AssetManager::AddComputeShader(const std::string& shaderName, const std::string& path)
+    {
+        auto shader = ENGINE_RENDERING::ShaderLoader::CreateCompute(path);
+        if (!shader) return false;
+        shader->SetIsEditorShader(true);
+        return m_mapShader.emplace(shaderName, std::move(shader)).second;
+    }
+
     bool AssetManager::AddShader(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath)
     {
         // check if shader already loaded

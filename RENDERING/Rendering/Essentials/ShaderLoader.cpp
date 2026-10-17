@@ -201,6 +201,21 @@ namespace ENGINE_RENDERING {
         return nullptr;
     }
 
+    std::shared_ptr<Shader> ShaderLoader::CreateCompute(const std::string& path)
+    {
+        GLuint shader = CompileShader(GL_COMPUTE_SHADER, path);
+        if (shader == 0) return nullptr;
+        GLuint program = glCreateProgram();
+        glAttachShader(program, shader);
+        glLinkProgram(program);
+        glDeleteShader(shader);
+        if (!IsProgramValid(program)) {
+            glDeleteProgram(program);
+            return nullptr;
+        }
+        return std::make_shared<Shader>(program, std::string(), std::string(), std::string());
+    }
+
     bool ShaderLoader::Destroy(Shader* pShader)
     {
         if (pShader->ShaderProgramID() <= 0)
