@@ -1,7 +1,7 @@
 ﻿#version 450 core
-#define NR_DIR_LIGHTS   1
-#define NR_POINT_LIGHTS 5
-#define NR_AREA_LIGHTS  1
+#define MAX_DIR_SHADOWS   1
+#define MAX_POINT_SHADOWS 5
+#define MAX_AREA_SHADOWS  1
 #define DIR_CASCADE_COUNT 4
 
 struct DirLight {
@@ -37,6 +37,9 @@ uniform vec3 viewPos;
 uniform float far_plane;
 uniform bool disable_AO;
 uniform bool debug_AO;
+uniform int dirLightCount;
+uniform int pointLightCount;
+uniform int areaLightCount;
 
 layout(binding = 0) uniform sampler2D gPosition;
 layout(binding = 1) uniform sampler2D gNormal;
@@ -46,25 +49,19 @@ layout(binding = 4) uniform sampler2D screenAO;
 layout(binding = 5) uniform samplerCube irradianceMap; 
 layout(binding = 6) uniform samplerCube prefilterMap; 
 layout(binding = 7) uniform sampler2D brdfLUT; 
-layout(binding = 8) uniform sampler2DArray dirLight_CSM[NR_DIR_LIGHTS];
-layout(binding = 9) uniform usampler2D areaMomentSAT[NR_AREA_LIGHTS];
-layout(binding = 10) uniform usampler2D areaCoverageSAT[NR_AREA_LIGHTS];
-layout(binding = 11) uniform samplerCube pointLight_ShadowMap[NR_POINT_LIGHTS];
+layout(binding = 8) uniform sampler2DArray dirLight_CSM[MAX_DIR_SHADOWS];
+layout(binding = 9) uniform usampler2D areaMomentSAT[MAX_AREA_SHADOWS];
+layout(binding = 10) uniform usampler2D areaCoverageSAT[MAX_AREA_SHADOWS];
+layout(binding = 11) uniform samplerCube pointLight_ShadowMap[MAX_POINT_SHADOWS];
 
 layout (std140) uniform Matrices {
     mat4 view;
     mat4 projection;
 };
 
-layout (std140) uniform DirLights {
-    DirLight dir_lights[NR_DIR_LIGHTS];
-};
-layout (std140) uniform PointLights {
-    PointLight point_lights[NR_POINT_LIGHTS];
-};
-layout (std140) uniform AreaLights {
-    AreaLight area_lights[NR_AREA_LIGHTS];
-};
+layout(std430, binding=1) readonly buffer DirLights{ DirLight dir_lights[]; };
+layout(std430, binding=2) readonly buffer PointLights{ PointLight point_lights[]; };
+layout(std430, binding=3) readonly buffer AreaLights{ AreaLight area_lights[]; };
 
 const float PI = 3.14159265359;
 const float VSSM_MOMENT_SCALE = 16777215.0;
@@ -138,24 +135,24 @@ void main()
     vec3 Lo = vec3(0.0);
 
     // ---------- 方向光 ----------
-    for (int i = 0; i < NR_DIR_LIGHTS; i++) {
+    for (int i = 0; i < dirLightCount; i++) {
         if (dir_lights[i].params.z < 0.5) continue;
-        float shadow = ShadowCalculation_DIR(dir_lights[i], dirLight_CSM[i], FragPos, receiverNormal);
+        float shadow = i < MAX_DIR_SHADOWS ? ShadowCalculation_DIR(dir_lights[i], dirLight_CSM[i], FragPos, receiverNormal) : 0.0;
         Lo += CalcDirLight(dir_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
     // ---------- 点光源 ----------
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+    for (int i = 0; i < pointLightCount; i++) {
         if (point_lights[i].attenuation.x > 0.0 || point_lights[i].attenuation.y > 0.0 || point_lights[i].attenuation.z > 0.0){
-            float shadow = ShadowCalculation_point(point_lights[i], pointLight_ShadowMap[i], FragPos, Normal);
+            float shadow = i < MAX_POINT_SHADOWS ? ShadowCalculation_point(point_lights[i], pointLight_ShadowMap[i], FragPos, Normal) : 0.0;
             Lo += CalcPointLight(point_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
         }
     }
 
     // ---------- 面光源 ----------
-    for (int i = 0; i < NR_AREA_LIGHTS; i++) {
+    for (int i = 0; i < areaLightCount; i++) {
         if (area_lights[i].direction.w < 0.5) continue;
-        float shadow = ShadowCalculation_area(area_lights[i], areaMomentSAT[i], areaCoverageSAT[i], FragPos,receiverNormal);
+        float shadow = i < MAX_AREA_SHADOWS ? ShadowCalculation_area(area_lights[i], areaMomentSAT[i], areaCoverageSAT[i], FragPos,receiverNormal) : 0.0;
         Lo += CalcAreaLight(area_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
