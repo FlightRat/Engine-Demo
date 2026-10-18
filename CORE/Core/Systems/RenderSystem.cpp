@@ -11,6 +11,7 @@
 #include <Rendering/Essentials/TextureCommon.h>
 #include <Logger/Logger.h>
 #include "../CORE/Core/ECS/MainRegistry.h"
+#include "../CORE/Core/Systems/TileSystem.h"
 #include "../CORE/Core/Systems/LightSystem.h"
 #include "../ECS/Entity.h"
 #include "../Buffers/BufferManager.h"
@@ -77,6 +78,8 @@ namespace ENGINE_CORE::Systems {
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
 		Geometry_Pass(camera, runtimeRegistry);
 		intermediateGB->Unbind();
+
+		Tiling_Pass(intermediateGB);
 
 		// HBAO
 		glDisable(GL_BLEND);
@@ -280,17 +283,18 @@ namespace ENGINE_CORE::Systems {
 		Shader_ShadowCubemap->Enable();
 		for (int index = 0; index < pointShadowCount; index++)
 		{
+			const auto& point_light = pointLightData[index];
+			if (point_light.attenuation.w <= 0.0f) continue;	// range不大于0的点光源没作用
+
 			const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(index));
 			shadowCubemap->Bind();
 
 			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
 			glClearColor(0.f, 0.f, 0.f, 1.f);
 			glClear(GL_DEPTH_BUFFER_BIT);
-
-			const auto& point_light = pointLightData[index];
-			glm::vec3 point_light_pos = glm::vec3(point_light.position);
-
+			
 			// light space matrix
+			glm::vec3 point_light_pos = glm::vec3(point_light.position);
 			GLfloat aspect = (GLfloat)shadowCubemap->Width() / (GLfloat)shadowCubemap->Height();
 			float near_plane = 0.1f, far_plane = 100.0f;
 			glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane);
@@ -450,6 +454,13 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
+	void RenderSystem::Tiling_Pass(const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& intermediateGB)
+	{
+		auto& mainRegistry = MAIN_REGISTRY();
+		auto& tileSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::TileSystem>>();
+		tileSystem->Update(intermediateGB);
+	}
+
 	void RenderSystem::HBAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
 	{
 		auto& assetManager = MAIN_REGISTRY().GetAssetManager();
@@ -482,6 +493,7 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
+		auto& tileSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::TileSystem>>();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
@@ -506,6 +518,7 @@ namespace ENGINE_CORE::Systems {
 		Shader_Lighting->SetUniformInt("pointLightCount", lightSystem->GetActivatedPointLights());
 		Shader_Lighting->SetUniformInt("areaLightCount", lightSystem->GetActivatedAreaLights());
 
+		tileSystem->Bind(intermediateGB);
 		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
 		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
 		glBindTextureUnit(2, intermediateGB->GetTextureID(2));
@@ -514,11 +527,6 @@ namespace ENGINE_CORE::Systems {
 		glBindTextureUnit(5, ibl_fb->GetTextureID(1));
 		glBindTextureUnit(6, ibl_fb->GetTextureID(2));
 		glBindTextureUnit(7, ibl_fb->GetTextureID(3));
-
-		auto& inputManager = ENGINE_CORE::INPUTS::InputManager::GetInstance();
-		auto& keyboard = inputManager.GetKeyBoard();
-		Shader_Lighting->SetUniformBool("disable_AO", keyboard.IsKeyPressed(ENGINE_KEY_2));
-		Shader_Lighting->SetUniformBool("debug_AO", keyboard.IsKeyPressed(ENGINE_KEY_3));
 
 		// 纹理单元
 		int dirShadowBaseUnit = 8;
