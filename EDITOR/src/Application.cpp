@@ -565,7 +565,7 @@ namespace ENGINE_EDITOR {
 		// uniform buffer
 		bufferManager.AddUniformBuffer("matrix", 2 * sizeof(glm::mat4), 0);
 
-		// ssbo
+		// ssbo（声明时绑定，所有shader都能用）
 		bufferManager.AddShaderStorageBuffer("DirLights", 1);
 		bufferManager.AddShaderStorageBuffer("PointLights", 2);
 		bufferManager.AddShaderStorageBuffer("AreaLights", 3);
