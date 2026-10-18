@@ -23,7 +23,7 @@ namespace ENGINE_RENDERING {
 	struct PointLight {
 		glm::vec4 color{ 0.0f };
 		glm::vec4 position{ 0.0f };
-		glm::vec4 attenuation{ 0.0f }; // xyz: 衰减系数，w: 影响范围，0 表示无截止
+		glm::vec4 attenuation{ 0.0f }; // xyz: 衰减系数，w: 影响范围
 		//bool render{ false };
 	};
 
