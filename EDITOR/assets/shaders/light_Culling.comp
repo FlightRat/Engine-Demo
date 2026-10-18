@@ -1,0 +1,147 @@
+#version 450
+
+// gl_WorkGroupID               当前shader执行所属工作组编号
+// gl_WorkGroupSize             一个工作组的大小，也是线程数量
+// gl_LocalInvocationIndex      当前shader在所属工作组内部的线程编号
+// gl_GlobalInvocationID        当前shader全局线程编号
+// CPU端把compute shader分发为（1920/16，1080/16，1）个工作组，这里设置每个工作组大小/线程数为（16，16，1）
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+// 当前工作组内的共享数据
+shared uint minDepthBits;
+shared uint maxDepthBits;
+shared uint validPixelCount;
+shared uint candidateCount;
+shared vec4 tilePlanes[4];
+
+const uint MAX_TILE_LIGHTS = 128u;
+
+struct PointLight{
+    vec4 color;
+    vec4 position;
+    vec4 attenuation;
+};
+struct TileHeader {
+    uint count;            // 实际通过剔除的光源数
+    float minDepth;        // 最近可见表面的观察空间深度
+    float maxDepth;        // 最远可见表面的观察空间深度
+    uint validPixelCount;  // 有效像素数
+};
+
+uniform int pointLightCount;
+layout(binding = 0) uniform sampler2D gPosition;
+layout(std140, binding=0) uniform Matrices {
+	mat4 view;
+	mat4 projection;
+};
+layout(std430, binding = 2) readonly buffer PointLights { PointLight point_lights[]; };
+layout(std430, binding = 4) writeonly buffer TileHeaders { TileHeader tileHeaders[]; };
+layout(std430, binding = 5) writeonly buffer TileLightIndices { uint tileLightIndices[]; };
+
+void BuildTilePlanes(ivec2 size){
+    vec2 pixelMin = vec2(gl_WorkGroupID.xy * gl_WorkGroupSize.xy);
+    vec2 pixelMax = min(pixelMin + vec2(gl_WorkGroupSize.xy), vec2(size));
+
+    vec2 ndcMin = pixelMin / vec2(size) * 2.0 - 1.0;
+    vec2 ndcMax = pixelMax / vec2(size) * 2.0 - 1.0;
+
+    // GLSL 矩阵按列索引，转置后可直接取得原矩阵的行。
+    mat4 rows = transpose(projection);
+    vec4 rowX = rows[0];
+    vec4 rowY = rows[1];
+    vec4 rowW = rows[3];
+
+    // 平面法线指向 Tile 内部。
+    tilePlanes[0] = rowX - ndcMin.x * rowW;
+    tilePlanes[1] = ndcMax.x * rowW - rowX;
+    tilePlanes[2] = rowY - ndcMin.y * rowW;
+    tilePlanes[3] = ndcMax.y * rowW - rowY;
+
+    for (int i = 0; i < 4; i++)
+        tilePlanes[i] /= length(tilePlanes[i].xyz);
+}
+
+bool SphereIntersectsTile(vec3 center, float radius, float minDepth, float maxDepth){
+    float centerDepth = -center.z;
+
+    if (centerDepth + radius < minDepth ||
+        centerDepth - radius > maxDepth)
+        return false;
+
+    for (int i = 0; i < 4; i++)
+    {
+        float distanceToPlane =
+            dot(tilePlanes[i].xyz, center) + tilePlanes[i].w;
+
+        if (distanceToPlane < -radius)
+            return false;
+    }
+
+    return true;
+}
+
+void main()
+{
+    // 如果shader执行的是工作组内0号线程，初始化
+    uint localIndex = gl_LocalInvocationIndex;
+    if(localIndex==0u){
+        minDepthBits = floatBitsToUint(3.402823466e+38);
+        maxDepthBits = 0u;
+        validPixelCount = 0u;
+        candidateCount = 0u;
+        BuildTilePlanes(textureSize(gPosition, 0));
+    }
+
+    barrier();
+
+    // 把当前shader的全局线程编号当作像素坐标
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = textureSize(gPosition, 0);
+    // 更新当前shader工作组的深度范围
+    if (all(lessThan(pixel, size))){
+        vec4 position = texelFetch(gPosition, pixel, 0);
+        if (position.w > 0.5)
+        {
+            float depth = -(view * vec4(position.xyz, 1.0)).z;
+            if (depth > 0.0)
+            {
+                atomicMin(minDepthBits, floatBitsToUint(depth));
+                atomicMax(maxDepthBits, floatBitsToUint(depth));
+                atomicAdd(validPixelCount, 1u);
+            }
+        }
+    }
+
+    barrier();
+
+    // 当前shader的全局工作组/tile编号
+    uint tileIndex = gl_WorkGroupID.y * gl_NumWorkGroups.x + gl_WorkGroupID.x;
+    // 当前shader工作组的深度范围
+    float minDepth = validPixelCount > 0u ? uintBitsToFloat(minDepthBits) : 0.0;
+    float maxDepth = validPixelCount > 0u ? uintBitsToFloat(maxDepthBits) : 0.0;
+    if (validPixelCount > 0u){
+        uint threadCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+        // 以线程数量为间隔遍历光源
+        for (uint index = localIndex; index < uint(pointLightCount); index += threadCount){
+            float range = point_lights[index].attenuation.w;
+            // 无截止点光源稍后在光照阶段单独全屏遍历。
+            if (range <= 0.0) continue;
+            // 光源中心点
+            vec3 center = (view * vec4(point_lights[index].position.xyz, 1.0)).xyz;
+            // 略微扩大测试球，避免边界浮点误差造成漏灯。
+            float radius = range + 1e-4 * max(1.0, max(abs(center.z), range));
+            // 判断tile与光源相交情况
+            if (!SphereIntersectsTile(center, radius, minDepth, maxDepth)) continue;
+            // 记录光源索引
+            uint slot = atomicAdd(candidateCount, 1u);
+            if (slot < MAX_TILE_LIGHTS)
+                tileLightIndices[tileIndex * MAX_TILE_LIGHTS + slot] = index;
+        }
+    }
+
+    barrier();
+
+    if (localIndex == 0u)
+    {
+        tileHeaders[tileIndex] = TileHeader(candidateCount, minDepth, maxDepth, validPixelCount);
+    }
+}
