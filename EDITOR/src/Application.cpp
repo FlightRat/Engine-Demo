@@ -24,6 +24,7 @@
 #include<Core/Systems/RenderSystem.h>
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Systems/LightSystem.h>
+#include<Core/Systems/TileSystem.h>
 #include<Core/Inputs/InputManager.h>
 #include<Core/Buffers/BufferManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
@@ -171,6 +172,19 @@ namespace ENGINE_EDITOR {
 		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>(lightSystem))
 		{
 			ENGINE_ERROR("Failed to add the light system to the registry context!");
+			return false;
+		}
+
+		// tile system for tiled defer rendering
+		auto tileSystem = std::make_shared<ENGINE_CORE::Systems::TileSystem>();
+		if (!tileSystem)
+		{
+			ENGINE_ERROR("Failed to create the tile system!");
+			return false;
+		}
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::Systems::TileSystem>>(tileSystem))
+		{
+			ENGINE_ERROR("Failed to add the tile system to the registry context!");
 			return false;
 		}
 
