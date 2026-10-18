@@ -125,3 +125,58 @@ function DisplayPBR_tex()
 	LoadEntity(EnvirDefs["grass_ball"])
 	LoadEntity(EnvirDefs["rust_ball"])
 end
+
+function light_test(light_count)
+	LoadEntity({
+		tag = "light_test_ground",
+		group = "light_test",
+		components = {
+			Transform = {
+				position = vec3(0.0, -0.2, 0.0),
+				scale = vec3(64.0, 0.2, 64.0),
+				rotation = vec3(0.0, 0.0, 0.0)
+			},
+			MeshFilter = {
+				type = "cube"
+			},
+			MeshRender = {
+				material = {
+					{
+						shadingModel = "PBR",
+						color = vec4(0.6, 0.6, 0.6, 1.0),
+						metallic = 0.0,
+						roughness = 0.8,
+						ao = 1.0,
+						useTex = false
+					}
+				}
+			}
+		}
+	})
+
+	for index = 1, light_count do
+		local position = vec3(math.random() * 60.0 - 30.0, 1.5, math.random() * 60.0 - 30.0)
+		LoadEntity({
+			tag = "light_test_" .. index,
+			group = "light_test",
+			components = {
+				Transform = {
+					position = position,
+					scale = vec3(1.0, 1.0, 1.0),
+					rotation = vec3(0.0, 0.0, 0.0)
+				},
+				Light = {
+					color = vec3(0.2 + math.random() * 0.8, 0.2 + math.random() * 0.8, 0.2 + math.random() * 0.8),
+					intensity = 3.0,
+					type = "point_light",
+					pos = position,
+					constant = 1.0,
+					linear = 0.09,
+					quadratic = 0.032,
+					range = 5.0,
+					render = false
+				}
+			}
+		})
+	end
+end
