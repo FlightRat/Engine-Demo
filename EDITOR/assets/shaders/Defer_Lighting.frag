@@ -14,7 +14,6 @@ struct DirLight {
     vec4 depthRanges;
     vec4 params;
 };
-
 struct PointLight {
     vec4 color;
     vec4 position;
