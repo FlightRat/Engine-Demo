@@ -35,6 +35,7 @@ LightDefs =
 				constant = 1.0,
 				linear = 0.5,
 				quadratic = 0.05,
+				range = 5.0,
 				render = true
 			}
 		}
@@ -55,6 +56,7 @@ LightDefs =
 				constant = 1.0,
 				linear = 0.5,
 				quadratic = 0.05,
+				range = 5.0,
 				render = true
 			}
 		}
@@ -75,6 +77,7 @@ LightDefs =
 				constant = 1.0,
 				linear = 0.5,
 				quadratic = 0.05,
+				range = 5.0,
 				render = true
 			}
 		}
@@ -95,6 +98,7 @@ LightDefs =
 				constant = 1.0,
 				linear = 0.5,
 				quadratic = 0.05,
+				range = 5.0,
 				render = true
 			}
 		}
@@ -115,6 +119,7 @@ LightDefs =
 				constant = 1.0,
 				linear = 0.5,
 				quadratic = 0.05,
+				range = 5.0,
 				render = true
 			}
 		}
