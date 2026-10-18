@@ -113,6 +113,7 @@
     <None Include="assets\shaders\vssm_sat.frag" />
     <None Include="assets\shaders\fxaa.frag" />
     <None Include="assets\shaders\fxaa-license.txt" />
+    <None Include="assets\shaders\light_Culling.comp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\mafuyu.png">
