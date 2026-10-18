@@ -540,22 +540,10 @@ namespace ENGINE_EDITOR {
 		bufferManager.AddFrameBuffer("SCENE_AO_Blur", ENGINE_RENDERING::BufferType::AO, 600, 600, false);
 		bufferManager.AddFrameBuffer("IBL", ENGINE_RENDERING::BufferType::IBL, 512, 512, true);
 		
-		// CSM for directional light
-		for (int i = 0; i < ENGINE_RENDERING::MAX_DIR_SHADOWS; i++)
-		{
-			bufferManager.AddFrameBuffer(
-				"dirLight_CSM_" + std::to_string(i), 
-				ENGINE_RENDERING::BufferType::SHADOWCASCADE, 
-				2048, 2048, false);
-		}
-		// shadowcubemap for point light
-		for (int i = 0; i < ENGINE_RENDERING::MAX_POINT_SHADOWS; i++)
-		{
-			bufferManager.AddFrameBuffer(
-				"pointLight_ShadowMap_" + std::to_string(i),
-				ENGINE_RENDERING::BufferType::SHADOWCUBEMAP, 
-				2048, 2048, false);
-		}
+		// shadow cubemap array for point lights
+		bufferManager.AddFrameBuffer("pointLight_ShadowMap", ENGINE_RENDERING::BufferType::SHADOWCUBEARRAY, 2048, 2048, false);
+		// CSM for directional lights
+		bufferManager.AddFrameBuffer("dirLight_CSM", ENGINE_RENDERING::BufferType::SHADOWCASCADE, 2048, 2048, false);
 		// shadowmap for area light
 		for (int i = 0; i < ENGINE_RENDERING::MAX_AREA_SHADOWS; i++)
 		{

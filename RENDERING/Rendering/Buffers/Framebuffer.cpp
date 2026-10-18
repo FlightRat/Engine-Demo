@@ -38,8 +38,8 @@ namespace ENGINE_RENDERING {
 			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SHADOWMAP, m_Width, m_Height));
 			break;
 
-		case BufferType::SHADOWCUBEMAP:
-			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SHADOWCUBEMAP, m_Width, m_Height));
+		case BufferType::SHADOWCUBEARRAY:
+			m_pTextures.push_back(TextureLoader::Create(Texture::TextureType::SHADOWCUBEARRAY, m_Width, m_Height));
 			break;
 
         case BufferType::SHADOWCASCADE:
@@ -103,7 +103,7 @@ namespace ENGINE_RENDERING {
             glNamedFramebufferDrawBuffer(m_FboID, GL_NONE);
             break;
         }
-        case ENGINE_RENDERING::BufferType::SHADOWCUBEMAP:
+        case ENGINE_RENDERING::BufferType::SHADOWCUBEARRAY:
         {
             // DSA 中的 glNamedFramebufferTexture 同样支持 Cubemap/Layered 附着
             glNamedFramebufferTexture(m_FboID, GL_DEPTH_ATTACHMENT, m_pTextures[0]->GetID(), 0);
@@ -183,7 +183,7 @@ namespace ENGINE_RENDERING {
 	void Framebuffer::SetDepthLayer(int layer)
 	{
 		if (m_Type != BufferType::SHADOWCASCADE || m_FboID == 0 ||
-			m_pTextures.empty() || !m_pTextures[0] || layer < 0 || layer >= DIR_CASCADE_COUNT)
+			m_pTextures.empty() || !m_pTextures[0] || layer < 0 || layer >= MAX_DIR_SHADOWS * DIR_CASCADE_COUNT)
 		{
 			ENGINE_ERROR("Invalid directional cascade layer: {0}", layer);
 			return;

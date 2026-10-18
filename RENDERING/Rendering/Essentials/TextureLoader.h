@@ -10,7 +10,7 @@ namespace ENGINE_RENDERING {
 		static bool LoadFBTexture_singlesample(GLuint& id, int& width, int& height);
 		static bool LoadFBTexture_multisample(GLuint& id, int& width, int& height);
 		static bool LoadShadowmapTexture(GLuint& id, int& width, int& height);
-		static bool LoadShadowCubemapTexture(GLuint& id, int& width, int& height);
+		static bool LoadShadowCubeArrayTexture(GLuint& id, int& width, int& height);
 		static bool LoadShadowCascadeTexture(GLuint& id, int& width, int& height);
 		static bool LoadVSSMTexture(GLuint& id, int& width, int& height, GLenum format);
 		static bool LoadGbufferTexture(GLuint& id, int& width, int& height, GLenum internalFormat);

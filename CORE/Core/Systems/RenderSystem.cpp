@@ -244,15 +244,15 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.5f, 2.0f);
 		Shader_ShadowMap->Enable();
-		for (int index = 0; index <  dirShadowCount; index++)
+		const auto& shadowCascade = bufferManager.GetFrameBuffer("dirLight_CSM");
+		for (int index = 0; index < dirShadowCount; index++)
 		{
-			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_CSM_" + std::to_string(index));
 			int layerCount = DIR_CASCADE_COUNT;
 			for (int layer = 0; layer < layerCount; layer++)
 			{
-				shadowMap->SetDepthLayer(layer);
-				shadowMap->Bind();
-				glViewport(0, 0, shadowMap->Width(), shadowMap->Height());
+				shadowCascade->SetDepthLayer(index * DIR_CASCADE_COUNT + layer);
+				shadowCascade->Bind();
+				glViewport(0, 0, shadowCascade->Width(), shadowCascade->Height());
 				glClear(GL_DEPTH_BUFFER_BIT);
 				Shader_ShadowMap->SetUniformMat4("lightSpaceMatrix", dirLightData[index].lightSpaceMatrices[layer]);
 
@@ -274,24 +274,23 @@ namespace ENGINE_CORE::Systems {
 					for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 						meshes[meshIdx].Draw();
 				}
-				shadowMap->Unbind();
+				shadowCascade->Unbind();
 			}
 		}
 		glDisable(GL_POLYGON_OFFSET_FILL);
 
 		// 点光源
+		const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap");
+		shadowCubemap->Bind();
+		glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
+		glClear(GL_DEPTH_BUFFER_BIT);
 		Shader_ShadowCubemap->Enable();
 		for (int index = 0; index < pointShadowCount; index++)
 		{
 			const auto& point_light = pointLightData[index];
 			if (point_light.attenuation.w <= 0.0f) continue;	// range不大于0的点光源没作用
 
-			const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(index));
-			shadowCubemap->Bind();
-
-			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
-			glClearColor(0.f, 0.f, 0.f, 1.f);
-			glClear(GL_DEPTH_BUFFER_BIT);
+			Shader_ShadowCubemap->SetUniformInt("shadowIndex", index);
 			
 			// light space matrix
 			glm::vec3 point_light_pos = glm::vec3(point_light.position);
@@ -328,10 +327,8 @@ namespace ENGINE_CORE::Systems {
 				for (size_t meshIdx = 0; meshIdx < meshes.size(); meshIdx++)
 					meshes[meshIdx].Draw();
 			}
-
-			shadowCubemap->Unbind();
-			// shadowCubemap->CheckResize(); no need
 		}
+		shadowCubemap->Unbind();
 
 		// VSSM
 		const auto& scratch = bufferManager.GetFrameBuffer("areaLight_VSSM_scratch"); // 乒乓缓冲
@@ -529,28 +526,20 @@ namespace ENGINE_CORE::Systems {
 		glBindTextureUnit(7, ibl_fb->GetTextureID(3));
 
 		// 纹理单元
-		int dirShadowBaseUnit = 8;
-		int areaMomentBaseUnit = dirShadowBaseUnit + ENGINE_RENDERING::MAX_DIR_SHADOWS;
-		int areaCoverageBaseUnit = areaMomentBaseUnit + ENGINE_RENDERING::MAX_AREA_SHADOWS;
-		int pointShadowBaseUnit = areaCoverageBaseUnit + ENGINE_RENDERING::MAX_AREA_SHADOWS;
+		int pointShadowBaseUnit = 10;
+		int dirShadowBaseUnit = 11;
+		int areaMomentBaseUnit = 12;
+		int areaCoverageBaseUnit = 13;
 
 		// set directional light CSM
-		for (int dir_light_index = 0; dir_light_index < ENGINE_RENDERING::MAX_DIR_SHADOWS; dir_light_index++)
-		{
-			int texUnit = dirShadowBaseUnit + dir_light_index;
-			const auto& shadowMap = bufferManager.GetFrameBuffer("dirLight_CSM_" + std::to_string(dir_light_index));
-			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
-			Shader_Lighting->SetUniformInt("dirLight_CSM[" + std::to_string(dir_light_index) + "]", texUnit);
-		}
+		const auto& shadowCascade = bufferManager.GetFrameBuffer("dirLight_CSM");
+		glBindTextureUnit(dirShadowBaseUnit, shadowCascade->GetTextureID());
+		Shader_Lighting->SetUniformInt("dirLight_CSM", dirShadowBaseUnit);
 
-		// set point light shadowCubemap
-		for (int point_light_index = 0; point_light_index < ENGINE_RENDERING::MAX_POINT_SHADOWS; point_light_index++)
-		{
-			int texUnit = pointShadowBaseUnit + point_light_index;
-			const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap_" + std::to_string(point_light_index));
-			glBindTextureUnit(texUnit, shadowMap->GetTextureID());
-			Shader_Lighting->SetUniformInt("pointLight_ShadowMap[" + std::to_string(point_light_index) + "]", texUnit);
-		}
+		// set point light shadow cubemap array
+		const auto& shadowMap = bufferManager.GetFrameBuffer("pointLight_ShadowMap");
+		glBindTextureUnit(pointShadowBaseUnit, shadowMap->GetTextureID());
+		Shader_Lighting->SetUniformInt("pointLight_ShadowMap", pointShadowBaseUnit);
 
 		// set area light VSSM
 		for (int area_light_index = 0; area_light_index < ENGINE_RENDERING::MAX_AREA_SHADOWS; area_light_index++)

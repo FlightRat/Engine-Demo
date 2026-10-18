@@ -255,7 +255,7 @@ namespace ENGINE_RENDERING
     bool TextureLoader::LoadShadowCascadeTexture(GLuint& id, int& width, int& height)
     {
         glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &id);
-        glTextureStorage3D(id, 1, GL_DEPTH_COMPONENT24, width, height, DIR_CASCADE_COUNT);
+        glTextureStorage3D(id, 1, GL_DEPTH_COMPONENT24, width, height, MAX_DIR_SHADOWS * DIR_CASCADE_COUNT);
         glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -266,12 +266,12 @@ namespace ENGINE_RENDERING
     }
 
     // -----------------------------
-    // Shadow Cubemap
+    // Shadow Cubemap Array
     // -----------------------------
-    bool TextureLoader::LoadShadowCubemapTexture(GLuint& id, int& width, int& height)
+    bool TextureLoader::LoadShadowCubeArrayTexture(GLuint& id, int& width, int& height)
     {
-        glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &id);
-        glTextureStorage2D(id, 1, GL_DEPTH_COMPONENT24, width, height);
+        glCreateTextures(GL_TEXTURE_CUBE_MAP_ARRAY, 1, &id);
+        glTextureStorage3D(id, 1, GL_DEPTH_COMPONENT24, width, height, 6 * MAX_POINT_SHADOWS);
 
         glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -569,8 +569,8 @@ namespace ENGINE_RENDERING
             if (!LoadShadowmapTexture(id, width, height)) return nullptr;
             break;
 
-        case Texture::TextureType::SHADOWCUBEMAP:
-            if (!LoadShadowCubemapTexture(id, width, height)) return nullptr;
+        case Texture::TextureType::SHADOWCUBEARRAY:
+            if (!LoadShadowCubeArrayTexture(id, width, height)) return nullptr;
             break;
 
         case Texture::TextureType::SHADOWCASCADE:

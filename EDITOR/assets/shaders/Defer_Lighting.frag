@@ -55,10 +55,10 @@ layout(binding = 4) uniform sampler2D screenAO;
 layout(binding = 5) uniform samplerCube irradianceMap; 
 layout(binding = 6) uniform samplerCube prefilterMap; 
 layout(binding = 7) uniform sampler2D brdfLUT; 
-layout(binding = 8) uniform sampler2DArray dirLight_CSM[MAX_DIR_SHADOWS];
-layout(binding = 9) uniform usampler2D areaMomentSAT[MAX_AREA_SHADOWS];
-layout(binding = 10) uniform usampler2D areaCoverageSAT[MAX_AREA_SHADOWS];
-layout(binding = 11) uniform samplerCube pointLight_ShadowMap[MAX_POINT_SHADOWS];
+layout(binding = 10) uniform samplerCubeArray pointLight_ShadowMap;
+layout(binding = 11) uniform sampler2DArray dirLight_CSM;
+layout(binding = 12) uniform usampler2D areaMomentSAT[MAX_AREA_SHADOWS];
+layout(binding = 13) uniform usampler2D areaCoverageSAT[MAX_AREA_SHADOWS];
 
 layout (std140) uniform Matrices {
     mat4 view;
@@ -96,56 +96,15 @@ float VSSMVisibility(vec3 moments, float receiverQ, int area);
 // CSM
 int SelectCascade(DirLight dirLight, float viewDepth);
 float CascadeBlend(DirLight dirLight, int layer, float viewDepth);
-float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int layer, vec3 fragPos, vec3 normal);
+float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int shadowIndex, int layer, vec3 fragPos, vec3 normal);
 // 阴影系数计算
-float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, vec3 fragPos, vec3 normal);
-float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal);
+float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, int shadowIndex, vec3 fragPos, vec3 normal);
+float ShadowCalculation_point(PointLight pointLight, samplerCubeArray shadowCubeMap, int shadowIndex, vec3 fragPos, vec3 normal);
 float ShadowCalculation_area(AreaLight areaLight, usampler2D momentSAT, usampler2D coverageSAT, vec3 fragPos, vec3 normal);
 // 直接光照计算（不含 ambient，只返回 Lo）
 vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
-
-vec3 EvaluatePointLight(int index, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra){
-    PointLight light = point_lights[index];
-    float range = light.attenuation.w;
-    vec3 offset = light.position.xyz - fragPos;
-
-    if (range <= 0.0 || dot(offset, offset) >= range * range)
-        return vec3(0.0);
-
-    if (!any(greaterThan(light.attenuation.xyz, vec3(0.0))))
-        return vec3(0.0);
-
-    float shadow = 0.0;
-
-    switch (index)
-    {
-        case 0:
-            shadow = ShadowCalculation_point(
-                light, pointLight_ShadowMap[0], fragPos, normal);
-            break;
-        case 1:
-            shadow = ShadowCalculation_point(
-                light, pointLight_ShadowMap[1], fragPos, normal);
-            break;
-        case 2:
-            shadow = ShadowCalculation_point(
-                light, pointLight_ShadowMap[2], fragPos, normal);
-            break;
-        case 3:
-            shadow = ShadowCalculation_point(
-                light, pointLight_ShadowMap[3], fragPos, normal);
-            break;
-        case 4:
-            shadow = ShadowCalculation_point(
-                light, pointLight_ShadowMap[4], fragPos, normal);
-            break;
-    }
-
-    return CalcPointLight(
-        light, fragPos, viewDir, normal, albedo, mra, shadow);
-}
 
 // ==================== 主函数 ====================
 void main()
@@ -187,7 +146,7 @@ void main()
     // ---------- 方向光 ----------
     for (int i = 0; i < dirLightCount; i++) {
         if (dir_lights[i].params.z < 0.5) continue;
-        float shadow = i < MAX_DIR_SHADOWS ? ShadowCalculation_DIR(dir_lights[i], dirLight_CSM[i], FragPos, receiverNormal) : 0.0;
+        float shadow = i < MAX_DIR_SHADOWS ? ShadowCalculation_DIR(dir_lights[i], dirLight_CSM, i, FragPos, receiverNormal) : 0.0;
         Lo += CalcDirLight(dir_lights[i], FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
@@ -199,8 +158,16 @@ void main()
     uint candidateCount = tileHeaders[tileIndex].count;
     for (uint slot = 0u; slot < candidateCount; slot++)
     {
-        uint lightIndex = tileLightIndices[tileIndex * MAX_TILE_LIGHTS + slot];
-        Lo += EvaluatePointLight(int(lightIndex), FragPos, ViewDir, Normal, Albedo, MRA);
+        int lightIndex = int(tileLightIndices[tileIndex * MAX_TILE_LIGHTS + slot]);
+        PointLight light = point_lights[lightIndex];
+        float range = light.attenuation.w;
+        vec3 offset = light.position.xyz - FragPos;
+        if (range <= 0.0 || dot(offset, offset) >= range * range) continue;
+        if (!any(greaterThan(light.attenuation.xyz, vec3(0.0)))) continue;
+        float shadow = 0.0;
+        if (lightIndex < MAX_POINT_SHADOWS)
+            shadow = ShadowCalculation_point(light, pointLight_ShadowMap, lightIndex, FragPos, Normal);
+        Lo += CalcPointLight(light, FragPos, ViewDir, Normal, Albedo, MRA, shadow);
     }
 
     // ---------- 面光源 ----------
@@ -412,7 +379,7 @@ float CascadeBlend(DirLight dirLight, int layer, float viewDepth) {
 }
 
 // 采样级联阴影
-float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int layer, vec3 fragPos, vec3 normal) {
+float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int shadowIndex, int layer, vec3 fragPos, vec3 normal) {
     vec3 N = normalize(normal);
     vec3 lightDir = normalize(-vec3(dirLight.direction));
     float NdotL = clamp(dot(N, lightDir), 0.0, 1.0);
@@ -431,7 +398,9 @@ float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int lay
     float shadow = 0.0;
     for (int x = -1; x <= 1; x++) {
         for (int y = -1; y <= 1; y++) {
-            float depth = texture(shadowMapCascaded, vec3(coords.xy + vec2(x, y) * texelSize, float(layer))).r;
+            // sampler 二维坐标+纹理层级
+            vec3 sampler = vec3(coords.xy + vec2(x, y) * texelSize, float(shadowIndex * DIR_CASCADE_COUNT + layer));
+            float depth = texture(shadowMapCascaded, sampler).r;
             shadow += coords.z > depth + bias ? 1.0 : 0.0;
         }
     }
@@ -439,20 +408,20 @@ float SampleCascade(DirLight dirLight, sampler2DArray shadowMapCascaded, int lay
 }
 
 // 方向光阴影
-float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, vec3 fragPos, vec3 normal) {
+float ShadowCalculation_DIR(DirLight dirLight, sampler2DArray shadowMapCascaded, int shadowIndex, vec3 fragPos, vec3 normal) {
     if (dirLight.params.z < 0.5) return 0.0;
     float viewDepth = -(view * vec4(fragPos, 1.0)).z;
     int layer = SelectCascade(dirLight, viewDepth);
     if (layer < 0) return 0.0;
-    float shadow = SampleCascade(dirLight, shadowMapCascaded, layer, fragPos, normal);
+    float shadow = SampleCascade(dirLight, shadowMapCascaded, shadowIndex, layer, fragPos, normal);
     float blend = CascadeBlend(dirLight, layer, viewDepth);
     if (blend > 0.0 && layer < DIR_CASCADE_COUNT - 1)
-        shadow = mix(shadow, SampleCascade(dirLight, shadowMapCascaded, layer + 1, fragPos, normal), blend);
+        shadow = mix(shadow, SampleCascade(dirLight, shadowMapCascaded, shadowIndex, layer + 1, fragPos, normal), blend);
     return shadow;
 }
 
 // 点光源阴影（Omnidirectional Shadow Map，PCF软阴影）
-float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, vec3 fragPos, vec3 normal) {
+float ShadowCalculation_point(PointLight pointLight, samplerCubeArray shadowCubeMap, int shadowIndex, vec3 fragPos, vec3 normal) {
     vec3 N = normalize(normal);
     vec3 lightPos = vec3(pointLight.position);
     vec3 fragToLight = fragPos - lightPos;
@@ -478,7 +447,9 @@ float ShadowCalculation_point(PointLight pointLight, samplerCube shadowCubeMap, 
     float viewDistance = length(viewPos - fragPos);
     float diskRadius = (1.0 + (viewDistance / far_plane)) / 50.0;   // 调整半径缩放
     for (int i = 0; i < samples; ++i) {
-        float closestDepth = texture(shadowCubeMap, samplingVector + sampleOffsetDirections[i] * diskRadius, 0.0).r; // 0~1
+        // sampler 三维坐标+纹理层级
+        vec4 sampler = vec4(samplingVector + sampleOffsetDirections[i] * diskRadius, float(shadowIndex));
+        float closestDepth = texture(shadowCubeMap, sampler, 0.0).r; // 0~1
         closestDepth *= far_plane; // 还原到世界空间距离
         if (currentDepth > closestDepth + bias)
             shadow += 1.0;

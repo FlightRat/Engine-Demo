@@ -9,7 +9,7 @@ namespace ENGINE_RENDERING {
     enum class BufferType {
         FRAMEBUFFER,    // 普通场景渲染：1 Color + 1 Depth RBO
         SHADOWMAP,      // 方向光阴影：1 Depth Texture (2D)
-        SHADOWCUBEMAP,  // 点光源阴影：1 Depth Texture (Cube)
+        SHADOWCUBEARRAY, // Point shadow: depth cubemap array
         SHADOWCASCADE,  // 级联阴影: depth texture array
         GBUFFER,        // 延迟渲染：Position, Normal, Albedo, Refl + Depth RBO
         AO,             // AO: 1 Color
