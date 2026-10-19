@@ -22,7 +22,7 @@ namespace ENGINE_RENDERING {
 	{
 	public:
 		float NearPlane = { 0.1f };
-		float FarPlane = { 100.0f };
+		float FarPlane = { 200.0f };
 		int Width = {600};
 		int Height = { 600 };
 		// camera Attributes
