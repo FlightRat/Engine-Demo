@@ -512,7 +512,6 @@ namespace ENGINE_CORE::Systems {
 		Shader_Lighting->SetUniformFloat("far_plane", 100.0f);
 		Shader_Lighting->SetUniformVec3("viewPos", camera->GetPosition());
 		Shader_Lighting->SetUniformInt("dirLightCount", lightSystem->GetActivatedDirLights());
-		Shader_Lighting->SetUniformInt("pointLightCount", lightSystem->GetActivatedPointLights());
 		Shader_Lighting->SetUniformInt("areaLightCount", lightSystem->GetActivatedAreaLights());
 
 		tileSystem->Bind(intermediateGB);
