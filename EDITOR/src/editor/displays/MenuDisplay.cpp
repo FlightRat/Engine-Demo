@@ -1,4 +1,5 @@
 #include "MenuDisplay.h"
+#include "../automation/StateRules.h"
 #include "Logger/Logger.h"
 #include <imgui.h>
 #include "SDL.h"
@@ -28,6 +29,7 @@ namespace ENGINE_EDITOR {
 						if (pCurrentScene)
 						{
 							ENGINE_CORE::Loaders::SceneLoader sl{};
+                            Automation::NotifyManualEdit(); Automation::ResetSelection();
 							if (!sl.LoadScene(pCurrentScene->GetRegistry(), file, true))
 							{
 								ENGINE_ERROR("Failed to load scene.");

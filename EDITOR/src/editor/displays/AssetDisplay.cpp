@@ -1,4 +1,5 @@
 #include "AssetDisplay.h"
+#include "../automation/StateRules.h"
 #include "Utilities/EngineUtilities.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Inputs/InputManager.h"
@@ -202,6 +203,7 @@ namespace ENGINE_EDITOR {
 						auto file = fd.OpenFileDialog("Open texture", SDL_GetBasePath(), { "*.jpg", "*.png" });
 						if (!file.empty())
 						{
+							Automation::NotifyManualEdit();
 							assetManager.AddTexture("new_texture", file, false);
 						}
 					}
@@ -214,9 +216,11 @@ namespace ENGINE_EDITOR {
 						if (!file.empty())
 						{
 							std::map<std::string, std::string> textures;
+							Automation::NotifyManualEdit();
 							assetManager.AddModel("new_model", file, textures);
 							for (const auto& [texName, texPath] : textures) {
 								if (!assetManager.CheckHasAsset(texName, ENGINE_UTIL::AssetType::TEXTURE)) {
+									Automation::NotifyManualEdit();
 									assetManager.AddTexture(texName, texPath, false);
 								}
 							}
@@ -230,6 +234,7 @@ namespace ENGINE_EDITOR {
 						auto file = fd.OpenFileDialog("Open music", SDL_GetBasePath(), { "*.wav" });
 						if (!file.empty())
 						{
+							Automation::NotifyManualEdit();
 							assetManager.AddMusic("new_music", file);
 						}
 					}
@@ -241,6 +246,7 @@ namespace ENGINE_EDITOR {
 						auto file = fd.OpenFileDialog("Open soundFX", SDL_GetBasePath(), { "*.wav" });
 						if (!file.empty())
 						{
+							Automation::NotifyManualEdit();
 							assetManager.AddSoundFx("new_soundfx", file);
 						}
 					}
@@ -248,6 +254,7 @@ namespace ENGINE_EDITOR {
 				case ENGINE_UTIL::AssetType::SCENE:
 					if (ImGui::Selectable("Add Scene"))
 					{
+						Automation::NotifyManualEdit();
 						SCENE_MANAGER().AddScene("new_scene");
 					}
 					break;
@@ -258,6 +265,7 @@ namespace ENGINE_EDITOR {
 						auto vsPath = fd.OpenFileDialog("Open vertex shader", SDL_GetBasePath(), { "*.vert" });
 						auto fsPath = fd.OpenFileDialog("Open fragment shader", SDL_GetBasePath(), { "*.frag" });
 						if (!vsPath.empty() && !fsPath.empty()) {
+							Automation::NotifyManualEdit();
 							assetManager.AddShader("new_shader", vsPath, fsPath);
 						}
 					}
@@ -326,12 +334,14 @@ namespace ENGINE_EDITOR {
 			return false;
 		if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
 		{
-			return SCENE_MANAGER().ChangeSceneName(sOldName, sNewName);
+			Automation::NotifyManualEdit();
+            return SCENE_MANAGER().ChangeSceneName(sOldName, sNewName);
 		}
 		else
 		{
 			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
-			return assetManager.ChangeAssetName(sOldName, sNewName, m_eSelectedType);
+			Automation::NotifyManualEdit();
+            return assetManager.ChangeAssetName(sOldName, sNewName, m_eSelectedType);
 		}
 		assert(false && "How did it get here?");
 		return false;

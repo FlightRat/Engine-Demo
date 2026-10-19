@@ -1,4 +1,6 @@
 #include "GameDisplay.h"
+#include "SceneDisplay.h"
+#include "../automation/StateRules.h"
 #include "imgui.h"
 #include "Logger/Logger.h"
 #include "Core/ECS/MainRegistry.h"
@@ -39,7 +41,9 @@ namespace ENGINE_EDITOR
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		if (!pCurrentScene) 
 			return;
+        if (!SceneDisplay::PrepareForPlay()) return;
 		pCurrentScene->SetPlay(true);
+        Automation::NotifyManualEdit();
 		m_bPlayGame = true;
 
 		auto& registry = pCurrentScene->GetRegistry();
@@ -81,6 +85,7 @@ namespace ENGINE_EDITOR
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		pCurrentScene->SetPlay(false);
+        Automation::NotifyManualEdit();
 		m_bPlayGame = false;
 
 		//auto& runtimeRegistry = pCurrentScene->GetRegistry();

@@ -19,6 +19,7 @@ namespace ENGINE_EDITOR {
 		inline void SetPlay(const bool play) { m_bPlay = play; }
 
 		inline const std::string& GetName() { return m_sSceneName; }
+        void SetName(const std::string& name) { m_sSceneName = name; }
 		inline ENGINE_CORE::ECS::Registry& GetRegistry() { return m_Registry; }
 		inline ENGINE_CORE::ECS::Registry* GetRegistryPtr() { return &m_Registry; }
 		inline ENGINE_CORE::ECS::Registry& GetRuntimeRegistry() { return m_RuntimeRegistry; }

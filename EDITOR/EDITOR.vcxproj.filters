@@ -295,4 +295,18 @@
   <ItemGroup>
     <Font Include="assets\fonts\fa-solid-900.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\editor\automation\AutomationRuntime.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\editor\automation\EditorOperations.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\editor\automation\Protocol.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\editor\bridge\CommandQueue.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\editor\bridge\NamedPipeServer.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClInclude Include="src\editor\automation\AutomationRuntime.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\automation\EditorOperations.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\automation\Json.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\automation\Protocol.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\automation\StateRules.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\bridge\CommandQueue.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\bridge\NamedPipeServer.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
 </Project>

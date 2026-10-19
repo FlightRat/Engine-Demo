@@ -1,4 +1,5 @@
 #include "ComponentDrawer.h"
+#include "../automation/StateRules.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Resources/AssetManager.h"
 #include "../scene/SceneManager.h"
@@ -33,7 +34,7 @@ namespace ENGINE_EDITOR {
 			if (euler != oldEuler) {
 				
 				transform.rotation_eular = euler;
-				transform.rotation_quat = glm::quat(glm::radians(euler)); // 欧拉角→弧度→四元数
+				ENGINE_EDITOR::Automation::SynchronizeRotation(transform); // 欧拉角→弧度→四元数
 			}
 
 			ImGui::DrawVec3Control("Scale", transform.scale, 1.0f);
@@ -70,6 +71,7 @@ namespace ENGINE_EDITOR {
 						sSelectedMesh = sMeshName;
 						meshFilter.mesh = sSelectedMesh;
 						meshFilter.changed = true;
+                ENGINE_EDITOR::Automation::NotifyManualEdit();
 					}
 				}
 				ImGui::EndCombo();
@@ -96,10 +98,10 @@ namespace ENGINE_EDITOR {
 			ImGui::SetColumnWidth(0, 100.0f);
 
 			ImGui::Text("Render"); ImGui::NextColumn();
-			ImGui::Checkbox("##render", &meshRender.shouldRender); ImGui::NextColumn();
+			if (ImGui::Checkbox("##render", &meshRender.shouldRender)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
 
 			ImGui::Text("Flip UV"); ImGui::NextColumn();
-			ImGui::Checkbox("##flipUV", &meshRender.flipUV); ImGui::NextColumn();
+			if (ImGui::Checkbox("##flipUV", &meshRender.flipUV)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
 
 			ImGui::Columns(1);
 			ImGui::Separator();
@@ -117,29 +119,29 @@ namespace ENGINE_EDITOR {
 
 				if (open)
 				{
-					ImGui::ColorEdit4("Base Color", &m.color.x);
+					if (ImGui::ColorEdit4("Base Color", &m.color.x)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 
 					ImGui::Columns(2, "PhysicsCols", false);
 					ImGui::SetColumnWidth(0, 100.0f); // 标签宽度固定
 
 					ImGui::Text("Metallic");
 					ImGui::NextColumn();
-					ImGui::DragFloat("##Metallic", &m.metallic, 0.005f, 0.0f, 1.0f);
+					if (ImGui::DragFloat("##Metallic", &m.metallic, 0.005f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 					ImGui::NextColumn();
 
 					ImGui::Text("Roughness");
 					ImGui::NextColumn();
-					ImGui::DragFloat("##Roughness", &m.roughness, 0.005f, 0.0f, 1.0f);
+					if (ImGui::DragFloat("##Roughness", &m.roughness, 0.005f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 					ImGui::NextColumn();
 
 					ImGui::Text("Ao");
 					ImGui::NextColumn();
-					ImGui::DragFloat("##Ao", &m.ao, 0.005f, 0.0f, 1.0f);
+					if (ImGui::DragFloat("##Ao", &m.ao, 0.005f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 					ImGui::NextColumn();
 
 					ImGui::Columns(1);
 
-					ImGui::Checkbox("Use Texture", &m.m_useTexture);
+					if (ImGui::Checkbox("Use Texture", &m.m_useTexture)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 
 					if (ImGui::BeginTable("TexTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
 					{
@@ -208,22 +210,22 @@ namespace ENGINE_EDITOR {
 
 			ImGui::Text("Mass");
 			ImGui::NextColumn();
-			ImGui::DragFloat("##Mass", &physicsAttr.rb_Mass, 0.1f, 0.0f, 0.0f, "%.1f");
+			if (ImGui::DragFloat("##Mass", &physicsAttr.rb_Mass, 0.1f, 0.0f, 0.0f, "%.1f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 			ImGui::NextColumn();
 
 			ImGui::Text("Density");
 			ImGui::NextColumn();
-			ImGui::DragFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.01f, 0.0f, 1.0f, "%.2f");
+			if (ImGui::DragFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.01f, 0.0f, 1.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 			ImGui::NextColumn();
 
 			ImGui::Text("Friction");
 			ImGui::NextColumn();
-			ImGui::DragFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.01f, 0.0f, 1.0f, "%.2f");
+			if (ImGui::DragFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.01f, 0.0f, 1.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 			ImGui::NextColumn();
 
 			ImGui::Text("Bounciness");
 			ImGui::NextColumn();
-			ImGui::DragFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.01f, 0.0f, 1.0f, "%.2f");
+			if (ImGui::DragFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.01f, 0.0f, 1.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 			ImGui::NextColumn();
 
 			// --- 2. RigidBody Settings ---
@@ -243,6 +245,7 @@ namespace ENGINE_EDITOR {
 					{
 						sSelectedBodyType = bodyStr;
 						physicsAttr.rb_type = bodyType;
+                        Automation::NotifyManualEdit();
 					}
 				}
 				ImGui::EndCombo();
@@ -251,7 +254,7 @@ namespace ENGINE_EDITOR {
 
 			ImGui::Text("Is Trigger");
 			ImGui::NextColumn();
-			ImGui::Checkbox("##bTrigger", &physicsAttr.c_Trigger);
+			if (ImGui::Checkbox("##bTrigger", &physicsAttr.c_Trigger)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 			ImGui::NextColumn();
 
 			// --- 3. Collider Settings ---
@@ -271,6 +274,7 @@ namespace ENGINE_EDITOR {
 					{
 						sSelectedColliderType = colliderType;
 						physicsAttr.shape = colliderType;
+                        Automation::NotifyManualEdit();
 					}
 				}
 				ImGui::EndCombo();
@@ -295,17 +299,17 @@ namespace ENGINE_EDITOR {
 				if (physicsAttr.shape == "sphere")
 				{
 					ImGui::Text("Radius"); ImGui::NextColumn();
-					ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.05f, 0.01f, 1000.f, "%.2f");
+					if (ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.05f, 0.01f, 1000.f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 					ImGui::NextColumn();
 				}
 				else if (physicsAttr.shape == "capsule")
 				{
 					ImGui::Text("Radius"); ImGui::NextColumn();
-					ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.05f, 0.01f, 1000.f, "%.2f");
+					if (ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.05f, 0.01f, 1000.f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 					ImGui::NextColumn();
 
 					ImGui::Text("Half Height"); ImGui::NextColumn();
-					ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.05f, 0.01f, 1000.f, "%.2f");
+					if (ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.05f, 0.01f, 1000.f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 					ImGui::NextColumn();
 				}
 				ImGui::Columns(1);
@@ -316,6 +320,7 @@ namespace ENGINE_EDITOR {
 			// 使用 ImVec2(-1, 0) 让按钮横跨整个可用宽度，更加明显
 			if (ImGui::Button("Apply Physics Changes", ImVec2(-1, 0))) {
 				physics.Update(common);
+                ENGINE_EDITOR::Automation::NotifyManualEdit();
 			}
 
 			ImGui::TreePop();
@@ -335,6 +340,7 @@ namespace ENGINE_EDITOR {
 			strcpy_s(nameBuf, identity.name.c_str());
 			if (ImGui::InputText("##Name", nameBuf, sizeof(nameBuf))) {
 				identity.name = nameBuf;
+                ENGINE_EDITOR::Automation::NotifyManualEdit();
 			}
 			ImGui::NextColumn();
 
@@ -344,6 +350,7 @@ namespace ENGINE_EDITOR {
 			strcpy_s(groupBuf, identity.group.c_str());
 			if (ImGui::InputText("##Group", groupBuf, sizeof(groupBuf))) {
 				identity.group = groupBuf;
+                ENGINE_EDITOR::Automation::NotifyManualEdit();
 			}
 
 			ImGui::Columns(1);
@@ -364,7 +371,7 @@ namespace ENGINE_EDITOR {
 			if (ImGui::BeginCombo("##Type", light.type.c_str()))
 			{
 				for (auto type : lightTypes) {
-					if (ImGui::Selectable(type, light.type == type)) light.type = type;
+					if (ImGui::Selectable(type, light.type == type)) { Automation::SetLightType(light, type); Automation::NotifyManualEdit(); }
 				}
 				ImGui::EndCombo();
 			}
@@ -373,13 +380,13 @@ namespace ENGINE_EDITOR {
 			ImGui::Separator();
 
 			// 2. Colors 
-			ImGui::ColorEdit3(
+			if (ImGui::ColorEdit3(
 				"Base Color",
 				&light.color.x,
                 ImGuiColorEditFlags_DisplayRGB |
 				ImGuiColorEditFlags_Uint8 |
-				ImGuiColorEditFlags_InputRGB);
-			ImGui::DragFloat("Intensity", &light.intensity, 0.1f, 0.0f, 10000.0f, "%.2f");
+				ImGuiColorEditFlags_InputRGB)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+			if (ImGui::DragFloat("Intensity", &light.intensity, 0.1f, 0.0f, 10000.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
 
 			ImGui::Separator();
 
@@ -394,24 +401,26 @@ namespace ENGINE_EDITOR {
 				ImGui::SetColumnWidth(0, 100.0f);
 
 				ImGui::Text("Constant"); ImGui::NextColumn();
-				ImGui::DragFloat("##Const", &light.constant, 0.01f, 0.0f, 10.0f); ImGui::NextColumn();
+				if (ImGui::DragFloat("##Const", &light.constant, 0.01f, 0.0f, 10.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
 
 				ImGui::Text("Linear"); ImGui::NextColumn();
-				ImGui::DragFloat("##Lin", &light.linear, 0.001f, 0.0f, 1.0f); ImGui::NextColumn();
+				if (ImGui::DragFloat("##Lin", &light.linear, 0.001f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
 
 				ImGui::Text("Quadratic"); ImGui::NextColumn();
-				ImGui::DragFloat("##Quad", &light.quadratic, 0.001f, 0.0f, 1.0f); ImGui::NextColumn();
+				if (ImGui::DragFloat("##Quad", &light.quadratic, 0.001f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
 
 				ImGui::Text("Render"); ImGui::NextColumn();
-				ImGui::Checkbox("##Render", &light.render);
+				if (ImGui::Checkbox("##Render", &light.render)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 
 				ImGui::Columns(1);
 
-				ImGui::DragFloat("Range", &light.range, 0.1f, 0.0f, 10000.0f,"%.2f", ImGuiSliderFlags_AlwaysClamp);
+				if (ImGui::DragFloat("Range", &light.range, 0.1f, 0.0f, 10000.0f,"%.2f", ImGuiSliderFlags_AlwaysClamp)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 			}
 			else if (light.type == "direction_light")
 			{
-				ImGui::DrawVec3Control("Direction", light.direction);
+				const auto oldDirection = light.direction;
+                ImGui::DrawVec3Control("Direction", light.direction);
+                if (!Automation::SetLightDirection(light, light.direction)) light.direction = oldDirection;
 			}
 			else if (light.type == "area_light") {
 				ImGui::DrawVec3Control("Center_Pos", light.pos);
@@ -420,7 +429,7 @@ namespace ENGINE_EDITOR {
 				ImGui::DrawVec3Control("Rotation", euler);
 				if (euler != oldEuler) {
 					light.rotation_eular = euler;
-					light.rotation_quat = glm::quat(glm::radians(light.rotation_eular));
+					ENGINE_EDITOR::Automation::SynchronizeRotation(light);
 				}
 
 				// 使用 Columns 简单对齐参数
@@ -428,11 +437,11 @@ namespace ENGINE_EDITOR {
 				ImGui::SetColumnWidth(0, 100.0f);
 
 				ImGui::Text("Half_Width"); ImGui::NextColumn();
-				ImGui::DragFloat("##Width", &light.half_width, 0.01f, 0.001f, 4.999f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+				if (ImGui::DragFloat("##Width", &light.half_width, 0.01f, 0.001f, 4.999f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 				ImGui::NextColumn();
 
 				ImGui::Text("Half_Height"); ImGui::NextColumn();
-				ImGui::DragFloat("##Height", &light.half_height, 0.01f, 0.001f, 4.999f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+				if (ImGui::DragFloat("##Height", &light.half_height, 0.01f, 0.001f, 4.999f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) ENGINE_EDITOR::Automation::NotifyManualEdit();
 				ImGui::NextColumn();
 			}
 

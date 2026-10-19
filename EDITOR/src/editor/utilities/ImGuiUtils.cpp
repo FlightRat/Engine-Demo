@@ -1,4 +1,5 @@
 #include "ImGuiUtils.h"
+#include "../automation/StateRules.h"
 #include <ImGuizmo.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -10,6 +11,7 @@
 namespace ImGui {
     void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth)
     {
+        const auto beforeValues = values;
         ImGui::PushID(label.c_str());           // ID作用域
         ImGui::Columns(2);                      // 开始多列布局（这里2列）
 
@@ -59,6 +61,7 @@ namespace ImGui {
 
         ImGui::Columns(1);      // 结束多列布局
         ImGui::PopID();
+        if (values != beforeValues) ENGINE_EDITOR::Automation::NotifyManualEdit();
     }
 
     void ActiveButton(const char* label, ImVec2 size)
@@ -175,6 +178,8 @@ namespace ImGui {
             transform.rotation_quat = newRotationQuat;
             transform.rotation_eular = glm::degrees(glm::eulerAngles(transform.rotation_quat)); // 四元数→弧度→欧拉角
             transform.scale = newScale;
+            ENGINE_EDITOR::Automation::SynchronizeRotation(transform);
+            ENGINE_EDITOR::Automation::NotifyManualEdit();
 
         }
     }

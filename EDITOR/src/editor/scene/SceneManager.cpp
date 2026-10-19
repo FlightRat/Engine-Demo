@@ -31,7 +31,10 @@ namespace ENGINE_EDITOR {
 
 	bool SceneManager::ChangeSceneName(const std::string& sOldName, const std::string& sNewName)
 	{
-		return ENGINE_UTIL::ChangeKey(m_mapScene, sOldName, sNewName);
+        if (!ENGINE_UTIL::ChangeKey(m_mapScene, sOldName, sNewName)) return false;
+        m_mapScene.at(sNewName)->SetName(sNewName);
+        if (m_sCurrentScene == sOldName) m_sCurrentScene = sNewName;
+        return true;
 	}
 
 	bool SceneManager::CheckHasScene(const std::string& sceneName)

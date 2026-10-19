@@ -1,0 +1,19 @@
+This is an authorized integration test of the local Engine-Demo editor MCP server.
+Use only the engine_demo MCP tools for editor actions. If tools are deferred, first
+use the available read-only tool search/discovery mechanism to locate engine_demo.
+Do not infer tool absence without trying discovery. Do not use shell/file tools, inspect repository files,
+spawn agents, modify code/configuration, or touch any pre-existing editor object.
+1. Query get_editor_status and list_assets for loaded models. Check cube is loaded.
+2. Create and activate a uniquely named "Codex MCP Acceptance" scene. Use a unique
+   request_id for each write and the latest observed session_id/editor_revision.
+3. In ONE apply_operations batch, create a mesh from cube with client_ref model,
+   set its local position to [0,0,0] and rotation_degrees to [0,30,0], create a light
+   with client_ref light, set it to position [-3,4,2], color [1,0.65,0.35], intensity 250, range 25.
+4. Query get_scene_state for that scene and verify precisely two entities and those attributes.
+5. Undo ONLY that batch with its operation_id and the latest revision. Query again
+   to confirm the scene is empty and still exists. Do not delete or edit any other scene.
+If a write returns pending, use get_operation_status with its original IDs. Do not
+replace an uncertain write with a new request ID. If a tool errors, report that error
+instead of using another mechanism to simulate success.
+Return a concise report with instance, created scene_id, batch operation_id, queried
+entity count before and after undo, and whether the values matched.

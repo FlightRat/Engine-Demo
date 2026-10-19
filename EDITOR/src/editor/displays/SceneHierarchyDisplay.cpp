@@ -1,4 +1,5 @@
 #include "SceneHierarchyDisplay.h"
+#include "../automation/StateRules.h"
 #include "../tools/ToolContext.h"
 #include "../scene/SceneManager.h"
 #include "../scene/SceneObject.h"
@@ -19,12 +20,13 @@ using namespace entt::literals;
 namespace ENGINE_EDITOR {
 
 	auto create_entity = [&](ENGINE_EDITOR::SceneObject& currentScene) {
-		ENGINE_CORE::ECS::Entity newEntity{ currentScene.GetRegistry(),"GameObject","" };
-		newEntity.AddComponent<ENGINE_CORE::ECS::TransformComponent>();
+        auto newEntity = Automation::CreateEditableEntity(currentScene.GetRegistry(), "GameObject");
+        Automation::NotifyManualEdit();
 		};
 
 	auto delete_entity = [&](std::shared_ptr<ENGINE_CORE::ECS::Entity> entityToDelete) {
 		entityToDelete->Kill();
+        Automation::NotifyManualEdit();
 		};
 
 	/*为单个实体绘制左侧树节点*/
@@ -201,6 +203,7 @@ namespace ENGINE_EDITOR {
 				else
 				{
 					storage->push(entity.GetEntity());
+                    Automation::NotifyManualEdit();
 					*bAddComponent = false;
 					ImGui::CloseCurrentPopup();
 				}
@@ -251,6 +254,7 @@ namespace ENGINE_EDITOR {
 				if (ImGui::Button("remove"))
 				{
 					storage.remove(m_pSelectedEntity->GetEntity());
+                    Automation::NotifyManualEdit();
 				}
 				ImGui::PopID();
 			}
@@ -274,6 +278,13 @@ namespace ENGINE_EDITOR {
 	void SceneHierarchyDisplay::Draw()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
+        if (!pCurrentScene || m_SelectedScene.lock() != pCurrentScene || m_SelectionResetSerial != Automation::SelectionResetSerial) {
+            m_pSelectedEntity.reset(); TOOL_CTX().selectedEntity.reset();
+            m_SelectedScene = pCurrentScene; m_SelectionResetSerial = Automation::SelectionResetSerial;
+        }
+        if (m_pSelectedEntity && !pCurrentScene->GetRegistry().GetRegistry().valid(m_pSelectedEntity->GetEntity())) {
+            m_pSelectedEntity.reset(); TOOL_CTX().selectedEntity.reset();
+        }
 		if (!ImGui::Begin("Scene Hierarchy") || !pCurrentScene)
 		{
 			ImGui::End();

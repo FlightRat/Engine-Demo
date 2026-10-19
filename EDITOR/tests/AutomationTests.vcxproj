@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals"><ProjectGuid>{0BFC5BEC-8FB6-4E10-A593-729E31099666}</ProjectGuid><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion><ProjectName>AutomationTests</ProjectName></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration"><ConfigurationType>Application</ConfigurationType><PlatformToolset>v143</PlatformToolset><UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="..\..\Engine.Build.props" />
+  <PropertyGroup><OutDir>$(EngineRoot)x64\$(Configuration)\</OutDir><IntDir>$(EngineRoot)x64\$(Configuration)\AutomationTests\</IntDir>
+    <IncludePath>$(EngineRoot)CORE;$(EngineRoot)LOGGER;$(EngineRoot)RENDERING;$(EngineRoot)WINDOW;$(EngineRoot)UTILITIES;$(EngineRoot)SOUNDS;$(EngineRoot)PHYSICS;$(EngineRoot)FILESYSTEM;$(EngineRoot)Dependencies\GLM;$(EngineRoot)Dependencies\ENTT;$(EngineRoot)Dependencies\LUA\include;$(EngineRoot)Dependencies\SOL3;$(EngineRoot)Dependencies\SDL\include;$(EngineRoot)Dependencies\ReactPhysics3D\include;$(EngineRoot)Dependencies\Assimp\include;$(EngineRoot)GLAD\glad\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile><AdditionalIncludeDirectories>$(EngineRoot)Dependencies\RapidJSON\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><PreprocessorDefinitions>NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions><WarningLevel>Level3</WarningLevel><ConformanceMode>true</ConformanceMode></ClCompile>
+    <Link><SubSystem>Console</SubSystem><AdditionalLibraryDirectories>$(EngineLuaLibDir);$(EnginePhysicsLibDir);$(EngineAssimpLibDir);$(EngineRoot)Dependencies\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><AdditionalDependencies>advapi32.lib;SDL2.lib;SDL2_mixer.lib;opengl32.lib;lua53.lib;reactphysics3d.lib;comdlg32.lib;ole32.lib;user32.lib;shell32.lib;$(EngineAssimpLibrary);%(AdditionalDependencies)</AdditionalDependencies></Link>
+  </ItemDefinitionGroup>
+  <ItemGroup><ClCompile Include="AutomationTests.cpp" /><ClCompile Include="OperationsTests.cpp" /><ClCompile Include="QueueTests.cpp" /><ClCompile Include="BridgeHarness.cpp" /><ClCompile Include="..\src\editor\bridge\CommandQueue.cpp" /><ClCompile Include="..\src\editor\bridge\NamedPipeServer.cpp" /><ClCompile Include="..\src\editor\automation\Protocol.cpp" /><ClCompile Include="..\src\editor\automation\EditorOperations.cpp" /><ClCompile Include="..\src\editor\scene\SceneManager.cpp" /><ClCompile Include="..\src\editor\scene\SceneObject.cpp" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\CORE\CORE.vcxproj"><Project>{a599468f-36e3-4f69-b68c-a05379e648f3}</Project></ProjectReference>
+    <ProjectReference Include="..\..\LOGGER\LOGGER.vcxproj"><Project>{b74f995b-9d70-4e9e-9ba5-c79049df539d}</Project></ProjectReference>
+    <ProjectReference Include="..\..\PHYSICS\PHYSICS.vcxproj"><Project>{00835d04-1da9-49ca-b79d-cfbd09e5d57b}</Project></ProjectReference>
+    <ProjectReference Include="..\..\RENDERING\RENDERING.vcxproj"><Project>{51cc6e2b-2094-407b-a2bb-c1c65b712213}</Project></ProjectReference>
+    <ProjectReference Include="..\..\SOUNDS\SOUNDS.vcxproj"><Project>{40aaaf01-edad-4dd3-96f7-2c31eae6361d}</Project></ProjectReference>
+    <ProjectReference Include="..\..\UTILITIES\Utilities.vcxproj"><Project>{57200a04-1262-450c-907e-b274c1889cfb}</Project></ProjectReference>
+    <ProjectReference Include="..\..\WINDOW\Window.vcxproj"><Project>{a930181f-2110-4d57-84ce-2d7dc0f44357}</Project></ProjectReference>
+    <ProjectReference Include="..\..\FILESYSTEM\FileSystem.vcxproj"><Project>{ffe0bf52-1e50-4414-b845-26d6caff51de}</Project></ProjectReference>
+    <ProjectReference Include="..\..\GLAD\GLAD.vcxproj"><Project>{90fc090c-3046-40d5-ae1e-d04e8aec83cc}</Project></ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\..\Engine.Runtime.targets" />
+</Project>

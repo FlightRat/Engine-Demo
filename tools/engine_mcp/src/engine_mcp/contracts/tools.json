@@ -1,0 +1,1723 @@
+{
+  "protocol_version": 1,
+  "tools": [
+    {
+      "name": "get_editor_status",
+      "description": "Read connection, instance, session_id, editor_revision, current_scene_id, play state and protocol version. Start here.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_scene_state",
+      "description": "Read edit scene list and stable entity snapshots. Default page=50 (max=200); cursors expire when revision changes. Transforms are local engine units/degrees; lights expose their own scene-space position.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "name_filter": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "component_filter": {
+            "type": "string",
+            "enum": [
+              "transform",
+              "light",
+              "mesh",
+              "physics",
+              "script"
+            ]
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_assets",
+      "description": "List only loaded model/texture keys. Does not import files. Use a returned model key in create_object.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "asset_type": {
+            "type": "string",
+            "enum": [
+              "model",
+              "texture"
+            ]
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "create_scene",
+      "description": "Create and activate a uniquely named empty edit scene. Requires current session/revision and a new request_id. Writes are rejected during play.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id",
+          "expected_revision",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "create_object",
+      "description": "Create a visible mesh from a loaded model key, or an enabled default point light. Name is not identity; use returned entity_id.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Required display name for each new object; names may repeat."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "mesh",
+              "light"
+            ],
+            "description": "Required object kind."
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Required for mesh: an exact loaded model key from list_assets. Omit for light."
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id",
+          "expected_revision",
+          "scene_id",
+          "name",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "mesh"
+                ]
+              }
+            },
+            "required": [
+              "model"
+            ]
+          },
+          {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "light"
+                ]
+              }
+            },
+            "not": {
+              "required": [
+                "model"
+              ]
+            }
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "set_transform",
+      "description": "Update local position, XYZ Euler rotation_degrees, or positive scale. Engine units; no world space or physics targets. For light position use set_light instead.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "entity_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "space": {
+            "type": "string",
+            "enum": [
+              "local"
+            ]
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "rotation_degrees": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "scale": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id",
+          "expected_revision",
+          "scene_id",
+          "entity_id"
+        ],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "position"
+            ]
+          },
+          {
+            "required": [
+              "rotation_degrees"
+            ]
+          },
+          {
+            "required": [
+              "scale"
+            ]
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "set_light",
+      "description": "Update an existing light. Scene-space position is independent of Transform. Linear RGB 0..1, intensity 0..10000. Nonzero direction; area half-sizes .001..4.999. Only type-applicable fields allowed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "entity_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "point_light",
+              "direction_light",
+              "area_light"
+            ]
+          },
+          "color": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "intensity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "direction": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "rotation_degrees": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "render": {
+            "type": "boolean"
+          },
+          "constant": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "exclusiveMinimum": true
+          },
+          "linear": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "quadratic": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "range": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "half_width": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 4.999
+          },
+          "half_height": {
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 4.999
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id",
+          "expected_revision",
+          "scene_id",
+          "entity_id"
+        ],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "type"
+            ]
+          },
+          {
+            "required": [
+              "color"
+            ]
+          },
+          {
+            "required": [
+              "intensity"
+            ]
+          },
+          {
+            "required": [
+              "position"
+            ]
+          },
+          {
+            "required": [
+              "direction"
+            ]
+          },
+          {
+            "required": [
+              "rotation_degrees"
+            ]
+          },
+          {
+            "required": [
+              "render"
+            ]
+          },
+          {
+            "required": [
+              "constant"
+            ]
+          },
+          {
+            "required": [
+              "linear"
+            ]
+          },
+          {
+            "required": [
+              "quadratic"
+            ]
+          },
+          {
+            "required": [
+              "range"
+            ]
+          },
+          {
+            "required": [
+              "half_width"
+            ]
+          },
+          {
+            "required": [
+              "half_height"
+            ]
+          }
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "apply_operations",
+      "description": "Atomically apply 1..32 actions in the current scene. Each item has method and params. create_object params require name and kind; mesh also requires model (the loaded asset key). Example creation: {\"method\":\"create_object\",\"params\":{\"name\":\"Display Model\",\"kind\":\"mesh\",\"model\":\"cube\",\"client_ref\":\"model\"}}. For a light use name, kind=light and optional client_ref. Later set_transform/set_light params use entity_id OR an earlier creation's target_ref, plus the fields to update. One revision and one single-level undo record; no scene creation inside a batch.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "operations": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "enum": [
+                        "create_object"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256,
+                          "description": "Required display name for each new object; names may repeat."
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "mesh",
+                            "light"
+                          ],
+                          "description": "Required object kind."
+                        },
+                        "model": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256,
+                          "description": "Required for mesh: an exact loaded model key from list_assets. Omit for light."
+                        },
+                        "client_ref": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "kind"
+                      ],
+                      "additionalProperties": false,
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "mesh"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "model"
+                          ]
+                        },
+                        {
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "light"
+                              ]
+                            }
+                          },
+                          "not": {
+                            "required": [
+                              "model"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "params"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "enum": [
+                        "set_transform"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "entity_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "space": {
+                          "type": "string",
+                          "enum": [
+                            "local"
+                          ]
+                        },
+                        "position": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        "rotation_degrees": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        "scale": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          }
+                        },
+                        "target_ref": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        }
+                      },
+                      "additionalProperties": false,
+                      "anyOf": [
+                        {
+                          "required": [
+                            "position"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "rotation_degrees"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "scale"
+                          ]
+                        }
+                      ],
+                      "oneOf": [
+                        {
+                          "required": [
+                            "entity_id"
+                          ],
+                          "not": {
+                            "required": [
+                              "target_ref"
+                            ]
+                          }
+                        },
+                        {
+                          "required": [
+                            "target_ref"
+                          ],
+                          "not": {
+                            "required": [
+                              "entity_id"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "params"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "enum": [
+                        "set_light"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "entity_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "point_light",
+                            "direction_light",
+                            "area_light"
+                          ]
+                        },
+                        "color": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "intensity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "position": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        "direction": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        "rotation_degrees": {
+                          "type": "array",
+                          "minItems": 3,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        "render": {
+                          "type": "boolean"
+                        },
+                        "constant": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 10,
+                          "exclusiveMinimum": true
+                        },
+                        "linear": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "quadratic": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1
+                        },
+                        "range": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "half_width": {
+                          "type": "number",
+                          "minimum": 0.001,
+                          "maximum": 4.999
+                        },
+                        "half_height": {
+                          "type": "number",
+                          "minimum": 0.001,
+                          "maximum": 4.999
+                        },
+                        "target_ref": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        }
+                      },
+                      "additionalProperties": false,
+                      "anyOf": [
+                        {
+                          "required": [
+                            "type"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "color"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "intensity"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "position"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "direction"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "rotation_degrees"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "render"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "constant"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "linear"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "quadratic"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "range"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "half_width"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "half_height"
+                          ]
+                        }
+                      ],
+                      "oneOf": [
+                        {
+                          "required": [
+                            "entity_id"
+                          ],
+                          "not": {
+                            "required": [
+                              "target_ref"
+                            ]
+                          }
+                        },
+                        {
+                          "required": [
+                            "target_ref"
+                          ],
+                          "not": {
+                            "required": [
+                              "entity_id"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "params"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id",
+          "expected_revision",
+          "scene_id",
+          "operations"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "undo_operation",
+      "description": "Undo only the latest still-valid operation_id. Manual edits/context changes invalidate it. No redo or older-history undo; successful undo clears the slot.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scene_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "operation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id",
+          "expected_revision",
+          "scene_id",
+          "operation_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_operation_status",
+      "description": "Look up queued/running/succeeded/failed/cancelled by original session_id/request_id after a timeout or reconnect. Never blindly resend as a NEW write.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "session_id",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "pending"
+            ]
+          },
+          "session_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "editor_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "operation_id": {
+            "type": "string"
+          },
+          "execution_status": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "details",
+              "retryable"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "status",
+          "request_id"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

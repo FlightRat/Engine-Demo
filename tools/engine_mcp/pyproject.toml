@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools==82.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "engine-demo-mcp"
+version = "0.1.0"
+description = "Local MCP tools for the Engine-Demo Windows editor"
+requires-python = ">=3.11"
+dependencies = ["mcp==2.3.0", "jsonschema==4.26.0"]
+
+[project.optional-dependencies]
+test = ["pytest==9.0.2"]
+
+[project.scripts]
+engine-demo-mcp = "engine_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+engine_mcp = ["contracts/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

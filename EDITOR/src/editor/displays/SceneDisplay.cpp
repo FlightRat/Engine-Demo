@@ -23,12 +23,23 @@
 using namespace ENGINE_CORE::Systems;
 
 namespace ENGINE_EDITOR {
-	void SceneDisplay::LoadScnne()
+    namespace { struct SceneRuntimeReady {}; }
+	bool SceneDisplay::LoadScnne()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
 		if (!pCurrentScene)
-			return;
+			return false;
 		auto& runtimeRegistry = pCurrentScene->GetRegistry();
+        auto& context = runtimeRegistry.GetRegistry().ctx();
+        if (context.contains<SceneRuntimeReady>()) return true;
+        if (context.contains<std::shared_ptr<ScriptingSystem>>()) {
+            // Retry a previous script-load failure without recreating physics contexts.
+            auto& script = runtimeRegistry.GetContext<std::shared_ptr<ScriptingSystem>>();
+            auto& state = runtimeRegistry.GetContext<std::shared_ptr<sol::state>>();
+            if (!script->LoadMainScript(runtimeRegistry, *state)) return false;
+            context.emplace<SceneRuntimeReady>();
+            return true;
+        }
 
 		// Camera
 		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
@@ -68,8 +79,10 @@ namespace ENGINE_EDITOR {
 		if (!scriptSystem->LoadMainScript(runtimeRegistry, *lua))
 		{
 			ENGINE_ERROR("Failed to load the main lua script!");
-			return;
+			return false;
 		}
+        context.emplace<SceneRuntimeReady>();
+        return true;
 	}
 
     GLuint SceneDisplay::RenderScene(int width, int height)

@@ -1,0 +1,8 @@
+# Copy this table to your own Codex config after installing the package.
+# Replace both absolute paths if the checkout is elsewhere. No model key needed.
+[mcp_servers.engine_demo]
+command = 'D:\代码-CG\Engine-Demo\tools\engine_mcp\.venv\Scripts\python.exe'
+args = ["-m", "engine_mcp.server", "--instance", "default"]
+cwd = 'D:\代码-CG\Engine-Demo\tools\engine_mcp'
+required = true
+startup_timeout_sec = 20

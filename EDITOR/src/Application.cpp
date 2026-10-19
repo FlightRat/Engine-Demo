@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "editor/automation/AutomationRuntime.h"
 #include<SDL.h>
 #include<SDL_opengl.h>
 #include<glad/glad.h>
@@ -838,6 +839,7 @@ namespace ENGINE_EDITOR {
 
 	void Application::Update()
 	{
+        if (m_pAutomation) m_pAutomation->Update();
 		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
 
 		auto& mainRegistry = MAIN_REGISTRY();
@@ -857,11 +859,13 @@ namespace ENGINE_EDITOR {
 		BeginImGui();
 		RenderImGui();
 		EndImGui();
+        if (m_pAutomation) m_pAutomation->AfterUI();
 		SDL_GL_SwapWindow(m_pWindow->GetWindow().get());
 	}
 
 	void Application::CleanUp()
 	{
+        m_pAutomation.reset();
 		// 后面的 GPU 资源释放需要当前 OpenGL 上下文。
 		SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext());
 
@@ -1051,7 +1055,7 @@ namespace ENGINE_EDITOR {
 
 	}
 
-	int Application::Run()
+	int Application::Run(bool enableBridge, const std::string& instance)
 	{
 		if (!Initialize())
 		{
@@ -1059,6 +1063,10 @@ namespace ENGINE_EDITOR {
 			return EXIT_FAILURE;
 		}
 
+        if (enableBridge) {
+            try { m_pAutomation = std::make_unique<Automation::AutomationRuntime>(instance); }
+            catch (const std::exception& e) { ENGINE_ERROR("MCP bridge unavailable: {}", e.what()); }
+        }
 		while (m_bIsRunning)
 		{
 			ProcessEvents();

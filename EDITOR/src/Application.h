@@ -3,6 +3,7 @@
 #include<Windowing/Window/Window.h>
 #include<Core/ECS/Registry.h>
 
+namespace ENGINE_EDITOR::Automation { class AutomationRuntime; }
 namespace ENGINE_EDITOR{
 	class Application
 	{
@@ -10,6 +11,7 @@ namespace ENGINE_EDITOR{
 		std::unique_ptr<ENGINE_WINDOWING::Window> m_pWindow;
 		SDL_Event m_Event;
 		bool m_bIsRunning;
+		std::unique_ptr<Automation::AutomationRuntime> m_pAutomation;
 
 	private:
 		Application();
@@ -35,6 +37,6 @@ namespace ENGINE_EDITOR{
 		static Application& GetInstance();
 		~Application();
 
-		int Run();
+		int Run(bool enableBridge = false, const std::string& instance = "default");
 	};
 }

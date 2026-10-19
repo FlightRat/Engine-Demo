@@ -95,7 +95,7 @@ namespace {
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
 #ifdef _WIN32
 #ifndef NDEBUG
@@ -106,8 +106,19 @@ int main()
 #endif
 
     try {
+        bool bridge = false;
+        std::string instance = "default";
+        for (int i = 1; i < argc; ++i) {
+            const std::string argument = argv[i];
+            if (argument == "--enable-mcp-bridge") bridge = true;
+            else if (argument == "--mcp-instance" && i + 1 < argc) instance = argv[++i];
+            else if (argument == "--help") {
+                std::cout << "EDITOR.exe [--enable-mcp-bridge] [--mcp-instance NAME]\n";
+                return EXIT_SUCCESS;
+            } else throw std::invalid_argument("Unknown or incomplete argument: " + argument);
+        }
         SetEditorWorkingDirectory(ExecutablePath());
-        const int result = ENGINE_EDITOR::Application::GetInstance().Run();
+        const int result = ENGINE_EDITOR::Application::GetInstance().Run(bridge, instance);
         if (result != EXIT_SUCCESS)
             ReportStartupFailure(InitializationErrors());
         return result;

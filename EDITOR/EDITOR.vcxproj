@@ -72,6 +72,7 @@
   </ImportGroup>
   <Import Project="..\Engine.Build.props" Condition="'$(Platform)'=='x64'" />
   <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup><ClCompile><AdditionalIncludeDirectories>$(EngineRoot)Dependencies\RapidJSON\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><PreprocessorDefinitions>NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile><Link><AdditionalDependencies>advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link></ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <IncludePath>$(SolutionDir).\Dependencies\GLM;$(SolutionDir).\Dependencies\SDL\include;$(SolutionDir).\GLAD\glad\include;$(SolutionDir).\UTILITIES;$(SolutionDir).\WINDOW;$(SolutionDir).\RENDERING;$(SolutionDir).\LOGGER;$(SolutionDir).\Dependencies\ENTT;$(SolutionDir).\CORE;$(SolutionDir).\Dependencies\LUA\include;$(SolutionDir).\Dependencies\SOL3;$(SolutionDir).\SOUNDS;$(SolutionDir).\PHYSICS;$(SolutionDir).\Dependencies\ReactPhysics3D\include;$(SolutionDir).\ImGui\src;$(SolutionDir).\FILESYSTEM;$(SolutionDir).\Dependencies\Assimp\include;$(SolutionDir).\Dependencies\STB;$(IncludePath)</IncludePath>
     <LibraryPath>$(EngineLuaLibDir);$(SolutionDir).\Dependencies\SDL\lib;$(EnginePhysicsLibDir);$(EngineAssimpLibDir);$(LibraryPath)</LibraryPath>
@@ -130,6 +131,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\editor\automation\Protocol.cpp" />
+    <ClCompile Include="src\editor\automation\EditorOperations.cpp" />
+    <ClCompile Include="src\editor\automation\AutomationRuntime.cpp" />
+    <ClCompile Include="src\editor\bridge\CommandQueue.cpp" />
+    <ClCompile Include="src\editor\bridge\NamedPipeServer.cpp" />
     <ClCompile Include="src\editor\displays\AssetDisplay.cpp" />
     <ClCompile Include="src\editor\displays\LogDisplay.cpp" />
     <ClCompile Include="src\editor\displays\GameDisplay.cpp" />
@@ -273,6 +279,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\editor\automation\Json.h" />
+    <ClInclude Include="src\editor\automation\Protocol.h" />
+    <ClInclude Include="src\editor\automation\EditorOperations.h" />
+    <ClInclude Include="src\editor\automation\AutomationRuntime.h" />
+    <ClInclude Include="src\editor\automation\StateRules.h" />
+    <ClInclude Include="src\editor\bridge\CommandQueue.h" />
+    <ClInclude Include="src\editor\bridge\NamedPipeServer.h" />
     <ClInclude Include="src\editor\displays\AssetDisplay.h" />
     <ClInclude Include="src\editor\displays\IDisplay.h" />
     <ClInclude Include="src\editor\displays\LogDisplay.h" />
