@@ -1,0 +1,111 @@
+#version 450 core
+
+layout(local_size_x = 16, local_size_y = 16) in;
+
+const uint DEPTH_SLICES = 24u;
+const uint MAX_CLUSTER_LIGHTS = 128u;
+
+struct PointLight {
+    vec4 color;
+    vec4 position;
+    vec4 attenuation;
+};
+struct ClusterHeader {
+    uint count;
+    uint overflow;
+    uint validPixelCount;
+    uint reserved;
+};
+
+layout(std140, binding = 0) uniform Matrices {
+    mat4 view;
+    mat4 projection;
+};
+layout(std430, binding = 2) readonly buffer PointLights { PointLight point_lights[]; };
+layout(std430, binding = 4) writeonly buffer ClusterHeaders { ClusterHeader clusterHeaders[]; };
+layout(std430, binding = 5) writeonly buffer ClusterLightIndices { uint clusterLightIndices[]; };
+layout(binding = 0) uniform sampler2D gPosition;
+uniform int pointLightCount;
+uniform float clusterNear;
+uniform float clusterFar;
+uniform float clusterDepthScale;
+
+shared uint candidateCounts[24];
+shared uint pixelCounts[24];
+shared uint occupiedSlices;
+shared float boundaries[25];
+shared vec4 tilePlanes[4];
+
+uint DepthSlice(float depth)
+{
+    return uint(clamp(floor(log(depth / clusterNear) * clusterDepthScale), 0.0, 23.0));
+}
+
+void main()
+{
+    uint lane = gl_LocalInvocationIndex;
+    ivec2 size = textureSize(gPosition, 0);
+    if (lane < DEPTH_SLICES) {
+        candidateCounts[lane] = 0u;
+        pixelCounts[lane] = 0u;
+    }
+    if (lane <= DEPTH_SLICES)
+        boundaries[lane] = clusterNear * pow(clusterFar / clusterNear, float(lane) / float(DEPTH_SLICES));
+    if (lane == 0u) {
+        occupiedSlices = 0u;
+        vec2 lower = vec2(gl_WorkGroupID.xy * 16u) / vec2(size) * 2.0 - 1.0;
+        vec2 upper = vec2(min(gl_WorkGroupID.xy * 16u + 16u, uvec2(size))) / vec2(size) * 2.0 - 1.0;
+        mat4 rows = transpose(projection);
+        tilePlanes[0] = rows[0] - lower.x * rows[3];
+        tilePlanes[1] = upper.x * rows[3] - rows[0];
+        tilePlanes[2] = rows[1] - lower.y * rows[3];
+        tilePlanes[3] = upper.y * rows[3] - rows[1];
+        for (int i = 0; i < 4; ++i) tilePlanes[i] /= length(tilePlanes[i].xyz);
+    }
+    barrier();
+
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (all(lessThan(pixel, size))) {
+        vec4 position = texelFetch(gPosition, pixel, 0);
+        if (position.w > 0.5) {
+            float depth = -(view * vec4(position.xyz, 1.0)).z;
+            if (depth > 0.0) {
+                uint slice = DepthSlice(depth);
+                atomicAdd(pixelCounts[slice], 1u);
+                atomicOr(occupiedSlices, 1u << slice);
+            }
+        }
+    }
+    barrier();
+
+    uint tile = gl_WorkGroupID.y * gl_NumWorkGroups.x + gl_WorkGroupID.x;
+    if (occupiedSlices != 0u) {
+        for (uint index = lane; index < uint(pointLightCount); index += 256u) {
+            float range = point_lights[index].attenuation.w;
+            if (range <= 0.0) continue;
+            vec3 center = (view * vec4(point_lights[index].position.xyz, 1.0)).xyz;
+            float radius = range + 1e-4 * max(1.0, max(abs(center.z), range));
+            bool inside = true;
+            for (int i = 0; i < 4; ++i)
+                inside = inside && dot(tilePlanes[i], vec4(center, 1.0)) >= -radius;
+            if (!inside) continue;
+            float nearDepth = -center.z - radius;
+            float farDepth = -center.z + radius;
+            if (farDepth < clusterNear || nearDepth > clusterFar) continue;
+            uint slices = occupiedSlices;
+            while (slices != 0u) {
+                uint slice = uint(findLSB(slices));
+                slices &= slices - 1u;
+                if (farDepth < boundaries[slice] || nearDepth > boundaries[slice + 1u]) continue;
+                uint slot = atomicAdd(candidateCounts[slice], 1u);
+                if (slot < MAX_CLUSTER_LIGHTS)
+                    clusterLightIndices[(tile * DEPTH_SLICES + slice) * MAX_CLUSTER_LIGHTS + slot] = index;
+            }
+        }
+    }
+    barrier();
+    if (lane < DEPTH_SLICES) {
+        uint count = candidateCounts[lane];
+        clusterHeaders[tile * DEPTH_SLICES + lane] = ClusterHeader(count, uint(count > MAX_CLUSTER_LIGHTS), pixelCounts[lane], 0u);
+    }
+}

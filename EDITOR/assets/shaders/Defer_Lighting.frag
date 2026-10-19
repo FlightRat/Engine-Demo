@@ -5,7 +5,7 @@
 #define DIR_CASCADE_COUNT 4
 
 const uint TILE_SIZE = 16u;
-const uint MAX_TILE_LIGHTS = 128u;
+const uint MAX_CLUSTER_LIGHTS = 128u;
 
 struct DirLight {
     vec4 color;
@@ -31,11 +31,11 @@ struct AreaLight {
 	mat4 lightSpaceMatrix;
     vec4 shadowParams;
 };
-struct TileHeader {
+struct ClusterHeader {
     uint count;
-    float minDepth;
-    float maxDepth;
+    uint overflow;
     uint validPixelCount;
+    uint reserved;
 };
 
 out vec4 FragColor;
@@ -46,6 +46,10 @@ uniform float far_plane;
 uniform int dirLightCount;
 uniform int pointLightCount;
 uniform int areaLightCount;
+uniform int lightingMode;
+uniform bool pointShadowsEnabled;
+uniform float clusterNear;
+uniform float clusterDepthScale;
 
 layout(binding = 0) uniform sampler2D gPosition;
 layout(binding = 1) uniform sampler2D gNormal;
@@ -68,8 +72,8 @@ layout (std140) uniform Matrices {
 layout(std430, binding=1) readonly buffer DirLights{ DirLight dir_lights[]; };
 layout(std430, binding=2) readonly buffer PointLights{ PointLight point_lights[]; };
 layout(std430, binding=3) readonly buffer AreaLights{ AreaLight area_lights[]; };
-layout(std430, binding=4) readonly buffer TileHeaders{ TileHeader tileHeaders[];};
-layout(std430, binding=5) readonly buffer TileLightIndices { uint tileLightIndices[]; };
+layout(std430, binding=4) readonly buffer ClusterHeaders{ ClusterHeader clusterHeaders[];};
+layout(std430, binding=5) readonly buffer ClusterLightIndices { uint clusterLightIndices[]; };
 
 const float PI = 3.14159265359;
 const float VSSM_MOMENT_SCALE = 16777215.0;
@@ -105,6 +109,7 @@ float ShadowCalculation_area(AreaLight areaLight, usampler2D momentSAT, usampler
 vec3 CalcDirLight(DirLight dirLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcPointLight(PointLight pointLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
 vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra, float shadow);
+vec3 EvaluatePointLight(int lightIndex, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra);
 
 // ==================== 主函数 ====================
 void main()
@@ -151,23 +156,29 @@ void main()
     }
 
     // ---------- 点光源 ----------
-    uvec2 tile = uvec2(gl_FragCoord.xy) / TILE_SIZE;
-    uint width = uint(textureSize(gPosition, 0).x);
-    uint tileCountX = (width + TILE_SIZE - 1u) / TILE_SIZE;
-    uint tileIndex = tile.y * tileCountX + tile.x;
-    uint candidateCount = tileHeaders[tileIndex].count;
-    for (uint slot = 0u; slot < candidateCount; slot++)
-    {
-        int lightIndex = int(tileLightIndices[tileIndex * MAX_TILE_LIGHTS + slot]);
-        PointLight light = point_lights[lightIndex];
-        float range = light.attenuation.w;
-        vec3 offset = light.position.xyz - FragPos;
-        if (range <= 0.0 || dot(offset, offset) >= range * range) continue;
-        if (!any(greaterThan(light.attenuation.xyz, vec3(0.0)))) continue;
-        float shadow = 0.0;
-        if (lightIndex < MAX_POINT_SHADOWS)
-            shadow = ShadowCalculation_point(light, pointLight_ShadowMap, lightIndex, FragPos, Normal);
-        Lo += CalcPointLight(light, FragPos, ViewDir, Normal, Albedo, MRA, shadow);
+    if (lightingMode == 0) {
+        for (int i = 0; i < pointLightCount; ++i)
+            Lo += EvaluatePointLight(i, FragPos, ViewDir, Normal, Albedo, MRA);
+    } else {
+        uvec2 tile = uvec2(gl_FragCoord.xy) / TILE_SIZE;
+        uint width = uint(textureSize(gPosition, 0).x);
+        uint tileCountX = (width + TILE_SIZE - 1u) / TILE_SIZE;
+        uint listIndex = tile.y * tileCountX + tile.x;
+        if (lightingMode == 2) {
+            float depth = -(view * vec4(FragPos, 1.0)).z;
+            uint slice = uint(clamp(floor(log(depth / clusterNear) * clusterDepthScale), 0.0, 23.0));
+            listIndex = listIndex * 24u + slice;
+        }
+        ClusterHeader header = clusterHeaders[listIndex];
+        if (header.overflow != 0u) {
+            for (int i = 0; i < pointLightCount; ++i)
+                Lo += EvaluatePointLight(i, FragPos, ViewDir, Normal, Albedo, MRA);
+        } else {
+            for (uint slot = 0u; slot < header.count; ++slot) {
+                int lightIndex = int(clusterLightIndices[listIndex * MAX_CLUSTER_LIGHTS + slot]);
+                Lo += EvaluatePointLight(lightIndex, FragPos, ViewDir, Normal, Albedo, MRA);
+            }
+        }
     }
 
     // ---------- 面光源 ----------
@@ -704,4 +715,17 @@ vec3 CalcAreaLight(AreaLight areaLight, vec3 fragPos, vec3 viewDir, vec3 normal,
     Lo *= (1.0 - shadow);
 
     return Lo;
+}
+
+vec3 EvaluatePointLight(int lightIndex, vec3 fragPos, vec3 viewDir, vec3 normal, vec3 albedo, vec3 mra)
+{
+    PointLight light = point_lights[lightIndex];
+    float range = light.attenuation.w;
+    vec3 offset = light.position.xyz - fragPos;
+    if (range <= 0.0 || dot(offset, offset) >= range * range) return vec3(0.0);
+    if (!any(greaterThan(light.attenuation.xyz, vec3(0.0)))) return vec3(0.0);
+    float shadow = 0.0;
+    if (pointShadowsEnabled && lightIndex < MAX_POINT_SHADOWS)
+        shadow = ShadowCalculation_point(light, pointLight_ShadowMap, lightIndex, fragPos, normal);
+    return CalcPointLight(light, fragPos, viewDir, normal, albedo, mra, shadow);
 }

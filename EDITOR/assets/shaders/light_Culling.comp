@@ -21,10 +21,10 @@ struct PointLight{
     vec4 attenuation;
 };
 struct TileHeader {
-    uint count;            // 实际通过剔除的光源数
-    float minDepth;        // 最近可见表面的观察空间深度
-    float maxDepth;        // 最远可见表面的观察空间深度
-    uint validPixelCount;  // 有效像素数
+    uint count;
+    uint overflow;
+    uint validPixelCount;
+    uint reserved;
 };
 
 uniform int pointLightCount;
@@ -142,6 +142,6 @@ void main()
 
     if (localIndex == 0u)
     {
-        tileHeaders[tileIndex] = TileHeader(candidateCount, minDepth, maxDepth, validPixelCount);
+        tileHeaders[tileIndex] = TileHeader(candidateCount, uint(candidateCount > MAX_TILE_LIGHTS), validPixelCount, 0u);
     }
 }

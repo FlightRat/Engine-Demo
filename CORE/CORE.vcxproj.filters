@@ -108,7 +108,7 @@
     <ClInclude Include="Core\Systems\LightSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Core\Systems\TileSystem.h">
+    <ClInclude Include="Core\Systems\ClusterSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Core\Buffers\BufferManager.h">
@@ -203,7 +203,7 @@
     <ClCompile Include="Core\Systems\LightSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Systems\TileSystem.cpp">
+    <ClCompile Include="Core\Systems\ClusterSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\buffers\BufferManager.cpp">

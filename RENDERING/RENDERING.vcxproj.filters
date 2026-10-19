@@ -18,6 +18,12 @@
     <ClInclude Include="Rendering\Essentials\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Rendering\Essentials\LightCulling.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Essentials\RenderMetrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Rendering\Essentials\ShaderLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -60,6 +66,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Rendering\Essentials\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Essentials\RenderMetrics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\Essentials\ShaderLoader.cpp">

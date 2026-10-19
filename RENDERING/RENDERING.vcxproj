@@ -145,6 +145,8 @@
     <ClInclude Include="Rendering\Essentials\ModelLoader.h" />
     <ClInclude Include="Rendering\Essentials\Model.h" />
     <ClInclude Include="Rendering\Essentials\Shader.h" />
+    <ClInclude Include="Rendering\Essentials\LightCulling.h" />
+    <ClInclude Include="Rendering\Essentials\RenderMetrics.h" />
     <ClInclude Include="Rendering\Essentials\ShaderLoader.h" />
     <ClInclude Include="Rendering\Essentials\Texture.h" />
     <ClInclude Include="Rendering\Essentials\TextureCommon.h" />
@@ -160,6 +162,7 @@
     <ClCompile Include="Rendering\Essentials\Model.cpp" />
     <ClCompile Include="Rendering\Essentials\ModelLoader.cpp" />
     <ClCompile Include="Rendering\Essentials\Shader.cpp" />
+    <ClCompile Include="Rendering\Essentials\RenderMetrics.cpp" />
     <ClCompile Include="Rendering\Essentials\ShaderLoader.cpp" />
     <ClCompile Include="Rendering\Essentials\Texture.cpp" />
     <ClCompile Include="Rendering\Essentials\TextureLoader.cpp" />

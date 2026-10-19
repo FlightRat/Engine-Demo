@@ -1,6 +1,12 @@
 ﻿#include "RenderSystem.h"
 #include <utility>
 #include <algorithm>
+#include <cmath>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <SDL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -11,7 +17,7 @@
 #include <Rendering/Essentials/TextureCommon.h>
 #include <Logger/Logger.h>
 #include "../CORE/Core/ECS/MainRegistry.h"
-#include "../CORE/Core/Systems/TileSystem.h"
+#include "../CORE/Core/Systems/ClusterSystem.h"
 #include "../CORE/Core/Systems/LightSystem.h"
 #include "../ECS/Entity.h"
 #include "../Buffers/BufferManager.h"
@@ -62,10 +68,40 @@ namespace ENGINE_CORE::Systems {
 		std::shared_ptr<ENGINE_RENDERING::Framebuffer> shadeOutputFB,
         std::shared_ptr<ENGINE_RENDERING::Framebuffer> fxaaOutputFB)
     {
+        auto submitStart = std::chrono::steady_clock::now();
         Prepare_Pass(camera, runtimeRegistry);
+        auto clusterSystem = MAIN_REGISTRY().GetContext<std::shared_ptr<ClusterSystem>>();
+        auto& view = clusterSystem->Prepare(intermediateGB, *camera, lightingMode);
+        if (profilingEnabled || collectLightStatistics) {
+            std::ostringstream configuration;
+            configuration << std::setprecision(9);
+            configuration << '"' << reinterpret_cast<const char*>(glGetString(GL_RENDERER)) << "\",";
+#ifdef _DEBUG
+            configuration << "Debug,";
+#else
+            configuration << "Release,";
+#endif
+            configuration << intermediateGB.get() << ',' << view.width << ',' << view.height << ',' << SDL_GL_GetSwapInterval() << ','
+                << static_cast<int>(lightingMode) << ',' << collectLightStatistics << ',' << pointShadowsEnabled << ',' << showLightVisualizations << ',';
+            std::string label = benchmarkLabel;
+            for (size_t i = 0; (i = label.find('"', i)) != std::string::npos; i += 2) label.insert(i, 1, '"');
+            configuration << '"' << label << "\"," << MAIN_REGISTRY().GetContext<std::shared_ptr<LightSystem>>()->GetActivatedPointLights()
+                << ",5,2048,100,16," << view.sliceCount << ",128," << view.count << ',' << view.headers.Capacity() << ',' << view.indices.Capacity()
+                << ',' << camera->GetNearPlane() << ',' << camera->GetFarPlane();
+            for (const auto& matrix : {camera->GetViewMatrix(), camera->GetProjectionMatrix()}) {
+                configuration << ",\"";
+                for (int i = 0; i < 16; ++i) configuration << glm::value_ptr(matrix)[i] << ';';
+                configuration << '"';
+            }
+            configuration << ",120,300";
+            view.metrics.Configure(configuration.str());
+        }
+        if (profilingEnabled) view.metrics.BeginFrame(lightingMode != LightingMode::Full);
 
 		//glCullFace(GL_FRONT);		// 解决acne，但导致漏光
+		if (profilingEnabled) view.metrics.BeginPass(3);
 		Shadow_Pass(runtimeRegistry);
+		if (profilingEnabled) view.metrics.EndPass(3);
 		//glCullFace(GL_BACK);
 
 		// 几何pass
@@ -76,10 +112,17 @@ namespace ENGINE_CORE::Systems {
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);	// 保证 Position 为 0
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glViewport(0, 0, intermediateGB->Width(), intermediateGB->Height());
+		if (profilingEnabled) view.metrics.BeginPass(0);
 		Geometry_Pass(camera, runtimeRegistry);
+		if (profilingEnabled) view.metrics.EndPass(0);
 		intermediateGB->Unbind();
 
-		Tiling_Pass(intermediateGB);
+		if (profilingEnabled) view.metrics.BeginPass(1);
+		Tiling_Pass(intermediateGB, *camera);
+		if (profilingEnabled) view.metrics.EndPass(1);
+		if (collectLightStatistics && lightingMode != LightingMode::Full)
+			view.metrics.SampleCandidates(view.headers.GetID(), view.count,
+				MAIN_REGISTRY().GetContext<std::shared_ptr<LightSystem>>()->GetActivatedPointLights());
 
 		// HBAO
 		glDisable(GL_BLEND);
@@ -114,7 +157,9 @@ namespace ENGINE_CORE::Systems {
 		glViewport(0, 0, shadeOutputFB->Width(), shadeOutputFB->Height());
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		if (profilingEnabled) view.metrics.BeginPass(2);
 		Lighting_Pass(camera, runtimeRegistry, intermediateGB, aoFB);
+		if (profilingEnabled) view.metrics.EndPass(2);
 		shadeOutputFB->Unbind();
 
 		// 后处理pass（点光源+模板测试+天空盒）
@@ -129,6 +174,8 @@ namespace ENGINE_CORE::Systems {
 		shadeOutputFB->Unbind();
 		// FXAA
 		FXAA_Pass(shadeOutputFB, fxaaOutputFB);
+		m_CpuMs[2] = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - submitStart).count() - m_CpuMs[0] - m_CpuMs[1];
+		if (profilingEnabled) view.metrics.EndFrame(m_CpuMs);
 	}
 
 	void RenderSystem::Prepare_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry)
@@ -153,13 +200,17 @@ namespace ENGINE_CORE::Systems {
 
 		// 更新并填充光源SSBO数据
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
+		auto collectStart = std::chrono::steady_clock::now();
 		lightSystem->Update(runtimeRegistry, *camera);
+		m_CpuMs[0] = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - collectStart).count();
+		auto uploadStart = std::chrono::steady_clock::now();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
 		auto& areaLightData = lightSystem->GetAreaLightData();
 		dirLightsSSbo->UpdateShaderStorageBuffer(dirLightData.data(), dirLightData.size() * sizeof(ENGINE_RENDERING::DirLight));
 		pointLightsSSbo->UpdateShaderStorageBuffer(pointLightData.data(), pointLightData.size() * sizeof(ENGINE_RENDERING::PointLight));
 		areaLightsSSbo->UpdateShaderStorageBuffer(areaLightData.data(), areaLightData.size() * sizeof(ENGINE_RENDERING::AreaLight));
+		m_CpuMs[1] = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - uploadStart).count();
 
 	}
 
@@ -281,11 +332,13 @@ namespace ENGINE_CORE::Systems {
 
 		// 点光源
 		const auto& shadowCubemap = bufferManager.GetFrameBuffer("pointLight_ShadowMap");
-		shadowCubemap->Bind();
-		glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
-		glClear(GL_DEPTH_BUFFER_BIT);
+		if (pointShadowsEnabled) {
+			shadowCubemap->Bind();
+			glViewport(0, 0, shadowCubemap->Width(), shadowCubemap->Height());
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 		Shader_ShadowCubemap->Enable();
-		for (int index = 0; index < pointShadowCount; index++)
+		for (int index = 0; index < (pointShadowsEnabled ? pointShadowCount : 0); index++)
 		{
 			const auto& point_light = pointLightData[index];
 			if (point_light.attenuation.w <= 0.0f) continue;	// range不大于0的点光源没作用
@@ -451,11 +504,11 @@ namespace ENGINE_CORE::Systems {
 		}
 	}
 
-	void RenderSystem::Tiling_Pass(const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& intermediateGB)
+	void RenderSystem::Tiling_Pass(const std::shared_ptr<ENGINE_RENDERING::Framebuffer>& intermediateGB, const ENGINE_RENDERING::Camera3D& camera)
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
-		auto& tileSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::TileSystem>>();
-		tileSystem->Update(intermediateGB);
+		auto& clusterSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ClusterSystem>>();
+		clusterSystem->Update(intermediateGB, camera, lightingMode);
 	}
 
 	void RenderSystem::HBAO_Pass(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera, ENGINE_CORE::ECS::Registry& runtimeRegistry, std::shared_ptr<ENGINE_RENDERING::Framebuffer> intermediateGB)
@@ -490,7 +543,7 @@ namespace ENGINE_CORE::Systems {
 	{
 		auto& mainRegistry = MAIN_REGISTRY();
 
-		auto& tileSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::TileSystem>>();
+		auto& clusterSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::ClusterSystem>>();
 		auto& lightSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::LightSystem>>();
 		auto& dirLightData = lightSystem->GetDirLightData();
 		auto& pointLightData = lightSystem->GetPointLightData();
@@ -515,7 +568,11 @@ namespace ENGINE_CORE::Systems {
 		Shader_Lighting->SetUniformInt("pointLightCount", lightSystem->GetActivatedPointLights());
 		Shader_Lighting->SetUniformInt("areaLightCount", lightSystem->GetActivatedAreaLights());
 
-		tileSystem->Bind(intermediateGB);
+		if (lightingMode != LightingMode::Full) clusterSystem->Bind(intermediateGB);
+		Shader_Lighting->SetUniformInt("lightingMode", static_cast<int>(lightingMode));
+		Shader_Lighting->SetUniformBool("pointShadowsEnabled", pointShadowsEnabled);
+		Shader_Lighting->SetUniformFloat("clusterNear", camera->GetNearPlane());
+		Shader_Lighting->SetUniformFloat("clusterDepthScale", CLUSTER_DEPTH_SLICES / std::log(camera->GetFarPlane() / camera->GetNearPlane()));
 		glBindTextureUnit(0, intermediateGB->GetTextureID(0));
 		glBindTextureUnit(1, intermediateGB->GetTextureID(1));
 		glBindTextureUnit(2, intermediateGB->GetTextureID(2));
@@ -621,6 +678,7 @@ namespace ENGINE_CORE::Systems {
 		Shader_Color->Enable();
 		for (int point_light_index = 0; point_light_index < lightSystem->GetActivatedPointLights(); point_light_index++)
 		{
+			if (!showLightVisualizations) continue;
 			auto point_light = pointLightData[point_light_index];
 			// TODO: check point_light.render to decide if render
 			glm::mat4 light_sphere_model = glm::mat4(1.0f);
@@ -762,6 +820,57 @@ namespace ENGINE_CORE::Systems {
 		quad->GetMeshes()[0].Draw();
 		output->Unbind();
 	}
+
+    void RenderSystem::StartLightBenchmark()
+    {
+        profilingEnabled = true;
+        MAIN_REGISTRY().GetContext<std::shared_ptr<ClusterSystem>>()->StartCapture();
+    }
+
+    void RenderSystem::ExportLightBenchmark(const std::string& path) const
+    {
+        auto system = MAIN_REGISTRY().GetContext<std::shared_ptr<ClusterSystem>>();
+        std::ofstream output(path);
+        output << "gpu,build,viewport,width,height,vsync,mode,diagnostics,point_shadows,visualizations,label,lights,shadow_slots,shadow_resolution,shadow_far,tile_size,depth_slices,list_capacity,list_count,header_bytes,index_bytes,near,far,view,projection,warmup,target,record,geometry_ms,culling_ms,lighting_ms,shadow_ms,collect_ms,upload_ms,submit_ms,culling_lighting_ms,active_clusters,average_candidates,max_candidates,overflow_clusters,weighted_candidates,weighted_evaluations\n";
+        output << std::setprecision(9);
+        for (const auto& [key, view] : system->GetViews()) {
+            const auto& metrics = view.metrics;
+            const auto& samples = metrics.Samples();
+            if (metrics.IsRecording() || samples.size() != 300) continue;
+            auto write = [&](const LightRenderSample& sample, const std::string& record, double combined) {
+                output << metrics.Configuration() << ',' << record;
+                for (double value : sample.gpuMs) output << ',' << value;
+                for (double value : sample.cpuMs) output << ',' << value;
+                output << ',' << combined;
+                if (sample.statisticsAvailable)
+                    output << ',' << sample.activeClusters << ',' << sample.averageCandidates << ',' << sample.maxCandidates
+                        << ',' << sample.overflowClusters << ',' << sample.weightedCandidates << ',' << sample.weightedEvaluations;
+                else output << ",NA,NA,NA,NA,NA,NA";
+                output << '\n';
+            };
+            for (size_t i = 0; i < samples.size(); ++i)
+                write(samples[i], std::to_string(i), samples[i].gpuMs[1] + samples[i].gpuMs[2]);
+            for (double percentile : {0.5, 0.95}) {
+                auto quantile = [&](auto get) {
+                    std::vector<double> values;
+                    for (const auto& sample : samples) values.push_back(get(sample));
+                    std::sort(values.begin(), values.end());
+                    return values[static_cast<size_t>(percentile * (values.size() - 1))];
+                };
+                LightRenderSample summary;
+                for (int i = 0; i < 4; ++i) summary.gpuMs[i] = quantile([&](const auto& s) { return s.gpuMs[i]; });
+                for (int i = 0; i < 3; ++i) summary.cpuMs[i] = quantile([&](const auto& s) { return s.cpuMs[i]; });
+                summary.statisticsAvailable = std::all_of(samples.begin(), samples.end(), [](const auto& s) { return s.statisticsAvailable; });
+                summary.activeClusters = static_cast<unsigned int>(quantile([](const auto& s) { return double(s.activeClusters); }));
+                summary.averageCandidates = quantile([](const auto& s) { return s.averageCandidates; });
+                summary.maxCandidates = static_cast<unsigned int>(quantile([](const auto& s) { return double(s.maxCandidates); }));
+                summary.overflowClusters = static_cast<unsigned int>(quantile([](const auto& s) { return double(s.overflowClusters); }));
+                summary.weightedCandidates = quantile([](const auto& s) { return s.weightedCandidates; });
+                summary.weightedEvaluations = quantile([](const auto& s) { return s.weightedEvaluations; });
+                write(summary, percentile == 0.5 ? "median" : "p95", quantile([](const auto& s) { return s.gpuMs[1] + s.gpuMs[2]; }));
+            }
+        }
+    }
 
 }
 

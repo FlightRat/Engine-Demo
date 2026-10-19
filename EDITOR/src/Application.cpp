@@ -24,7 +24,7 @@
 #include<Core/Systems/RenderSystem.h>
 #include<Core/Systems/PhysicsSystem.h>
 #include<Core/Systems/LightSystem.h>
-#include<Core/Systems/TileSystem.h>
+#include<Core/Systems/ClusterSystem.h>
 #include<Core/Inputs/InputManager.h>
 #include<Core/Buffers/BufferManager.h>
 #include<Core/CoreUtilities/CoreEngineData.h>
@@ -175,16 +175,16 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
-		// tile system for tiled defer rendering
-		auto tileSystem = std::make_shared<ENGINE_CORE::Systems::TileSystem>();
-		if (!tileSystem)
+		// cluster system for deferred rendering
+		auto clusterSystem = std::make_shared<ENGINE_CORE::Systems::ClusterSystem>();
+		if (!clusterSystem)
 		{
-			ENGINE_ERROR("Failed to create the tile system!");
+			ENGINE_ERROR("Failed to create the cluster system!");
 			return false;
 		}
-		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::Systems::TileSystem>>(tileSystem))
+		if (!mainRegistry.AddToContext<std::shared_ptr<ENGINE_CORE::Systems::ClusterSystem>>(clusterSystem))
 		{
-			ENGINE_ERROR("Failed to add the tile system to the registry context!");
+			ENGINE_ERROR("Failed to add the cluster system to the registry context!");
 			return false;
 		}
 
@@ -360,6 +360,12 @@ namespace ENGINE_EDITOR {
 			return false;
 		}
 
+		if (!assetManager.AddComputeShader("cluster_Culling", "assets/shaders/cluster_Culling.comp"))
+		{
+			ENGINE_ERROR("Failed to create clustered light culling shader!");
+			return false;
+		}
+
 		assetManager.GetShader("forward_Color")->SetIsEditorShader(true);
 		assetManager.GetShader("forward_AreaLight")->SetIsEditorShader(true);
 		assetManager.GetShader("defer_Gbuffer")->SetIsEditorShader(true);
@@ -378,6 +384,7 @@ namespace ENGINE_EDITOR {
 		assetManager.GetShader("ibl_brdf")->SetIsEditorShader(true);
 		assetManager.GetShader("fxaa")->SetIsEditorShader(true);
 		assetManager.GetShader("light_Culling")->SetIsEditorShader(true);
+		assetManager.GetShader("cluster_Culling")->SetIsEditorShader(true);
 		return true;
 	}
 
