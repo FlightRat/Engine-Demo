@@ -37,10 +37,13 @@ layout(std430, binding = 2) readonly buffer PointLights { PointLight point_light
 layout(std430, binding = 4) writeonly buffer TileHeaders { TileHeader tileHeaders[]; };
 layout(std430, binding = 5) writeonly buffer TileLightIndices { uint tileLightIndices[]; };
 
+// 给当前tile建立视锥的4平面
 void BuildTilePlanes(ivec2 size){
+    // tile对应的像素范围
     vec2 pixelMin = vec2(gl_WorkGroupID.xy * gl_WorkGroupSize.xy);
     vec2 pixelMax = min(pixelMin + vec2(gl_WorkGroupSize.xy), vec2(size));
 
+    // 转为NCD [-1, 1]
     vec2 ndcMin = pixelMin / vec2(size) * 2.0 - 1.0;
     vec2 ndcMax = pixelMax / vec2(size) * 2.0 - 1.0;
 
@@ -56,6 +59,7 @@ void BuildTilePlanes(ivec2 size){
     tilePlanes[2] = rowY - ndcMin.y * rowW;
     tilePlanes[3] = ndcMax.y * rowW - rowY;
 
+    // 归一化
     for (int i = 0; i < 4; i++)
         tilePlanes[i] /= length(tilePlanes[i].xyz);
 }
@@ -63,15 +67,14 @@ void BuildTilePlanes(ivec2 size){
 bool SphereIntersectsTile(vec3 center, float radius, float minDepth, float maxDepth){
     float centerDepth = -center.z;
 
-    if (centerDepth + radius < minDepth ||
-        centerDepth - radius > maxDepth)
+    if (centerDepth + radius < minDepth || centerDepth - radius > maxDepth)
         return false;
 
     for (int i = 0; i < 4; i++)
     {
-        float distanceToPlane =
-            dot(tilePlanes[i].xyz, center) + tilePlanes[i].w;
-
+        // 光源中心到平面的距离
+        float distanceToPlane = dot(tilePlanes[i].xyz, center) + tilePlanes[i].w;
+        // 距离小于-r说明完全不相交
         if (distanceToPlane < -radius)
             return false;
     }
