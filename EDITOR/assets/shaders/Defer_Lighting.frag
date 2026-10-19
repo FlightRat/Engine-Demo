@@ -44,7 +44,6 @@ in vec2 TexCoord;
 uniform vec3 viewPos;
 uniform float far_plane;
 uniform int dirLightCount;
-uniform int pointLightCount;
 uniform int areaLightCount;
 
 layout(binding = 0) uniform sampler2D gPosition;
