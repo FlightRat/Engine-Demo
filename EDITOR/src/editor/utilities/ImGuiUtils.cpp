@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "../automation/PhysicsEditing.h"
 #include "ImGuiUtils.h"
 #include "../automation/StateRules.h"
@@ -107,6 +108,7 @@ namespace ImGui {
 
     void DrawGizmo(std::shared_ptr<ENGINE_RENDERING::Camera3D> camera)
     {
+        if (!ENGINE_EDITOR::PlaybackController::Get().CanEdit()) return;
         auto& toolCTX = TOOL_CTX();
         if (!toolCTX.selectedEntity || toolCTX.gizmoOp == ENGINE_EDITOR::EGizmoType::NO_GIZMO)
             return;

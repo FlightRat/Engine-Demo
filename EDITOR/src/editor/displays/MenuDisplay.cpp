@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "MenuDisplay.h"
 #include "../automation/StateRules.h"
 #include "Logger/Logger.h"
@@ -15,11 +16,11 @@ namespace ENGINE_EDITOR {
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New", "Ctrl + N"))
+				if (ImGui::MenuItem("New", "Ctrl + N", false, PlaybackController::Get().CanEdit()))
 				{
 					ENGINE_LOG("New is pressed!")
 				}
-				if (ImGui::MenuItem("Open", "Ctrl + O"))
+				if (ImGui::MenuItem("Open", "Ctrl + O", false, PlaybackController::Get().CanEdit()))
 				{
 					ENGINE_FileSystem::FileDialog fd{};
 					auto file = fd.OpenFileDialog("Open test", SDL_GetBasePath(), { "*.json" });
@@ -41,7 +42,7 @@ namespace ENGINE_EDITOR {
 						}
 					}
 				}
-				if (ImGui::MenuItem("Save", "Ctrl + S"))
+				if (ImGui::MenuItem("Save", "Ctrl + S", false, PlaybackController::Get().CanEdit()))
 				{
 					ENGINE_FileSystem::FileDialog fd{};
 					auto file = fd.SaveFileDialog("Save scene test", SDL_GetBasePath(), { "*.json"});

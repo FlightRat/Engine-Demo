@@ -3,7 +3,7 @@
   "tools": [
     {
       "name": "get_editor_status",
-      "description": "Read connection, instance, session_id, editor_revision, current_scene_id, play state and protocol version. Start here.",
+      "description": "Read connection, instance, session_id, editor_revision, current_scene_id, playback_state (editing/playing/paused), legacy playing (true for Playing and Paused), and protocol version. Start here.",
       "inputSchema": {
         "type": "object",
         "properties": {},
@@ -46,7 +46,21 @@
             "type": "string"
           },
           "data": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "playback_state": {
+                "type": "string",
+                "enum": [
+                  "editing",
+                  "playing",
+                  "paused"
+                ]
+              },
+              "playing": {
+                "type": "boolean",
+                "description": "True throughout a runtime session, including Paused."
+              }
+            }
           },
           "error": {
             "type": "object",
@@ -87,7 +101,7 @@
     },
     {
       "name": "get_scene_state",
-      "description": "Read edit scene list and stable entity snapshots. Default page=50 (max=200); cursors expire when revision changes. Transforms are local engine units/degrees; lights expose their own scene-space position.",
+      "description": "Read edit scene list and stable EDIT snapshots, also during Playing/Paused; never runtime entity IDs. Includes playback_state and legacy playing. Default page=50 (max=200); cursors expire when revision changes. Transforms are local engine units/degrees; lights expose their own scene-space position.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -160,7 +174,21 @@
             "type": "string"
           },
           "data": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "playback_state": {
+                "type": "string",
+                "enum": [
+                  "editing",
+                  "playing",
+                  "paused"
+                ]
+              },
+              "playing": {
+                "type": "boolean",
+                "description": "True throughout a runtime session, including Paused."
+              }
+            }
           },
           "error": {
             "type": "object",
@@ -306,7 +334,7 @@
     },
     {
       "name": "create_scene",
-      "description": "Create and activate a uniquely named empty edit scene. Requires current session/revision and a new request_id. Writes are rejected during play.",
+      "description": "Create and activate an empty edit scene with a Windows-safe, case-insensitively unique name. Generate assets/scripts/<name>.lua only if absent; reuse existing contents. Undo retains the Lua file. Requires current session/revision and a new request_id. Writes are rejected during Playing and Paused.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -3582,7 +3610,7 @@
     },
     {
       "name": "capture_viewport",
-      "description": "Read a fresh Scene-camera PNG of the current non-playing edit scene, including when Game tab is active. No UI/Gizmo, file writes or camera changes. Default 640x360; integer width/height 64..1024, proportionally reduced to 230400 pixels. Returns image/png plus actual dimensions/frame_id/camera/session/revision. One in flight; capture_busy/timeout/unavailable are explicit. Does not consume undo.",
+      "description": "Read a fresh Scene-camera PNG of the current Editing scene (Playing and Paused return play_mode), including when Game tab is active. No UI/Gizmo, file writes or camera changes. Default 640x360; integer width/height 64..1024, proportionally reduced to 230400 pixels. Returns image/png plus actual dimensions/frame_id/camera/session/revision. One in flight; capture_busy/timeout/unavailable are explicit. Does not consume undo.",
       "inputSchema": {
         "type": "object",
         "properties": {

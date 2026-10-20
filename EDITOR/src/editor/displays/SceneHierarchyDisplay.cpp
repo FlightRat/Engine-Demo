@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "SceneHierarchyDisplay.h"
 #include "../automation/StateRules.h"
 #include "../tools/ToolContext.h"
@@ -20,12 +21,14 @@ using namespace entt::literals;
 namespace ENGINE_EDITOR {
 
 	auto create_entity = [&](ENGINE_EDITOR::SceneObject& currentScene) {
+        if (!PlaybackController::Get().CanEdit()) return;
         auto newEntity = Automation::CreateEditableEntity(currentScene.GetRegistry(), "GameObject");
         Automation::NotifyManualEdit();
 		};
 
 	auto delete_entity = [&](std::shared_ptr<ENGINE_CORE::ECS::Entity> entityToDelete) {
-		entityToDelete->Kill();
+		if (!PlaybackController::Get().CanEdit()) return;
+        entityToDelete->Kill();
         Automation::NotifyManualEdit();
 		};
 
@@ -45,7 +48,7 @@ namespace ENGINE_EDITOR {
 		bool bTreeNodeOpen = ImGui::TreeNodeEx(entity.GetName().c_str(), nodeFlags);
 
 		// 绘制当前entity左侧节点时，如果被选中+右键，弹窗
-		if (isSelected && ImGui::BeginPopupContextItem())
+		if (PlaybackController::Get().CanEdit() && isSelected && ImGui::BeginPopupContextItem())
 		{
 			if (ImGui::MenuItem("Delete Game Object"))
 				m_bDeleteGameObject = true;
@@ -53,8 +56,13 @@ namespace ENGINE_EDITOR {
 		}
 
         if (ImGui::IsItemClicked()) {
-            Automation::SelectEntity(SCENE_MANAGER().GetCurrentScene(), entity.GetEntity());
-            m_pSelectedEntity = TOOL_CTX().selectedEntity;
+            if (PlaybackController::Get().HasRuntimeSession()) {
+                TOOL_CTX().runtimeSelectedEntity = std::make_shared<ENGINE_CORE::ECS::Entity>(SCENE_MANAGER().GetCurrentScene()->GetRuntimeRegistry(), entity.GetEntity());
+                m_pSelectedEntity = TOOL_CTX().runtimeSelectedEntity;
+            } else {
+                Automation::SelectEntity(SCENE_MANAGER().GetCurrentScene(), entity.GetEntity());
+                m_pSelectedEntity = TOOL_CTX().selectedEntity;
+            }
         }
 
 		ImGui::PopID();
@@ -70,14 +78,14 @@ namespace ENGINE_EDITOR {
 			return;
 		}
 
-		if (ImGui::BeginPopupContextWindow())
+		if (PlaybackController::Get().CanEdit() && ImGui::BeginPopupContextWindow())
 		{
 			if (ImGui::Selectable("Add Component"))
 				m_bAddComponent = true;
 			ImGui::EndPopup();
 		}
 
-		if (m_pSelectedEntity && m_bAddComponent)
+		if (PlaybackController::Get().CanEdit() && m_pSelectedEntity && m_bAddComponent)
 			AddComponent(*m_pSelectedEntity, &m_bAddComponent);
 
 		if (m_pSelectedEntity)
@@ -94,6 +102,7 @@ namespace ENGINE_EDITOR {
 	*/
 	void SceneHierarchyDisplay::AddComponent(ENGINE_CORE::ECS::Entity& entity, bool* bAddComponent)
 	{
+        if (!PlaybackController::Get().CanEdit()) return;
 		if (!bAddComponent)
 			return;
 
@@ -233,11 +242,13 @@ namespace ENGINE_EDITOR {
 			{
 				ImGui::Spacing();
 				ImGui::PushID(id);
-				if (ImGui::Button("remove"))
+                ImGui::BeginDisabled(!PlaybackController::Get().CanEdit());
+				if (ImGui::Button("remove") && PlaybackController::Get().CanEdit())
 				{
 					storage.remove(m_pSelectedEntity->GetEntity());
                     Automation::NotifyManualEdit();
 				}
+				ImGui::EndDisabled();
 				ImGui::PopID();
 			}
 			ImGui::Spacing();
@@ -261,7 +272,7 @@ namespace ENGINE_EDITOR {
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
         Automation::SynchronizeSelection(pCurrentScene);
-        m_pSelectedEntity = TOOL_CTX().selectedEntity;
+        m_pSelectedEntity = PlaybackController::Get().CanEdit() ? TOOL_CTX().selectedEntity : TOOL_CTX().runtimeSelectedEntity;
 		if (!ImGui::Begin("Scene Hierarchy") || !pCurrentScene)
 		{
 			ImGui::End();
@@ -269,7 +280,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// 右击空白处的菜单
-		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+		if (PlaybackController::Get().CanEdit() && ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 		{
 			if (ImGui::Selectable("Add New Game Object"))
 			{
@@ -279,7 +290,7 @@ namespace ENGINE_EDITOR {
 		}
 
 		// 绘制左侧entity
-		auto& registry = pCurrentScene->GetRegistry();
+		auto& registry = *PlaybackController::Get().VisibleRegistry();
 		auto sceneEntities = registry.GetRegistry().view<entt::entity>(entt::exclude<ENGINE_CORE::ECS::ScriptComponent>);
 		for (auto entity : sceneEntities)
 		{
@@ -290,12 +301,13 @@ namespace ENGINE_EDITOR {
 
 		// 左击空白处取消选中entity
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
-            Automation::ResetSelection();
+            if (PlaybackController::Get().CanEdit()) Automation::ResetSelection();
+            else TOOL_CTX().runtimeSelectedEntity.reset();
             m_pSelectedEntity.reset();
         }
 
 		// 执行删除entity
-		if (m_pSelectedEntity && m_bDeleteGameObject)
+		if (PlaybackController::Get().CanEdit() && m_pSelectedEntity && m_bDeleteGameObject)
 		{
 			delete_entity(m_pSelectedEntity);
             Automation::ResetSelection();

@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "../automation/MaterialRules.h"
 #include "../automation/PhysicsEditing.h"
 #include "ComponentDrawer.h"
@@ -28,7 +29,7 @@ namespace ENGINE_EDITOR {
 
 		if (ImGui::TreeNodeEx((void*)typeid(TransformComponents).hash_code(), flags, "Transform"))
 		{
-            auto selected = TOOL_CTX().selectedEntity;
+            auto selected = PlaybackController::Get().CanEdit() ? TOOL_CTX().selectedEntity : TOOL_CTX().runtimeSelectedEntity;
             const bool physical = selected && selected->HasComponent<PhysicsComponent>();
             const auto before = transform;
             const bool child = physical && selected->HasComponent<Identification>() && selected->GetComponent<Identification>().parent_id != -1;
@@ -207,21 +208,21 @@ namespace ENGINE_EDITOR {
 		if (ImGui::TreeNodeEx((void*)typeid(PhysicsComponent).hash_code(), flags, "Physics"))
 		{
             auto scene = SCENE_MANAGER().GetCurrentScene();
-            auto selected = TOOL_CTX().selectedEntity;
+            auto selected = PlaybackController::Get().CanEdit() ? TOOL_CTX().selectedEntity : TOOL_CTX().runtimeSelectedEntity;
             if (!scene || !selected) { ImGui::TreePop(); return; }
-            auto& registry = scene->GetRegistry().GetRegistry();
+            auto& registry = selected->GetRegistry();
             const auto entity = selected->GetEntity();
             static std::weak_ptr<SceneObject> draftScene;
             static entt::entity draftEntity = entt::null;
             static PhysicsAttributes draft;
             static std::string applied, error;
-            if (!physics.initialized) {
+            if (!physics.initialized && PlaybackController::Get().CanEdit()) {
                 try { Automation::ApplyPhysics(registry, entity, physics.GetAttr()); }
                 catch (const std::exception& e) { error = e.what(); }
             }
             Automation::Json state; auto& allocator = state.GetAllocator();
             const auto fingerprint = Automation::Stringify(Automation::PhysicsJson(physics.GetAttr(), allocator));
-            if (draftScene.lock() != scene || draftEntity != entity || applied != fingerprint) {
+            if (!PlaybackController::Get().CanEdit() || draftScene.lock() != scene || draftEntity != entity || applied != fingerprint) {
                 draft = physics.GetAttr(); applied = fingerprint; draftScene = scene; draftEntity = entity; error.clear();
             }
             PhysicsAttributes& physicsAttr = draft;

@@ -1,3 +1,4 @@
+#include "../CoreUtilities/GameplayContext.h"
 #include <set>
 #include <stdexcept>
 #include "AssetManager.h"
@@ -547,6 +548,13 @@ namespace ENGINE_CORE::RESOURCES {
     // lua register
     void AssetManager::CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
     {
+        if (registry.GetRegistry().ctx().contains<std::shared_ptr<ENGINE_CORE::GameplayContext>>()) {
+            auto reject = [](sol::variadic_args) -> bool { throw std::runtime_error("Runtime scripts cannot register shared assets; import assets while Editing"); };
+            lua.new_usertype<AssetManager>("AssetManager", sol::no_constructor,
+                "add_model", reject, "add_texture", reject, "add_music", reject, "add_soundFx", reject, "add_shader", reject);
+            return;
+        }
+
         //auto& assetManager = registry.GetContext<std::shared_ptr<ENGINE_CORE::RESOURCES::AssetManager>>();
         auto& mainRegistry = MAIN_REGISTRY();
         auto& assetManager = mainRegistry.GetAssetManager();

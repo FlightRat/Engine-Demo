@@ -1,3 +1,5 @@
+#include "../scene/PlaybackController.h"
+#include <imgui.h>
 #include "ComponentDrawer.h"
 #include "Core/ECS/Entity.h"
 
@@ -7,13 +9,19 @@ namespace ENGINE_EDITOR {
 	inline void ComponentDrawer::DrawEntityComponentInfo(ENGINE_CORE::ECS::Entity& entity)
 	{
 		auto& component = entity.GetComponent<Tcomponent>();
-		DrawImGuiComponent(component);
+		if (!PlaybackController::Get().CanEdit()) {
+            auto snapshot = component;
+            ImGui::BeginDisabled(); DrawImGuiComponent(snapshot); ImGui::EndDisabled();
+        } else DrawImGuiComponent(component);
 	}
 
 	template<typename TComponent>
 	inline void ComponentDrawer::DrawComponentInfo(TComponent& component)
 	{
-		DrawImGuiComponent(component);
+		if (!PlaybackController::Get().CanEdit()) {
+            auto snapshot = component;
+            ImGui::BeginDisabled(); DrawImGuiComponent(snapshot); ImGui::EndDisabled();
+        } else DrawImGuiComponent(component);
 	}
 
 	template<typename TComponent>

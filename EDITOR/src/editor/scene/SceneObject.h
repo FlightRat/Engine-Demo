@@ -7,7 +7,7 @@ namespace ENGINE_EDITOR {
 	private:
 		ENGINE_CORE::ECS::Registry m_Registry, m_RuntimeRegistry;
 		std::string m_sSceneName;
-		bool m_bPlay;
+
 	public:
 		SceneObject(const std::string& sceneName);
 		~SceneObject() = default;
@@ -15,11 +15,12 @@ namespace ENGINE_EDITOR {
 		void CopySceneToRuntime();
 		void ClearRuntimeScene();
 		
-		inline const bool CheckPlay() { return m_bPlay; }
-		inline void SetPlay(const bool play) { m_bPlay = play; }
+		bool CheckPlay() const;
+
 
 		inline const std::string& GetName() { return m_sSceneName; }
         void SetName(const std::string& name) { m_sSceneName = name; }
+        void SwapName(std::string& name) noexcept { m_sSceneName.swap(name); }
 		inline ENGINE_CORE::ECS::Registry& GetRegistry() { return m_Registry; }
 		inline ENGINE_CORE::ECS::Registry* GetRegistryPtr() { return &m_Registry; }
 		inline ENGINE_CORE::ECS::Registry& GetRuntimeRegistry() { return m_RuntimeRegistry; }

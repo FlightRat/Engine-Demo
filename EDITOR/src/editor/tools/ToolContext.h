@@ -21,6 +21,7 @@ namespace ENGINE_EDITOR {
 
 		// 当前选中的实体（弱引用，避免循环持有）
 		std::shared_ptr<ENGINE_CORE::ECS::Entity> selectedEntity{ nullptr };
+        std::shared_ptr<ENGINE_CORE::ECS::Entity> runtimeSelectedEntity;
 
 		// 当前 Gizmo 操作模式
 		EGizmoType gizmoOp{ EGizmoType::NO_GIZMO };

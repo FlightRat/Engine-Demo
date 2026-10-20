@@ -7,6 +7,9 @@
 #include <SDL_mixer.h>
 #include <glad/glad.h>
 #include <Logger/Logger.h>
+#include "../src/editor/scene/SceneManager.h"
+#include <filesystem>
+#include <Windows.h>
 #ifdef _MSC_VER
 #include <crtdbg.h>
 #endif
@@ -19,7 +22,21 @@ void AssetImportTests(Contract&, bool);
 void MaterialSelectionTests(Contract&);
 void CaptureTests(Contract&);
 void QueueTests(Contract&);
+void RuntimeBasicsTests();
+void SceneScriptTests();
+void RuntimeLifecycleTests();
+void RuntimeAudioBackendTests();
+void PlaybackAutomationTests(Contract&);
 int BridgeHarness(Contract&, const std::string&, int);
+struct TestAssetScope {
+    std::filesystem::path root = std::filesystem::temp_directory_path() /
+        ("engine-scene-tests-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    ~TestAssetScope() {
+        if (root.parent_path() == std::filesystem::temp_directory_path() && root.filename().string().starts_with("engine-scene-tests-")) {
+            std::error_code error; std::filesystem::remove_all(root, error);
+        }
+    }
+};
 static void Check(bool condition, const char* message) { if (!condition) throw std::runtime_error(message); }
 static void Invalid(Contract& c, const char* method, const std::string& text) {
     bool rejected = false;
@@ -33,6 +50,9 @@ int main(int argc, char** argv) {
     _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
     try {
+        const TestAssetScope testAssetScope; const auto testAssets = testAssetScope.root;
+        std::filesystem::create_directories(testAssets / "scripts");
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets);
         const bool glTesting = argc > 1 && std::string(argv[1]) == "--gl-tests";
         const bool serving = argc > 2 && std::string(argv[1]) == "--serve";
         Contract c(!serving && !glTesting && argc > 1 ? argv[1] : "tools/engine_mcp/contracts/tools.json");
@@ -69,12 +89,27 @@ int main(int argc, char** argv) {
         auto first = Parse(R"({"b":1.0,"a":[0,-0.0]})");
         auto second = Parse(R"({"a":[0,0],"b":1})");
         Check(Request("test", first).Fingerprint() == Request("test", second).Fingerprint(), "Semantic fingerprints differ");
+        ENGINE_INIT_LOGS(false, true);
+        RuntimeBasicsTests();
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "SceneScriptTests");
+        SceneScriptTests();
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "RuntimeLifecycleTests");
+        RuntimeLifecycleTests();
+        RuntimeAudioBackendTests();
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "PlaybackAutomationTests");
+        PlaybackAutomationTests(c);
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "OperationsTests");
         OperationsTests(c);
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "HistoryTests");
         HistoryTests(c);
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "PhysicsEditingTests");
         PhysicsEditingTests(c);
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "DeletionTests");
         DeletionTests(c);
         AssetImportTests(c, false);
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "MaterialSelectionTests");
         MaterialSelectionTests(c);
+        SCENE_MANAGER().Scripts().SetAssetRoot(testAssets / "CaptureTests");
         CaptureTests(c);
         QueueTests(c);
         std::cout << "Automation contract tests passed\n";

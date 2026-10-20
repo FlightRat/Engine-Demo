@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "EditorOperations.h"
 #include "StateRules.h"
 #include "MaterialRules.h"
@@ -100,6 +101,7 @@ struct EditorOperations::Impl {
     std::string instance, session = NewSession();
     std::thread::id owner = std::this_thread::get_id();
     uint64_t revision = 0, nextId = 0;
+    uint64_t playbackSerial = PlaybackController::Get().TransitionSerial();
     std::string baseline;
     bool recovery = false;
     OperationHooks hooks;
@@ -183,6 +185,8 @@ struct EditorOperations::Impl {
     Json State() {
         Json out(rapidjson::kObjectType); auto& a = out.GetAllocator();
         out.AddMember("manual_serial", ManualEditSerial, a);
+        out.AddMember("playback_state", Text(PlaybackStateName(PlaybackController::Get().State()), a), a);
+        out.AddMember("playing", PlaybackController::Get().HasRuntimeSession(), a);
         out.AddMember("active", Text(scenes.GetCurrentSceneName(), a), a);
         Value list(rapidjson::kArrayType);
         for (auto& name : scenes.GetAllSceneNames()) {
@@ -207,7 +211,9 @@ struct EditorOperations::Impl {
             auto s = item.second.scene.lock(); return !s || !s->GetRegistry().GetRegistry().valid(item.second.entity);
         });
         auto now = Stamp();
-        if (!baseline.empty() && baseline != now) { ++revision; history.Clear(); }
+        const auto serial = PlaybackController::Get().TransitionSerial();
+        if (!baseline.empty() && baseline != now) { revision += (std::max)(uint64_t(1), serial - playbackSerial); history.Clear(); }
+        playbackSerial = serial;
         baseline = std::move(now);
     }
     Json Status() {
@@ -216,7 +222,8 @@ struct EditorOperations::Impl {
         d.AddMember("protocol_version", ProtocolVersion, a);
         d.AddMember("current_scene_id", Text(SceneId(scenes.GetCurrentScene()), a), a);
         auto current = scenes.GetCurrentScene(); d.AddMember("playing", current && current->CheckPlay(), a);
-        d.AddMember("write_enabled", !recovery, a);
+        d.AddMember("playback_state", Text(PlaybackStateName(PlaybackController::Get().State()), a), a);
+        d.AddMember("write_enabled", !recovery && PlaybackController::Get().CanEdit(), a);
         d.AddMember("undo_operation_id", Text(history.Top() ? history.Top()->id : "", a), a);
         d.AddMember("redo_operation_id", Text(history.Top(true) ? history.Top(true)->id : "", a), a);
         d.AddMember("undo_count", uint64_t(history.Undo().size()), a); d.AddMember("redo_count", uint64_t(history.Redo().size()), a);
@@ -573,7 +580,8 @@ struct EditorOperations::Impl {
                 auto previous = LogicalScene(record->previousScene);
                 if (previous != scenes.GetCurrentScene()) throw Error("history_conflict", "Scene creation context changed");
                 const auto oldId = lastSceneIds.at(record->logicalScene);
-                if (!scenes.AddScene(record->sceneName)) throw Error("execution_failed", "Could not recreate scene");
+                std::unique_ptr<SceneScriptFiles::Creation> script;
+                if (!scenes.AddScene(record->sceneName, &script)) throw Error("execution_failed", scenes.LastError());
                 auto s = scenes.GetScene(record->sceneName);
                 try {
                     const auto nextId = SceneId(s);
@@ -582,6 +590,7 @@ struct EditorOperations::Impl {
                     out.AddMember("scene_id", Text(nextId, a), a);
                 } catch (...) { scenes.DeleteScene(record->sceneName); throw; }
                 scenes.SetCurrentScene(record->sceneName);
+                script->Commit();
             } else {
                 auto s = LogicalScene(record->logicalScene);
                 if (s != scenes.GetCurrentScene() || !Entities(s).empty()) throw Error("history_conflict", "Created scene is not the current empty scene");
@@ -682,15 +691,18 @@ struct EditorOperations::Impl {
         if (r.method == "create_scene") {
             const auto name = Str(r.params, "name");
             if (EmptyName(name)) throw Error("invalid_arguments", "Scene name cannot be blank");
+            try { SceneScriptFiles::ValidateName(name); } catch (const std::exception& e) { throw Error("invalid_arguments", e.what()); }
             if (scenes.CheckHasScene(name)) throw Error("scene_name_conflict", "Scene name already exists");
             record.createsScene = true; record.sceneName = name; record.previousScene = SceneKey(s);
             record.logicalScene = Id("logical-scene-"); history.Admit(record);
-            if (!scenes.AddScene(name)) throw Error("execution_failed", "Could not create scene");
+            std::unique_ptr<SceneScriptFiles::Creation> script;
+            if (!scenes.AddScene(name, &script)) throw Error("execution_failed", scenes.LastError());
             auto created = scenes.GetScene(name);
             try {
                 const auto id = SceneId(created); logicalScenes[record.logicalScene] = created; lastSceneIds[record.logicalScene] = id;
                 result.AddMember("scene_id", Text(id, a), a);
                 history.Commit(std::move(record));
+                script->Commit();
             } catch (...) { scenes.DeleteScene(name); throw; }
             scenes.SetCurrentScene(name); ResetSelection();
         } else {

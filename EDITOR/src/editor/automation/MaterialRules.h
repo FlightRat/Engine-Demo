@@ -28,6 +28,7 @@ inline void ValidateMaterial(const Material& m, ENGINE_CORE::RESOURCES::AssetMan
     }
 }
 inline bool CommitMaterial(Material& destination, const Material& next, ENGINE_CORE::RESOURCES::AssetManager& assets, bool manual) {
+    if (manual && !PlaybackController::Get().CanEdit()) return false;
     if (MaterialEqual(destination, next)) return false;
     ValidateMaterial(next, assets);
     destination = next;

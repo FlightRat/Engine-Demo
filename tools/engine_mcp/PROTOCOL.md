@@ -155,3 +155,30 @@ Errors include import_busy/import_timeout/import_unavailable/import_failed,
 asset_name_conflict/asset_in_use/history_capacity_exceeded and existing context
 errors. Failure messages are bounded; large result metadata rolls back before
 destructive commit. PNG limits and observational Scene capture are unchanged.
+
+
+## Playback state extension
+
+Status and scene-query data include `playback_state` with values `editing`,
+`playing`, `paused`. Existing `playing` means a runtime session exists, including
+Paused. Scene entries derive their `playing` value from session ownership.
+State fields are additive; existing request envelopes and the 21 tools remain.
+Snapshots and public entity IDs always address edit data. Runtime UI selection
+is separate and never becomes an editable MCP entity.
+
+Playing and Paused reject new content/selection/import/history writes with
+`play_mode`; capture is Editing-only. Async import/capture revalidate revision
+and playback at commit/delivery. Deduplication still precedes execution guards,
+so an identical completed request returns its original receipt. Successful
+playback transitions (including error-driven pause) increment edit revision and
+clear history; runtime frames and camera/inspection changes do not.
+
+`create_scene` also creates or reuses the same-named Lua file. Names are valid
+Windows filenames, case-insensitively unique. File failures cannot publish a
+Scene or successful history. Undo/delete retain user script bytes; redo binds
+the current file, generating a template only if absent. External Lua edits are
+not rolled back by content history. Tests use an injected temporary asset root.
+
+This change's verification forbids computer-use and UI input/window automation.
+Visual, focus and auditory acceptance without human evidence stays explicitly
+pending rather than being inferred from headless test results.

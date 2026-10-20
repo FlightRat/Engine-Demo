@@ -3,6 +3,7 @@
 #include "StateRules.h"
 #include <Core/ECS/Components/PhysicsComponent.h>
 #include <cmath>
+#include <Core/Systems/PhysicsResources.h>
 
 namespace ENGINE_EDITOR::Automation {
 using ENGINE_CORE::ECS::PhysicsAttributes;
@@ -53,17 +54,10 @@ inline PhysicsAttributes UpdatedPhysics(PhysicsAttributes v, const Value& p) {
     if (p.HasMember("half_height")) v.capsule_halfHeight = p["half_height"].GetFloat();
     ValidatePhysics(v); return v;
 }
-inline void EnsurePhysicsContext(entt::registry& reg) {
-    auto& ctx = reg.ctx();
-    auto* common = ctx.find<std::shared_ptr<rp3d::PhysicsCommon>>();
-    if (!common) common = &ctx.emplace<std::shared_ptr<rp3d::PhysicsCommon>>(std::make_shared<rp3d::PhysicsCommon>());
-    if (!*common) *common = std::make_shared<rp3d::PhysicsCommon>();
-    auto* world = ctx.find<std::shared_ptr<rp3d::PhysicsWorld>>();
-    if (!world) ctx.emplace<std::shared_ptr<rp3d::PhysicsWorld>>(ENGINE_PHYSICS::MakeSharedPhysicsWorld(*common));
-    else if (!*world) *world = ENGINE_PHYSICS::MakeSharedPhysicsWorld(*common);
-}
+inline void EnsurePhysicsContext(entt::registry& reg) { ENGINE_CORE::Systems::EnsurePhysicsResources(reg); }
 inline void ApplyPhysics(entt::registry& reg, entt::entity e, PhysicsAttributes value);
 inline void SyncPhysicsPose(entt::registry& reg, entt::entity e) {
+    if (!PlaybackController::Get().CanEdit()) throw Error("play_mode", "Stop playback before editing physics");
     auto* physics = reg.try_get<PhysicsComponent>(e); auto* t = reg.try_get<ENGINE_CORE::ECS::TransformComponent>(e);
     if (!physics || !t) return;
     if (!physics->GetRigidBody()) { ApplyPhysics(reg, e, physics->GetAttr()); return; }
@@ -75,19 +69,10 @@ inline void SyncPhysicsPose(entt::registry& reg, entt::entity e) {
     }
 }
 inline void ApplyPhysics(entt::registry& reg, entt::entity e, PhysicsAttributes value) {
-    ValidatePhysics(value); EnsurePhysicsContext(reg);
-    auto* t = reg.try_get<ENGINE_CORE::ECS::TransformComponent>(e);
-    if (!t) throw Error("unsupported_target", "Physics needs a Transform");
-    value.position = t->position; value.rotation = t->rotation_eular;
-    value.objectData.entityID = entt::to_integral(e); value.objectData.bTrigger = value.c_Trigger;
-    value.objectData.bCollider = true; value.objectData.contactEntities.clear();
-    if (auto* id = reg.try_get<ENGINE_CORE::ECS::Identification>(e)) { value.objectData.tag = id->name; value.objectData.group = id->group; }
-    PhysicsComponent next(value);
-    next.Init(reg.ctx().get<std::shared_ptr<rp3d::PhysicsCommon>>(), reg.ctx().get<std::shared_ptr<rp3d::PhysicsWorld>>());
-    if (!next.GetRigidBody()) throw Error("execution_failed", "Could not build physics resources");
-    next.initialized = true;
-    if (auto* current = reg.try_get<PhysicsComponent>(e)) current->Swap(next);
-    else reg.emplace<PhysicsComponent>(e, next);
+    if (!PlaybackController::Get().CanEdit()) throw Error("play_mode", "Stop playback before editing physics");
+    ValidatePhysics(value);
+    if (!reg.try_get<ENGINE_CORE::ECS::TransformComponent>(e)) throw Error("unsupported_target", "Physics needs a Transform");
+    ENGINE_CORE::Systems::BuildPhysicsBody(reg, e, std::move(value));
     SyncPhysicsPose(reg, e);
 }
 inline Value PhysicsJson(const PhysicsAttributes& p, Allocator& a) {

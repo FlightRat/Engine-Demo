@@ -3,6 +3,7 @@
 #include <Windowing/Inputs/Mouse.h>
 #include <memory>
 #include <sol/sol.hpp>
+#include "../CoreUtilities/GameplayContext.h"
 
 using namespace ENGINE_WINDOWING::INPUTS;
 #define INPUT_MANAGER() ENGINE_CORE::INPUTS::InputManager::GetInstance()
@@ -40,7 +41,7 @@ namespace ENGINE_CORE::INPUTS {
 
 	public:
 		static InputManager& GetInstance();
-		static void CreateLuaInputBind(sol::state& lua);
+		static void CreateLuaInputBind(sol::state& lua, std::shared_ptr<GameplayContext> runtime = {});
 
 		inline Keyboard& GetKeyBoard() { return *m_pKeyboard; }
 		inline Mouse& GetMouse() { return *m_pMouse; }

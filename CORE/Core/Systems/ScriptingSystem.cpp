@@ -1,4 +1,6 @@
 #include "ScriptingSystem.h"
+#include <fstream>
+#include <stdexcept>
 #include "../ECS/MainRegistry.h"
 #include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
@@ -28,117 +30,43 @@
 using namespace ENGINE_CORE::ECS;
 
 namespace ENGINE_CORE::Systems {
-	ScriptingSystem::ScriptingSystem():m_bMainLoaded{false}
-	{
-	}
-
-	bool ScriptingSystem::LoadMainScript(ENGINE_CORE::ECS::Registry& registry, sol::state& lua)
-	{
-		// read the lua script
-		try
-		{
-			auto result = lua.safe_script_file("./assets/scripts/main.lua");
-		}
-		catch(const sol::error& err)
-		{
-			ENGINE_ERROR("Error loading the main lua script: {0}", err.what());
-			return false;
-		}
-
-		sol::table main_lua = lua["main"];	// read the "main" into sol::table main_lua
-
-		sol::optional<sol::table> bUpdateExists = main_lua[1]; // check if the element 1 is a "sol::table"
-		if (bUpdateExists == sol::nullopt)
-		{
-			ENGINE_ERROR("There is no update function in main.lua!");
-			return false;
-		}
-		sol::table update_script = main_lua[1];
-		sol::function update = update_script["update"];
-
-		sol::optional<sol::table> bRenderExists = main_lua[2];
-		if (bRenderExists == sol::nullopt)
-		{
-			ENGINE_ERROR("There is no render function in main.lua!");
-			return false;
-		}
-		sol::table render_script = main_lua[2];
-		sol::function render = render_script["render"];
-
-		ENGINE_CORE::ECS::Entity mainLuaScript{ registry, "main_script", "" };
-		mainLuaScript.AddComponent<ENGINE_CORE::ECS::ScriptComponent>(
-			ENGINE_CORE::ECS::ScriptComponent{
-				.update = update,
-				.render = render,
-			}
-		);
-
-		m_bMainLoaded = true;
-
-		return true;
-	}
-
-	void ScriptingSystem::Update(ENGINE_CORE::ECS::Registry& registry)
-	{
-		if (!m_bMainLoaded)
-		{
-			ENGINE_ERROR("Main lua script has not been loaded!");
-			return;
-		}
-
-		auto view = registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
-
-		for (const auto& entity : view) 
-		{
-			ENGINE_CORE::ECS::Entity ent{ registry, entity };
-			if (ent.GetName() != "main_script")
-				continue;
-			auto& script = ent.GetComponent<ENGINE_CORE::ECS::ScriptComponent>();
-			auto error = script.update(entity);
-			if (!error.valid())
-			{
-				sol::error err = error;
-				ENGINE_ERROR("Error running the Update script£º {0}", err.what());
-			}
-		}
-
-		auto& lua = registry.GetContext<std::shared_ptr<sol::state>>();
-		if (lua)
-		{
-			lua->collect_garbage();
-		}
-	}
-
-	void ScriptingSystem::Render(ENGINE_CORE::ECS::Registry& registry)
-	{
-		if (!m_bMainLoaded)
-		{
-			ENGINE_ERROR("Main lua script has not been loaded!");
-			return;
-		}
-
-		auto view = registry.GetRegistry().view<ENGINE_CORE::ECS::ScriptComponent>();
-
-		for (const auto& entity : view)
-		{
-			ENGINE_CORE::ECS::Entity ent{ registry, entity };
-			if (ent.GetName() != "main_script")
-				continue;
-			auto& script = ent.GetComponent<ENGINE_CORE::ECS::ScriptComponent>();
-			auto error = script.render(entity);
-			if (!error.valid())
-			{
-				sol::error err = error;
-				ENGINE_ERROR("Error running the Render script£º {0}", err.what());
-			}
-		}
-
-		auto& lua = registry.GetContext<std::shared_ptr<sol::state>>();
-		if (lua)
-		{
-			lua->collect_garbage();
-		}
-	}
+    namespace {
+    std::string ScriptBytes(const std::filesystem::path& path) {
+        std::ifstream file(path, std::ios::binary);
+        if (!file) throw std::runtime_error("Cannot open Lua script");
+        return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+    }
+    }
+    bool ScriptingSystem::LoadSceneScript(sol::state& lua, const std::filesystem::path& path) {
+        Release(); const auto text = path.u8string(); m_Path.assign(text.begin(), text.end());
+        try {
+            auto result = lua.safe_script(ScriptBytes(path), sol::script_pass_on_error, m_Path);
+            if (!result.valid()) { sol::error error = result; throw error; }
+            if (result.return_count() < 1) throw std::runtime_error("Scene script must return a callback table");
+            sol::object object = result.get<sol::object>();
+            if (!object.is<sol::table>()) throw std::runtime_error("Scene script must return a callback table");
+            auto table = object.as<sol::table>();
+            for (const char* name : {"on_start", "on_update", "on_stop"}) {
+                sol::object value = table[name];
+                if (value.get_type() != sol::type::function) throw std::runtime_error(std::string("Missing Scene function: ") + name);
+            }
+            m_Start = table["on_start"]; m_Update = table["on_update"]; m_Stop = table["on_stop"]; return true;
+        } catch (const std::exception& error) { m_Error = m_Path + ": module: " + error.what(); return false; }
+    }
+    bool ScriptingSystem::Invoke(sol::protected_function& callback, const char* name) {
+        if (!callback.valid()) { m_Error = m_Path + ": missing callback " + name; return false; }
+        auto result = callback();
+        if (result.valid()) return true;
+        sol::error error = result; m_Error = m_Path + ": " + name + ": " + error.what(); return false;
+    }
+    bool ScriptingSystem::Start() { return Invoke(m_Start, "on_start"); }
+    bool ScriptingSystem::Stop() { return Invoke(m_Stop, "on_stop"); }
+    bool ScriptingSystem::Tick(double dt) {
+        auto result = m_Update(dt);
+        if (result.valid()) return true;
+        sol::error error = result; m_Error = m_Path + ": on_update: " + error.what(); return false;
+    }
+    void ScriptingSystem::Release() { m_Start = sol::lua_nil; m_Update = sol::lua_nil; m_Stop = sol::lua_nil; }
 
 	auto create_lua_logger = [](sol::state& lua) {
 		auto& logger = ENGINE_LOGGER::Logger::GetInstance();
@@ -271,12 +199,14 @@ namespace ENGINE_CORE::Systems {
 		ENGINE_CORE::Scripting::UserDataBindings::CreateLuaUserDataBind(lua);
 		ENGINE_CORE::Scripting::ContactListenerBindings::CreateLuaContactListenerBind(lua, registry);
 		ENGINE_CORE::FollowCamera::CreateLuaFollowCameraBind(lua, registry);
-		ENGINE_CORE::INPUTS::InputManager::CreateLuaInputBind(lua);
+		auto* runtimePtr = registry.GetRegistry().ctx().find<std::shared_ptr<GameplayContext>>();
+        const auto runtime = runtimePtr ? *runtimePtr : nullptr;
+        ENGINE_CORE::INPUTS::InputManager::CreateLuaInputBind(lua, runtime);
 		ENGINE_CORE::State::CreateLuaStateBind(lua);
 		ENGINE_CORE::StateStack::CreateLuaStateStackBind(lua);
 		ENGINE_CORE::StateMachine::CreateLuaStateMachineBind(lua);
 		ENGINE_CORE::RESOURCES::AssetManager::CreateLuaAssetManagerBind(lua, registry);
-		ENGINE_UTIL::Timer::CreateLuaTimerBind(lua);
+		ENGINE_UTIL::Timer::CreateLuaTimerBind(lua, runtime ? std::function<int64_t()>([runtime] { return int64_t(runtime->clock.Milliseconds()); }) : std::function<int64_t()>{});
 
 		create_lua_logger(lua);
 
@@ -290,6 +220,10 @@ namespace ENGINE_CORE::Systems {
 		PhysicsComponent::CreateLuaPhysicsBind(lua, registry.GetRegistry());
 		LightComponent::CreateLuaLightBind(lua);
 
+        RegisterComponentMetadata();
+	}
+
+    void ScriptingSystem::RegisterComponentMetadata() {
 		//NOTE::the same registered Component in LUA and META should have the same id
 
 		ENGINE_CORE::ECS::Entity::RegisterMetaComponent<TransformComponent>();	// register TransformComponent into meta
@@ -309,69 +243,33 @@ namespace ENGINE_CORE::Systems {
 		Registry::RegisterMetaComponent<LightComponent>();
 
 		ENGINE_CORE::Scripting::UserDataBindings::register_meta_user_data<ENGINE_PHYSICS::ObjectData>();
-	}
+    }
 
-	void ScriptingSystem::RegisterLuaFunctions(sol::state& lua)
-	{
-		lua.set_function(
-			"ENGINE_RunScript", [&](const std::string& path)
-			{
-				try
-				{
-					lua.safe_script_file(path);
-				}
-				catch (const sol::error& error)
-				{
-					ENGINE_ERROR("Error loading Lua Script:{}", error.what());
-					return false;
-				}
-				return true;
-			}
-		);
-
-		lua.set_function(
-			"ENGINE_LoadScriptTable", [&](const sol::table& scriptList) {
-				if (!scriptList.valid())
-				{
-					ENGINE_ERROR("Failed to load script list: invalid!");
-					return;
-				}
-				for (const auto& [index, script] : scriptList)
-				{
-					try
-					{
-						auto result = lua.safe_script_file(script.as<std::string>());
-						if (!result.valid())
-						{
-							sol::error error = result;
-							throw error;
-						}
-					}
-					catch(const sol::error& error)
-					{
-						ENGINE_ERROR("Failed to load script: {}, Error: {}", script.as<std::string>(), error.what());
-						return;
-					}
-				}
-			}
-		);
-
-		lua.set_function("ENGINE_GetTicks", [] { return SDL_GetTicks(); }); // todo:where to use???
-
-		auto& engine = CoreEngineData::GetInstance();
-		lua.set_function("ENGINE_DeltaTime", [&] { return engine.GetDeltaTime(); });
-		lua.set_function("ENGINE_WindowWidth", [&] { return engine.WindowWidth(); });
-		lua.set_function("ENGINE_WindowHeight", [&] { return engine.WindowHeight(); });
-		// Physics Enable functions
-		lua.set_function("ENGINE_DisablePhysics", [&] { engine.DisablePhysics(); });
-		lua.set_function("ENGINE_EnablePhysics", [&] { engine.EnablePhysics(); });
-		lua.set_function("ENGINE_IsPhysicsEnabled", [&] { return engine.IsPhysicsEnabled(); });
-		// Render Colliders Enable functions
-		lua.set_function("ENGINE_DisableCollisionRendering", [&] { engine.DisableColliderRender(); });
-		lua.set_function("ENGINE_EnableCollisionRendering", [&] { engine.EnableColliderRender(); });
-		lua.set_function("ENGINE_CollisionRenderingEnabled", [&] { return engine.RenderCollidersEnabled(); });
-		// Path
-		lua.set_function("ENGINE_GetProjecPath", [&] { return engine.GetProjectPath(); });
-	}
+    void ScriptingSystem::RegisterLuaFunctions(sol::state& lua, std::shared_ptr<GameplayContext> runtime) {
+        lua.set_function("ENGINE_RunScript", [&lua](const std::string& path) {
+            auto result = lua.safe_script(ScriptBytes(std::filesystem::path(std::u8string(path.begin(), path.end()))), sol::script_pass_on_error, path);
+            if (!result.valid()) { sol::error error = result; throw error; }
+            return true;
+        });
+        lua.set_function("ENGINE_LoadScriptTable", [&lua](const sol::table& list) {
+            if (!list.valid()) throw std::runtime_error("Invalid script list");
+            for (const auto& item : list) {
+                const auto path = item.second.as<std::string>();
+                auto result = lua.safe_script(ScriptBytes(std::filesystem::path(std::u8string(path.begin(), path.end()))), sol::script_pass_on_error, path);
+                if (!result.valid()) { sol::error error = result; throw error; }
+            }
+        });
+        auto& engine = CoreEngineData::GetInstance();
+        lua.set_function("ENGINE_GetTicks", [runtime] { return runtime ? runtime->clock.Milliseconds() : uint64_t(SDL_GetTicks()); });
+        lua.set_function("ENGINE_DeltaTime", [runtime, &engine] { return runtime ? runtime->clock.Delta() : engine.GetDeltaTime(); });
+        lua.set_function("ENGINE_WindowWidth", [&engine] { return engine.WindowWidth(); });
+        lua.set_function("ENGINE_WindowHeight", [&engine] { return engine.WindowHeight(); });
+        lua.set_function("ENGINE_DisablePhysics", [runtime, &engine] { if (runtime) runtime->physicsEnabled = false; else engine.DisablePhysics(); });
+        lua.set_function("ENGINE_EnablePhysics", [runtime, &engine] { if (runtime) runtime->physicsEnabled = true; else engine.EnablePhysics(); });
+        lua.set_function("ENGINE_IsPhysicsEnabled", [runtime, &engine] { return runtime ? runtime->physicsEnabled : engine.IsPhysicsEnabled(); });
+        lua.set_function("ENGINE_DisableCollisionRendering", [runtime, &engine] { if (runtime) runtime->renderColliders = false; else engine.DisableColliderRender(); });
+        lua.set_function("ENGINE_EnableCollisionRendering", [runtime, &engine] { if (runtime) runtime->renderColliders = true; else engine.EnableColliderRender(); });
+        lua.set_function("ENGINE_CollisionRenderingEnabled", [runtime, &engine] { return runtime ? runtime->renderColliders : engine.RenderCollidersEnabled(); });
+        lua.set_function("ENGINE_GetProjecPath", [&engine] { return engine.GetProjectPath(); });
+    }
 }
-

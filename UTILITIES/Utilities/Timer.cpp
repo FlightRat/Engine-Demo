@@ -7,7 +7,7 @@ namespace ENGINE_UTIL {
         {
             m_bIsRunning = true;
             m_bIsPaused = false;
-            m_StartPoint = steady_clock::now();
+            m_StartPoint = Now();
         }
     }
 
@@ -24,7 +24,7 @@ namespace ENGINE_UTIL {
         if (!m_bIsPaused && m_bIsRunning)
         {
             m_bIsPaused = true;
-            m_PausePoint = steady_clock::now();
+            m_PausePoint = Now();
         }
     }
 
@@ -33,7 +33,7 @@ namespace ENGINE_UTIL {
         if (m_bIsRunning && m_bIsPaused)
         {
             m_bIsPaused = false;
-            m_StartPoint += duration_cast<milliseconds>(steady_clock::now() - m_PausePoint);
+            m_StartPoint += (Now() - m_PausePoint);
         }
     }
 
@@ -51,9 +51,9 @@ namespace ENGINE_UTIL {
         if (m_bIsRunning)
         {
             if (m_bIsPaused)
-                return duration_cast<milliseconds>(m_PausePoint - m_StartPoint).count();
+                return (m_PausePoint - m_StartPoint);
             else
-                return duration_cast<milliseconds>(steady_clock::now() - m_StartPoint).count();
+                return (Now() - m_StartPoint);
         }
         return 0;
     }
@@ -63,12 +63,12 @@ namespace ENGINE_UTIL {
         return ElapsedMS() / 1000;
     }
 
-    void Timer::CreateLuaTimerBind(sol::state& lua)
+    void Timer::CreateLuaTimerBind(sol::state& lua, std::function<int64_t()> clock)
     {
         lua.new_usertype<Timer>(
             "Timer",
             sol::call_constructor,
-            sol::factories([]() {return Timer{}; }),
+            sol::factories([clock]() {return Timer{clock}; }),
             "start",&Timer::Start,
             "stop", &Timer::Stop,
             "pause", &Timer::Pause,

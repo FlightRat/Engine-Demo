@@ -140,7 +140,7 @@ namespace ENGINE_CORE::INPUTS {
 		return instance;
 	}
 
-	void InputManager::CreateLuaInputBind(sol::state& lua)
+	void InputManager::CreateLuaInputBind(sol::state& lua, std::shared_ptr<GameplayContext> runtime)
 	{
 		RegisterLuaKeyboardNames(lua);	// register keyboard btn into lua
 		RegisterLuaMouseNames(lua);		// register mouse btn into lua
@@ -153,27 +153,28 @@ namespace ENGINE_CORE::INPUTS {
 		lua.new_usertype<Keyboard>(
 			"Keyboard",
 			sol::no_constructor,
-			"just_pressed", [&](int key) {return keyboard.IsKeyJustPressed(key); },
-			"just_released", [&](int key) {return keyboard.IsKeyJustReleased(key); },
-			"pressed", [&](int key) {return keyboard.IsKeyPressed(key); }
+			"just_pressed", [runtime, &keyboard](int key) {return runtime ? runtime->input.KeyJustPressed(key) : keyboard.IsKeyJustPressed(key); },
+			"just_released", [runtime, &keyboard](int key) {return runtime ? runtime->input.KeyJustReleased(key) : keyboard.IsKeyJustReleased(key); },
+			"pressed", [runtime, &keyboard](int key) {return runtime ? runtime->input.KeyPressed(key) : keyboard.IsKeyPressed(key); }
 		);
 
 		// register mouse into lua
 		lua.new_usertype<Mouse>(
 			"Mouse",
 			sol::no_constructor,
-			"pressed", [&](int btn) {return mouse.IsBtnPressed(btn); },
-			"just_pressed", [&](int btn) {return mouse.IsBtnJustPressed(btn); },
-			"just_released", [&](int btn) {return mouse.IsBtnJustReleased(btn); },
+			"pressed", [runtime, &mouse](int btn) {return runtime ? runtime->input.MousePressed(btn) : mouse.IsBtnPressed(btn); },
+			"just_pressed", [runtime, &mouse](int btn) {return runtime ? runtime->input.MouseJustPressed(btn) : mouse.IsBtnJustPressed(btn); },
+			"just_released", [runtime, &mouse](int btn) {return runtime ? runtime->input.MouseJustReleased(btn) : mouse.IsBtnJustReleased(btn); },
 			//"screen_pos", [&]() {return mouse.GetMouseScreenPosition(); },
-			"offset", [&]() {
+			"offset", [runtime, &mouse]() {
+                if (runtime) { auto [x, y] = runtime->input.Offset(); return glm::vec2(x, y); }
 				auto [x, y] = mouse.GetMouseOffset();
 				float xrel = static_cast<float>(x);
 				float yrel = static_cast<float>(y);
 				return glm::vec2(xrel, yrel); },
-			"wheel_x", [&]() {return static_cast<float>(mouse.GetMouseWheelX()); },
-			"wheel_y", [&]() {return static_cast<float>(mouse.GetMouseWheelY()); },
-			"moving", [&]() {return mouse.IsMouseMoving(); }
+			"wheel_x", [runtime, &mouse]() {return float(runtime ? runtime->input.WheelX() : mouse.GetMouseWheelX()); },
+			"wheel_y", [runtime, &mouse]() {return float(runtime ? runtime->input.WheelY() : mouse.GetMouseWheelY()); },
+			"moving", [runtime, &mouse]() {return runtime ? runtime->input.Offset() != std::pair{0, 0} : mouse.IsMouseMoving(); }
 		);
 	}
 }

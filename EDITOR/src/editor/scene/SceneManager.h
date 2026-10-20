@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "SceneScriptFiles.h"
 
 #define SCENE_MANAGER() ENGINE_EDITOR::SceneManager::GetInstance()
 
@@ -14,6 +15,8 @@ namespace ENGINE_EDITOR {
 	private:
 		std::map<std::string, std::shared_ptr<ENGINE_EDITOR::SceneObject>> m_mapScene;
 		std::string m_sCurrentScene{ "" };
+		SceneScriptFiles m_Scripts;
+		std::string m_LastError;
 	private:
 		SceneManager() = default;
 		~SceneManager() = default;
@@ -23,7 +26,7 @@ namespace ENGINE_EDITOR {
 	public:
 		static SceneManager& GetInstance();
 
-		bool AddScene(const std::string& sSceneName);
+		bool AddScene(const std::string& sSceneName, std::unique_ptr<SceneScriptFiles::Creation>* receipt = nullptr);
 		bool DeleteScene(const std::string& sceneName);
 		void CleanUp();
 		bool ChangeSceneName(const std::string& sOldName, const std::string& sNewName);
@@ -31,7 +34,11 @@ namespace ENGINE_EDITOR {
 		std::shared_ptr<ENGINE_EDITOR::SceneObject> GetScene(const std::string& sSceneName);
 		std::shared_ptr<ENGINE_EDITOR::SceneObject>	GetCurrentScene();
 		std::vector<std::string> GetAllSceneNames() const;
-		inline void SetCurrentScene(const std::string& sSceneName) { m_sCurrentScene = sSceneName; }
+		bool SetCurrentScene(const std::string& sSceneName);
+		bool CreateAndActivate(const std::string& name);
+		bool CreateDefault() { return CreateAndActivate("default"); }
+		SceneScriptFiles& Scripts() { return m_Scripts; }
+		const std::string& LastError() const { return m_LastError; }
 		inline const std::string& GetCurrentSceneName() const { return m_sCurrentScene; }
 	};
 }

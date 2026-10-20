@@ -1,3 +1,5 @@
+#include "editor/scene/PlaybackController.h"
+#include <Core/Systems/PhysicsResources.h>
 #include "Application.h"
 #include "editor/automation/AutomationRuntime.h"
 #include<SDL.h>
@@ -216,16 +218,15 @@ namespace ENGINE_EDITOR {
 		}
 		PrepareIBL();
 
-		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::TransformComponent>();
+		ENGINE_CORE::Systems::ScriptingSystem::RegisterComponentMetadata();
+        ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::TransformComponent>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::PhysicsComponent>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshFilter>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshRender>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::Identification>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::LightComponent>();
 
-		SCENE_MANAGER().AddScene("scene1");
-		SCENE_MANAGER().AddScene("scene2");
-		//SCENE_MANAGER().SetCurrentScene("scene1");
+		if (!SCENE_MANAGER().CreateDefault()) { ENGINE_ERROR("Cannot initialize default Scene: {}", SCENE_MANAGER().LastError()); return false; }
 
 		return true;
 	}
@@ -396,6 +397,10 @@ namespace ENGINE_EDITOR {
 			ENGINE_ERROR("Failed to load texture [stop_button] from memory!");
 			return false;
 		}
+        if (!assetManager.AddTextureFromMemory("pause_button", pause_button, sizeof(pause_button))) {
+            ENGINE_ERROR("Failed to load embedded Pause icon"); return false;
+        }
+
 		if (!assetManager.AddTextureFromMemory("translate_button", translate_button, sizeof(translate_button) / sizeof(translate_button[0])))
 		{
 			ENGINE_ERROR("Failed to load texture [translate_button] from memory!");
@@ -453,6 +458,7 @@ namespace ENGINE_EDITOR {
 		}
 		assetManager.GetTexture("play_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("stop_button")->SetIsEditorTexture(true);
+        assetManager.GetTexture("pause_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("translate_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("rotate_button")->SetIsEditorTexture(true);
 		assetManager.GetTexture("scale_button")->SetIsEditorTexture(true);
@@ -762,6 +768,7 @@ namespace ENGINE_EDITOR {
 		while (SDL_PollEvent(&m_Event))
 		{
 			ImGui_ImplSDL2_ProcessEvent(&m_Event);
+            ENGINE_EDITOR::PlaybackController::Get().HandleInput(m_Event, ImGui::GetIO().WantTextInput);
 			switch (m_Event.type)
 			{
 			case SDL_QUIT:
@@ -773,20 +780,19 @@ namespace ENGINE_EDITOR {
 			{
 				//if (m_Event.key.keysym.sym == SDLK_ESCAPE)
 				//	m_bIsRunning = false;
-				if (m_Event.key.keysym.sym == SDLK_1 && pCurrentScene)
-				{
-					engine.ToggleRenderCollisions();
-					auto& runtimeRegistry = pCurrentScene->GetRegistry();
-					//auto& camera = runtimeRegistry.GetContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>();
-					auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-					physicsWorld->setIsDebugRenderingEnabled(engine.RenderCollidersEnabled());
-					auto view = runtimeRegistry.GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>();
-					for (auto [entity, physics] : view.each())
-					{
-						physics.SetDebug(engine.RenderCollidersEnabled());
-					}
-					physicsWorld->update(1.0f / 60.0f);
-				}
+                if (m_Event.key.keysym.sym == SDLK_1 && !m_Event.key.repeat && pCurrentScene && !ImGui::GetIO().WantTextInput) {
+                    auto& playback = ENGINE_EDITOR::PlaybackController::Get();
+                    auto context = playback.Context();
+                    const bool show = context ? (context->renderColliders = !context->renderColliders) : !engine.RenderCollidersEnabled();
+                    if (!context) engine.ToggleRenderCollisions();
+                    auto* visible = playback.VisibleRegistry();
+                    ENGINE_CORE::Systems::EnsurePhysicsResources(visible->GetRegistry());
+                    visible->GetContext<std::shared_ptr<rp3d::PhysicsWorld>>()->setIsDebugRenderingEnabled(show);
+                    for (auto e : visible->GetRegistry().view<ENGINE_CORE::ECS::PhysicsComponent>()) {
+                        auto& body = visible->GetRegistry().get<ENGINE_CORE::ECS::PhysicsComponent>(e);
+                        if (body.GetRigidBody()) body.SetDebug(show);
+                    }
+                }
 				keyboard.OnKeyPressed(m_Event.key.keysym.sym);
 				break;
 			}
@@ -841,6 +847,7 @@ namespace ENGINE_EDITOR {
 	{
         if (m_pAutomation) m_pAutomation->Update();
 		ENGINE_CORE::CoreEngineData::GetInstance().UpdateDeltaTime();
+        ENGINE_EDITOR::PlaybackController::Get().Tick(CORE_GLOBALS().GetDeltaTime());
 
 		auto& mainRegistry = MAIN_REGISTRY();
 		auto& displayHolder = mainRegistry.GetContext<std::shared_ptr<ENGINE_EDITOR::DisplayHolder>>();
@@ -871,7 +878,8 @@ namespace ENGINE_EDITOR {
 		SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext());
 
 		// 先释放场景中的实体、脚本、物理对象等。
-		SCENE_MANAGER().CleanUp();
+		ENGINE_EDITOR::PlaybackController::Get().Stop();
+        SCENE_MANAGER().CleanUp();
 		// 再释放编辑器对象和共享的模型、纹理、Shader、缓冲。
 		MAIN_REGISTRY().CleanUp();
 

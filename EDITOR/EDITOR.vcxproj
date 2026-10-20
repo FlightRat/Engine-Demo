@@ -334,4 +334,6 @@
 <ItemGroup><ClInclude Include="src\editor\automation\EntitySnapshot.h" /></ItemGroup>
 <ItemGroup><ClCompile Include="src\editor\automation\AssetImport.cpp" /><ClInclude Include="src\editor\automation\AssetImport.h" /></ItemGroup>
 <ItemGroup><ClCompile Include="src\editor\automation\AssetImportCoordinator.cpp" /><ClInclude Include="src\editor\automation\AssetImportCoordinator.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="src\editor\scene\SceneScriptFiles.cpp" /></ItemGroup>
+<ItemGroup><ClCompile Include="src\editor\scene\PlaybackController.cpp" /><ClCompile Include="src\editor\scene\SessionAudio.cpp" /></ItemGroup>
 </Project>

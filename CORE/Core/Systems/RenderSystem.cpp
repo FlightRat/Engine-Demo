@@ -1,4 +1,6 @@
-﻿#include "RenderSystem.h"
+﻿#include "PhysicsResources.h"
+#include "../CoreUtilities/GameplayContext.h"
+#include "RenderSystem.h"
 #include <utility>
 #include <algorithm>
 #include <glm/glm.hpp>
@@ -710,10 +712,13 @@ namespace ENGINE_CORE::Systems {
 		glEnable(GL_CULL_FACE);
 
 		// 绘制物理调试线框
-		if (ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled())
+		if (const auto* game = runtimeRegistry.GetRegistry().ctx().find<std::shared_ptr<ENGINE_CORE::GameplayContext>>();
+            (game ? (*game)->renderColliders : ENGINE_CORE::CoreEngineData::GetInstance().RenderCollidersEnabled()) &&
+            runtimeRegistry.GetRegistry().ctx().contains<std::shared_ptr<rp3d::PhysicsWorld>>())
 		{
 			auto& physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-			auto& physicsDebugger = physicsWorld->getDebugRenderer();
+			RefreshDebugGeometry(*physicsWorld);
+            auto& physicsDebugger = physicsWorld->getDebugRenderer();
 
 			auto Shader_PhysicsDebug = assetManager.GetShader("physics_Debug");
 			if (Shader_PhysicsDebug->ShaderProgramID() == 0)

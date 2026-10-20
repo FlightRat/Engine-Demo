@@ -225,3 +225,30 @@ import_asset 不要求激活场景，不放进 apply_operations。参数为公�
 demo_editing 验证五类导入及“创建→物理→移动→删除→全部撤销→全部重做→清理”，检查源文件指纹并默认恢复进入前状态。--keep 留下本次唯一 QA 场景/资源，恢复并选中物理实体，供 Apply/Gizmo 人工界面检查。显式 output-dir 才保存图片与不含像素的工具证据。--gl-tests 使用真实隐藏 GL 上下文和 SDL dummy 音频后端，不代表用户已看到 UI 或听到声音。
 
 受限 Codex 验收脚本增加 --editing（与 --visual 互斥），使用单次临时配置并校验工具链、原内容 ID 顺序和图片块。它仍会调用现有 Codex 模型，不修改全局配置。
+
+
+## Scene playback lifecycle
+
+The editor now starts with an empty active `default` Scene and binds Scenes to
+`EDITOR/assets/scripts/<name>.lua`. Scene creation generates a missing template;
+existing Lua is preserved. Names follow Windows filename rules, ignoring case.
+Undo/delete retain the Lua file; redo reuses current bytes. Scene rename also
+renames its script and fails on destination conflicts. See
+`EDITOR/assets/scripts/README.md` for callbacks and migration from `main.lua`.
+JSON loading and file format have not changed.
+
+`get_editor_status` and `get_scene_state` add `data.playback_state`, one of
+`editing`, `playing`, `paused`. The legacy `playing` value remains true for both
+Playing and Paused. `write_enabled` is false during either runtime state.
+Entity snapshots always describe the edit Registry; runtime inspection does not
+publish writable edit IDs, and `get_selection` returns an empty edit selection
+while running. All new writes, including selection, import, undo and redo, and
+edit-scene capture are blocked while Playing/Paused. Completed identical request
+retries still return their original receipts. The tool count remains 21.
+
+Play, Pause, Resume and Stop each invalidate revisions/cursors and clear content
+history; simulation frames do not. The public MCP API does not control playback.
+Verification must not use computer-use, CUA, key/mouse injection or window/UI
+automation. Use native/SDK tests for logic and protocol. Icon appearance, actual
+viewport rendering, focus and real audio remain pending manual verification as
+listed in `EDITOR/src/editor/scene/README.md` and `VERIFICATION.md`.

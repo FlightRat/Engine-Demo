@@ -14,6 +14,11 @@ namespace ENGINE_CORE::ECS {
 		inline entt::registry& GetRegistry() { return *m_pRegistry; }
 		inline entt::entity CreateEntity() { return m_pRegistry->create(); }
 		inline void ClearRegistry() { m_pRegistry->clear(); }
+        void Reset() {
+            auto next = std::make_unique<entt::registry>();
+            m_pRegistry->clear(); // Release component-owned resources before contexts.
+            m_pRegistry.swap(next);
+        }
 
 		template <typename TContext>
 		TContext AddToContext(TContext context);

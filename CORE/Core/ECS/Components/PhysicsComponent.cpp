@@ -1,3 +1,4 @@
+#include "../../Systems/PhysicsResources.h"
 #include "PhysicsComponent.h"
 #include<Logger/Logger.h>
 
@@ -240,7 +241,8 @@ namespace ENGINE_CORE::ECS {
 			sol::call_constructor,
 			sol::factories(
 				[&](const PhysicsAttributes& attr) {
-					PhysicsComponent pc{ attr };
+					ENGINE_CORE::Systems::ValidatePhysicsAttributes(attr);
+                PhysicsComponent pc{ attr };
 					pc.Init(common, world);
 					pc.initialized = true;
 					return pc;

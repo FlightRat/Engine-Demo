@@ -1,5 +1,6 @@
 """Regenerate the language-neutral contract consumed by both bridge peers."""
 from __future__ import annotations
+from copy import deepcopy
 
 import copy
 import json
@@ -64,14 +65,20 @@ def build() -> dict:
     }, ["status", "request_id"])
 
     def add(name, description, schema, read=False):
-        tools.append({"name": name, "description": description, "inputSchema": schema, "outputSchema": response,
+        result = deepcopy(response)
+        if name in ("get_editor_status", "get_scene_state"):
+            result["properties"]["data"]["properties"] = {
+                "playback_state": {"type": "string", "enum": ["editing", "playing", "paused"]},
+                "playing": {"type": "boolean", "description": "True throughout a runtime session, including Paused."},
+            }
+        tools.append({"name": name, "description": description, "inputSchema": schema, "outputSchema": result,
                       "annotations": {"readOnlyHint": read, "destructiveHint": not read, "openWorldHint": False}})
 
     paging = {"page_size": {"type": "integer", "minimum": 1, "maximum": 200}, "cursor": {"type": "string", "minLength": 1, "maxLength": 4096}}
-    add("get_editor_status", "Read connection, instance, session_id, editor_revision, current_scene_id, play state and protocol version. Start here.", obj({}), True)
-    add("get_scene_state", "Read edit scene list and stable entity snapshots. Default page=50 (max=200); cursors expire when revision changes. Transforms are local engine units/degrees; lights expose their own scene-space position.", obj({"scene_id": string(), "name_filter": {"type": "string", "maxLength": 256}, "component_filter": {"type": "string", "enum": ["transform", "light", "mesh", "physics", "script"]}, **paging}), True)
+    add("get_editor_status", "Read connection, instance, session_id, editor_revision, current_scene_id, playback_state (editing/playing/paused), legacy playing (true for Playing and Paused), and protocol version. Start here.", obj({}), True)
+    add("get_scene_state", "Read edit scene list and stable EDIT snapshots, also during Playing/Paused; never runtime entity IDs. Includes playback_state and legacy playing. Default page=50 (max=200); cursors expire when revision changes. Transforms are local engine units/degrees; lights expose their own scene-space position.", obj({"scene_id": string(), "name_filter": {"type": "string", "maxLength": 256}, "component_filter": {"type": "string", "enum": ["transform", "light", "mesh", "physics", "script"]}, **paging}), True)
     add("list_assets", "List loaded model/texture/music/soundfx/shader keys. Does not import files. Use a returned model key in create_object.", obj({"asset_type": {"type": "string", "enum": ["model", "texture", "music", "soundfx", "shader"]}, **paging}), True)
-    add("create_scene", "Create and activate a uniquely named empty edit scene. Requires current session/revision and a new request_id. Writes are rejected during play.", obj({**common, "name": string()}, [*common, "name"]))
+    add("create_scene", "Create and activate an empty edit scene with a Windows-safe, case-insensitively unique name. Generate assets/scripts/<name>.lua only if absent; reuse existing contents. Undo retains the Lua file. Requires current session/revision and a new request_id. Writes are rejected during Playing and Paused.", obj({**common, "name": string()}, [*common, "name"]))
 
     for name, properties, description in [
         ("create_object", creation, "Create a visible mesh from a loaded model key, or an enabled default point light. Name is not identity; use returned entity_id."),
@@ -127,7 +134,7 @@ def build() -> dict:
         obj({**common, "scene_id": string(), "entity_id": {"anyOf": [string(), {"type": "null"}]}}, [*common, "scene_id", "entity_id"]))
     tools[-1]["annotations"]["destructiveHint"] = False
     capture_target = {k: v for k, v in common.items() if k != "request_id"}
-    add("capture_viewport", "Read a fresh Scene-camera PNG of the current non-playing edit scene, including when Game tab is active. No UI/Gizmo, file writes or camera changes. Default 640x360; integer width/height 64..1024, proportionally reduced to 230400 pixels. Returns image/png plus actual dimensions/frame_id/camera/session/revision. One in flight; capture_busy/timeout/unavailable are explicit. Does not consume undo.",
+    add("capture_viewport", "Read a fresh Scene-camera PNG of the current Editing scene (Playing and Paused return play_mode), including when Game tab is active. No UI/Gizmo, file writes or camera changes. Default 640x360; integer width/height 64..1024, proportionally reduced to 230400 pixels. Returns image/png plus actual dimensions/frame_id/camera/session/revision. One in flight; capture_busy/timeout/unavailable are explicit. Does not consume undo.",
         obj({**capture_target, "scene_id": string(), "width": {"type": "integer", "minimum": 64, "maximum": 1024},
              "height": {"type": "integer", "minimum": 64, "maximum": 1024}}, [*capture_target, "scene_id"]), True)
     camera = obj({"position": vec(), "front": vec(), "up": vec(), "fov_degrees": number(0, 180, True),

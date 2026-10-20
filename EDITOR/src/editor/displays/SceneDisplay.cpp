@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "SceneDisplay.h"
 #include "../automation/PhysicsEditing.h"
 #include "Core/ECS/MainRegistry.h"
@@ -24,69 +25,11 @@
 using namespace ENGINE_CORE::Systems;
 
 namespace ENGINE_EDITOR {
-    namespace { struct SceneRuntimeReady {}; }
-	bool SceneDisplay::LoadScnne()
-	{
-		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-		if (!pCurrentScene)
-			return false;
-		auto& runtimeRegistry = pCurrentScene->GetRegistry();
-        auto& context = runtimeRegistry.GetRegistry().ctx();
-        if (context.contains<SceneRuntimeReady>()) return true;
-        if (context.contains<std::shared_ptr<ScriptingSystem>>()) {
-            // Retry a previous script-load failure without recreating physics contexts.
-            auto& script = runtimeRegistry.GetContext<std::shared_ptr<ScriptingSystem>>();
-            auto& state = runtimeRegistry.GetContext<std::shared_ptr<sol::state>>();
-            if (!script->LoadMainScript(runtimeRegistry, *state)) return false;
-            context.emplace<SceneRuntimeReady>();
-            return true;
-        }
-
-		// Camera
-		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
-		runtimeRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera);
-
-        Automation::EnsurePhysicsContext(runtimeRegistry.GetRegistry());
-        auto physicsCommon = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsCommon>>();
-        auto physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
-		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
-
-		// Contact Listener
-		auto contactListener = std::make_shared<ENGINE_PHYSICS::ContactListener>();
-		runtimeRegistry.AddToContext<std::shared_ptr< ENGINE_PHYSICS::ContactListener>>(contactListener);
-		physicsWorld->setEventListener(contactListener.get());
-
-		// Physics System
-		auto physicsSystem = std::make_shared<PhysicsSystem>();
-		runtimeRegistry.AddToContext<std::shared_ptr< PhysicsSystem>>(physicsSystem);
-
-		// Script system
-		auto scriptSystem = std::make_shared<ScriptingSystem>();
-		runtimeRegistry.AddToContext<std::shared_ptr<ScriptingSystem>>(scriptSystem);
-
-		// lua
-		auto lua = runtimeRegistry.AddToContext<std::shared_ptr<sol::state>>(std::make_shared<sol::state>());
-		if (!lua)
-		{
-			lua = std::make_shared<sol::state>();
-		}
-		lua->open_libraries(sol::lib::base, sol::lib::math, sol::lib::os, sol::lib::table, sol::lib::io, sol::lib::string);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaBindings(*lua, runtimeRegistry);
-		ENGINE_CORE::Systems::ScriptingSystem::RegisterLuaFunctions(*lua);
-		if (!scriptSystem->LoadMainScript(runtimeRegistry, *lua))
-		{
-			ENGINE_ERROR("Failed to load the main lua script!");
-			return false;
-		}
-        context.emplace<SceneRuntimeReady>();
-        return true;
-	}
-
     GLuint SceneDisplay::RenderScene(int width, int height)
     {
         auto scene = SCENE_MANAGER().GetCurrentScene();
         if (!scene) return 0;
-        auto& runtimeRegistry = scene->GetRegistry();
+        auto& runtimeRegistry = *PlaybackController::Get().VisibleRegistry();
         auto& mainRegistry = MAIN_REGISTRY();
         const auto& renderSystem = mainRegistry.GetContext<std::shared_ptr<ENGINE_CORE::Systems::RenderSystem>>();
         auto& buffers = mainRegistry.GetBufferManager();
@@ -219,14 +162,14 @@ namespace ENGINE_EDITOR {
                 ImGui::Image((ImTextureID)(intptr_t)texture,
                     ImVec2{static_cast<float>(width), static_cast<float>(height)},
                     ImVec2{0.f, 1.f}, ImVec2{1.f, 0.f});
-                ImGui::DrawGizmo(m_pSceneCam);
+                if (PlaybackController::Get().CanEdit()) ImGui::DrawGizmo(m_pSceneCam);
                 ControlCam();
             } else {
                 // Keep an item for scene drag-and-drop even before a scene is loaded.
                 ImGui::InvisibleButton("##EmptyScene", available);
             }
 
-			if (ImGui::BeginDragDropTarget())
+			if (PlaybackController::Get().CanEdit() && ImGui::BeginDragDropTarget())
 			{
 				const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(DROP_SCENE_SRC);
 				if (payload)
@@ -235,7 +178,7 @@ namespace ENGINE_EDITOR {
 					SCENE_MANAGER().SetCurrentScene(std::string{ (const char*)payload->Data });
 					ENGINE_LOG("AFTER: {}", SCENE_MANAGER().GetCurrentSceneName());
 
-					LoadScnne();
+
 				}
 				ImGui::EndDragDropTarget();
 			}

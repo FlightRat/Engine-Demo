@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #pragma once
 #include <Core/ECS/Entity.h>
 #include <Core/ECS/Components/TransformComponent.h>
@@ -28,6 +29,7 @@ inline void SynchronizeSelection(const std::shared_ptr<ENGINE_EDITOR::SceneObjec
     if (!scene || SelectionScene.lock() != scene || !scene->GetRegistry().GetRegistry().valid(TOOL_CTX().selectedEntity->GetEntity())) ResetSelection();
 }
 inline void SelectEntity(const std::shared_ptr<ENGINE_EDITOR::SceneObject>& scene, entt::entity e) {
+    if (!PlaybackController::Get().CanEdit()) throw std::invalid_argument("Stop playback before changing edit selection");
     SynchronizeSelection(scene);
     if (e == entt::null) { ResetSelection(); return; }
     if (!scene || !scene->GetRegistry().GetRegistry().valid(e)) throw std::invalid_argument("Invalid selection");
@@ -59,6 +61,7 @@ inline bool SetLightDirection(ENGINE_CORE::ECS::LightComponent& l, const glm::ve
     return true;
 }
 inline ENGINE_CORE::ECS::Entity CreateEditableEntity(ENGINE_CORE::ECS::Registry& registry, const std::string& name) {
+    if (!PlaybackController::Get().CanEdit()) throw std::logic_error("Stop playback before creating edit entities");
     ENGINE_CORE::ECS::Entity e{registry, name, ""};
     e.AddComponent<ENGINE_CORE::ECS::TransformComponent>();
     return e;

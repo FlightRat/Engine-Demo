@@ -14,7 +14,7 @@ namespace ENGINE_EDITOR
 	private:
 		std::shared_ptr<ENGINE_RENDERING::Camera3D> m_pSceneCam;	//TODO: unique ptr
 	private:
-		static bool LoadScnne();
+
 		GLuint RenderScene(int width, int height);
 		void LoadNewScene();
 	protected:
@@ -28,6 +28,6 @@ namespace ENGINE_EDITOR
 
 		void ControlCam();
         std::shared_ptr<ENGINE_RENDERING::Camera3D> GetSceneCamera() const { return m_pSceneCam; }
-		static bool PrepareForPlay() { return LoadScnne(); }
+
 	};
 }

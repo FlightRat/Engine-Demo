@@ -203,3 +203,64 @@ Computer Use 对隐藏及可见 QA 窗口均遇到 `FrameArrived timed out` / `w
 本次任务 6.2–6.5 保留未勾选：Scene 前台与 Game 前台的完整界面对比、人工编辑保护、
 真实 UI 场景/播放/缩放/关闭矩阵及汇总人工证据仍未齐备。SDK 和 Codex 主链路已通过的部分如上，
 不以它们代替缺失的人工界面/正常退出证据。
+
+## Scene 播放生命周期验收（2026-10-20）
+
+变更：`add-scene-playback-lifecycle`。本节记录本变更的证据，前文历史验收记录不代表新增播放交互已由人工确认。
+
+### 自动化检查
+
+| 项目 | 结果与证据范围 |
+| --- | --- |
+| EDITOR x64 Debug / Release | 构建通过，0 个错误；完整构建仍有编译器/模板转换警告 |
+| AutomationTests x64 Debug / Release | 构建及运行通过，未创建编辑器窗口 |
+| 新增原生测试 | 状态/按钮矩阵、游戏时钟、30/60/144 FPS 真实 RP3D 一致性、双 Registry/层级/材质/相机隔离、反复运行与故障清理、默认空 Scene、文件生成/复用/冲突/回滚、Lua 回调及文档示例、组件元数据独立注册、运行输入数据与音频所有权 |
+| SDL dummy 真实音频后端 | 通道/音乐 Pause、Resume、Stop、脚本已暂停声音、外部声音和音量还原通过；没有实际听感证据 |
+| MCP 原生回归 | 三状态及旧 playing、Paused 写入/截图拒绝、Scene 创建历史与脚本保留、失败 Play 保留历史、跨状态导入/截图失效、运行帧不推进 revision、多个状态切换分别计数、已完成请求回执复用通过 |
+| Python SDK / 协议回归 | 68 passed；真实无窗口 C++ 管道宿主及 SDK 调用，21 个工具保持 |
+| Pause 图标 | 内嵌字节与用户 pause.png 一致；Pillow 解码为 200 × 200 RGBA，1749 字节；只证明资源有效，未验证按钮实际外观 |
+| OpenSpec / 差异检查 | strict 校验及 git diff --check 通过；新文件另行检查尾部空白与项目源文件条目 |
+| JSON 加载 | SceneLoader.cpp 未修改；未改变 JSON 格式、加载或引入 JSON 运行快照 |
+
+可复现的构建及原生检查（仓库根目录）：
+
+```powershell
+python tools/engine_mcp/build.py tests --configuration Debug --msbuild 'D:/Microsoft Visual Studio/IDE/MSBuild/Current/Bin/MSBuild.exe'
+& './x64/Debug/AutomationTests.exe'
+python tools/engine_mcp/build.py editor --configuration Debug --msbuild 'D:/Microsoft Visual Studio/IDE/MSBuild/Current/Bin/MSBuild.exe'
+python tools/engine_mcp/build.py tests --configuration Release --msbuild 'D:/Microsoft Visual Studio/IDE/MSBuild/Current/Bin/MSBuild.exe'
+& './x64/Release/AutomationTests.exe'
+python tools/engine_mcp/build.py editor --configuration Release --msbuild 'D:/Microsoft Visual Studio/IDE/MSBuild/Current/Bin/MSBuild.exe'
+```
+
+SDK 检查：
+
+```powershell
+$qaRoot = Join-Path (Join-Path (Get-Location).Path 'x64') ('qa-playback-' + [guid]::NewGuid().ToString('N'))
+& tools/engine_mcp/.venv/Scripts/python.exe -m pytest tools/engine_mcp/tests -q -p no:cacheprovider --basetemp $qaRoot
+openspec validate add-scene-playback-lifecycle --strict
+git diff --check
+```
+
+环境说明：默认 pytest 缓存和 pytest-of 临时目录存在访问权限限制，因此使用新的 x64 隔离临时目录并关闭 pytest 缓存；该方式下完整套件通过，没有修改用户全局配置。原生宿主使用独立临时资产根，QA 不向真实 assets/scripts 写入脚本。Debug 的资源新增禁止/缺失辅助脚本样例会输出预期 sol2 异常消息，随后测试通过。
+
+### 验证方式约束
+
+本次没有使用 computer-use、CUA、浏览器/桌面键鼠、窗口 UI 自动化或模拟拖拽。状态切换由测试直接调用 C++ 控制器，输入验证使用纯数据；没有增加 MCP Play/Pause/Stop 工具来绕过约束。
+
+原生 CaptureTests 使用合成像素，仅证明既有协调器/协议规则；本轮没有以它们宣称真实 Game/Scene 画面正确。真实声音使用 dummy 设备核对后端状态，不能据此确认听感。
+
+### 待人工验证
+
+以下各项均为**待人工验证**。提供清单即可完成交付任务；没有人工证据前不得把这些条目改为通过。
+
+| 状态 | 人工步骤 | 预期 |
+| --- | --- | --- |
+| 待人工验证 | 启动 EDITOR，查看空 default；依次 Play、Pause、Resume、Stop 并悬停三按钮 | 图标正确、当前状态高亮、不可用操作置灰，暂停后的 Play 提示 Resume Game |
+| 待人工验证 | 编辑态创建可见动态刚体，同时显示 Game 与 Scene 后 Play | 两个窗口显示同一运行对象及运动，使用独立相机 |
+| 待人工验证 | Pause 后等待并导航 Scene 相机，再 Resume | 场景模拟与游戏相机冻结，Scene 仍可导航，恢复不补算暂停时间 |
+| 待人工验证 | 在 Game 画面操作，再切到 Scene、工具栏及可输入文本框（若有） | 游戏只接收 Game 画面的输入，编辑器导航、文本和按钮点击不透传；失焦仍模拟 |
+| 待人工验证 | 预加载音乐/音效，通过 Scene 脚本播放，依次 Pause/Resume/Stop | 实际声音暂停、恢复和停止，音量不污染下一轮 |
+| 待人工验证 | Playing/Paused 时尝试属性、物理 Apply、Gizmo、对象/资源/Scene 修改、拖入其他 Scene、Open/Save | 内容写入被阻止，仍可选择运行对象并只读查看 |
+| 待人工验证 | 运行脚本改变位置、创建/删除对象，Stop 后再次 Play | 编辑数据恢复，下一轮从编辑初始状态启动；没有重复对象或继承速度 |
+| 待人工验证 | 通过 Asset UI 创建、重命名、删除 Scene，并检查同名 Lua | 创建激活空 Scene、复用不覆盖、重命名同步文件、冲突不覆盖、删除保留脚本 |

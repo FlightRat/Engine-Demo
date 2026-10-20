@@ -27,7 +27,7 @@ Json Run(EditorOperations& ops, const char* name, const std::string& extra, cons
 }
 }
 void OperationsTests(Contract& c) {
-    ENGINE_INIT_LOGS(false, true);
+
     auto& scenes = SCENE_MANAGER(); scenes.CleanUp();
     ENGINE_CORE::RESOURCES::AssetManager assets;
     {
@@ -89,10 +89,10 @@ void OperationsTests(Contract& c) {
         Check(direction["data"]["entity"]["light"]["direction"][1].GetFloat() == -1, "Direction was not normalized");
         Check(direction["data"]["entity"]["light"]["intensity"] == area["data"]["entity"]["light"]["intensity"], "Type change lost common fields");
         auto invalidated = Params(ops, "{\"entity_id\":\"" + entityId + "\",\"position\":[1,2,3]}", scene);
-        scenes.GetCurrentScene()->SetPlay(true);
+        Check(ENGINE_EDITOR::PlaybackController::Get().Play(), "Cannot start runtime guard test");
         auto play = ops.Execute(Request("set_transform", invalidated));
         Check(Str(play["error"], "code") == "play_mode", "Play writes accepted");
-        scenes.GetCurrentScene()->SetPlay(false); ops.ObserveExternalChanges();
+        ENGINE_EDITOR::PlaybackController::Get().Stop(); ops.ObserveExternalChanges();
         auto revision = ops.Execute(Request("set_transform", invalidated));
         Check(Str(revision["error"], "code") == "revision_conflict", "Old revision accepted");
         auto fresh = ops.Session();
@@ -239,10 +239,10 @@ void MaterialSelectionTests(Contract& c) {
     Check(Str(batch["error"], "code") == "execution_failed" && MaterialEqual(render.materials[0], beforeFailure[0]) && MaterialEqual(render.materials[1], beforeFailure[1]), "Material rollback left partial edit");
     fail = false;
     auto staleSelect = Params(ops, "{\"entity_id\":\"" + aid + "\"}", scene);
-    scenes.GetCurrentScene()->SetPlay(true);
+    Check(ENGINE_EDITOR::PlaybackController::Get().Play(), "Cannot start runtime guard test");
     auto playing = ops.Execute(Request("set_selection", staleSelect));
     Check(Str(playing["error"], "code") == "play_mode", "Selection accepted during play");
-    scenes.GetCurrentScene()->SetPlay(false); ops.ObserveExternalChanges();
+    ENGINE_EDITOR::PlaybackController::Get().Stop(); ops.ObserveExternalChanges();
     auto staleRevision = ops.Execute(Request("set_selection", staleSelect));
     Check(Str(staleRevision["error"], "code") == "revision_conflict", "Selection accepted old revision");
     auto staleSession = Params(ops, R"({"entity_id":null})", scene);

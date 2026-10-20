@@ -1,3 +1,4 @@
+#include "../scene/PlaybackController.h"
 #include "AssetDisplay.h"
 #include "../automation/StateRules.h"
 #include "Utilities/EngineUtilities.h"
@@ -192,7 +193,7 @@ namespace ENGINE_EDITOR {
 			}
 			
 			// draw right click menu
-			if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+			if (PlaybackController::Get().CanEdit() && ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
 			{
 				switch (m_eSelectedType)
 				{
@@ -254,8 +255,9 @@ namespace ENGINE_EDITOR {
 				case ENGINE_UTIL::AssetType::SCENE:
 					if (ImGui::Selectable("Add Scene"))
 					{
-						Automation::NotifyManualEdit();
-						SCENE_MANAGER().AddScene("new_scene");
+						std::string name = "new_scene"; int suffix = 1;
+                            while (SCENE_MANAGER().CheckHasScene(name)) name = "new_scene_" + std::to_string(suffix++);
+                            if (SCENE_MANAGER().CreateAndActivate(name)) Automation::NotifyManualEdit();
 					}
 					break;
 				case ENGINE_UTIL::AssetType::SHADER:
@@ -328,24 +330,14 @@ namespace ENGINE_EDITOR {
 		return 0;
 	}
 
-	bool AssetDisplay::DoRenameAsset(const std::string& sOldName, const std::string& sNewName)
-	{
-		if (sNewName.empty())
-			return false;
-		if (m_eSelectedType == ENGINE_UTIL::AssetType::SCENE)
-		{
-			Automation::NotifyManualEdit();
-            return SCENE_MANAGER().ChangeSceneName(sOldName, sNewName);
-		}
-		else
-		{
-			auto& assetManager = MAIN_REGISTRY().GetAssetManager();
-			Automation::NotifyManualEdit();
-            return assetManager.ChangeAssetName(sOldName, sNewName, m_eSelectedType);
-		}
-		assert(false && "How did it get here?");
-		return false;
-	}
+    bool AssetDisplay::DoRenameAsset(const std::string& oldName, const std::string& newName) {
+        if (!PlaybackController::Get().CanEdit() || newName.empty()) return false;
+        const bool changed = m_eSelectedType == ENGINE_UTIL::AssetType::SCENE
+            ? SCENE_MANAGER().ChangeSceneName(oldName, newName)
+            : MAIN_REGISTRY().GetAssetManager().ChangeAssetName(oldName, newName, m_eSelectedType);
+        if (changed && oldName != newName) Automation::NotifyManualEdit();
+        return changed;
+    }
 
 	void AssetDisplay::CheckRename(const std::string& sCheckName)
 	{
@@ -371,6 +363,7 @@ namespace ENGINE_EDITOR {
 
 	void AssetDisplay::OpenAssetContext(const std::string& sAssetName)
 	{
+        if (!PlaybackController::Get().CanEdit()) return;
 		if (ImGui::Selectable("rename"))
 		{
 			m_bRename = true;
