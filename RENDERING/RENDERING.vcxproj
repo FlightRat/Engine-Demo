@@ -167,4 +167,5 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+<ItemGroup><ClCompile Include="Rendering\Essentials\PreparedAssets.cpp" /><ClInclude Include="Rendering\Essentials\PreparedAssets.h" /></ItemGroup>
 </Project>

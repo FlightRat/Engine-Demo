@@ -1,3 +1,5 @@
+#include "../automation/MaterialRules.h"
+#include "../automation/PhysicsEditing.h"
 #include "ComponentDrawer.h"
 #include "../automation/StateRules.h"
 #include "Core/ECS/MainRegistry.h"
@@ -26,7 +28,12 @@ namespace ENGINE_EDITOR {
 
 		if (ImGui::TreeNodeEx((void*)typeid(TransformComponents).hash_code(), flags, "Transform"))
 		{
-			ImGui::DrawVec3Control("Position", transform.position);
+            auto selected = TOOL_CTX().selectedEntity;
+            const bool physical = selected && selected->HasComponent<PhysicsComponent>();
+            const auto before = transform;
+            const bool child = physical && selected->HasComponent<Identification>() && selected->GetComponent<Identification>().parent_id != -1;
+            ImGui::BeginDisabled(child);
+            ImGui::DrawVec3Control("Position", transform.position);
 			
 			glm::vec3 euler = transform.rotation_eular;
 			glm::vec3 oldEuler = euler;
@@ -37,7 +44,11 @@ namespace ENGINE_EDITOR {
 				ENGINE_EDITOR::Automation::SynchronizeRotation(transform); // 欧拉角→弧度→四元数
 			}
 
-			ImGui::DrawVec3Control("Scale", transform.scale, 1.0f);
+			ImGui::BeginDisabled(physical);
+            ImGui::DrawVec3Control("Scale", transform.scale, 1.0f);
+            ImGui::EndDisabled(); ImGui::EndDisabled();
+            if (physical && (before.position != transform.position || before.rotation_eular != transform.rotation_eular))
+                Automation::SyncPhysicsPose(selected->GetRegistry(), selected->GetEntity());
 
 			ImGui::TreePop();
 		}
@@ -98,10 +109,10 @@ namespace ENGINE_EDITOR {
 			ImGui::SetColumnWidth(0, 100.0f);
 
 			ImGui::Text("Render"); ImGui::NextColumn();
-			if (ImGui::Checkbox("##render", &meshRender.shouldRender)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
+			ImGui::Checkbox("##render", &meshRender.shouldRender); ImGui::NextColumn();
 
 			ImGui::Text("Flip UV"); ImGui::NextColumn();
-			if (ImGui::Checkbox("##flipUV", &meshRender.flipUV)) ENGINE_EDITOR::Automation::NotifyManualEdit(); ImGui::NextColumn();
+			ImGui::Checkbox("##flipUV", &meshRender.flipUV); ImGui::NextColumn();
 
 			ImGui::Columns(1);
 			ImGui::Separator();
@@ -111,7 +122,8 @@ namespace ENGINE_EDITOR {
 			for (size_t i = 0; i < materials.size(); ++i)
 			{
 				ImGui::PushID((int)i);
-				ENGINE_CORE::ECS::Material& m = meshRender.GetMaterial(i);
+				auto& original = materials[i];
+                auto m = original;
 
 				bool open = ImGui::TreeNodeEx("##mat",
 					ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth,
@@ -119,29 +131,29 @@ namespace ENGINE_EDITOR {
 
 				if (open)
 				{
-					if (ImGui::ColorEdit4("Base Color", &m.color.x)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::ColorEdit4("Base Color", &m.color.x);
 
 					ImGui::Columns(2, "PhysicsCols", false);
 					ImGui::SetColumnWidth(0, 100.0f); // 标签宽度固定
 
 					ImGui::Text("Metallic");
 					ImGui::NextColumn();
-					if (ImGui::DragFloat("##Metallic", &m.metallic, 0.005f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::DragFloat("##Metallic", &m.metallic, 0.005f, 0.0f, 1.0f);
 					ImGui::NextColumn();
 
 					ImGui::Text("Roughness");
 					ImGui::NextColumn();
-					if (ImGui::DragFloat("##Roughness", &m.roughness, 0.005f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::DragFloat("##Roughness", &m.roughness, 0.005f, 0.0f, 1.0f);
 					ImGui::NextColumn();
 
 					ImGui::Text("Ao");
 					ImGui::NextColumn();
-					if (ImGui::DragFloat("##Ao", &m.ao, 0.005f, 0.0f, 1.0f)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::DragFloat("##Ao", &m.ao, 0.005f, 0.0f, 1.0f);
 					ImGui::NextColumn();
 
 					ImGui::Columns(1);
 
-					if (ImGui::Checkbox("Use Texture", &m.m_useTexture)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::Checkbox("Use Texture", &m.m_useTexture);
 
 					if (ImGui::BeginTable("TexTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingStretchProp))
 					{
@@ -158,14 +170,15 @@ namespace ENGINE_EDITOR {
 							ImGui::TableSetColumnIndex(1);
 							ImGui::PushID(slot.key.c_str());
 
-							std::string& currentTextureName = m.m_textures[slot.key];
+							const auto existing = m.m_textures.find(slot.key);
+                            std::string currentTextureName = existing == m.m_textures.end() ? "" : existing->second;
 							const char* previewValue = currentTextureName.empty() ? "None" : currentTextureName.c_str();
 
 							if (ImGui::BeginCombo("##tex", previewValue))
 							{
-								if (ImGui::Selectable("None", currentTextureName.empty())) currentTextureName = "";
+								if (ImGui::Selectable("None", currentTextureName.empty())) m.m_textures[slot.key] = "";
 								for (const auto& sTextureName : assetManager.GetAssetKeyName(ENGINE_UTIL::AssetType::TEXTURE)) {
-									if (ImGui::Selectable(sTextureName.c_str(), sTextureName == currentTextureName)) currentTextureName = sTextureName;
+									if (ImGui::Selectable(sTextureName.c_str(), sTextureName == currentTextureName)) m.m_textures[slot.key] = sTextureName;
 								}
 								ImGui::EndCombo();
 							}
@@ -175,7 +188,9 @@ namespace ENGINE_EDITOR {
 					}
 					ImGui::TreePop();
 				}
-				ImGui::PopID();
+                try { ENGINE_EDITOR::Automation::CommitMaterial(original, m, assetManager, true); }
+                catch (const ENGINE_EDITOR::Automation::Error& error) { ENGINE_ERROR("Material edit rejected: {}", error.what()); }
+                ImGui::PopID();
 			}
 			ImGui::TreePop();
 		}
@@ -191,18 +206,26 @@ namespace ENGINE_EDITOR {
 
 		if (ImGui::TreeNodeEx((void*)typeid(PhysicsComponent).hash_code(), flags, "Physics"))
 		{
-			// Context retrieval
-			auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-			auto& runtimeRegistry = pCurrentScene->GetRegistry();
-			auto& common = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsCommon>>();
-			auto& world = runtimeRegistry.GetRegistry().ctx().get<std::shared_ptr<PhysicsWorld>>();
-			if (!physics.initialized)
-			{
-				physics.Init(common, world);
-				physics.initialized = true;
-			}
-
-			PhysicsAttributes& physicsAttr = physics.GetAttr();
+            auto scene = SCENE_MANAGER().GetCurrentScene();
+            auto selected = TOOL_CTX().selectedEntity;
+            if (!scene || !selected) { ImGui::TreePop(); return; }
+            auto& registry = scene->GetRegistry().GetRegistry();
+            const auto entity = selected->GetEntity();
+            static std::weak_ptr<SceneObject> draftScene;
+            static entt::entity draftEntity = entt::null;
+            static PhysicsAttributes draft;
+            static std::string applied, error;
+            if (!physics.initialized) {
+                try { Automation::ApplyPhysics(registry, entity, physics.GetAttr()); }
+                catch (const std::exception& e) { error = e.what(); }
+            }
+            Automation::Json state; auto& allocator = state.GetAllocator();
+            const auto fingerprint = Automation::Stringify(Automation::PhysicsJson(physics.GetAttr(), allocator));
+            if (draftScene.lock() != scene || draftEntity != entity || applied != fingerprint) {
+                draft = physics.GetAttr(); applied = fingerprint; draftScene = scene; draftEntity = entity; error.clear();
+            }
+            PhysicsAttributes& physicsAttr = draft;
+            ImGui::TextUnformatted("Draft settings - use Apply to commit");
 
 			// --- 1. Physical Properties ---
 			ImGui::Columns(2, "PhysicsCols", false);
@@ -210,22 +233,22 @@ namespace ENGINE_EDITOR {
 
 			ImGui::Text("Mass");
 			ImGui::NextColumn();
-			if (ImGui::DragFloat("##Mass", &physicsAttr.rb_Mass, 0.1f, 0.0f, 0.0f, "%.1f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+			ImGui::DragFloat("##Mass", &physicsAttr.rb_Mass, 0.1f, 0.0f, 0.0f, "%.1f");
 			ImGui::NextColumn();
 
 			ImGui::Text("Density");
 			ImGui::NextColumn();
-			if (ImGui::DragFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.01f, 0.0f, 1.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+			ImGui::DragFloat("##MassDensity", &physicsAttr.c_MassDensity, 0.01f, 0.0f, 1.0f, "%.2f");
 			ImGui::NextColumn();
 
 			ImGui::Text("Friction");
 			ImGui::NextColumn();
-			if (ImGui::DragFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.01f, 0.0f, 1.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+			ImGui::DragFloat("##FC", &physicsAttr.c_FrictionCoefficient, 0.01f, 0.0f, 1.0f, "%.2f");
 			ImGui::NextColumn();
 
 			ImGui::Text("Bounciness");
 			ImGui::NextColumn();
-			if (ImGui::DragFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.01f, 0.0f, 1.0f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+			ImGui::DragFloat("##Bounciness", &physicsAttr.c_Bounciness, 0.01f, 0.0f, 1.0f, "%.2f");
 			ImGui::NextColumn();
 
 			// --- 2. RigidBody Settings ---
@@ -245,7 +268,7 @@ namespace ENGINE_EDITOR {
 					{
 						sSelectedBodyType = bodyStr;
 						physicsAttr.rb_type = bodyType;
-                        Automation::NotifyManualEdit();
+
 					}
 				}
 				ImGui::EndCombo();
@@ -254,7 +277,7 @@ namespace ENGINE_EDITOR {
 
 			ImGui::Text("Is Trigger");
 			ImGui::NextColumn();
-			if (ImGui::Checkbox("##bTrigger", &physicsAttr.c_Trigger)) ENGINE_EDITOR::Automation::NotifyManualEdit();
+			ImGui::Checkbox("##bTrigger", &physicsAttr.c_Trigger);
 			ImGui::NextColumn();
 
 			// --- 3. Collider Settings ---
@@ -274,7 +297,7 @@ namespace ENGINE_EDITOR {
 					{
 						sSelectedColliderType = colliderType;
 						physicsAttr.shape = colliderType;
-                        Automation::NotifyManualEdit();
+
 					}
 				}
 				ImGui::EndCombo();
@@ -288,7 +311,7 @@ namespace ENGINE_EDITOR {
 			if (physicsAttr.shape == "box")
 			{
 				// 使用统一的 Vec3 控件
-				ImGui::DrawVec3Control("Half Extents", physicsAttr.box_halfExtents, 0.5f);
+				ImGui::DragFloat3("Half Extents", &physicsAttr.box_halfExtents.x, .05f);
 			}
 			else
 			{
@@ -299,17 +322,17 @@ namespace ENGINE_EDITOR {
 				if (physicsAttr.shape == "sphere")
 				{
 					ImGui::Text("Radius"); ImGui::NextColumn();
-					if (ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.05f, 0.01f, 1000.f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::DragFloat("##sphere_radius", &physicsAttr.sphere_radius, 0.05f, 0.01f, 1000.f, "%.2f");
 					ImGui::NextColumn();
 				}
 				else if (physicsAttr.shape == "capsule")
 				{
 					ImGui::Text("Radius"); ImGui::NextColumn();
-					if (ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.05f, 0.01f, 1000.f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::DragFloat("##capsule_radius", &physicsAttr.capsule_radius, 0.05f, 0.01f, 1000.f, "%.2f");
 					ImGui::NextColumn();
 
 					ImGui::Text("Half Height"); ImGui::NextColumn();
-					if (ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.05f, 0.01f, 1000.f, "%.2f")) ENGINE_EDITOR::Automation::NotifyManualEdit();
+					ImGui::DragFloat("##capsule_height", &physicsAttr.capsule_halfHeight, 0.05f, 0.01f, 1000.f, "%.2f");
 					ImGui::NextColumn();
 				}
 				ImGui::Columns(1);
@@ -319,10 +342,15 @@ namespace ENGINE_EDITOR {
 			ImGui::Spacing();
 			// 使用 ImVec2(-1, 0) 让按钮横跨整个可用宽度，更加明显
 			if (ImGui::Button("Apply Physics Changes", ImVec2(-1, 0))) {
-				physics.Update(common);
-                ENGINE_EDITOR::Automation::NotifyManualEdit();
+				try {
+                    if (auto* id = registry.try_get<Identification>(entity); id && id->parent_id != -1)
+                        throw Automation::Error("unsupported_target", "Physics editing requires a root entity");
+                    Automation::ApplyPhysics(registry, entity, draft);
+                    Automation::NotifyManualEdit(); error.clear();
+                } catch (const std::exception& e) { error = e.what(); }
 			}
 
+            if (!error.empty()) ImGui::TextWrapped("%s", error.c_str());
 			ImGui::TreePop();
 		}
 	}

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <stdexcept>
 #include "ShaderLoader.h"
 #include<iostream>
 #include <filesystem>
@@ -225,6 +227,33 @@ namespace ENGINE_RENDERING {
 
         glDeleteProgram(pShader->ShaderProgramID());
         return true;
+    }
+
+    std::shared_ptr<Shader> ShaderLoader::CompileSources(const std::string& vertex, const std::string& fragment) {
+        if (!glCreateShader || !glGetString(GL_VERSION)) throw std::runtime_error("No active OpenGL context for Shader compilation");
+        GLuint vs = 0, fs = 0, program = 0;
+        auto compile = [](GLenum type, const std::string& source) {
+            const auto shader = glCreateShader(type); const auto* text = source.c_str();
+            const GLint length = static_cast<GLint>(source.size()); glShaderSource(shader, 1, &text, &length); glCompileShader(shader);
+            GLint ok = 0; glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
+            if (!ok) {
+                GLint size = 0; glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &size); std::string error((std::max)(1, size), '\0');
+                glGetShaderInfoLog(shader, size, nullptr, error.data()); glDeleteShader(shader);
+                throw std::runtime_error(std::string(type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") + " shader compilation failed: " + error);
+            }
+            return shader;
+        };
+        try {
+            vs = compile(GL_VERTEX_SHADER, vertex); fs = compile(GL_FRAGMENT_SHADER, fragment); program = glCreateProgram();
+            glAttachShader(program, vs); glAttachShader(program, fs); glLinkProgram(program);
+            GLint ok = 0; glGetProgramiv(program, GL_LINK_STATUS, &ok);
+            if (!ok) {
+                GLint size = 0; glGetProgramiv(program, GL_INFO_LOG_LENGTH, &size); std::string error((std::max)(1, size), '\0');
+                glGetProgramInfoLog(program, size, nullptr, error.data()); throw std::runtime_error("Shader linking failed: " + error);
+            }
+            glDetachShader(program, vs); glDetachShader(program, fs); glDeleteShader(vs); glDeleteShader(fs); vs = fs = 0;
+            return std::make_shared<Shader>(program, "Imported source", "Imported source", "");
+        } catch (...) { if (vs) glDeleteShader(vs); if (fs) glDeleteShader(fs); if (program) glDeleteProgram(program); throw; }
     }
 
 }

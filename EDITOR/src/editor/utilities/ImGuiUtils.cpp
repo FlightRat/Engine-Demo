@@ -1,3 +1,4 @@
+#include "../automation/PhysicsEditing.h"
 #include "ImGuiUtils.h"
 #include "../automation/StateRules.h"
 #include <ImGuizmo.h>
@@ -118,6 +119,9 @@ namespace ImGui {
             return;
 
         auto& transform = entity.GetComponent<ENGINE_CORE::ECS::TransformComponent>();
+        const bool physical = entity.HasComponent<ENGINE_CORE::ECS::PhysicsComponent>();
+        if (physical && toolCTX.gizmoOp == ENGINE_EDITOR::EGizmoType::SCALE) return;
+        if (physical && entity.HasComponent<ENGINE_CORE::ECS::Identification>() && entity.GetComponent<ENGINE_CORE::ECS::Identification>().parent_id != -1) return;
 
         ImVec2 windowPos = ImGui::GetItemRectMin();
         const ImVec2 imageEnd = ImGui::GetItemRectMax();
@@ -177,8 +181,9 @@ namespace ImGui {
             transform.position = newPosition;
             transform.rotation_quat = newRotationQuat;
             transform.rotation_eular = glm::degrees(glm::eulerAngles(transform.rotation_quat)); // 四元数→弧度→欧拉角
-            transform.scale = newScale;
+            if (!physical) transform.scale = newScale;
             ENGINE_EDITOR::Automation::SynchronizeRotation(transform);
+            if (physical) ENGINE_EDITOR::Automation::SyncPhysicsPose(entity.GetRegistry(), entity.GetEntity());
             ENGINE_EDITOR::Automation::NotifyManualEdit();
 
         }

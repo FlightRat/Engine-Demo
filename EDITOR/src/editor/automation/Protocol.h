@@ -15,6 +15,7 @@ struct Error : std::runtime_error {
     std::string code;
     bool retryable;
     std::optional<size_t> actionIndex;
+    std::vector<std::string> unsupportedComponents;
     Error(std::string code, std::string message, bool retryable = false, std::optional<size_t> actionIndex = {})
         : std::runtime_error(std::move(message)), code(std::move(code)), retryable(retryable), actionIndex(actionIndex) {}
 };

@@ -70,26 +70,136 @@ OpenSpec strict 校验与 `git diff --check` 通过。
 查询中的 `visible=true` 是渲染组件状态，不代表已经观察到实际画面。
 测试创建的临时编辑器进程已停止；没有保存或改写场景文件。
 
-## Codex 与人工画面验收尚未完成
+## Codex 快速冒烟验收通过
 
-`run_codex_acceptance.py` 通过进程级 `-c mcp_servers.engine_demo.*` 覆盖提供配置，
-没有修改用户的全局 Codex 配置。它只在确认所需工具调用成功、查询属性匹配，
-且同一新场景的实体数从 2 变为 0、撤销指向原批次后才返回成功。
-验收提示限制操作在新建场景，禁止触碰既有物体或改代码。
+2026-10-19，用户在已连接 `default` 的 Codex 会话执行一段式测试，反馈全部通过。
+以下结果来源为用户实测反馈，不是本会话重新执行工具调用或观察画面所得：
 
-本机 CLI 尝试未完成验收：一次查询返回 `editor_unavailable`；后续会话虽然能启动
-Server，但模型报告未发现 `engine_demo` 工具，没有执行创建/撤销调用。
-最新辅助脚本据此返回失败，未将 CLI 退出码 0 视为验收通过。
-现有证据不能确定此处的 Codex 工具暴露问题根因；SDK 与旧协议消息测试通过也不能替代它。
-本地详情位于忽略的 `qa-codex-events.log`、`qa-codex-stderr.log`、`qa-codex-result.log`。
+| 项目 | 用户验收结果 |
+| --- | --- |
+| 查询状态与已加载资源，新建唯一测试场景 | 通过 |
+| 单批次创建 Cube、设置原点位置和 Y 轴 30 度旋转、创建暖色点光源 | 通过 |
+| 查询两个实体的属性，以及原请求的操作状态 | 通过 |
+| 相同 request_id 和原参数重试，结果一致且不重复创建 | 通过 |
+| 零缩放、旧 revision、缺失模型批次被拒绝，状态无残留变化 | 通过 |
+| 撤销创建批次后实体数由 2 变为 0，测试场景保留 | 通过 |
+| 新 request_id 再次撤销原批次被拒绝 | 通过 |
+
+这轮验证确认 Codex 到真实编辑器的核心接口链路可用。它覆盖批次预校验拒绝，
+执行中故障回滚仍以原生故障注入测试为证据。
+
+`run_codex_acceptance.py` 可独立生成工具事件验收记录；早期的 `qa-codex-*.log`
+包含未完成尝试，不作为上述用户验收的原始工具日志。
+
+## 连接与构建注意事项
+
+切换分支后曾复现 `editor_unavailable`：当前分支已包含 MCP 源码，但磁盘上的
+Debug/Release EXE 是在不含 MCP 的分支编译的，均不含桥接启动参数和代码。
+`x64/` 被 Git 忽略，切回分支不会恢复对应二进制。重新构建当前 MCP 分支两种配置后，
+实际 `get_editor_status` 返回 connected=true、instance=default；`list_assets`
+成功返回包括 cube、teapot 在内的 9 个模型。
 
 当前用户专用管道还要求编辑器与 MCP 执行器使用同一 Windows 身份，
 包括沙箱身份；宿主用户与沙箱用户不同会得到 `editor_unavailable`，不能自动改连其他实例。
 
-用户已明确暂缓画面验收。窗口授权超时后没有获取截图或执行鼠标验收，
-因此仍需在真实编辑器完成模型/灯光显示、Gizmo/属性面板、场景切换、加载、
-手动修改后拒绝旧撤销、桥接关闭/失败时的手动流程与正常退出检查。
-相关 OpenSpec 任务保留未勾选，变更尚未归档。
+## 完整界面与生命周期验收待完成
 
-继续验收时，先按 README 配置同一用户、同一实例，确认 Codex 实际调用
-`get_editor_status`，再运行完整示例与人工修改冲突检查；不能只以 `codex mcp list` 作为成功依据。
+用户已恢复窗口访问授权；Computer Use 捕获窗口时仍遇到超时。
+本轮快速冒烟不包含 Gizmo/属性面板的人工操作、模型与灯光画面一致性、
+人工编辑后拒绝旧撤销、各 UI 结构/场景/资源入口的失效检查，
+也不包含真实双编辑器隔离、桥接关闭/失败时的手动编辑与正常退出。
+需要这些证据的 10 项 OpenSpec 任务继续保留未勾选。用户确认保留未完成项后，
+变更于 2026-10-19 归档，两份能力规格已同步到主规格。
+原始任务清单见 [归档 tasks.md](../../openspec/changes/archive/2026-10-19-add-editor-mcp-integration/tasks.md)。
+
+继续验收时在 Scene 标签观察编辑结果；启动默认显示 Game，底部默认显示 Logs，
+管理场景或资源需切换到 Asset。MCP 创建场景会自动激活，手动切换场景则需从
+Asset 的 SCENE 分类拖入 Scene 视口。
+
+## 材质、选择与 Scene 截图扩展（2026-10-19）
+
+变更：`add-mcp-material-selection-capture`。下列记录属于本次扩展，前面已归档变更的
+验收范围和未完成任务保持原记录，不追溯改勾。
+
+### 构建和自动测试
+
+- 完整 EDITOR x64 Release 最终构建成功，0 错误：`build-editor-Release.log`。
+- 完整 EDITOR x64 Debug 最终标准产物构建成功，0 错误：`build-editor-Debug.log`，
+  产物为 `x64/Debug/EDITOR.exe`；另有隔离复核日志 `build-editor-Debug-validation.log`。
+  人工检查迁移至可见 Release QA 实例后，后台 Debug QA 已结束，标准 Debug/Release EXE 均已更新到最终代码。
+- AutomationTests x64 Debug / Release 均构建成功并运行通过，包含原操作/队列、
+  新材质/选择和捕获协调测试；原生测试不创建 OpenGL 窗口。
+- Python 套件最终 **62 passed**，`pip check` 无依赖冲突。
+- 共享契约与公开 Schema 保持一致：十四工具、旧工具参数兼容、材质未知字段和数值边界、
+  写入分类、选择回执/重连/去重、无渲染器时 capture_unavailable 均有覆盖。
+- 选中对象改名后 get_selection 返回实际 Identification 名称，原生测试验证不会返回包装对象的缓存旧名。
+- 捕获协调测试覆盖延迟完成不阻塞其他查询、单捕获忙、过期、取消、晚到编码结果不覆盖取消、
+  场景切换、像素长度、最大消息预算、超大元数据以及停止时未完成请求取消。
+- PNG 测试覆盖 RGB/行方向/CRC/随机像素最大尺寸、无图片字节的元数据、损坏像素拒绝、
+  Server 取消后释放捕获槽和不把像素写入错误/日志。CLI 验收器拒绝无工具证据的“成功”。
+
+### 真实 EDITOR 的 SDK 验收
+
+对独立 `qa_material_capture`（Debug）及 `qa_material_release`（Release）运行：
+
+```powershell
+& tools/engine_mcp/.venv/Scripts/python.exe -m engine_mcp.demo_visual --instance <QA实例> --output-dir <明确指定的证据目录>
+```
+
+两种配置均实测通过 **18 次工具调用**：创建唯一 QA 场景；一个布局批次创建 Cube、暖光并以
+target_ref 设置初始材质；选择及查询 Cube；材质批次改红色金属；连续两次截图；清空选择；
+重试原选择不覆盖清空；非法槽/缺失纹理拒绝；撤销材质；查询及第三次截图确认恢复。
+
+| Debug 返回项 | 真实结果 |
+| --- | --- |
+| 测试场景 / Cube | scene-4 / entity-8（仅该 session 有效） |
+| 第一次图片 | frame_id=1，640×360，revision=3，约 0.438 秒 |
+| 请求 1024×1024 | frame_id=2，实际 480×480，revision=3，约 0.422 秒 |
+| 撤销后图片 | frame_id=3，640×360，revision=4，约 0.469 秒 |
+| 相机 | position `[0,20,-20]`，前向约 `[0,-.7071,.7071]`，fov 43；三次元数据一致 |
+| 真实图像检查 | 红色 Cube 可见；撤销后恢复白色；PNG 可正常解码且上下方向正常 |
+
+本机证据（忽略文件，不作为代码提交）：
+`qa-visual-debug/events.json`、`qa-visual-debug/material-red.png`、
+`qa-visual-debug/material-large.png`、`qa-visual-debug/material-restored.png`；
+Release 对应文件在 `qa-visual-release/`。工具记录不包含图片 Base64。
+
+开发中真实连续捕获发现复用已 move 的 RapidJSON Document 会失去 allocator，导致第二次捕获失败；
+已改为每次捕获创建新的相机元数据 Document。修复后 Debug/Release 连续截图和不同尺寸复核通过，
+另外在真实 Release 中连续完成数百次捕获，无超时、错误帧或连接中断。
+
+另以可见独立 Release 实例 `qa_visible_material` 再次运行同一 SDK 流程，三张图片与全部调用通过。
+这些 PNG 是编辑器渲染结果；没有用 headless 合成像素替代真实画面。
+
+### 真实本地 Codex 验收
+
+运行 `run_codex_acceptance.py --visual`，只使用进程级 MCP 配置和既有模型登录。
+原生 Codex CLI 返回 **exit 0**，且语义验收器核对工具调用后返回成功：
+
+- 实例 qa_material_release，新 QA 场景 scene-17，Cube entity-21。
+- 16 次成功工具调用，包含 get_selection / set_selection、材质批次、两次实际图片和撤销。
+- 材质 operation-24；修改后 color 约 `[1,.02,.02]`、metallic `.6`、roughness `.25`、use_texture=false。
+- 选择确认 Cube → 清空并查询 null；材质撤销保持有效，撤销后完整材质槽与原快照一致。
+- 两张实际 MCP 图片分别为 frame_id 4、5，均 640×360；模型报告看到红色 Cube，随后看到恢复的棋盘外观。
+
+本机记录：`qa-codex-visual-result.log`、`qa-codex-visual-events.log`、`qa-codex-visual-stderr.log`。
+日志在写盘前移除图片字节，仅保留图片内容块标记和元数据；图片由模型从实际工具响应查看。
+该记录是 Codex 模型观察，不是人工面板观察。
+
+### 界面与真实生命周期仍待补证
+
+Computer Use 对隐藏及可见 QA 窗口均遇到 `FrameArrived timed out` / `window capture timed out`；
+无图像的可访问性树只包含窗口系统控件。关闭按钮输入报 `coordinate input geometry is unavailable`，
+键盘关闭未观察到进程退出。因此没有把这些尝试记为正常退出成功，也没有使用盲点坐标或其他 UI 自动化绕过。
+已结束不再使用的隐藏 Debug/Release QA 进程；这些清理不作为正常关闭验收证据。
+
+2026-10-19，用户明确选择“暂不做人工界面验收”。本轮停止继续窗口交互检查，
+层级/GO Details/Gizmo、手动选择与粗糙度修改，以及人工修改后旧撤销返回 history_conflict 的联验均暂缓。
+此前准备的可见 Release 实例为 `qa_visible_material`，已选中 Cube；检查点记录在
+`qa-visual-visible/manual-checkpoint.json`，原材质 operation-17 / revision 5。
+此检查点仅在原进程与 session 仍有效时可用；恢复验收前须重新查询状态，不能直接复用旧身份与版本。
+此前后台 Debug 检查点已随该临时进程结束失效，不得跨 session 使用。
+
+本次任务 6.2–6.5 保留未勾选：Scene 前台与 Game 前台的完整界面对比、人工编辑保护、
+真实 UI 场景/播放/缩放/关闭矩阵及汇总人工证据仍未齐备。SDK 和 Codex 主链路已通过的部分如上，
+不以它们代替缺失的人工界面/正常退出证据。

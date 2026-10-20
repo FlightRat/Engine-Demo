@@ -1,3 +1,5 @@
+#include <set>
+#include <stdexcept>
 #include "AssetManager.h"
 #include "Utilities/EngineUtilities.h"
 #include<../CORE/Core/ECS/MainRegistry.h>
@@ -497,18 +499,22 @@ namespace ENGINE_CORE::RESOURCES {
     /* change the asset name of specific asset type from "sOldName" to "sNewName */
     bool AssetManager::ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType)
     {
-        switch (eAssetType)
-        {
-        case ENGINE_UTIL::AssetType::TEXTURE:return ENGINE_UTIL::ChangeKey(m_mapTexture, sOldName, sNewName);
-        case ENGINE_UTIL::AssetType::MUSIC:return ENGINE_UTIL::ChangeKey(m_mapMusic, sOldName, sNewName);
-        case ENGINE_UTIL::AssetType::SOUNDFX:return ENGINE_UTIL::ChangeKey(m_mapSoundFx, sOldName, sNewName);
-        case ENGINE_UTIL::AssetType::MODEL:return ENGINE_UTIL::ChangeKey(m_mapModel, sOldName, sNewName);
-        case ENGINE_UTIL::AssetType::SHADER:return ENGINE_UTIL::ChangeKey(m_mapShader, sOldName, sNewName);
-        default:assert(false && "Cannot get this type!");
+        auto provenance = m_Provenance;
+        if (auto i = provenance.find({eAssetType, sOldName}); i != provenance.end()) {
+            provenance[{eAssetType, sNewName}] = i->second; provenance.erase(i);
         }
-        return false;
+        bool changed = false;
+        switch (eAssetType) {
+        case ENGINE_UTIL::AssetType::TEXTURE: changed = ENGINE_UTIL::ChangeKey(m_mapTexture, sOldName, sNewName); break;
+        case ENGINE_UTIL::AssetType::MUSIC: changed = ENGINE_UTIL::ChangeKey(m_mapMusic, sOldName, sNewName); break;
+        case ENGINE_UTIL::AssetType::SOUNDFX: changed = ENGINE_UTIL::ChangeKey(m_mapSoundFx, sOldName, sNewName); break;
+        case ENGINE_UTIL::AssetType::MODEL: changed = ENGINE_UTIL::ChangeKey(m_mapModel, sOldName, sNewName); break;
+        case ENGINE_UTIL::AssetType::SHADER: changed = ENGINE_UTIL::ChangeKey(m_mapShader, sOldName, sNewName); break;
+        default: return false;
+        }
+        if (changed) m_Provenance.swap(provenance);
+        return changed;
     }
-
     bool AssetManager::CheckHasAsset(const std::string& checkName, ENGINE_UTIL::AssetType eAssetType)
     {
         switch (eAssetType)
@@ -525,6 +531,7 @@ namespace ENGINE_CORE::RESOURCES {
 
     bool AssetManager::DeleteAsset(const std::string& assetName, ENGINE_UTIL::AssetType eAssetType)
     {
+        m_Provenance.erase({eAssetType, assetName});
         switch (eAssetType)
         {
         case ENGINE_UTIL::AssetType::TEXTURE:return std::erase_if(m_mapTexture, [&](const auto& pair) {return pair.first == assetName; }) > 0;
@@ -572,6 +579,66 @@ namespace ENGINE_CORE::RESOURCES {
             }
         );
     }
+    std::optional<AssetPayload> AssetManager::FindPayload(ENGINE_UTIL::AssetType type, const std::string& key) const {
+        switch (type) {
+        case ENGINE_UTIL::AssetType::MODEL: if (auto i = m_mapModel.find(key); i != m_mapModel.end()) return i->second; break;
+        case ENGINE_UTIL::AssetType::TEXTURE: if (auto i = m_mapTexture.find(key); i != m_mapTexture.end()) return i->second; break;
+        case ENGINE_UTIL::AssetType::SHADER: if (auto i = m_mapShader.find(key); i != m_mapShader.end()) return i->second; break;
+        case ENGINE_UTIL::AssetType::MUSIC: if (auto i = m_mapMusic.find(key); i != m_mapMusic.end()) return i->second; break;
+        case ENGINE_UTIL::AssetType::SOUNDFX: if (auto i = m_mapSoundFx.find(key); i != m_mapSoundFx.end()) return i->second; break;
+        default: break;
+        }
+        return {};
+    }
+    const AssetProvenance* AssetManager::Provenance(ENGINE_UTIL::AssetType type, const std::string& key) const {
+        auto i = m_Provenance.find({type, key}); if (i == m_Provenance.end()) return nullptr;
+        auto payload = FindPayload(type, key); if (!payload) return nullptr;
+        auto identity = std::visit([](const auto& p) { return static_cast<void*>(p.get()); }, *payload);
+        if (i->second.owner.lock().get() != identity) return nullptr;
+        return &i->second;
+    }
+    void AssetManager::Publish(const std::vector<LoadedAsset>& entries) {
+        auto models = m_mapModel; auto textures = m_mapTexture; auto shaders = m_mapShader;
+        auto music = m_mapMusic; auto sound = m_mapSoundFx; auto provenance = m_Provenance;
+        std::set<std::pair<ENGINE_UTIL::AssetType, std::string>> keys;
+        for (const auto& entry : entries) {
+            if (FindPayload(entry.type, entry.key) || !keys.emplace(entry.type, entry.key).second) throw std::runtime_error("Asset key already exists: " + entry.key);
+            std::visit([&](const auto& value) {
+                if (!value) throw std::runtime_error("Cannot publish a null resource");
+                using T = typename std::decay_t<decltype(value)>::element_type;
+                ENGINE_UTIL::AssetType actual{};
+                if constexpr (std::is_same_v<T, ENGINE_RENDERING::Model>) { models.emplace(entry.key, value); actual = ENGINE_UTIL::AssetType::MODEL; }
+                else if constexpr (std::is_same_v<T, ENGINE_RENDERING::Texture>) { textures.emplace(entry.key, value); actual = ENGINE_UTIL::AssetType::TEXTURE; }
+                else if constexpr (std::is_same_v<T, ENGINE_RENDERING::Shader>) { shaders.emplace(entry.key, value); actual = ENGINE_UTIL::AssetType::SHADER; }
+                else if constexpr (std::is_same_v<T, ENGINE_SOUNDS::Music>) { music.emplace(entry.key, value); actual = ENGINE_UTIL::AssetType::MUSIC; }
+                else { sound.emplace(entry.key, value); actual = ENGINE_UTIL::AssetType::SOUNDFX; }
+                if (actual != entry.type) throw std::runtime_error("Asset payload type does not match registration");
+                auto source = entry.provenance; source.owner = value; provenance[{entry.type, entry.key}] = std::move(source);
+            }, entry.payload);
+        }
+        m_mapModel.swap(models); m_mapTexture.swap(textures); m_mapShader.swap(shaders);
+        m_mapMusic.swap(music); m_mapSoundFx.swap(sound); m_Provenance.swap(provenance);
+    }
+    void AssetManager::Withdraw(const std::vector<LoadedAsset>& entries) {
+        auto models = m_mapModel; auto textures = m_mapTexture; auto shaders = m_mapShader;
+        auto music = m_mapMusic; auto sound = m_mapSoundFx; auto provenance = m_Provenance;
+        for (const auto& entry : entries) {
+            auto current = FindPayload(entry.type, entry.key);
+            if (!current || *current != entry.payload) throw std::runtime_error("Asset registration changed: " + entry.key);
+            switch (entry.type) {
+            case ENGINE_UTIL::AssetType::MODEL: models.erase(entry.key); break;
+            case ENGINE_UTIL::AssetType::TEXTURE: textures.erase(entry.key); break;
+            case ENGINE_UTIL::AssetType::SHADER: shaders.erase(entry.key); break;
+            case ENGINE_UTIL::AssetType::MUSIC: music.erase(entry.key); break;
+            case ENGINE_UTIL::AssetType::SOUNDFX: sound.erase(entry.key); break;
+            default: throw std::runtime_error("Unknown asset type");
+            }
+            provenance.erase({entry.type, entry.key});
+        }
+        m_mapModel.swap(models); m_mapTexture.swap(textures); m_mapShader.swap(shaders);
+        m_mapMusic.swap(music); m_mapSoundFx.swap(sound); m_Provenance.swap(provenance);
+    }
+
 }
 
 

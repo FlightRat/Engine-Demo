@@ -4,29 +4,51 @@ import argparse
 import json
 import logging
 import anyio
-from jsonschema import Draft4Validator
+from jsonschema import Draft4Validator, ValidationError
 from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 
 from .contract import TOOLS, TOOL_MAP, BridgeError, failure, validate, public_tool
 from .transport import PipeClient
+from .image import encode_capture
 
 
 def create_server(client: PipeClient):
+    capture_inflight = False
     async def list_tools(context, params):
         return types.ListToolsResult(tools=[types.Tool.model_validate(public_tool(tool)) for tool in TOOLS])
 
     async def call_tool(context, params):
+        nonlocal capture_inflight
         arguments = params.arguments or {}
+        owns_capture = False
+        picture = None
         try:
             validate(params.name, arguments)
+            if params.name == "capture_viewport":
+                if capture_inflight:
+                    raise BridgeError("capture_busy", "Another capture is in progress", retryable=True)
+                capture_inflight = owns_capture = True
             result = await client.rpc(params.name, arguments)
+            schema = TOOL_MAP[params.name]
+            Draft4Validator(schema.get("bridgeOutputSchema", schema["outputSchema"])).validate(result)
+            if owns_capture and result.get("status") == "succeeded":
+                result, picture = await anyio.to_thread.run_sync(encode_capture, result)
             Draft4Validator(TOOL_MAP[params.name]["outputSchema"]).validate(result)
         except BridgeError as error:
             logging.getLogger(__name__).warning("%s: %s", error.code, error)
             result = failure(error, arguments)
-        return types.CallToolResult(content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False, allow_nan=False))],
+        except (ValidationError, ValueError, KeyError, TypeError):
+            result = failure(BridgeError("invalid_response", "Editor response does not match the tool contract"), arguments)
+            picture = None
+        finally:
+            if owns_capture:
+                capture_inflight = False
+        content = [types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False, allow_nan=False))]
+        if picture is not None:
+            content.append(types.ImageContent(type="image", mime_type="image/png", data=picture))
+        return types.CallToolResult(content=content,
                                     structured_content=result, is_error=result.get("status") == "failed")
 
     # Validation uses the exact Draft-4 schema shared with RapidJSON, rather than

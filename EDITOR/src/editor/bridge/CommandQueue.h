@@ -14,6 +14,7 @@ public:
     struct Ticket {
         Request request;
         std::string fingerprint, status = "queued", result;
+        bool importCommitting = false;
         std::promise<std::string> promise;
         std::shared_future<std::string> future;
         explicit Ticket(Request request) : request(std::move(request)), future(promise.get_future().share()) {}
@@ -30,6 +31,10 @@ private:
     size_t m_QueueCapacity, m_LedgerCapacity;
     std::atomic<uint64_t> m_Revision{0};
     bool m_Stopped = false;
+    Handle m_Capture;
+    std::function<void(const Handle&)> m_CaptureHandler;
+    Handle m_Import;
+    std::function<void(const Handle&)> m_ImportHandler;
     Json SnapshotLocked(const Handle&) const;
     void CompleteLocked(const Handle&, Json);
     Json Fail(const Request&, const Error&) const;
@@ -43,5 +48,11 @@ public:
     Json Snapshot(const Handle&);
     void Process(size_t maxCommands = 8, std::chrono::milliseconds budget = std::chrono::milliseconds(2));
     void Stop();
+    void SetCaptureHandler(std::function<void(const Handle&)> handler) { m_CaptureHandler = std::move(handler); }
+    void SetImportHandler(std::function<void(const Handle&)> handler) { m_ImportHandler = std::move(handler); }
+    bool BeginImportCommit(const Handle&);
+    bool Active(const Handle&);
+    void CompleteDeferred(const Handle&, Json);
+    void ReleaseCapture(const Handle&);
 };
 }

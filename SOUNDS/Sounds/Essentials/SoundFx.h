@@ -11,7 +11,10 @@ namespace ENGINE_SOUNDS {
 		SoundFxPtr m_pSoundFx{ nullptr };
 	public:
 		SoundFx(const SoundParams& params, SoundFxPtr pSoundFx);
-		~SoundFx() = default;
+		~SoundFx() {
+            for (int channel = 0; channel < Mix_AllocateChannels(-1); ++channel)
+                if (Mix_GetChunk(channel) == m_pSoundFx.get() && (Mix_Playing(channel) || Mix_Paused(channel))) Mix_HaltChannel(channel);
+        }
 
 		// Getters
 		inline const std::string& GetName() const { return m_Params.name; }

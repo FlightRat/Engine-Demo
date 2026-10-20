@@ -92,6 +92,7 @@ struct NamedPipeServer::Impl {
                     std::lock_guard lock(mutex);
                     for (auto it = pending.begin(); it != pending.end(); ++it) {
                         if (!it->immediate.empty() || it->ticket->future.wait_for(std::chrono::seconds(0)) == std::future_status::ready ||
+                            (it->ticket && it->ticket->request.method == "capture_viewport" && std::chrono::steady_clock::now() >= it->ticket->request.deadline) ||
                             std::chrono::steady_clock::now() - it->started >= std::chrono::seconds(10)) {
                             selected = std::move(*it); pending.erase(it); break;
                         }
@@ -103,12 +104,23 @@ struct NamedPipeServer::Impl {
                 if (!p.immediate.empty()) result = Parse(p.immediate);
                 else if (p.ticket->future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) result = Parse(p.ticket->future.get());
                 else {
+                    if (p.ticket->request.method == "capture_viewport") {
+                        auto snapshot = queue.Snapshot(p.ticket);
+                        auto timeout = Failure("", Error("capture_timeout", "Capture deadline expired", true));
+                        auto& a = timeout.GetAllocator();
+                        timeout.AddMember("session_id", Copy(snapshot["session_id"], a), a);
+                        timeout.AddMember("editor_revision", Copy(snapshot["editor_revision"], a), a);
+                        queue.CompleteDeferred(p.ticket, std::move(timeout));
+                        result = Parse(p.ticket->future.get());
+                    } else {
                     result = queue.Snapshot(p.ticket);
                     Set(result, "execution_status", Text(Str(result, "status"), result.GetAllocator()), result.GetAllocator());
                     Set(result, "status", Text("pending", result.GetAllocator()), result.GetAllocator());
+                    }
                 }
                 Set(result, "correlation_id", Text(p.correlation, result.GetAllocator()), result.GetAllocator());
-                if (!WriteFrame(Stringify(result))) { connected = false; CancelIoEx(pipe, nullptr); break; }
+                if (!WriteFrame(Stringify(result))) { if (p.ticket) queue.Cancel(p.ticket); connected = false; CancelIoEx(pipe, nullptr); break; }
+                if (p.ticket) queue.ReleaseCapture(p.ticket);
             }
             } catch (...) {
                 // A failed response must close this client, not terminate the editor.

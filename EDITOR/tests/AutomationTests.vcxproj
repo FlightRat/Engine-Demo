@@ -30,4 +30,15 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="..\..\Engine.Runtime.targets" />
+<ItemGroup><ClCompile Include="..\src\editor\automation\CaptureCoordinator.cpp" /></ItemGroup>
+<ItemGroup><ClCompile Include="CaptureTests.cpp" /></ItemGroup>
+<ItemGroup><ClInclude Include="..\src\editor\automation\OperationTransaction.h" /><ClInclude Include="..\src\editor\automation\OperationHistory.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="HistoryTests.cpp" /></ItemGroup>
+<ItemGroup><ClCompile Include="PhysicsEditingTests.cpp" /></ItemGroup>
+<ItemGroup><ClInclude Include="..\src\editor\automation\PhysicsEditing.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="DeletionTests.cpp" /></ItemGroup>
+<ItemGroup><ClInclude Include="..\src\editor\automation\EntitySnapshot.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="..\src\editor\automation\AssetImport.cpp" /><ClInclude Include="..\src\editor\automation\AssetImport.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="..\src\editor\automation\AssetImportCoordinator.cpp" /><ClInclude Include="..\src\editor\automation\AssetImportCoordinator.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="AssetImportTests.cpp" /></ItemGroup>
 </Project>

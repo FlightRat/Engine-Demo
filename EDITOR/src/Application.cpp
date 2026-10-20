@@ -865,6 +865,7 @@ namespace ENGINE_EDITOR {
 
 	void Application::CleanUp()
 	{
+        SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext());
         m_pAutomation.reset();
 		// 后面的 GPU 资源释放需要当前 OpenGL 上下文。
 		SDL_GL_MakeCurrent(m_pWindow->GetWindow().get(), m_pWindow->GetGLContext());

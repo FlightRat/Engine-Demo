@@ -2,6 +2,8 @@
 #include<map>
 #include<memory>
 #include<string>
+#include<variant>
+#include<optional>
 #include<sol/sol.hpp>
 #include"../ECS/Registry.h"
 #include<Rendering/Essentials/Shader.h>
@@ -16,6 +18,21 @@ namespace ENGINE_UTIL
 }
 
 namespace ENGINE_CORE::RESOURCES {
+    using AssetPayload = std::variant<std::shared_ptr<ENGINE_RENDERING::Model>, std::shared_ptr<ENGINE_RENDERING::Texture>,
+        std::shared_ptr<ENGINE_RENDERING::Shader>, std::shared_ptr<ENGINE_SOUNDS::Music>, std::shared_ptr<ENGINE_SOUNDS::SoundFx>>;
+    struct AssetProvenance {
+        std::string path;
+        bool pixelArt = false;
+        std::shared_ptr<const std::vector<unsigned char>> source;
+        std::weak_ptr<void> owner;
+    };
+    struct LoadedAsset {
+        ENGINE_UTIL::AssetType type{};
+        std::string key;
+        AssetPayload payload;
+        AssetProvenance provenance;
+        size_t estimatedBytes = 0;
+    };
 	class AssetManager
 	{
 	private:
@@ -24,6 +41,7 @@ namespace ENGINE_CORE::RESOURCES {
 		std::map<std::string, std::shared_ptr<ENGINE_RENDERING::Shader>> m_mapShader{};
 		std::map<std::string, std::shared_ptr<ENGINE_SOUNDS::Music>> m_mapMusic{};
 		std::map<std::string, std::shared_ptr<ENGINE_SOUNDS::SoundFx>> m_mapSoundFx{};
+        std::map<std::pair<ENGINE_UTIL::AssetType, std::string>, AssetProvenance> m_Provenance;
 
 		const std::vector<std::string> m_SelectableMesh{ "cube", "sphere", "capsule"};
 	public:
@@ -63,6 +81,11 @@ namespace ENGINE_CORE::RESOURCES {
 		bool ChangeAssetName(const std::string& sOldName, const std::string& sNewName, ENGINE_UTIL::AssetType eAssetType);
 		bool CheckHasAsset(const std::string& checkName, ENGINE_UTIL::AssetType eAssetType);
 		bool DeleteAsset(const std::string& assetName, ENGINE_UTIL::AssetType eAssetType);
+        // Prepare all allocations before publishing or withdrawing a resource bundle.
+        void Publish(const std::vector<LoadedAsset>& entries);
+        void Withdraw(const std::vector<LoadedAsset>& entries);
+        std::optional<AssetPayload> FindPayload(ENGINE_UTIL::AssetType type, const std::string& key) const;
+        const AssetProvenance* Provenance(ENGINE_UTIL::AssetType type, const std::string& key) const;
 
 		static void CreateLuaAssetManagerBind(sol::state& lua, ENGINE_CORE::ECS::Registry& registry);
 	};

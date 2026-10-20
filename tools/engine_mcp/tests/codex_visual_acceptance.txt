@@ -1,0 +1,23 @@
+This is an authorized integration test of the local Engine-Demo editor MCP server.
+Use only engine_demo for editor actions; use read-only tool discovery first if tools
+are deferred. Do not run shell/file tools, spawn agents, modify code/configuration,
+save files, or touch any pre-existing scene or object. Work only in a new unique QA scene.
+1. Query get_editor_status/list_assets; verify cube is loaded. Create and activate
+   a uniquely named "Codex Visual Acceptance" scene using fresh request IDs and current revisions.
+2. In one apply_operations batch create Cube (kind mesh, model cube, client_ref cube),
+   set position [0,0,0], rotation_degrees [0,30,0], scale [4,4,4], create a light and
+   set its position [-3,5,-3], color [1,.65,.35], intensity 500, range 50.
+3. Query get_scene_state and remember Cube material slot 0's original values.
+   Query get_selection, use set_selection to select Cube, query again to confirm its ID.
+4. In a NEW apply_operations batch use set_material on Cube material_index=0 to set
+   color [1,.02,.02], metallic .6, roughness .25 and use_texture false. Query to confirm.
+5. Call capture_viewport with current session_id/scene_id/expected_revision and width=640,height=360.
+   Inspect the actual image; report what is visible. Do not pretend success if no image is returned.
+6. Clear selection using entity_id=null and query to confirm null. Undo ONLY the material batch
+   from step 4 with its operation_id. Selection and screenshots must not consume that content undo.
+7. Query to verify material slot 0 exactly matches the values remembered before step 4,
+   with both QA objects still present. Capture again and confirm a new frame_id and restored appearance.
+For pending writes use get_operation_status with the original IDs; never create a new uncertain retry.
+For any error report it instead of simulating success with another mechanism.
+Return a concise report: instance, QA scene_id, Cube entity_id, material operation_id,
+two screenshot frame_ids/dimensions, material before/changed/restored, and image observations.

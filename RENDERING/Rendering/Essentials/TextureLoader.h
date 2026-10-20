@@ -1,5 +1,6 @@
 #pragma once
 #include"Texture.h"
+#include "PreparedAssets.h"
 #include<memory>
 
 namespace ENGINE_RENDERING {
@@ -25,6 +26,7 @@ namespace ENGINE_RENDERING {
 			int& height, bool blended = false);
 	public:
 		TextureLoader() = delete;
+        static std::shared_ptr<Texture> CreatePrepared(const PreparedImage& image, bool pixelArt, const std::string& sourcePath);
 		static std::shared_ptr<Texture> Create(Texture::TextureType type, const std::string& texturePath);
 		static std::shared_ptr<Texture> Create(Texture::TextureType type, int width, int height, const bool multiSample=false);
 		static std::shared_ptr<Texture> CreateGbuffer(int width, int height, GLenum internalFormat = GL_RGBA16F);

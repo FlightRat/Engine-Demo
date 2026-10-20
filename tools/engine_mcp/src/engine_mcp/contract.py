@@ -10,7 +10,7 @@ from jsonschema import Draft4Validator
 MAX_MESSAGE = 1024 * 1024
 TOOLS = json.loads(files("engine_mcp").joinpath("contracts/tools.json").read_text(encoding="utf-8"))["tools"]
 TOOL_MAP = {tool["name"]: tool for tool in TOOLS}
-WRITES = {"create_scene", "create_object", "set_transform", "set_light", "apply_operations", "undo_operation"}
+WRITES = {tool["name"] for tool in TOOLS if not tool.get("annotations", {}).get("readOnlyHint", False)}
 
 
 def public_tool(tool):
@@ -27,6 +27,7 @@ def public_tool(tool):
             del result["exclusiveMinimum"]
         return result
     result = copy.deepcopy(tool)
+    result.pop("bridgeOutputSchema", None)
     for key in ("inputSchema", "outputSchema"):
         result[key] = modern(result[key])
         result[key]["$schema"] = "https://json-schema.org/draft/2020-12/schema"

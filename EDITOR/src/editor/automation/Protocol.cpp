@@ -12,7 +12,7 @@ Request::Request(std::string method, const Value& p, std::string correlationId)
 }
 bool Request::IsWrite() const {
     return method == "create_scene" || method == "create_object" || method == "set_transform" ||
-        method == "set_light" || method == "apply_operations" || method == "undo_operation";
+        method == "set_light" || method == "set_material" || method == "set_selection" || method == "apply_operations" || method == "undo_operation" || method == "redo_operation" || method == "add_physics" || method == "set_physics" || method == "remove_physics" || method == "delete_entity" || method == "import_asset";
 }
 std::string Request::Fingerprint() const {
     Json d;
@@ -62,8 +62,13 @@ Json Failure(const std::string& requestId, const Error& error) {
     d.AddMember("status", "failed", a);
     Value e(rapidjson::kObjectType);
     e.AddMember("code", Text(error.code, a), a);
-    e.AddMember("message", Text(error.what(), a), a);
+    e.AddMember("message", Text(std::string(error.what()).substr(0, 8192), a), a);
     Value details(rapidjson::kObjectType);
+    if (!error.unsupportedComponents.empty()) {
+        Value components(rapidjson::kArrayType);
+        for (const auto& name : error.unsupportedComponents) components.PushBack(Text(name, a), a);
+        details.AddMember("unsupported_components", std::move(components), a);
+    }
     if (error.actionIndex) details.AddMember("failed_action_index", uint64_t(*error.actionIndex), a);
     e.AddMember("details", std::move(details), a);
     e.AddMember("retryable", error.retryable, a);

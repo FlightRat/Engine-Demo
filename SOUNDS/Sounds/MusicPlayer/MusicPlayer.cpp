@@ -18,6 +18,7 @@ namespace ENGINE_SOUNDS {
 	MusicPlayer::~MusicPlayer()
 	{
 		Mix_HaltMusic();
+        Music::ActiveMusic = nullptr;
 		Mix_Quit();
 		ENGINE_LOG("Music Player closed!");
 	}
@@ -35,6 +36,7 @@ namespace ENGINE_SOUNDS {
 			std::string error{ Mix_GetError() };
 			ENGINE_ERROR("Failed to play music [{}] -- Mix Error: {}", music.GetName(), error);
 		}
+        else Music::ActiveMusic = music.GetMusicPtr();
 	}
 
 	void MusicPlayer::Pause()
@@ -53,6 +55,7 @@ namespace ENGINE_SOUNDS {
 	void MusicPlayer::Stop()
 	{
 		Mix_HaltMusic();
+        Music::ActiveMusic = nullptr;
 	}
 
 	void MusicPlayer::SetVolume(int volume)

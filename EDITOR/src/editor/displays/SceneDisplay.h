@@ -27,6 +27,7 @@ namespace ENGINE_EDITOR
 		virtual void Update() override;
 
 		void ControlCam();
+        std::shared_ptr<ENGINE_RENDERING::Camera3D> GetSceneCamera() const { return m_pSceneCam; }
 		static bool PrepareForPlay() { return LoadScnne(); }
 	};
 }

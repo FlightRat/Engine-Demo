@@ -316,6 +316,7 @@ paket-files/
 __pycache__/
 *.pyc
 .venv/
+tools/engine_mcp/qa-visual-*/
 .pytest_cache/
 *.egg-info/
 
@@ -383,3 +384,8 @@ FodyWeavers.xsd
 
 # Wavefront OBJ models are source assets, not compiler object files.
 !/EDITOR/assets/models/**/*.obj
+
+# Small, source-controlled import test fixtures.
+!/tools/engine_mcp/tests/fixtures/imports/*.obj
+/tools/engine_mcp/qa-import-*/
+/tools/engine_mcp/.pytest-tmp-*/

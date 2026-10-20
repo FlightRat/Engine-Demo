@@ -52,28 +52,10 @@ namespace ENGINE_EDITOR {
 			ImGui::EndPopup();
 		}
 
-		// click event
-		if (ImGui::IsItemClicked())
-		{
-			// A. 如果之前有选中的物体，先把它的 selected 标志取消
-			if (m_pSelectedEntity)
-			{
-				// 需要检查之前的实体是否还存在 (防止野指针)
-				if (m_pSelectedEntity->GetRegistry().valid(m_pSelectedEntity->GetEntity()))
-				{
-					auto& oldId = m_pSelectedEntity->GetComponent<ENGINE_CORE::ECS::Identification>();
-					oldId.selected = false;
-				}
-			}
-
-			// B. 更新内部指针
-			m_pSelectedEntity = std::make_shared<ENGINE_CORE::ECS::Entity>(SCENE_MANAGER().GetCurrentScene()->GetRegistry(), entity.GetEntity());
-			TOOL_CTX().selectedEntity = m_pSelectedEntity;
-
-			// C. 将当前物体的 selected 标志设为 true
-			auto& newId = entity.GetComponent<ENGINE_CORE::ECS::Identification>();
-			newId.selected = true;
-		}
+        if (ImGui::IsItemClicked()) {
+            Automation::SelectEntity(SCENE_MANAGER().GetCurrentScene(), entity.GetEntity());
+            m_pSelectedEntity = TOOL_CTX().selectedEntity;
+        }
 
 		ImGui::PopID();
 		return bTreeNodeOpen;
@@ -278,13 +260,8 @@ namespace ENGINE_EDITOR {
 	void SceneHierarchyDisplay::Draw()
 	{
 		auto pCurrentScene = SCENE_MANAGER().GetCurrentScene();
-        if (!pCurrentScene || m_SelectedScene.lock() != pCurrentScene || m_SelectionResetSerial != Automation::SelectionResetSerial) {
-            m_pSelectedEntity.reset(); TOOL_CTX().selectedEntity.reset();
-            m_SelectedScene = pCurrentScene; m_SelectionResetSerial = Automation::SelectionResetSerial;
-        }
-        if (m_pSelectedEntity && !pCurrentScene->GetRegistry().GetRegistry().valid(m_pSelectedEntity->GetEntity())) {
-            m_pSelectedEntity.reset(); TOOL_CTX().selectedEntity.reset();
-        }
+        Automation::SynchronizeSelection(pCurrentScene);
+        m_pSelectedEntity = TOOL_CTX().selectedEntity;
 		if (!ImGui::Begin("Scene Hierarchy") || !pCurrentScene)
 		{
 			ImGui::End();
@@ -312,24 +289,16 @@ namespace ENGINE_EDITOR {
 		}
 
 		// 左击空白处取消选中entity
-		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
-		{
-			if (m_pSelectedEntity)
-			{
-				if (m_pSelectedEntity->GetRegistry().valid(m_pSelectedEntity->GetEntity()))
-				{
-					auto& oldId = m_pSelectedEntity->GetComponent<ENGINE_CORE::ECS::Identification>();
-					oldId.selected = false;
-				}
-				m_pSelectedEntity.reset();
-				TOOL_CTX().selectedEntity.reset();
-			}
-		}
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+            Automation::ResetSelection();
+            m_pSelectedEntity.reset();
+        }
 
 		// 执行删除entity
 		if (m_pSelectedEntity && m_bDeleteGameObject)
 		{
 			delete_entity(m_pSelectedEntity);
+            Automation::ResetSelection();
 			m_pSelectedEntity.reset();
 			TOOL_CTX().selectedEntity.reset();
 			m_bDeleteGameObject = false;

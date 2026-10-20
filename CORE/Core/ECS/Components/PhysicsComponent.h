@@ -63,7 +63,16 @@ namespace ENGINE_CORE::ECS {
 	public:
 		PhysicsComponent();
 		PhysicsComponent(const PhysicsAttributes& pAttributes);
-		~PhysicsComponent() = default;
+		~PhysicsComponent() {
+            m_pCollider.reset(); m_pCollisionShape.reset(); m_pRigidBody.reset(); m_pUserData.reset();
+        }
+        void Swap(PhysicsComponent& other) noexcept {
+            using std::swap;
+            swap(m_previousTransform, other.m_previousTransform); swap(m_currentTransform, other.m_currentTransform);
+            swap(m_pAttribute, other.m_pAttribute); swap(m_pRigidBody, other.m_pRigidBody);
+            swap(m_pCollisionShape, other.m_pCollisionShape); swap(m_pCollider, other.m_pCollider);
+            swap(m_pUserData, other.m_pUserData); swap(initialized, other.initialized);
+        }
 
 		void Init(std::shared_ptr<PhysicsCommon> common, std::shared_ptr<PhysicsWorld> world);
 		void Update(std::shared_ptr<PhysicsCommon> common);

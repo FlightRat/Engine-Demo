@@ -29,6 +29,7 @@ namespace ENGINE_RENDERING {
 		inline const bool IsEditorTexture() const { return m_bEditorTexture; }
 		inline void SetIsEditorTexture(bool bIsEditorTexture) { m_bEditorTexture = bIsEditorTexture; }
 
+		inline TextureType GetType() const { return m_eType; }
 		inline const int GetWidth() const { return m_Width; }
 		inline const int GetHeight() const { return m_Height; }
 		inline const GLuint GetID() const { return m_TextureID; }

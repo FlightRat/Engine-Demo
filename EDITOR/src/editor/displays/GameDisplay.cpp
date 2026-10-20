@@ -1,3 +1,4 @@
+#include "../automation/PhysicsEditing.h"
 #include "GameDisplay.h"
 #include "SceneDisplay.h"
 #include "../automation/StateRules.h"
@@ -42,6 +43,14 @@ namespace ENGINE_EDITOR
 		if (!pCurrentScene) 
 			return;
         if (!SceneDisplay::PrepareForPlay()) return;
+        try {
+            auto& registry = pCurrentScene->GetRegistry().GetRegistry();
+            for (auto entity : registry.view<TransformComponent, PhysicsComponent>()) {
+                auto& component = registry.get<PhysicsComponent>(entity);
+                if (!component.initialized) Automation::ApplyPhysics(registry, entity, component.GetAttr());
+            }
+        } catch (const std::exception& error) { ENGINE_ERROR("Cannot start physics: {}", error.what()); return; }
+
 		pCurrentScene->SetPlay(true);
         Automation::NotifyManualEdit();
 		m_bPlayGame = true;

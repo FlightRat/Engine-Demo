@@ -1,4 +1,5 @@
 #include "SceneDisplay.h"
+#include "../automation/PhysicsEditing.h"
 #include "Core/ECS/MainRegistry.h"
 #include "Core/Systems/RenderSystem.h"
 #include "Core/Systems/PhysicsSystem.h"
@@ -45,13 +46,9 @@ namespace ENGINE_EDITOR {
 		auto camera = std::make_shared<ENGINE_RENDERING::Camera3D>(glm::vec3(0.0f, 10.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -45.0f);
 		runtimeRegistry.AddToContext<std::shared_ptr<ENGINE_RENDERING::Camera3D>>(camera);
 
-		// Physics Common
-		std::shared_ptr<PhysicsCommon> physicsCommon = std::make_shared<PhysicsCommon>();
-		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsCommon>>(physicsCommon);
-
-		// Physics World
-		std::shared_ptr<PhysicsWorld> physicsWorld = ENGINE_PHYSICS::MakeSharedPhysicsWorld(physicsCommon);
-		runtimeRegistry.AddToContext<std::shared_ptr<rp3d::PhysicsWorld>>(physicsWorld);
+        Automation::EnsurePhysicsContext(runtimeRegistry.GetRegistry());
+        auto physicsCommon = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsCommon>>();
+        auto physicsWorld = runtimeRegistry.GetContext<std::shared_ptr<rp3d::PhysicsWorld>>();
 		physicsWorld->getDebugRenderer().setIsDebugItemDisplayed(rp3d::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
 
 		// Contact Listener

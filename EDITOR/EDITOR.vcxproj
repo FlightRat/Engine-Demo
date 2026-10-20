@@ -322,4 +322,16 @@
   <Import Project="..\Engine.Runtime.targets" Condition="'$(Platform)'=='x64'" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <ClCompile Include="src\editor\automation\CaptureCoordinator.cpp" />
+    <ClCompile Include="src\editor\automation\SceneCapture.cpp" />
+    <ClInclude Include="src\editor\automation\CaptureCoordinator.h" />
+    <ClInclude Include="src\editor\automation\SceneCapture.h" />
+    <ClInclude Include="src\editor\automation\MaterialRules.h" />
+  </ItemGroup>
+<ItemGroup><ClInclude Include="src\editor\automation\OperationTransaction.h" /><ClInclude Include="src\editor\automation\OperationHistory.h" /></ItemGroup>
+<ItemGroup><ClInclude Include="src\editor\automation\PhysicsEditing.h" /></ItemGroup>
+<ItemGroup><ClInclude Include="src\editor\automation\EntitySnapshot.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="src\editor\automation\AssetImport.cpp" /><ClInclude Include="src\editor\automation\AssetImport.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="src\editor\automation\AssetImportCoordinator.cpp" /><ClInclude Include="src\editor\automation\AssetImportCoordinator.h" /></ItemGroup>
 </Project>

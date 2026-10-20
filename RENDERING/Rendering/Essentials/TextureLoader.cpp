@@ -719,4 +719,26 @@ namespace ENGINE_RENDERING
         return nullptr;
     }
 
+    std::shared_ptr<Texture> TextureLoader::CreatePrepared(const PreparedImage& image, bool pixelArt, const std::string& sourcePath) {
+        if (!glCreateTextures || !glGetString(GL_VERSION)) throw std::runtime_error("No active OpenGL context for texture upload");
+        if (image.width <= 0 || image.height <= 0 || image.rgba.size() != size_t(image.width) * image.height * 4) throw std::runtime_error("Invalid prepared image");
+        GLuint id = 0; glCreateTextures(GL_TEXTURE_2D, 1, &id);
+        if (!id) throw std::runtime_error("Could not allocate texture");
+        GLint oldAlignment = 4, oldBuffer = 0;
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldAlignment); glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &oldBuffer);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0); glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        const int levels = pixelArt ? 1 : 1 + int(std::floor(std::log2((std::max)(image.width, image.height))));
+        glTextureStorage2D(id, levels, GL_RGBA8, image.width, image.height);
+        glTextureSubImage2D(id, 0, 0, 0, image.width, image.height, GL_RGBA, GL_UNSIGNED_BYTE, image.rgba.data());
+        glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, pixelArt ? GL_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, pixelArt ? GL_NEAREST : GL_LINEAR);
+        glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_REPEAT); glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        if (!pixelArt) glGenerateTextureMipmap(id);
+        const auto error = glGetError();
+        glPixelStorei(GL_UNPACK_ALIGNMENT, oldAlignment); glBindBuffer(GL_PIXEL_UNPACK_BUFFER, oldBuffer);
+        if (error != GL_NO_ERROR) { glDeleteTextures(1, &id); throw std::runtime_error("GPU texture upload failed: " + std::to_string(error)); }
+        try { return std::make_shared<Texture>(id, image.width, image.height, pixelArt ? Texture::TextureType::PIXEL : Texture::TextureType::BLENDED, sourcePath); }
+        catch (...) { glDeleteTextures(1, &id); throw; }
+    }
+
 } // namespace ENGINE_RENDERING

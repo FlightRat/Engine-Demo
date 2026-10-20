@@ -15,7 +15,7 @@ LoadAssets()
 --direction_light_0 = LoadEntity(LightDefs["direction_light_0"])
 --area_light_0 = LoadEntity(LightDefs["area_light_0"])
 
-light_test(1024)
+--light_test(1024)
 
 main = {
 	[1] = {

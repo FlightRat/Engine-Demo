@@ -309,4 +309,15 @@
     <ClInclude Include="src\editor\bridge\CommandQueue.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="src\editor\bridge\NamedPipeServer.h"><Filter>Header Files</Filter></ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\editor\automation\CaptureCoordinator.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\editor\automation\SceneCapture.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClInclude Include="src\editor\automation\CaptureCoordinator.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\automation\SceneCapture.h"><Filter>Header Files</Filter></ClInclude>
+    <ClInclude Include="src\editor\automation\MaterialRules.h"><Filter>Header Files</Filter></ClInclude>
+  </ItemGroup>
+<ItemGroup><ClInclude Include="src\editor\automation\OperationTransaction.h" /><ClInclude Include="src\editor\automation\OperationHistory.h" /></ItemGroup>
+<ItemGroup><ClInclude Include="src\editor\automation\PhysicsEditing.h" /></ItemGroup>
+<ItemGroup><ClInclude Include="src\editor\automation\EntitySnapshot.h" /></ItemGroup>
+<ItemGroup><ClCompile Include="src\editor\automation\AssetImport.cpp" /><ClInclude Include="src\editor\automation\AssetImport.h" /><ClCompile Include="src\editor\automation\AssetImportCoordinator.cpp" /><ClInclude Include="src\editor\automation\AssetImportCoordinator.h" /></ItemGroup>
 </Project>

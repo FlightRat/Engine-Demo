@@ -1,0 +1,9 @@
+只使用 engine_demo 工具完成独立 QA 实例中的扩展验收，不改代码、不执行脚本、不保存场景、不修改其他场景、不播放音频或进入播放模式。所有写入先获取当前 session/revision，使用新 request_id；pending 必须用原请求查询至最终结果，不能换 ID 重发。
+
+从 __FIXTURES__ 下导入 textured.obj、color.png、tone.wav（分别为 music 和 soundfx）、vertex.vert+fragment.frag（shader），各自用新的唯一资源键。逐类 list_assets 验证。随后创建唯一 QA 场景，在一个批次创建导入的 mesh（client_ref=body），先设置非物理状态下 scale=[6,6,6]、position=[0,2,0]、材质颜色红色/metallic=.25/roughness=.45/use_texture=false，再创建暖色点光源放在 [-3,5,5]。
+
+分别调用 add_physics（dynamic、mass=3）、set_physics（sphere、radius=3、enable_gravity=false）、set_transform（position=[1,3,0]），记录每步原内容 operation_id。查询确认已应用物理配置并 capture_viewport 获取图片。delete_entity 删除 body，查询和再截图确认。
+
+用 get_history 查询栈顶，逐项 undo_operation 撤销本次全部内容操作直到五次导入之前；每步使用栈顶原内容 ID 与当前上下文，资源作用域不要求 scene_id。查询确认本次 QA 场景和新增资源均移除。随后按原顺序 redo_operation 重做全部步骤，使用 scene_id_remap/entity_id_remap 中的新身份，查询确认最后只剩暖色灯。需要真实图片块，不能把元数据或文字描述当作图片证据。
+
+最后再次逐项撤销本次全部内容操作，恢复进入前状态。不要撤销本次以外的操作。工具失败、未解决 pending 或不符合断言时立即报告具体结果，不宣称通过。

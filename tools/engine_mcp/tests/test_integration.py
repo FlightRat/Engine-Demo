@@ -143,13 +143,45 @@ def test_mcp_sdk_stdio_with_live_native_editor(editor):
     asyncio.run(run())
 
 
+def test_selection_receipts_and_capture_unavailable(editor):
+    async def run():
+        client = PipeClient(editor[0])
+        try:
+            initial = ensure(await client.rpc("get_editor_status", {}))
+            assert ensure(await client.rpc("get_selection", {}))["data"]["entity_id"] is None
+            created = ensure(await client.rpc("create_scene", {**write_params(initial), "name": "Selection"}))
+            scene = created["data"]["scene_id"]
+            batch = ensure(await client.rpc("apply_operations", {**write_params(created, scene), "operations": [
+                {"method": "create_object", "params": {"name": "A", "kind": "light", "client_ref": "a"}},
+                {"method": "create_object", "params": {"name": "B", "kind": "light", "client_ref": "b"}}]}))
+            refs = batch["data"]["references"]
+            first = {**write_params(batch, scene), "entity_id": refs["a"]}
+            receipt = ensure(await client.rpc("set_selection", first))
+            assert receipt["editor_revision"] == batch["editor_revision"]
+            second = ensure(await client.rpc("set_selection", {**write_params(receipt, scene), "entity_id": refs["b"]}))
+            await client.close(); await asyncio.sleep(.05); client = PipeClient(editor[0])
+            assert ensure(await client.rpc("set_selection", first))["operation_id"] == receipt["operation_id"]
+            assert ensure(await client.rpc("get_selection", {}))["data"]["entity_id"] == refs["b"]
+            assert ensure(await client.rpc("get_operation_status", {"session_id": receipt["session_id"], "request_id": first["request_id"]}))["operation_id"] == receipt["operation_id"]
+            assert (await client.rpc("set_selection", {**first, "entity_id": None}))["error"]["code"] == "request_id_conflict"
+            capture = {k: v for k, v in write_params(second, scene).items() if k != "request_id"}
+            unavailable = await client.rpc("capture_viewport", capture)
+            assert unavailable["error"]["code"] == "capture_unavailable"
+            assert ensure(await client.rpc("get_editor_status", {}))["data"]["undo_operation_id"] == batch["operation_id"]
+            undo = ensure(await client.rpc("undo_operation", {**write_params(second, scene), "operation_id": batch["operation_id"]}))
+            assert ensure(await client.rpc("get_selection", {}))["data"]["entity_id"] is None
+        finally:
+            await client.close()
+    asyncio.run(run())
+
+
 def test_mcp_stays_discoverable_without_editor():
     from mcp import Client
     from mcp.client.stdio import StdioServerParameters
     async def run():
         command = StdioServerParameters(command=sys.executable, args=["-m", "engine_mcp.server", "--instance", "missing_" + uuid.uuid4().hex])
         async with Client(command) as client:
-            assert len((await client.list_tools()).tools) == 10
+            assert len((await client.list_tools()).tools) == 21
             status = await client.call_tool("get_editor_status", {})
             assert status.is_error
             assert status.structured_content["error"]["code"] == "editor_unavailable"
@@ -256,7 +288,7 @@ def test_config_paths_and_sdk_launch_from_space_directory(tmp_path):
     cwd.mkdir()
     async def run():
         async with Client(StdioServerParameters(command=config["command"], args=config["args"], cwd=str(cwd))) as client:
-            assert len((await client.list_tools()).tools) == 10
+            assert len((await client.list_tools()).tools) == 21
     asyncio.run(run())
 
 
@@ -441,12 +473,154 @@ def test_legacy_mcp_protocol_exposes_camel_case_tools():
         {"jsonrpc": "2.0", "method": "notifications/initialized"},
         {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}},
     ]
-    process = subprocess.run([sys.executable, "-m", "engine_mcp.server", "--instance", "missing_compat"],
-                             input="\n".join(json.dumps(r) for r in requests) + "\n", text=True, encoding="utf-8",
-                             capture_output=True, timeout=15, creationflags=subprocess.CREATE_NO_WINDOW)
-    assert process.returncode == 0, process.stderr
-    responses = {r["id"]: r for r in map(json.loads, process.stdout.splitlines()) if "id" in r}
+    # Keep stdin open until each response is received; closing it immediately can
+    # cancel the SDK task group before tools/list finishes serializing its schemas.
+    import queue
+    import threading
+    process = subprocess.Popen([sys.executable, "-m", "engine_mcp.server", "--instance", "missing_compat"],
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True, encoding="utf-8", creationflags=subprocess.CREATE_NO_WINDOW)
+    lines = queue.Queue()
+    reader = threading.Thread(target=lambda: [lines.put(line) for line in process.stdout], daemon=True)
+    reader.start()
+    responses = {}
+    try:
+        for request in requests:
+            process.stdin.write(json.dumps(request) + "\n"); process.stdin.flush()
+            if "id" not in request:
+                continue
+            while request["id"] not in responses:
+                response = json.loads(lines.get(timeout=15))
+                if "id" in response:
+                    responses[response["id"]] = response
+        process.stdin.close()
+        assert process.wait(timeout=15) == 0, process.stderr.read()
+    finally:
+        if process.poll() is None:
+            process.terminate(); process.wait(timeout=10)
+        reader.join(timeout=5)
     assert responses[1]["result"]["protocolVersion"] == "2025-06-18"
     tools = responses[2]["result"]["tools"]
     assert {t["name"] for t in tools} == set(TOOL_MAP)
     assert all("inputSchema" in t and "outputSchema" in t for t in tools)
+
+
+def test_physics_delete_and_multilevel_history_over_pipe(editor):
+    async def run():
+        client = PipeClient(editor[0])
+        try:
+            status = ensure(await client.rpc("get_editor_status", {}))
+            scene_result = ensure(await client.rpc("create_scene", {**write_params(status), "name": "Physics deletion history"}))
+            scene = scene_result["data"]["scene_id"]
+            batch = ensure(await client.rpc("apply_operations", {**write_params(scene_result, scene), "operations": [
+                {"method": "create_object", "params": {"kind": "mesh", "model": "test_mesh", "name": "physical", "client_ref": "body"}},
+                {"method": "add_physics", "params": {"target_ref": "body", "body_type": "dynamic", "mass": 3}},
+                {"method": "set_material", "params": {"target_ref": "body", "material_index": 0, "color": [1, 0, 0], "metallic": .8}},
+                {"method": "set_transform", "params": {"target_ref": "body", "position": [1, 2, 3]}},
+            ]}))
+            original = batch["data"]["references"]["body"]
+            state = ensure(await client.rpc("get_scene_state", {}))
+            assert state["data"]["entities"][0]["physics"]["mass"] == 3
+            assert state["data"]["entities"][0]["materials"][0]["color"] == [1, 0, 0]
+            ensure(await client.rpc("set_selection", {**write_params(state, scene), "entity_id": original}))
+            delete_args = {**write_params(state, scene), "entity_id": original}
+            deleted = ensure(await client.rpc("delete_entity", delete_args))
+            assert deleted["data"]["deleted_entities"][0]["entity_id"] == original
+            assert (await client.rpc("get_selection", {}))["data"]["entity_id"] is None
+            restored = ensure(await client.rpc("undo_operation", {**write_params(deleted, scene), "operation_id": deleted["operation_id"]}))
+            new_id = restored["data"]["entity_id_remap"][original]
+            assert new_id != original
+            # Retrying the original deletion returns its receipt without touching the restored entity.
+            retried = ensure(await client.rpc("delete_entity", delete_args))
+            assert retried["operation_id"] == deleted["operation_id"]
+            assert (await client.rpc("get_scene_state", {}))["data"]["entities"][0]["entity_id"] == new_id
+            undo_batch = ensure(await client.rpc("undo_operation", {**write_params(restored, scene), "operation_id": batch["operation_id"]}))
+            assert (await client.rpc("get_scene_state", {}))["data"]["entities"] == []
+            redo_batch = ensure(await client.rpc("redo_operation", {**write_params(undo_batch, scene), "operation_id": batch["operation_id"]}))
+            assert redo_batch["data"]["entity_id_remap"][new_id] != new_id
+            redo_delete = ensure(await client.rpc("redo_operation", {**write_params(redo_batch, scene), "operation_id": deleted["operation_id"]}))
+            assert (await client.rpc("get_scene_state", {}))["data"]["entities"] == []
+            history = ensure(await client.rpc("get_history", {"page_size": 1}))
+            assert history["data"]["undo_count"] == 3 and history["data"]["redo_count"] == 0
+            assert history["data"]["entries"][0]["operation_id"] == deleted["operation_id"]
+            assert history["data"]["next_cursor"]
+            assert redo_delete["editor_revision"] > batch["editor_revision"]
+        finally:
+            await client.close()
+    asyncio.run(run())
+
+
+def test_import_validation_without_a_scene(editor):
+    async def run():
+        client = PipeClient(editor[0])
+        try:
+            status = ensure(await client.rpc("get_editor_status", {}))
+            fixture = ROOT / "tools/engine_mcp/tests/fixtures/imports"
+            invalid = await client.rpc("import_asset", {**write_params(status), "asset_type": "texture", "asset_key": "bad", "path": str(fixture / "broken.png")})
+            assert invalid["status"] == "failed"
+            assert invalid["editor_revision"] == status["editor_revision"]
+            state = ensure(await client.rpc("get_scene_state", {}))
+            assert state["data"]["scenes"] == []
+            assets = ensure(await client.rpc("list_assets", {}))
+            assert not any(item["key"] == "bad" for item in assets["data"]["assets"])
+        finally:
+            await client.close()
+    asyncio.run(run())
+
+
+def test_evicted_history_keeps_original_write_receipt(editor):
+    async def run():
+        client = PipeClient(editor[0])
+        try:
+            status = ensure(await client.rpc("get_editor_status", {}))
+            created = ensure(await client.rpc("create_scene", {**write_params(status), "name": "History eviction"}))
+            scene = created["data"]["scene_id"]
+            original_args = {**write_params(created, scene), "kind": "light", "name": "original"}
+            first = ensure(await client.rpc("create_object", original_args))
+            current = first
+            for index in range(65):
+                current = ensure(await client.rpc("create_object", {**write_params(current, scene), "kind": "light", "name": f"lamp {index}"}))
+            history = ensure(await client.rpc("get_history", {"page_size": 200}))
+            assert history["data"]["undo_count"] == 64
+            assert first["operation_id"] not in {row["operation_id"] for row in history["data"]["entries"]}
+            retry = ensure(await client.rpc("create_object", original_args))
+            assert retry["operation_id"] == first["operation_id"]
+            assert (await client.rpc("get_scene_state", {}))["data"]["total"] == 66
+        finally:
+            await client.close()
+    asyncio.run(run())
+
+
+def test_import_pending_busy_and_reconnect():
+    async def run():
+        instance = "slow_import_" + uuid.uuid4().hex
+        process = subprocess.Popen([str(EXE), "--serve", instance], cwd=ROOT, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
+        assert process.stdout.readline().strip() == b"BRIDGE_READY"
+        client = PipeClient(instance)
+        try:
+            status = ensure(await client.rpc("get_editor_status", {}))
+            args = {**write_params(status), "asset_type": "model", "asset_key": "deferred", "path": str(ROOT / "tools/engine_mcp/tests/fixtures/imports/triangle.obj")}
+            pending = await client.rpc("import_asset", args)
+            assert pending["status"] == "pending" and pending["request_id"] == args["request_id"]
+            inspect = ensure(await client.rpc("get_scene_state", {}))
+            assert inspect["editor_revision"] == status["editor_revision"] and inspect["data"]["scenes"] == []
+            busy = await client.rpc("import_asset", {**args, "request_id": uuid.uuid4().hex, "asset_key": "other"})
+            assert busy["error"]["code"] == "import_busy"
+            await client.close()
+            # A delivered pending receipt has left the server wait queue. Reconnect queries the same running request.
+            client = PipeClient(instance)
+            await asyncio.sleep(.05)  # Allow the same instance to finish releasing its prior pipe connection.
+            for _ in range(100):
+                result = await client.rpc("get_operation_status", {"session_id": status["session_id"], "request_id": args["request_id"]})
+                if result["status"] not in ("queued", "running", "pending"):
+                    break
+                await asyncio.sleep(.05)
+            assert result["status"] == "failed" and result["error"]["code"] == "import_unavailable"
+            # The headless host intentionally has no GL backend; the failed result remains deduplicated.
+            assert (await client.rpc("import_asset", args))["request_id"] == result["request_id"]
+            assert not any(item["key"] == "deferred" for item in (await client.rpc("list_assets", {}))["data"]["assets"])
+        finally:
+            await client.close()
+            process.terminate(); process.communicate(timeout=10)
+    asyncio.run(run())
