@@ -567,9 +567,9 @@ ModelDefs.nanosuit = ModelDefs.nanosuit or {
 	components =
 	{
 		Transform = {
-			position = vec3(0.0, 0.0, 0.0),
+			position = vec3(10.0, 0.0, -15.0),
 			scale = vec3(0.5, 0.5, 0.5),
-			rotation = vec3(0.0, 180.0, 0.0)
+			rotation = vec3(0.0, 0.0, 0.0)
 		},
 		MeshFilter = {
 			type = "nanosuit"
@@ -588,7 +588,7 @@ LightDefs.direction_light_1 = LightDefs.direction_light_1 or {
 	{
 		Light = {
 			color = vec3(1.0, 1.0, 1.0),
-			intensity = 255.0,
+			intensity = 10.0,
 
 			type = "direction_light",
 
