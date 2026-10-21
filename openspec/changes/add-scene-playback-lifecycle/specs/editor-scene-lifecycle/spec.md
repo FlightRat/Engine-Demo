@@ -6,9 +6,9 @@
 
 ## ADDED Requirements
 
-### Requirement: Default empty scene at editor startup
+### Requirement: Default authored scene at editor startup
 
-编辑器正常启动 SHALL 创建并激活名为 default 的空编辑 Scene，绑定项目资产根目录下的 assets/scripts/default.lua。文件不存在 MUST 生成主脚本模板；已有文件 MUST 保留原内容。启动 MUST 不再预建 scene1/scene2，不执行主脚本或为脚本在编辑场景生成隐藏实体。
+编辑器正常启动 SHALL 创建并激活名为 default 的编辑 Scene，绑定项目资产根目录下的 assets/scripts/default.lua。文件不存在 MUST 生成主脚本模板；已有文件 MUST 保留原内容。启动 MUST 不再预建 scene1/scene2；新建 default 时在候选编辑 Registry 调用可选 on_build 一次，不调用 on_start/on_update/on_stop，不生成隐藏脚本实体。
 
 #### Scenario: First startup
 - **WHEN** scripts 目录可写且没有 default.lua，编辑器启动
@@ -16,7 +16,7 @@
 
 #### Scenario: Startup with an existing script
 - **WHEN** default.lua 已含用户逻辑，编辑器再次启动
-- **THEN** 当前 Scene 仍为空 default，脚本原字节不变，游戏逻辑等待 Play
+- **THEN** 当前 Scene 为 default，脚本原字节不变，on_build 生成的初始对象在 Editing 可编辑，游戏行为等待 Play
 
 ### Requirement: Safe scene names and same named script resolution
 
@@ -32,11 +32,11 @@ Scene 名称 SHALL 非空且满足 Windows 文件名规则，拒绝保留设备�
 
 ### Requirement: Scene creation and script preservation
 
-所有创建入口 SHALL 使用统一规则创建空 Scene 并激活，自动生成缺失的同名 Lua；已有同名普通脚本文件 SHALL 原样复用。脚本文件或内存 Scene 创建失败 MUST 不发布新 Scene、不改变当前 Scene、不产生成功历史；新生成临时文件 MUST 清理，已有文件 MUST 不修改。可用脚本中的语法错误 SHALL 被诊断，不能导致空编辑 Scene 执行逻辑。
+所有创建入口 SHALL 使用统一规则构建 Scene 并激活，自动生成缺失的同名 Lua；已有同名普通脚本文件 SHALL 原样复用。脚本文件或内存 Scene 创建失败 MUST 不发布新 Scene、不改变当前 Scene、不产生成功历史；新生成临时文件 MUST 清理，已有文件 MUST 不修改。语法、契约或 on_build 失败 MUST 给出路径/回调诊断并回滚候选内容，原 Scene 和历史不变。构建阶段 MUST 不播放声音、不推进游戏时间/物理、不注册共享资源。
 
 #### Scenario: Create a scene with a reusable script
 - **WHEN** 对应 Lua 已存在且名称未被内存 Scene 占用，用户创建 Scene
-- **THEN** Scene 创建并激活，文件内容保持不变，不在编辑态执行代码
+- **THEN** Scene 创建并激活，文件内容保持不变，独立构建环境调用 on_build 一次，构建对象立即可编辑；缺少该可选回调时保持空 Scene
 
 #### Scenario: Fail to create the script file
 - **WHEN** scripts 目录不可写或同名路径为目录，创建不能完成
@@ -60,7 +60,7 @@ Editing 中重命名 Scene SHALL 同步重命名其同名 Lua，保留脚本字�
 
 #### Scenario: Undo and redo after an external script edit
 - **WHEN** 创建空 Scene 后用户在外部编辑 Lua，再撤销 Scene 创建并重做
-- **THEN** 撤销保留文件，重做使用文件当前内容，新的 Scene 公开身份按现有规则返回，不复活旧 ID
+- **THEN** 撤销保留文件，重做使用文件当前内容执行新实例的 on_build，新的 Scene 公开身份按现有规则返回，不复活旧 ID
 
 ### Requirement: Edit time binding without game side effects
 
@@ -76,12 +76,20 @@ Editing 中重命名 Scene SHALL 同步重命名其同名 Lua，保留脚本字�
 
 ### Requirement: Scene main script callback contract
 
-Scene 主 Lua SHALL 返回含 on_start、on_update 和 on_stop 函数的表。新文件 MUST 生成三个空回调模板。Play MUST 在新运行环境执行模块并调用 on_start 一次；Playing 每帧调用 on_update(dt)；Resume MUST 不重复模块执行或 on_start；正常 Stop MUST 在运行环境释放前调用 on_stop 一次。新一轮 Play MUST 重新读取磁盘文件。
+Scene 主 Lua SHALL 返回含 on_start、on_update 和 on_stop 函数的表。on_build SHALL 为可选构建回调，新文件 MUST 生成四个空回调模板，旧三回调脚本仍可创建空 Scene。on_build 仅在新建内存 Scene 时调用一次，切换、Play、Resume 和 Stop MUST 不重复调用。Play MUST 在新运行环境执行模块并调用 on_start 一次；Playing 每帧调用 on_update(dt)；Resume MUST 不重复模块执行或 on_start；正常 Stop MUST 在运行环境释放前调用 on_stop 一次。新一轮 Play MUST 重新读取磁盘文件。
 
 #### Scenario: Execute one lifecycle per play session
 - **WHEN** 用户 Play、Pause、Resume、Stop，再次 Play
-- **THEN** 第一轮模块和 on_start 各执行一次，暂停期间无 update，Stop 调用 on_stop，新轮重新执行模块和 on_start，Lua 状态不跨轮保留
+- **THEN** 新建时模块及 on_build 各执行一次；第一轮运行环境的模块和 on_start 各执行一次，暂停期间无 update，Stop 调用 on_stop，新轮重新执行模块和 on_start，Lua 状态不跨轮保留
 
 #### Scenario: Reject legacy main table scripts
 - **WHEN** 主脚本未返回所需回调表，仍依赖旧全局 main 更新表
 - **THEN** Play 报告契约错误并保持 Editing，不静默回退到公共 main.lua
+
+#### Scenario: Preserve authored values across sessions
+- **WHEN** on_build 生成初始对象，用户在 Editing 修改位置、材质和物理参数，然后多次 Play/Pause/Resume/Stop
+- **THEN** Play 克隆修改后的对象，on_start 不重新生成初始对象，Stop 后原编辑对象身份及修改均保留
+
+#### Scenario: Failed construction is atomic
+- **WHEN** on_build 已创建部分实体后报错或试图播放声音/注册共享资源
+- **THEN** 新 Scene 不发布，原当前 Scene、共享资源和历史不变，用户脚本不被覆盖

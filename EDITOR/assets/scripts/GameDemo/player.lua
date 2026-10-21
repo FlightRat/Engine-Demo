@@ -2,11 +2,15 @@ Player = {}
 Player.__index = Player
 
 function Player:Create(def)
+    return self:Bind(LoadEntity(def))
+end
+
+function Player:Bind(entityID)
 	local this = 
 	{
 		m_EntityID = -1,
 	}
-	this.m_EntityID = LoadEntity(def)
+	this.m_EntityID = entityID
 	setmetatable(this,self)
 	return this
 end

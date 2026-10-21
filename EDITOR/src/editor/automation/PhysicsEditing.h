@@ -10,11 +10,12 @@ using ENGINE_CORE::ECS::PhysicsAttributes;
 using ENGINE_CORE::ECS::PhysicsComponent;
 inline void ValidatePhysics(const PhysicsAttributes& v) {
     auto positive = [](float x) { return std::isfinite(x) && x > 0; };
+    auto nonnegative = [](float x) { return std::isfinite(x) && x >= 0; };
     auto unit = [](float x) { return std::isfinite(x) && x >= 0 && x <= 1; };
     if (v.rb_type != rp3d::BodyType::STATIC && v.rb_type != rp3d::BodyType::DYNAMIC && v.rb_type != rp3d::BodyType::KINEMATIC)
         throw Error("invalid_arguments", "Unknown body_type");
     if (!positive(v.rb_Mass) || !positive(v.c_MassDensity) || !std::isfinite(v.c_FrictionCoefficient) || v.c_FrictionCoefficient < 0 ||
-        !unit(v.c_Bounciness) || !unit(v.rb_LinearDamping) || !unit(v.rb_AngularDamping)) throw Error("invalid_arguments", "Invalid physics material or rigid body values");
+        !unit(v.c_Bounciness) || !nonnegative(v.rb_LinearDamping) || !nonnegative(v.rb_AngularDamping)) throw Error("invalid_arguments", "Invalid physics material or rigid body values");
     for (int i = 0; i < 3; ++i) if (!unit(v.rb_LinearAxisFactor[i]) || !unit(v.rb_AngularAxisFactor[i])) throw Error("invalid_arguments", "Physics axis factors must be in [0,1]");
     if (v.shape == "box") {
         for (int i = 0; i < 3; ++i) if (!positive(v.box_halfExtents[i])) throw Error("invalid_arguments", "Box half_extents must be positive");

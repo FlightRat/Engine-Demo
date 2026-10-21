@@ -2,12 +2,16 @@ Plat = {}
 Plat.__index = Plat
 
 function Plat:Create(def)
+    return self:Bind(LoadEntity(def))
+end
+
+function Plat:Bind(entityID)
 	local this = 
 	{
 		m_EntityID = -1,
 		m_speed = 2.5,
 	}
-	this.m_EntityID = LoadEntity(def)
+	this.m_EntityID = entityID
 	local entity = Entity(this.m_EntityID)
 	local physics = entity:get_component(Physics)
 	physics:set_linear_velocity(vec3(0.0, 0.0, this.m_speed))

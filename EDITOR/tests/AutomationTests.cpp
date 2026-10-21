@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
         if (glTesting) {
             ENGINE_INIT_LOGS(false, true);
             SDL_setenv("SDL_AUDIODRIVER", "dummy", 1);
+            SDL_SetMainReady();
             if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) throw std::runtime_error(SDL_GetError());
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4); SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
             SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

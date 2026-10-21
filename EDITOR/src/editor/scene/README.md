@@ -47,6 +47,31 @@ or music slot owned elsewhere cannot be replaced. Stop/all-channel operations
 only affect the session's voices, and restore their volume baselines. A recording
 backend makes ownership testable without an audio device.
 
+## Bundled default demo
+
+`SceneManager::AddScene` constructs a candidate edit Scene before publication.
+`ScriptingSystem::BuildScene` loads the module and invokes optional `on_build`
+once, with ECS/physics/camera bindings, frozen time and empty input. Sound/contact
+listener bindings and io/os/package libraries are omitted; shared asset writes
+remain rejected. It releases Lua/context, then validates the component/hierarchy
+clone before publishing. Failures preserve the current Scene and user files.
+
+The bundled default builds 24 editable demo objects in `on_build`. Each Play
+clones their edited values; `Entity.find(name)` and controller `Bind` methods
+attach gameplay to cloned objects. Switching, renaming, Play, Resume and Stop
+do not rebuild authored content. New templates include four callbacks, while
+older three-callback modules remain valid without construction content.
+
+`ProjectAssets.h` reads the optional `assets/scripts/preload.lua` data manifest
+and uses the existing import pipeline before construction. Paths resolve against
+the asset root; existing asset keys are retained. Resources remain read-only to
+construction and runtime scripts.
+
+MCP scene creation records the constructed entity baseline. Undo may remove an
+unchanged constructed Scene, retaining its Lua; redo builds from the current
+file and rebinds logical entities by name/group/occurrence for later history
+operations. Changed/removed targets do not silently match different names.
+
 ## Editing and automation
 
 Only Editing allows content or asset writes, scene lifecycle changes and saving.

@@ -4,6 +4,7 @@
 #include "../automation/StateRules.h"
 #include <Logger/Logger.h>
 #include <algorithm>
+#include <Core/Systems/ScriptingSystem.h>
 
 namespace ENGINE_EDITOR {
 SceneManager& SceneManager::GetInstance() { static SceneManager value; return value; }
@@ -17,6 +18,11 @@ bool SceneManager::AddScene(const std::string& name, std::unique_ptr<SceneScript
         if (CheckHasScene(name)) throw std::runtime_error("Scene name already exists");
         auto scene = std::make_shared<SceneObject>(name);
         auto script = m_Scripts.Prepare(name);
+        std::string error;
+        if (!ENGINE_CORE::Systems::ScriptingSystem::BuildScene(scene->GetRegistry(), m_Scripts.ScriptPath(name), error))
+            throw std::runtime_error(error);
+        // Validate the built edit data with the same component/hierarchy rules as Play.
+        scene->CopySceneToRuntime(); scene->ClearRuntimeScene();
         m_mapScene.emplace(name, std::move(scene));
         if (receipt) *receipt = std::move(script); else script->Commit();
         m_LastError.clear(); return true;

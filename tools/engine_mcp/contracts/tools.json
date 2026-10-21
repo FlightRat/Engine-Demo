@@ -334,7 +334,7 @@
     },
     {
       "name": "create_scene",
-      "description": "Create and activate an empty edit scene with a Windows-safe, case-insensitively unique name. Generate assets/scripts/<name>.lua only if absent; reuse existing contents. Undo retains the Lua file. Requires current session/revision and a new request_id. Writes are rejected during Playing and Paused.",
+      "description": "Create and activate an edit scene with a Windows-safe, case-insensitively unique name; run optional on_build once to construct initial editable objects. Generate assets/scripts/<name>.lua only if absent; reuse existing contents. Undo retains the Lua file; redo constructs a new Scene from its current contents. Construction failures preserve the previous Scene. Requires current session/revision and a new request_id. Writes are rejected during Playing and Paused.",
       "inputSchema": {
         "type": "object",
         "properties": {

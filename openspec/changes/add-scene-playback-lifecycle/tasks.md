@@ -64,3 +64,13 @@
 - [x] 8.1 使用现有 build.py 分别构建 editor/tests 的 x64 Debug 和 Release，并运行对应 AutomationTests.exe；记录实际命令、结果及失败/环境限制，验证完整模块能够链接且无窗口核心回归通过。
 - [x] 8.2 使用 tools/engine_mcp/.venv/Scripts/python.exe -m pytest tools/engine_mcp/tests -q 执行协议集成回归，运行 openspec validate add-scene-playback-lifecycle --strict 和 git diff --check；记录实际结果，不把构建成功当作渲染/音频/界面验收。
 - [x] 8.3 在 VERIFICATION.md 汇总自动检查及各组已交付的人工清单，注明 computer-use 未使用、JSON 加载未变；核对真实视觉/焦点/听感无人工证据的项目仍为“待人工验证”，该任务完成只代表记录交付，不代表人工项通过。
+
+
+## 9. 人工反馈修正：编辑态初始场景构建
+
+本组依据 2026-10-21 用户确认覆盖所有 Scene 的统一 on_build 方案，替代原任务中“创建一律为空/编辑态不执行模块”的假设；切换仍只编译，运行期只读及 Stop 回滚规则不变。
+
+- [x] 9.1 新增可选 on_build 和四回调模板，在 Scene 创建候选中执行一次，成功才发布；测试语法/部分构建/声音/资源写入失败的回滚、切换与重命名不重建、临时 Lua/context 释放。
+- [x] 9.2 将 default 构建移至 on_build，增加 Entity.find 与玩家/平台 Bind；真实 Lua/ECS/物理回归先修改编辑态位置、材质、质量，再验证多轮 Play/Pause/Resume/Stop 保留修改及身份、不重复生成对象。
+- [x] 9.3 适配 MCP 非空构建 Scene 的创建撤销与重做、逻辑实体重绑及历史预算；回归创建 Scene→修改构建实体→全部撤销→全部重做，并验证脚本保留及旧公开身份失效。
+- [x] 9.4 同步方案、规格、使用文档和工具说明，完成 Debug/Release 原生与编辑器构建、SDK/协议回归、严格规格验证及差异检查；记录编辑对象真实 UI 操作仍待人工验证，全程不使用 computer-use。

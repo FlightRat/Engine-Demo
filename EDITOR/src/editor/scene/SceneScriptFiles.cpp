@@ -26,7 +26,7 @@ void MoveNew(const fs::path& source, const fs::path& target) {
 }
 }
 const char* SceneScriptFiles::Template() {
-    return "return {\n    on_start = function()\n    end,\n\n    on_update = function(dt)\n    end,\n\n    on_stop = function()\n    end,\n}\n";
+    return "return {\n    on_build = function()\n    end,\n\n    on_start = function()\n    end,\n\n    on_update = function(dt)\n    end,\n\n    on_stop = function()\n    end,\n}\n";
 }
 std::string SceneScriptFiles::Read(const fs::path& path) {
     std::ifstream stream(path, std::ios::binary);

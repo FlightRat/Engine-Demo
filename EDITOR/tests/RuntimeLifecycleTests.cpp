@@ -2,7 +2,12 @@
 #include "../src/editor/scene/SceneManager.h"
 #include "../src/editor/scene/SceneObject.h"
 #include "../src/editor/scene/SessionAudio.h"
+#include "../src/editor/scene/ProjectAssets.h"
+#include <Core/ECS/Components/MeshFilter.h>
+#include <set>
+#include <SDL.h>
 #include "../src/editor/automation/StateRules.h"
+#include "../src/editor/automation/PhysicsEditing.h"
 #include <Core/Systems/PhysicsResources.h>
 #include <Core/Systems/ScriptingSystem.h>
 #include <Core/ECS/Components/MeshRender.h>
@@ -149,5 +154,77 @@ void RuntimeLifecycleTests() {
     Check(playback.Play(), "Error test failed start"); playback.Tick(.1);
     Check(playback.State() == PlaybackState::Paused && playback.PhysicsSteps() == 0 && playback.LastError().find("on_update") != std::string::npos, "Update error did not pause before physics");
     scenes.CleanUp(); Check(playback.CanEdit(), "Shutdown did not stop paused session"); playback.SetAudioBackend({});
+    {
+        struct Restore {
+            std::filesystem::path cwd = std::filesystem::current_path();
+            std::filesystem::path assets = SCENE_MANAGER().Scripts().AssetRoot();
+            ~Restore() { PlaybackController::Get().Stop(); SCENE_MANAGER().CleanUp(); PlaybackController::Get().SetAudioBackend({}); SCENE_MANAGER().Scripts().SetAssetRoot(assets); std::filesystem::current_path(cwd); }
+        } restore;
+        const auto editor = restore.cwd / "EDITOR";
+        const auto assets = editor / "assets";
+        auto manifest = ReadProjectAssets(assets);
+        Check(!manifest.empty(), "Default demo preload manifest is empty");
+        std::set<std::string> models{"cube", "sphere", "capsule", "plane"}, textures;
+        for (const auto& request : manifest) {
+            // Exercise the real CPU importer and dependency decoding without a GL window.
+            auto prepared = Automation::PrepareImport(request, std::make_shared<std::atomic_bool>(false));
+            const auto type = Automation::Str(request, "asset_type");
+            if (type == "model") models.insert(Automation::Str(request, "asset_key"));
+            if (type == "texture") textures.insert(Automation::Str(request, "asset_key"));
+            for (const char* key : {"path", "vertex_path", "fragment_path"}) {
+                const auto text = Automation::Str(request, key);
+                if (!text.empty()) Check(std::filesystem::is_regular_file(std::filesystem::path(std::u8string(text.begin(), text.end()))), "Default preload source is missing");
+            }
+        }
+        std::filesystem::current_path(editor);
+        scenes.Scripts().SetAssetRoot(assets);
+        playback.SetAudioBackend(backend);
+        Check(scenes.CreateDefault(), scenes.LastError().c_str());
+        auto demo = scenes.GetCurrentScene();
+        auto& authored = demo->GetRegistry().GetRegistry();
+        Check(authored.view<entt::entity>().size() == 24 && !backend->Active(AudioBackend::Music), "Default construction did not expose editable, silent initial content");
+        const auto authoredBody = Named(authored, "body");
+        authored.get<TransformComponent>(authoredBody).position = glm::vec3(7,4,0);
+        authored.get<MeshRender>(authoredBody).materials[0].color = glm::vec4(.2f,.3f,.4f,1);
+        auto changedPhysics = authored.get<PhysicsComponent>(authoredBody).GetAttr(); changedPhysics.rb_Mass = 14;
+        Automation::ApplyPhysics(authored, authoredBody, changedPhysics);
+        auto* authoredRigidBody = authored.get<PhysicsComponent>(authoredBody).GetRigidBody();
+        scenes.Scripts().SetAssetRoot(restore.assets);
+        Check(scenes.CreateAndActivate("Other"), "Other Scene creation failed");
+        scenes.Scripts().SetAssetRoot(assets);
+        Check(scenes.SetCurrentScene("default"), "Default switch test failed");
+        Check(authored.get<TransformComponent>(authoredBody).position.x == 7 && authored.view<entt::entity>().size() == 24, "Switch reset authored defaults");
+        for (int repeat = 0; repeat < 2; ++repeat) {
+            const bool started = playback.Play(); Check(started, playback.LastError().c_str());
+            auto context = playback.Context(); auto& runtime = demo->GetRuntimeRegistry().GetRegistry();
+            const auto count = runtime.view<entt::entity>().size();
+            Check(count == 24, "Default demo entity population changed");
+            auto& body = runtime.get<PhysicsComponent>(Named(runtime, "body"));
+            Check(body.GetRigidBody() != authoredRigidBody && body.GetAttr().rb_Mass == 14, "Play lost edited physics or shared its body");
+            Check(runtime.get<TransformComponent>(Named(runtime, "body")).position == glm::vec3(7,4,0) && runtime.get<MeshRender>(Named(runtime, "body")).materials[0].color == glm::vec4(.2f,.3f,.4f,1), "Play reset edited transform/material");
+            Check(body.GetRigidBody()->getLinearDamping() == 5 && body.GetRigidBody()->getAngularDamping() == 10, "Legacy player damping was clamped or lost");
+            for (const char* name : {"body", "glass", "platform_2", "ground", "cyborg", "nanosuit", "gold_ball", "direction_light_1"})
+                Check(Named(runtime, name) != entt::null, "Default demo entity missing");
+            for (auto entity : runtime.view<MeshFilter>()) Check(models.contains(runtime.get<MeshFilter>(entity).mesh), "Default demo model not preloaded");
+            for (auto entity : runtime.view<MeshRender>()) for (const auto& material : runtime.get<MeshRender>(entity).materials)
+                for (const auto& [slot, key] : material.m_textures) Check(key.empty() || textures.contains(key), "Default demo texture not preloaded");
+            Check(backend->Active(AudioBackend::Music), "Default demo music did not start");
+            for (int frame = 0; frame < 90; ++frame) playback.Tick(1.0/60);
+            Check(playback.State() == PlaybackState::Playing, playback.LastError().c_str());
+            playback.Pause(); const auto time = context->clock.Seconds();
+            playback.Tick(10); Check(context->clock.Seconds() == time, "Default demo advanced while Paused");
+            Check(playback.Play() && playback.Context() == context && runtime.view<entt::entity>().size() == count, "Default demo Resume reinitialized entities");
+            playback.SetGameInputAllowed(true); context->input.Allow(true); context->input.Key(SDLK_f, true);
+            playback.Tick(1.0/60);
+            Check(playback.State() == PlaybackState::Playing && runtime.view<entt::entity>().size() == count + 1, playback.LastError().c_str());
+            context->input.Key(SDLK_f, false);
+            for (int frame = 0; frame < 65; ++frame) playback.Tick(1.0/60);
+            Check(playback.State() == PlaybackState::Playing && runtime.view<entt::entity>().size() == count, "Default demo bullet update/timer failed");
+            playback.Stop();
+            Check(!backend->Active(AudioBackend::Music) && authored.view<entt::entity>().size() == 24 && authored.valid(authoredBody), "Stop discarded authored initial entities");
+            Check(authored.get<TransformComponent>(authoredBody).position == glm::vec3(7,4,0) && authored.get<PhysicsComponent>(authoredBody).GetAttr().rb_Mass == 14 && authored.get<PhysicsComponent>(authoredBody).GetRigidBody() == authoredRigidBody, "Stop lost authored edits or replaced their identity");
+        }
+        std::cout << "Default demo migration, preload coverage and repeated Play/Pause/Stop passed\n";
+    }
     std::cout << "Runtime lifecycle, isolation, Lua, clock, input and audio ownership tests passed\n";
 }

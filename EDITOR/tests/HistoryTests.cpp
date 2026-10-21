@@ -2,6 +2,8 @@
 #include "../src/editor/automation/OperationHistory.h"
 #include "../src/editor/automation/StateRules.h"
 #include "../src/editor/scene/SceneManager.h"
+#include "../src/editor/scene/SceneObject.h"
+#include <fstream>
 #include <Core/Resources/AssetManager.h>
 #include <iostream>
 using namespace ENGINE_EDITOR;
@@ -79,5 +81,33 @@ void HistoryTests(Contract& contract) {
     auto cleared = ops.Execute(Request("get_history", Parse("{}"))); Success(cleared);
     Check(cleared["data"]["undo_count"].GetUint64() == 0 && cleared["data"]["redo_count"].GetUint64() == 0, "Manual edit did not clear both history stacks");
     scenes.CleanUp();
+    {
+        const auto script = scenes.Scripts().ScriptPath("ConstructedHistory");
+        { std::ofstream file(script); file << "return {on_build=function() local e=Entity('authored','');e:add_component(Transform(3,4,5,1,1,1,0,0,0)) end,on_start=function() end,on_update=function() end,on_stop=function() end}"; }
+        EditorOperations constructed(scenes, assets, contract, "constructed-history");
+        auto creation = Write(constructed, "create_scene", R"({"name":"ConstructedHistory"})"); Success(creation);
+        const auto creationId = Str(creation["data"], "operation_id"); auto sceneId = Str(creation["data"], "scene_id");
+        auto snapshot = constructed.Execute(Request("get_scene_state", Parse("{}"))); Success(snapshot);
+        const auto entityId = Str(snapshot["data"]["entities"][0], "entity_id");
+        auto mutation = Write(constructed, "set_transform", "{\"entity_id\":\"" + entityId + "\",\"position\":[8,9,10]}", sceneId); Success(mutation);
+        const auto mutationId = Str(mutation["data"], "operation_id");
+        Success(Write(constructed, "undo_operation", Target(mutationId), sceneId));
+        Success(Write(constructed, "undo_operation", Target(creationId), sceneId));
+        Check(!scenes.GetCurrentScene() && std::filesystem::is_regular_file(script), "Constructed Scene undo did not retain its script");
+        const auto beforeFailure = constructed.Revision();
+        { std::ofstream file(script); file << "return {on_build=function() Entity('partial','');error('redo construction failure') end,on_start=function() end,on_update=function() end,on_stop=function() end}"; }
+        auto failedConstruction = Write(constructed, "redo_operation", Target(creationId));
+        Check(Str(failedConstruction["error"], "code") == "execution_failed" && constructed.Revision() == beforeFailure && !scenes.GetCurrentScene(), "Failed construction redo changed history or current Scene");
+        { std::ofstream file(script); file << "return {on_build=function() local e=Entity('authored','');e:add_component(Transform(6,4,5,1,1,1,0,0,0)) end,on_start=function() end,on_update=function() end,on_stop=function() end}"; }
+        auto recreate = Write(constructed, "redo_operation", Target(creationId)); Success(recreate); sceneId = Str(recreate["data"], "scene_id");
+        snapshot = constructed.Execute(Request("get_scene_state", Parse("{}"))); Success(snapshot);
+        Check(snapshot["data"]["entities"][0]["transform"]["position"][0].GetFloat() == 6, "Scene redo ignored the current on_build contents");
+        auto staleConstructed = Write(constructed, "set_transform", "{\"entity_id\":\"" + entityId + "\",\"position\":[1,2,3]}", sceneId);
+        Check(Str(staleConstructed["error"], "code") == "stale_target", "Constructed entity public identity survived scene recreation");
+        Success(Write(constructed, "redo_operation", Target(mutationId), sceneId));
+        snapshot = constructed.Execute(Request("get_scene_state", Parse("{}"))); Success(snapshot);
+        Check(snapshot["data"]["entities"].Size() == 1 && snapshot["data"]["entities"][0]["transform"]["position"][0].GetFloat() == 8, "History failed to rebind a constructed entity after scene redo");
+        scenes.CleanUp();
+    }
     std::cout << "Multi-level history tests passed\n";
 }

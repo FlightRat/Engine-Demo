@@ -556,6 +556,29 @@ struct EditorOperations::Impl {
                 if (removing.contains({AssetType::TEXTURE, texture})) throw Error("asset_in_use", "Imported texture has a model consumer");
         }
     }
+    std::vector<EntityChange> SceneBindings(const std::shared_ptr<SceneObject>& scene, const std::vector<EntityChange>& previous) {
+        std::map<std::pair<std::string, std::string>, std::vector<std::string>> keys;
+        std::map<std::pair<std::string, std::string>, size_t> occurrence;
+        for (const auto& change : previous) if (change.after.identity)
+            keys[{change.after.identity->name, change.after.identity->group}].push_back(change.logicalEntity);
+        std::vector<EntityChange> bindings;
+        for (auto entity : Entities(scene)) {
+            const auto identity = scene->GetRegistry().GetRegistry().get<Identification>(entity);
+            const auto key = std::make_pair(identity.name, identity.group);
+            const auto index = occurrence[key]++;
+            EntityChange change; change.after.identity = identity;
+            change.logicalEntity = index < keys[key].size() ? keys[key][index] : Id("logical-entity-");
+            bindings.push_back(std::move(change));
+        }
+        return bindings;
+    }
+    void BindCreatedEntities(const std::shared_ptr<SceneObject>& scene, const std::vector<EntityChange>& bindings) {
+        const auto entities = Entities(scene);
+        for (size_t i = 0; i < entities.size(); ++i) {
+            logicalEntities[bindings[i].logicalEntity] = {scene, entities[i]};
+            lastEntityIds[bindings[i].logicalEntity] = EntityId(scene, entities[i]);
+        }
+    }
     Json Traverse(const Request& r, bool forward) {
         auto* record = history.Top(forward);
         if (!record || record->id != Str(r.params, "operation_id")) throw Error("history_conflict", "Only the current history stack top can be traversed");
@@ -584,16 +607,23 @@ struct EditorOperations::Impl {
                 if (!scenes.AddScene(record->sceneName, &script)) throw Error("execution_failed", scenes.LastError());
                 auto s = scenes.GetScene(record->sceneName);
                 try {
+                    auto replacement = *record;
+                    replacement.changes = SceneBindings(s, record->changes);
+                    history.Admit(replacement);
+                    if (history.Bytes() - record->Bytes() + replacement.Bytes() > history.ByteLimit())
+                        throw Error("history_capacity_exceeded", "Rebuilt scene exceeds the retained history budget");
                     const auto nextId = SceneId(s);
+                    BindCreatedEntities(s, replacement.changes);
                     sceneRemap.AddMember(Text(oldId, a), Text(nextId, a), a);
                     logicalScenes[record->logicalScene] = s; lastSceneIds[record->logicalScene] = nextId;
                     out.AddMember("scene_id", Text(nextId, a), a);
+                    record->changes.swap(replacement.changes);
                 } catch (...) { scenes.DeleteScene(record->sceneName); throw; }
                 scenes.SetCurrentScene(record->sceneName);
                 script->Commit();
             } else {
                 auto s = LogicalScene(record->logicalScene);
-                if (s != scenes.GetCurrentScene() || !Entities(s).empty()) throw Error("history_conflict", "Created scene is not the current empty scene");
+                if (s != scenes.GetCurrentScene() || Entities(s).size() != record->changes.size()) throw Error("history_conflict", "Created scene no longer matches its construction baseline");
                 auto previous = LogicalScene(record->previousScene);
                 scenes.SetCurrentScene(previous ? previous->GetName() : "");
                 if (!scenes.DeleteScene(record->sceneName)) { scenes.SetCurrentScene(record->sceneName); throw Error("history_conflict", "Could not undo scene creation"); }
@@ -699,6 +729,9 @@ struct EditorOperations::Impl {
             if (!scenes.AddScene(name, &script)) throw Error("execution_failed", scenes.LastError());
             auto created = scenes.GetScene(name);
             try {
+                record.changes = SceneBindings(created, {});
+                history.Admit(record);
+                BindCreatedEntities(created, record.changes);
                 const auto id = SceneId(created); logicalScenes[record.logicalScene] = created; lastSceneIds[record.logicalScene] = id;
                 result.AddMember("scene_id", Text(id, a), a);
                 history.Commit(std::move(record));

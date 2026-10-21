@@ -256,7 +256,7 @@ git diff --check
 
 | 状态 | 人工步骤 | 预期 |
 | --- | --- | --- |
-| 待人工验证 | 启动 EDITOR，查看空 default；依次 Play、Pause、Resume、Stop 并悬停三按钮 | 图标正确、当前状态高亮、不可用操作置灰，暂停后的 Play 提示 Resume Game |
+| 待人工验证 | 启动 EDITOR，查看已构建的 default 初始对象；依次 Play、Pause、Resume、Stop 并悬停三按钮 | 图标正确、当前状态高亮、不可用操作置灰，暂停后的 Play 提示 Resume Game |
 | 待人工验证 | 编辑态创建可见动态刚体，同时显示 Game 与 Scene 后 Play | 两个窗口显示同一运行对象及运动，使用独立相机 |
 | 待人工验证 | Pause 后等待并导航 Scene 相机，再 Resume | 场景模拟与游戏相机冻结，Scene 仍可导航，恢复不补算暂停时间 |
 | 待人工验证 | 在 Game 画面操作，再切到 Scene、工具栏及可输入文本框（若有） | 游戏只接收 Game 画面的输入，编辑器导航、文本和按钮点击不透传；失焦仍模拟 |
@@ -264,3 +264,58 @@ git diff --check
 | 待人工验证 | Playing/Paused 时尝试属性、物理 Apply、Gizmo、对象/资源/Scene 修改、拖入其他 Scene、Open/Save | 内容写入被阻止，仍可选择运行对象并只读查看 |
 | 待人工验证 | 运行脚本改变位置、创建/删除对象，Stop 后再次 Play | 编辑数据恢复，下一轮从编辑初始状态启动；没有重复对象或继承速度 |
 | 待人工验证 | 通过 Asset UI 创建、重命名、删除 Scene，并检查同名 Lua | 创建激活空 Scene、复用不覆盖、重命名同步文件、冲突不覆盖、删除保留脚本 |
+
+
+### 默认演示迁移初版（2026-10-21，构建时机已由下节修正）
+
+`default.lua` 已迁移原 `main.lua` 的完整演示逻辑：玩家及子对象、移动平台、
+刚体、墙体、模型、PBR 球、灯光、跟随相机和子弹更新。编辑态仍为空 default，
+Play 创建运行对象，Pause/Resume 保留同一会话，Stop 恢复空编辑场景。
+缺失定义从 Git `3cc9941` 补入独立的 `GameDemo/default_scene_defs.lua`；当前定义优先。
+
+启动时通过 `ProjectAssets.h` 读取 `assets/scripts/preload.lua` 数据清单，使用现有
+导入管线预加载 38 项显式资源及模型依赖纹理。清单路径相对于资产根目录，
+运行时不再调用旧 `LoadAssets()`，仍禁止运行脚本注册共享资源。
+Lua 运行时阻尼校验修正为有限非负值，以保留旧玩家的线性/角阻尼 5/10；
+依据为 [ReactPhysics3D 官方接口范围](https://reactphysics3d.com/documentation/classreactphysics3d_1_1_rigid_body.html)。
+MCP 编辑参数的现有范围未扩展。
+
+验证使用命令行原生程序，未使用 computer-use：
+
+- Debug 完整原生回归通过，新增测试执行真实 `default.lua`，确认 24 个初始对象、
+  模型及纹理清单覆盖、原始阻尼、连续两轮 Play/Pause/Resume/Stop、开火与子弹计时销毁。
+- Debug `AutomationTests.exe --gl-tests` 通过：原生隐藏 SDL/OpenGL 窗口实际上传全部
+  清单资源并解码音频，再次预加载保留资源对象；音频使用 dummy 后端，没有实际声音。
+- Release 完整原生回归及 `AutomationTests.exe --gl-tests` 均通过，覆盖与 Debug 相同的默认脚本和预加载路径。
+- 最终 Debug / Release 编辑器构建均通过（0 错误，仍有编译警告），`git diff --check` 通过。
+
+人工验收仍待执行：重启编辑器，在 default 中 Play，观察双窗口的旧演示画面，
+检查 Game 实际输入焦点及音乐/音效听感，随后验证 Pause/Resume/Stop。
+隐藏窗口资源测试不作为实际编辑器画面或听感已验收的证据。
+
+
+### 编辑态构建与运行分离（2026-10-21，当前行为）
+
+用户实测指出初版把全部对象放在 on_start 中创建，导致编辑态为空，无法调整初始属性。
+已按用户确认的“覆盖所有 Scene”方案增加可选 on_build：新建 Scene 时在候选编辑
+Registry 和临时 Lua 中执行一次，成功后才发布。空模板仍为空，仓库 default.lua
+则在编辑态构建 24 个初始对象；切换、重命名、Play、Resume、Stop 均不再次构建。
+Play 克隆用户编辑的数据，on_start 使用 Entity.find 和控制器 Bind 绑定运行对象，
+Stop 丢弃运行数据，保留原编辑对象及修改。构建环境时间为零、输入为空、没有声音
+和 io/os/package 库，共享资源写入仍拒绝；构建失败保留旧 Scene 和原脚本。
+新模板含四个回调，模块应只在顶层声明函数/数据，构建 Lua 局部状态不传入运行 Lua。
+
+已通过的自动证据：
+
+- Debug / Release 完整原生回归：候选构建、部分失败回滚、资源/音频限制、对象查找及重名拒绝、上下文释放、切换与重命名不重建。
+- 真实 default.lua 回归：编辑态即有 24 个对象，先修改玩家位置、颜色和质量 14，再连续两轮 Play/Pause/Resume/Stop；运行物理指针独立，修改后的属性作为播放初值，Stop 保留编辑实体身份和数据，子弹仍正常生成与销毁。
+- MCP 构建 Scene 历史：创建→修改构建实体→全部撤销→全部重做；中间注入 on_build 失败，旧 Scene/revision/历史保持；重做读取修复后的当前脚本，旧公开实体 ID 拒绝，原修改记录可作用于重建对象。
+- 编辑侧物理校验接受原始玩家合法阻尼 5/10，实际 Apply 质量修改成功；同时修复 Lua assert 包装不返回被断言对象的问题，覆盖 assert(Entity.find(...)) 的正常返回。
+- Debug / Release 编辑器均构建通过（0 错误）；两配置完整原生回归均通过。
+- SDK/协议全量回归 68/68 通过（36.70 秒），使用独立 x64 QA 临时目录及 no:cacheprovider；严格 OpenSpec 验证和 git diff --check 通过。
+
+人工验证仍待执行（没有使用 computer-use）：重启编辑器，确认 default 的物体在
+未 Play 时可见；修改位置、材质和物理 Apply；切换 Scene 后返回，依次
+Play/Pause/Resume/Stop，确认回到修改后的初始状态且物体仍可继续编辑。
+初始编辑内容不自动写回 Lua 或自动保存，重启/重新创建仍按 on_build 构建。
+JSON 加载及格式未修改。

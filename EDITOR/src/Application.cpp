@@ -1,4 +1,5 @@
 #include "editor/scene/PlaybackController.h"
+#include "editor/scene/ProjectAssets.h"
 #include <Core/Systems/PhysicsResources.h>
 #include "Application.h"
 #include "editor/automation/AutomationRuntime.h"
@@ -225,6 +226,10 @@ namespace ENGINE_EDITOR {
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::MeshRender>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::Identification>();
 		ComponentDrawer::RegisterUIComponent<ENGINE_CORE::ECS::LightComponent>();
+
+        // Preload shared resources before gameplay starts; never execute default.lua here.
+        try { LoadProjectAssets(SCENE_MANAGER().Scripts().AssetRoot(), mainRegistry.GetAssetManager()); }
+        catch (const std::exception& error) { ENGINE_ERROR("Cannot preload project assets: {}", error.what()); return false; }
 
 		if (!SCENE_MANAGER().CreateDefault()) { ENGINE_ERROR("Cannot initialize default Scene: {}", SCENE_MANAGER().LastError()); return false; }
 

@@ -48,7 +48,7 @@
 
 ### Requirement: Create and activate a scene
 
-系统 SHALL 允许以合法 Windows 文件名且大小写不敏感唯一的名称创建并激活一个空编辑场景，并生成或原样复用项目 assets/scripts/<name>.lua，返回 scene_id、operation_id 和最新 revision。创建 MUST 遵守 editor-scene-lifecycle 的文件与绑定规则，不执行脚本或向编辑场景生成脚本实体。名称冲突、参数无效或文件操作失败 MUST 不产生新场景、成功历史或原激活场景变化。
+系统 SHALL 允许以合法 Windows 文件名且大小写不敏感唯一的名称创建并激活编辑场景（空模板为空，有 on_build 时包含构建对象），并生成或原样复用项目 assets/scripts/<name>.lua，返回 scene_id、operation_id 和最新 revision。创建 MUST 遵守 editor-scene-lifecycle 的文件与绑定规则，新建时执行可选 on_build 构建编辑对象，不调用游戏运行回调，也不生成隐藏脚本实体。名称冲突、参数无效或文件操作失败 MUST 不产生新场景、成功历史或原激活场景变化。
 
 #### Scenario: Create a named scene
 - **WHEN** 助手以有效前置条件创建名称未使用的展示场景
@@ -60,7 +60,7 @@
 
 #### Scenario: Create a scene with an existing Lua file
 - **WHEN** 名称未被 Scene 占用但同名 Lua 已存在，助手以有效前置条件创建 Scene
-- **THEN** 创建并激活空编辑 Scene，已有脚本字节保持不变，后续 Play 使用该文件
+- **THEN** 创建并激活编辑 Scene 并执行 on_build 一次，已有脚本字节保持不变，后续 Play 克隆编辑对象并使用该文件
 
 #### Scenario: Reject a script creation failure
 - **WHEN** 创建同名脚本时遇到目录冲突或不可写路径
@@ -99,8 +99,8 @@
 - **THEN** 按相反/原顺序恢复各步，组件、依赖及逻辑目标正确，没有重复实体、刚体或资源
 
 #### Scenario: Undo an empty scene creation
-- **WHEN** 栈顶是创建空场景且上下文有效，助手撤销
-- **THEN** 移除该场景并恢复原激活场景，原来无激活场景时恢复为空，同名 Lua 保留；重做重新绑定现有 Lua（缺失则生成模板）并返回新场景身份
+- **WHEN** 栈顶是创建场景且构建内容未被未撤销修改、上下文有效，助手撤销
+- **THEN** 移除该场景并恢复原激活场景，原来无激活场景时恢复为空，同名 Lua 保留；重做重新绑定现有 Lua（缺失则生成模板），执行新 Scene 的 on_build 并返回新场景身份；构建实体的逻辑绑定同步重建，后续实体编辑记录仍可重做
 
 #### Scenario: Reject non-top or invalid history
 - **WHEN** 助手跳过栈顶操作、使用失效历史或依赖已不满足
@@ -112,7 +112,7 @@
 
 #### Scenario: Traverse scene history after editing its script
 - **WHEN** 空 Scene 创建后，其 Lua 在外部被编辑，再撤销和重做创建
-- **THEN** 撤销不删除文件，重做不覆盖用户修改，编辑场景没有隐藏脚本实体阻止空场景撤销
+- **THEN** 撤销不删除文件，重做不覆盖用户修改，编辑场景没有隐藏脚本实体；初始构建对象本身不阻碍 Scene 创建的撤销
 
 ## ADDED Requirements
 

@@ -57,7 +57,7 @@ codex mcp list
 | get_editor_status | 实例、会话、revision、播放状态及可撤销 operation_id |
 | get_scene_state | 场景清单、当前或指定场景快照、名称/组件过滤与分页 |
 | list_assets | 已加载 model/texture 的键，默认页长 50，最大 200 |
-| create_scene | 创建并激活空场景；名称唯一 |
+| create_scene | 创建并激活场景，执行可选 on_build 构建初始编辑对象；名称唯一 |
 | create_object | 从已加载模型创建可见 mesh，或创建启用的点光源 |
 | set_transform | 局部位置、XYZ 欧拉角（度）和正缩放 |
 | set_light | 灯光类型、线性 RGB、强度及适用的类型专属参数 |
@@ -229,7 +229,7 @@ demo_editing 验证五类导入及“创建→物理→移动→删除→全部�
 
 ## Scene playback lifecycle
 
-The editor now starts with an empty active `default` Scene and binds Scenes to
+The editor now starts with an active `default` Scene constructed once by optional `on_build` and binds Scenes to
 `EDITOR/assets/scripts/<name>.lua`. Scene creation generates a missing template;
 existing Lua is preserved. Names follow Windows filename rules, ignoring case.
 Undo/delete retain the Lua file; redo reuses current bytes. Scene rename also
@@ -252,3 +252,10 @@ Verification must not use computer-use, CUA, key/mouse injection or window/UI
 automation. Use native/SDK tests for logic and protocol. Icon appearance, actual
 viewport rendering, focus and real audio remain pending manual verification as
 listed in `EDITOR/src/editor/scene/README.md` and `VERIFICATION.md`.
+
+Scene creation loads the module in a temporary construction environment and runs
+optional `on_build` once. Failures publish no Scene. Switching and Stop never
+rebuild authored data. Construction has frozen time/empty input, no sound, and
+no shared asset writes. Undo removes the construction baseline after later
+content operations are undone; redo uses the current file and rebinds constructed
+entities for subsequent redo records. New templates include an empty on_build.

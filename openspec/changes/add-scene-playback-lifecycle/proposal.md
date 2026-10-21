@@ -10,8 +10,8 @@
 - 沿用 SceneObject 双 Registry，重建实体关系、Lua、物理及游戏相机；Game 与 Scene 在播放和暂停期间渲染同一运行 Registry，模拟每帧只更新一次。
 - 增加 Pause Game 按钮，按现有 Play/Stop 内嵌 PNG 字节数组方式集成 `G:\Microsoft Edge下载\pause.png`；明确三按钮高亮、禁用和 Resume 提示。
 - 统一可暂停的游戏时间、固定步长物理、音频及 Game 视口焦点输入；Playing / Paused 禁止编辑内容及切换场景，允许只读查看和 Scene 相机导航。
-- 启动创建并激活空 default Scene；创建 Scene 自动生成或复用 `EDITOR/assets/scripts/<scene-name>.lua`，重命名同步重命名脚本，删除或撤销创建保留脚本，重做绑定已有文件。
-- **BREAKING**：Scene 不再自动执行公共 main.lua / GameDemo 资源加载，改用返回 `on_start / on_update(dt) / on_stop` 回调表的同名 Lua；编辑态只绑定和编译检查，Play 时重新读取执行。运行脚本不得新增或替换全局共享资源。
+- 启动创建并激活 default Scene，并在编辑态执行一次可选 on_build 构建初始对象；创建 Scene 自动生成或复用 `EDITOR/assets/scripts/<scene-name>.lua`，重命名同步重命名脚本，删除或撤销创建保留脚本，重做绑定已有文件。
+- **BREAKING**：Scene 不再自动执行公共 main.lua / GameDemo 资源加载，改用返回可选 `on_build` 及必需 `on_start / on_update(dt) / on_stop` 回调表的同名 Lua；新建 Scene 时在独立构建环境执行 on_build 一次，切换只绑定和编译检查，Play 时在全新运行环境重新读取并只执行游戏生命周期。运行脚本不得新增或替换全局共享资源。
 - UI 和 MCP 使用一致的播放保护、状态查询及历史失效规则；保留现有工具集，不新增远程播放控制工具。
 - JSON 加载、格式迁移和通过 JSON 实现播放快照不在本次范围；不引入自动保存或脚本热重载。
 
@@ -20,7 +20,7 @@
 ### New Capabilities
 
 - `editor-playback`：统一播放状态、运行副本隔离、双视口渲染、游戏时间/物理/音频/输入、运行失败恢复及播放期编辑保护。
-- `editor-scene-lifecycle`：默认空场景、Scene 命名与同名脚本文件管理、语法检查、场景脚本生命周期和文件操作失败处理。
+- `editor-scene-lifecycle`：默认可编辑初始场景、Scene 命名与同名脚本文件管理、语法检查、场景脚本生命周期和文件操作失败处理。
 
 ### Modified Capabilities
 

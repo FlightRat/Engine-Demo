@@ -182,3 +182,10 @@ not rolled back by content history. Tests use an injected temporary asset root.
 This change's verification forbids computer-use and UI input/window automation.
 Visual, focus and auditory acceptance without human evidence stays explicitly
 pending rather than being inferred from headless test results.
+
+Scene construction invokes optional `on_build` once in a temporary Lua environment
+before publishing each new Scene. The callback writes initial editable objects;
+no on_build means an empty Scene. Syntax/contract/build errors roll back creation.
+Switching, Play, Resume and Stop never repeat construction. Scene undo includes
+its constructed baseline; redo constructs from the current script and rebinds
+its logical entities for later history records. No public tool was added.

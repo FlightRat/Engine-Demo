@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include"Components/Identification.h"
 #include"MetaUtilities.h"
+#include <stdexcept>
 
 using namespace ENGINE_CORE::Utils;
 
@@ -46,6 +47,16 @@ namespace ENGINE_CORE::ECS {
 				}
 			),
 			// a lua "Entity" type has a "add_component" function, when this is called, it will invoke the "add_component" of the metatype which has the same id with comp
+            "find", [&registry](const std::string& name) -> sol::optional<Entity> {
+                entt::entity found = entt::null;
+                auto& entities = registry.GetRegistry();
+                for (auto entity : entities.view<Identification>()) if (entities.get<Identification>(entity).name == name) {
+                    if (found != entt::null) throw std::runtime_error("Ambiguous entity name: " + name);
+                    found = entity;
+                }
+                if (found == entt::null) return {};
+                return Entity{registry, found};
+            },
 			"add_component", [](Entity& entity, const sol::table& comp, sol::this_state s)->sol::object {
 				if (!comp.valid())
 					return sol::lua_nil_t{};

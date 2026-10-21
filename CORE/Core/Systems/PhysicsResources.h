@@ -9,11 +9,12 @@
 namespace ENGINE_CORE::Systems {
 inline void ValidatePhysicsAttributes(const ECS::PhysicsAttributes& v) {
     auto positive = [](float x) { return std::isfinite(x) && x > 0; };
+    auto nonnegative = [](float x) { return std::isfinite(x) && x >= 0; };
     auto unit = [](float x) { return std::isfinite(x) && x >= 0 && x <= 1; };
     if (v.rb_type != rp3d::BodyType::STATIC && v.rb_type != rp3d::BodyType::DYNAMIC && v.rb_type != rp3d::BodyType::KINEMATIC)
         throw std::invalid_argument("Unknown rigid body type");
     if (!positive(v.rb_Mass) || !positive(v.c_MassDensity) || !std::isfinite(v.c_FrictionCoefficient) || v.c_FrictionCoefficient < 0 ||
-        !unit(v.c_Bounciness) || !unit(v.rb_LinearDamping) || !unit(v.rb_AngularDamping)) throw std::invalid_argument("Invalid physics material or mass");
+        !unit(v.c_Bounciness) || !nonnegative(v.rb_LinearDamping) || !nonnegative(v.rb_AngularDamping)) throw std::invalid_argument("Invalid physics material or mass");
     for (int i = 0; i < 3; ++i) if (!unit(v.rb_LinearAxisFactor[i]) || !unit(v.rb_AngularAxisFactor[i])) throw std::invalid_argument("Invalid physics axis factor");
     if (v.shape == "box") { for (int i = 0; i < 3; ++i) if (!positive(v.box_halfExtents[i])) throw std::invalid_argument("Invalid box size"); }
     else if (v.shape == "sphere") { if (!positive(v.sphere_radius)) throw std::invalid_argument("Invalid sphere radius"); }

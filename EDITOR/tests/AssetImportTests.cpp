@@ -1,6 +1,7 @@
 #include "../src/editor/automation/AssetImportCoordinator.h"
 #include "../src/editor/automation/StateRules.h"
 #include "../src/editor/scene/SceneManager.h"
+#include "../src/editor/scene/ProjectAssets.h"
 #include <Core/ECS/Components/MeshFilter.h>
 #include <Rendering/Essentials/TextureLoader.h>
 #include <fstream>
@@ -247,6 +248,23 @@ void AssetImportTests(Contract& contract, bool gpu) {
 
 
 
+    }
+    if (gpu) {
+        const auto root = std::filesystem::absolute("EDITOR/assets");
+        LoadProjectAssets(root, assets);
+        auto manifest = ReadProjectAssets(root);
+        std::vector<AssetPayload> identities;
+        for (const auto& request : manifest) {
+            auto payload = assets.FindPayload(ImportType(Str(request, "asset_type")), Str(request, "asset_key"));
+            Check(payload.has_value(), "Startup preload did not publish a demo resource");
+            identities.push_back(*payload);
+        }
+        LoadProjectAssets(root, assets);
+        size_t index = 0;
+        for (const auto& request : manifest)
+            Check(*assets.FindPayload(ImportType(Str(request, "asset_type")), Str(request, "asset_key")) == identities[index++], "Repeated startup preload replaced a resource");
+        Check(glGetError() == GL_NO_ERROR, "Default project preload caused a GL error");
+        std::cout << "Default project preload passed with real GL uploads and audio decoding\n";
     }
     scenes.CleanUp();
     std::cout << (gpu ? "Real GL/audio asset import tests passed\n" : "CPU preparation, resource registry and global history tests passed\n");

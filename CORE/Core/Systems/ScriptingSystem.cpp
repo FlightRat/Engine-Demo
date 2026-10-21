@@ -1,6 +1,7 @@
 #include "ScriptingSystem.h"
 #include <fstream>
 #include <stdexcept>
+#include "PhysicsResources.h"
 #include "../ECS/MainRegistry.h"
 #include "../ECS/Components/ScriptComponent.h"
 #include "../ECS/Components/TransformComponent.h"
@@ -50,6 +51,10 @@ namespace ENGINE_CORE::Systems {
                 sol::object value = table[name];
                 if (value.get_type() != sol::type::function) throw std::runtime_error(std::string("Missing Scene function: ") + name);
             }
+            sol::object build = table["on_build"];
+            if (build.valid() && build != sol::lua_nil && build.get_type() != sol::type::function)
+                throw std::runtime_error("Scene on_build must be a function");
+            if (build.get_type() == sol::type::function) m_Build = build.as<sol::protected_function>();
             m_Start = table["on_start"]; m_Update = table["on_update"]; m_Stop = table["on_stop"]; return true;
         } catch (const std::exception& error) { m_Error = m_Path + ": module: " + error.what(); return false; }
     }
@@ -59,6 +64,7 @@ namespace ENGINE_CORE::Systems {
         if (result.valid()) return true;
         sol::error error = result; m_Error = m_Path + ": " + name + ": " + error.what(); return false;
     }
+    bool ScriptingSystem::Build() { return !m_Build.valid() || Invoke(m_Build, "on_build"); }
     bool ScriptingSystem::Start() { return Invoke(m_Start, "on_start"); }
     bool ScriptingSystem::Stop() { return Invoke(m_Stop, "on_stop"); }
     bool ScriptingSystem::Tick(double dt) {
@@ -66,7 +72,7 @@ namespace ENGINE_CORE::Systems {
         if (result.valid()) return true;
         sol::error error = result; m_Error = m_Path + ": on_update: " + error.what(); return false;
     }
-    void ScriptingSystem::Release() { m_Start = sol::lua_nil; m_Update = sol::lua_nil; m_Stop = sol::lua_nil; }
+    void ScriptingSystem::Release() { m_Build = sol::lua_nil; m_Start = sol::lua_nil; m_Update = sol::lua_nil; m_Stop = sol::lua_nil; }
 
 	auto create_lua_logger = [](sol::state& lua) {
 		auto& logger = ENGINE_LOGGER::Logger::GetInstance();
@@ -184,20 +190,20 @@ namespace ENGINE_CORE::Systems {
 					if not arg1 then 
 						Logger.error(string.format(message, ...))
 					end 
-					ENGINE_assert(arg1)
+					return ENGINE_assert(arg1)
 				end
 			)");
 	};
 
-	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry)
+	void ScriptingSystem::RegisterLuaBindings(sol::state& lua, ENGINE_CORE::ECS::Registry& registry, bool sceneConstruction)
 	{
 		// many lua registey
 		Registry::CreateLuaRegistryBind(lua, registry);
 		ENGINE_CORE::Scripting::GLMBindings::CreateLuaGlmBind(lua);
-		ENGINE_CORE::Scripting::SoundBindings::CreateLuaSoundBind(lua, registry);
+		if (!sceneConstruction) ENGINE_CORE::Scripting::SoundBindings::CreateLuaSoundBind(lua, registry);
 		ENGINE_CORE::Scripting::CameraBindings::CreateLuaCameraBind(lua, registry);
 		ENGINE_CORE::Scripting::UserDataBindings::CreateLuaUserDataBind(lua);
-		ENGINE_CORE::Scripting::ContactListenerBindings::CreateLuaContactListenerBind(lua, registry);
+		if (!sceneConstruction) ENGINE_CORE::Scripting::ContactListenerBindings::CreateLuaContactListenerBind(lua, registry);
 		ENGINE_CORE::FollowCamera::CreateLuaFollowCameraBind(lua, registry);
 		auto* runtimePtr = registry.GetRegistry().ctx().find<std::shared_ptr<GameplayContext>>();
         const auto runtime = runtimePtr ? *runtimePtr : nullptr;
@@ -222,6 +228,29 @@ namespace ENGINE_CORE::Systems {
 
         RegisterComponentMetadata();
 	}
+
+    bool ScriptingSystem::BuildScene(ECS::Registry& registry, const std::filesystem::path& path, std::string& error) {
+        try {
+            EnsurePhysicsResources(registry.GetRegistry());
+            auto context = std::make_shared<GameplayContext>();
+            registry.AddToContext<std::shared_ptr<GameplayContext>>(context);
+            struct RemoveBuildContext {
+                ECS::Registry& registry;
+                ~RemoveBuildContext() { registry.RemoveContext<std::shared_ptr<GameplayContext>>(); }
+            } removeContext{registry};
+            sol::state lua;
+            lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::table, sol::lib::string);
+            RegisterLuaBindings(lua, registry, true);
+            RegisterLuaFunctions(lua, context);
+            ScriptingSystem script;
+            if (!script.LoadSceneScript(lua, path) || !script.Build()) throw std::runtime_error(script.LastError());
+            script.Release(); error.clear(); return true;
+        } catch (const std::exception& exception) {
+            error = exception.what();
+            registry.Reset(); // Lua references are gone before partial ECS/physics teardown.
+            return false;
+        }
+    }
 
     void ScriptingSystem::RegisterComponentMetadata() {
 		//NOTE::the same registered Component in LUA and META should have the same id
